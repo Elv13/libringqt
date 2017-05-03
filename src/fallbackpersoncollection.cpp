@@ -240,6 +240,8 @@ FlagPack<CollectionInterface::SupportedFeatures> FallbackPersonCollection::suppo
       CollectionInterface::SupportedFeatures::CLEAR      |
       CollectionInterface::SupportedFeatures::MANAGEABLE |
       CollectionInterface::SupportedFeatures::REMOVE     |
+      CollectionInterface::SupportedFeatures::EDIT       |
+      CollectionInterface::SupportedFeatures::SAVE       |
       CollectionInterface::SupportedFeatures::ADD        ;
 }
 
