@@ -517,10 +517,12 @@ Call* RecentModel::getActiveCall(const QModelIndex &idx)
 QHash<int,QByteArray> RecentModel::roleNames() const
 {
    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   /*static bool initRoles = false;
+   static bool initRoles = false;
    if (!initRoles) {
-      initRoles = true;
-   }*/
+      QHash<int, QByteArray>::const_iterator i;
+      for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+         roles[i.key()] = i.value();
+   }
 
    return roles;
 }
