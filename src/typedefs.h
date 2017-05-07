@@ -39,12 +39,15 @@ typedef QMap< QString, QStringList >                        MapStringStringList 
 typedef QVector< QByteArray >                               VectorVectorByte              ;
 
 /**
- * This function add a safe way to get an enum class size
+ * This function add a safe way to get an enum class size.
  * @note it cannot be "const" due to some compiler issues
  * @note it cannot be unsigned to avoid some compiler warnings
+ * @note The 2 optional parameters should not be used directly. They are used
+ *  internally for the enum_iterator
  */
-template<typename A> constexpr int enum_class_size() {
-   return static_cast<int>(A::COUNT__);
+template<typename A, A from = static_cast<A>(0), A to = A::COUNT__ >
+constexpr int enum_class_size() {
+   return static_cast<int>(to) - static_cast<int>(from);
 }
 
 #define LIB_EXPORT Q_DECL_EXPORT
