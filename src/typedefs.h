@@ -169,3 +169,14 @@ __attribute__ ((unused)) static FlagPack<T> operator|(const T& first, const T& s
    return p | second; \
 } \
 DO_PRAGMA(GCC diagnostic pop)
+
+#if QT_VERSION < 0x050700
+// Keep the code compatible with Qt < 5.7. Also, once C++17 becomes mandatory,
+// drop this and use `std::as_const`.
+template<typename T>
+const T& qAsConst(const T& v)
+{
+    return const_cast<const T&>(v);
+}
+#endif
+
