@@ -52,6 +52,25 @@ enum class Role
     UserRole           = Qt::UserRole + 100  // this should always be the last role in the list
 };
 
+/// Role names associated with Ring::Role
+static const QHash<int, QByteArray> roleNames = {
+    { static_cast<int>(Role::DisplayRole            ) , "display"                },
+    { static_cast<int>(Role::Object                 ) , "object"                 },
+    { static_cast<int>(Role::ObjectType             ) , "objectType"             },
+    { static_cast<int>(Role::Name                   ) , "name"                   },
+    { static_cast<int>(Role::Number                 ) , "number"                 },
+    { static_cast<int>(Role::LastUsed               ) , "lastUsed"               },
+    { static_cast<int>(Role::FormattedLastUsed      ) , "formattedLastUsed"      },
+    { static_cast<int>(Role::IndexedLastUsed        ) , "indexedLastUsed"        },
+    { static_cast<int>(Role::State                  ) , "state"                  },
+    { static_cast<int>(Role::FormattedState         ) , "formattedState"         },
+    { static_cast<int>(Role::Length                 ) , "length"                 },
+    { static_cast<int>(Role::DropState              ) , "dropState"              },
+    { static_cast<int>(Role::IsPresent              ) , "isPresent"              },
+    { static_cast<int>(Role::UnreadTextMessageCount ) , "unreadTextMessageCount" },
+    { static_cast<int>(Role::UserRole               ) , "userRole"               },
+};
+
 /**
  * All LRC models that store more than one type of class (eg: RecentModel) should return a member of
  * this enum when ::data(Ring::Role::ObjectType) is called on one of their indeces. This is to
