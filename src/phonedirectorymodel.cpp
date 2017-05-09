@@ -113,6 +113,8 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return GlobalInstances::pixmapManipulator().decorationRole(number);
             case (int) Role::Object:
                return QVariant::fromValue(const_cast<ContactMethod*>(number));
+            case Qt::ToolTipRole:
+                return number->isDuplicate() ? "Is duplicate" : QString();
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::TYPE:
