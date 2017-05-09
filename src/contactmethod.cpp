@@ -146,6 +146,13 @@ bool ContactMethod::isPresent() const
    return d_ptr->m_Tracked && d_ptr->m_Present;
 }
 
+///Is this CM correspond to its account "self"
+bool ContactMethod::isSelf() const
+{
+    // Use the d_ptr just in case it was deduplicated
+    return account() && account()->contactMethod()->d_ptr == d_ptr;
+}
+
 ///This number presence status string
 QString ContactMethod::presenceMessage() const
 {

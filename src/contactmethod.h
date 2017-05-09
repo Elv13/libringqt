@@ -76,6 +76,7 @@ public:
    Q_PROPERTY(QString           uid              READ uid               WRITE setUid                  )
    Q_PROPERTY(bool              isTracked        READ isTracked         NOTIFY trackedChanged         )
    Q_PROPERTY(bool              isPresent        READ isPresent         NOTIFY presentChanged         )
+   Q_PROPERTY(bool              isSelf           READ isSelf                                          )
    Q_PROPERTY(bool              supportPresence  READ supportPresence                                 )
    Q_PROPERTY(QString           presenceMessage  READ presenceMessage   NOTIFY presenceMessageChanged )
    Q_PROPERTY(uint              weekCount        READ weekCount                                       )
@@ -107,6 +108,7 @@ public:
    //Getters
    URI                   uri             () const;
    NumberCategory*       category        () const;
+   bool                  isSelf          () const;
    bool                  isTracked       () const;
    bool                  isPresent       () const;
    QString               presenceMessage () const;
