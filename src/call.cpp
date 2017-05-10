@@ -1456,6 +1456,9 @@ void CallPrivate::initMedia()
    //Always assume there is an audio media, even if this is untrue
    for (const auto d : EnumIterator<Media::Media::Direction>())
       mediaFactory<Media::Audio>(d);
+
+   // Notify the ContactMethod it has a call in progress
+   q_ptr->peerContactMethod()->d_ptr->addActiveCall(q_ptr);
 }
 
 void CallPrivate::terminateMedia()
@@ -1471,6 +1474,9 @@ void CallPrivate::terminateMedia()
          }
       }
    }
+
+   // Notify the ContactMethod it has a call in progress
+   q_ptr->peerContactMethod()->d_ptr->removeActiveCall(q_ptr);
 }
 
 ///Set the start timestamp and update the cache

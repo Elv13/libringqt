@@ -47,6 +47,7 @@ public:
    Certificate*       m_pCertificate;
    QString            m_RegisteredName   ;
    UsageStatistics    m_UsageStats       ;
+   QList<Call*>       m_lActiveCalls     ;
 
    //Parents
    QList<ContactMethod*> m_lParents;
@@ -62,6 +63,8 @@ public:
    void registeredNameSet(const QString& registeredName);
 
    //Helpers
+   void addActiveCall(Call* c);
+   void removeActiveCall(Call* c);
    void setTextRecording(Media::TextRecording* r);
    void setCertificate (Certificate*);
    void setRegisteredName(const QString& registeredName);

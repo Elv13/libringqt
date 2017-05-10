@@ -49,6 +49,10 @@ enum class Role
     IsPresent          ,
     UnreadTextMessageCount,
     URI                ,
+    IsBookmarked       ,
+    IsRecording        ,
+    HasActiveCall      ,
+    HasActiveVideo     ,
     UserRole           = Qt::UserRole + 100  // this should always be the last role in the list
 };
 
@@ -68,6 +72,10 @@ static const QHash<int, QByteArray> roleNames = {
     { static_cast<int>(Role::DropState              ) , "dropState"              },
     { static_cast<int>(Role::IsPresent              ) , "isPresent"              },
     { static_cast<int>(Role::UnreadTextMessageCount ) , "unreadTextMessageCount" },
+    { static_cast<int>(Role::IsBookmarked           ) , "isBookmarked"           },
+    { static_cast<int>(Role::IsRecording            ) , "isRecording"            },
+    { static_cast<int>(Role::HasActiveCall          ) , "hasActiveCall"          },
+    { static_cast<int>(Role::HasActiveVideo         ) , "hasActiveVideo"         },
     { static_cast<int>(Role::UserRole               ) , "userRole"               },
 };
 

@@ -282,6 +282,7 @@ void ContactMethod::setCategory(NumberCategory* cat)
 void ContactMethod::setBookmarked(bool bookmarked )
 {
    d_ptr->m_IsBookmark = bookmarked;
+   changed();
 }
 
 ///Force an Uid on this number (instead of hash)
@@ -463,6 +464,33 @@ QString ContactMethod::getBestId() const
    return bestId();
 }
 
+/// Returns if this contact method is currently involved in a recording
+bool ContactMethod::isRecording() const
+{
+   for (auto c : qAsConst(d_ptr->m_lActiveCalls)) {
+      //TODO if video recording is ever supported, extend the if
+      if (c->isRecording(Media::Media::Type::AUDIO, Media::Media::Direction::OUT))
+         return true;
+   }
+   return false;
+}
+
+/// Returns if this contact method currently has ongoing calls
+bool ContactMethod::hasActiveCall() const
+{
+   return !d_ptr->m_lActiveCalls.isEmpty();
+}
+
+/// Returns if this contact method currently has active video streams
+bool ContactMethod::hasActiveVideo() const
+{
+   for (auto c : qAsConst(d_ptr->m_lActiveCalls)) {
+      if (c->videoRenderer())
+         return true;
+   }
+   return false;
+}
+
 /// Returns the registered name if available, otherwise returns the uri
 QString ContactMethod::bestId() const
 {
@@ -614,7 +642,8 @@ QVariant ContactMethod::roleData(int role) const
          cat = QVariant::fromValue(Ring::ObjectType::ContactMethod);
          break;
       case static_cast<int>(Call::Role::IsBookmark):
-         cat = false;
+      case static_cast<int>(Ring::Role::IsBookmarked):
+         cat = d_ptr->m_IsBookmark;
          break;
       case static_cast<int>(Call::Role::Filter):
          cat = uri()+primaryName();
@@ -639,8 +668,29 @@ QVariant ContactMethod::roleData(int role) const
          else
             cat = 0;
          break;
+      case static_cast<int>(Ring::Role::IsRecording):
+         cat = isRecording();
+         break;
+      case static_cast<int>(Ring::Role::HasActiveCall):
+         cat = hasActiveCall();
+         break;
+      case static_cast<int>(Ring::Role::HasActiveVideo):
+         cat = hasActiveVideo();
+         break;
    }
    return cat;
+}
+
+/// Keep a single method to set the roles instead of copy/pasting in 5 models
+bool ContactMethod::setRoleData(const QVariant &value, int role)
+{
+    switch(role) {
+        case static_cast<int>(Ring::Role::IsBookmarked):
+            setBookmarked(value.toBool());
+            return true;
+    };
+
+    return false;
 }
 
 QMimeData* ContactMethod::mimePayload() const
@@ -907,6 +957,29 @@ bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads
                                                     ,payloads);
    txtRecording->d_ptr->insertNewMessage(payloads, this, Media::Media::Direction::OUT, id);
    return true;
+}
+
+/**
+ * Track the CM active calls.
+ *
+ * Previous attempts at building a timeline tried to track CMs, Calls and
+ * Persons. While this worked with enough effort, it was hard to maintain,
+ * grew in complexity over time and was always rather fragile as new events
+ * were added.
+ *
+ * Tracking active calls (and text messages) in the CM allows it to unify the
+ * timeline events into a single object.
+ */
+void ContactMethodPrivate::addActiveCall(Call* c)
+{
+    m_lActiveCalls << c;
+    changed();
+}
+
+void ContactMethodPrivate::removeActiveCall(Call* c)
+{
+    m_lActiveCalls.removeAll(c);
+    changed();
 }
 
 

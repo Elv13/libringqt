@@ -84,6 +84,9 @@ public:
    Q_PROPERTY(bool              haveCalled       READ haveCalled                                      )
    Q_PROPERTY(QString           primaryName      READ primaryName                                     )
    Q_PROPERTY(bool              isBookmarked     READ isBookmarked                                    )
+   Q_PROPERTY(bool              isRecording      READ isRecording                                     )
+   Q_PROPERTY(bool              hasActiveCall    READ hasActiveCall                                   )
+   Q_PROPERTY(bool              hasActiveVideo   READ hasActiveVideo                                  )
    Q_PROPERTY(QVariant          icon             READ icon                                            )
    Q_PROPERTY(int               totalSpentTime   READ totalSpentTime                                  )
    Q_PROPERTY(URI::ProtocolHint protocolHint     READ protocolHint                                    )
@@ -139,6 +142,9 @@ public:
    QString               bestId          () const;
    bool                  isDuplicate     () const;
    QString               bestName        () const;
+   bool                  isRecording     () const;
+   bool                  hasActiveCall   () const;
+   bool                  hasActiveVideo  () const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles
@@ -146,6 +152,8 @@ public:
     */
    Q_INVOKABLE QVariant   roleData   (int role) const;
    Q_INVOKABLE QMimeData* mimePayload(        ) const;
+
+   Q_INVOKABLE bool setRoleData(const QVariant &value, int role);
 
    //Setters
    Q_INVOKABLE void setAccount       (Account*            account       );
