@@ -78,7 +78,8 @@ ADD_DEFINITIONS(
    -Wuninitialized
    -Woverloaded-virtual
    -Wunused-value
-   -pedantic
+   #-pedantic # As of Qt 5.8, Qt compiler detection enables C++14 features even
+   # if this project only set -std=c++1y. In practice this is pure noise.
    -Wnonnull
    -Wsequence-point
    #-Wsystem-headers
@@ -269,6 +270,7 @@ SET( libringclient_LIB_SRCS
   src/recentmodel.cpp
   src/chainoftrustmodel.cpp
   src/pendingcontactrequestmodel.cpp
+  src/peerstimelinemodel.cpp
   src/video/devicemodel.cpp
   src/video/sourcemodel.cpp
   src/video/channel.cpp
@@ -420,6 +422,7 @@ SET( libringclient_LIB_HDRS
   src/collectioncreationinterface.h
   src/collectionconfigurationinterface.h
   src/recentmodel.h
+  src/peerstimelinemodel.h
   src/chainoftrustmodel.h
   src/pendingcontactrequestmodel.h
   src/contactrequest.h
