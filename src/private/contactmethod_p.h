@@ -49,6 +49,8 @@ public:
    UsageStatistics    m_UsageStats       ;
    QList<Call*>       m_lActiveCalls     ;
 
+   QWeakPointer<QAbstractItemModel> m_CallsModel;
+
    //Parents
    QList<ContactMethod*> m_lParents;
 

@@ -96,6 +96,8 @@ public:
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName                                        )
 
+   Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
+
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
 
    ///@enum Type: Is this temporary, blank, used or unused
@@ -145,6 +147,8 @@ public:
    bool                  isRecording     () const;
    bool                  hasActiveCall   () const;
    bool                  hasActiveVideo  () const;
+
+   QSharedPointer<QAbstractItemModel> callsModel() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles

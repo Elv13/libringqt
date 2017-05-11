@@ -44,6 +44,7 @@
 #include "mime.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
+#include "private/cmcallsmodel.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -698,6 +699,18 @@ bool ContactMethod::setRoleData(const QVariant &value, int role)
     };
 
     return false;
+}
+
+/// Return or create a model for the `calls()`
+QSharedPointer<QAbstractItemModel> ContactMethod::callsModel() const
+{
+   if (!d_ptr->m_CallsModel) {
+      auto p = QSharedPointer<QAbstractItemModel>(new CMCallsModel(this));
+      d_ptr->m_CallsModel = p;
+      return p;
+   }
+
+   return d_ptr->m_CallsModel;
 }
 
 QMimeData* ContactMethod::mimePayload() const
