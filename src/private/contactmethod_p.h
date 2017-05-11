@@ -61,6 +61,7 @@ public:
    void primaryNameChanged(const QString& name);
    void rebased(ContactMethod* other);
    void registeredNameSet(const QString& registeredName);
+   void bookmarkedChanged(bool);
 
    //Helpers
    void addActiveCall(Call* c);
