@@ -1202,6 +1202,7 @@ void CallPrivate::setRecordingPath(const QString& path)
    if (!path.isEmpty() && QFile::exists(path)) {
 
       Media::Recording* rec = LocalRecordingCollection::instance().addFromPath(path);
+      rec->setCall(q_ptr);
       (*m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::IN ]) << rec;
       (*m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::OUT]) << rec;
    }
