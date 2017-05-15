@@ -222,6 +222,8 @@ struct TextMessageNode
    ContactMethod*         m_pContactMethod;
    TextMessageNode*       m_pNext         ;
    int                    m_row           ;
+
+   QVariant roleData(int role) const;
 };
 
 ///Model for the Instant Messaging (IM) features

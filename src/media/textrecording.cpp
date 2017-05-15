@@ -766,6 +766,11 @@ QHash<int,QByteArray> InstantMessagingModel::roleNames() const
    static bool initRoles = false;
    if (!initRoles) {
       initRoles = true;
+
+      QHash<int, QByteArray>::const_iterator i;
+      for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+         roles[i.key()] = i.value();
+
       roles.insert((int)Media::TextRecording::Role::Direction           , "direction"           );
       roles.insert((int)Media::TextRecording::Role::AuthorDisplayname   , "authorDisplayname"   );
       roles.insert((int)Media::TextRecording::Role::AuthorUri           , "authorUri"           );
@@ -782,75 +787,91 @@ QHash<int,QByteArray> InstantMessagingModel::roleNames() const
    return roles;
 }
 
+QVariant TextMessageNode::roleData(int role) const
+{
+   switch (role) {
+      case Qt::DisplayRole:
+         return QVariant(m_pMessage->m_PlainText);
+      case Qt::DecorationRole         :
+         if (m_pMessage->direction == Media::Media::Direction::IN)
+            return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod);
+         else if (m_pContactMethod->account())
+            return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod->account());
+         else {
+               /* It's most likely an account that doesn't exist anymore
+               * Use a fallback image in pixmapManipulator
+               */
+               return GlobalInstances::pixmapManipulator().decorationRole((ContactMethod*)nullptr);
+         }
+         break;
+      case (int)Media::TextRecording::Role::Direction            :
+         return QVariant::fromValue(m_pMessage->direction);
+      case (int)Media::TextRecording::Role::AuthorDisplayname    :
+      case (int)Ring::Role::Name                                 :
+         if (m_pMessage->direction == Media::Media::Direction::IN)
+            return m_pContactMethod->roleData(static_cast<int>(Ring::Role::Name));
+         else
+            return QObject::tr("Me");
+      case (int)Media::TextRecording::Role::AuthorUri            :
+      case (int)Ring::Role::Number                               :
+         return m_pContactMethod->uri();
+      case (int)Media::TextRecording::Role::AuthorPresenceStatus :
+         // Always consider "self" as present
+         if (m_pMessage->direction == Media::Media::Direction::OUT)
+            return true;
+         else
+            return m_pContactMethod->contact() ?
+               m_pContactMethod->contact()->isPresent() : m_pContactMethod->isPresent();
+      case (int)Media::TextRecording::Role::Timestamp            :
+         return (uint)m_pMessage->timestamp;
+      case (int)Media::TextRecording::Role::IsRead               :
+         return (int)m_pMessage->isRead;
+      case (int)Media::TextRecording::Role::FormattedDate        :
+         return QDateTime::fromTime_t(m_pMessage->timestamp).toString();
+      case (int)Media::TextRecording::Role::IsStatus             :
+         return m_pMessage->type == Serializable::Message::Type::STATUS;
+      case (int)Media::TextRecording::Role::HTML                 :
+         return QVariant(m_pMessage->m_HTML);
+      case (int)Media::TextRecording::Role::HasText              :
+         return m_pMessage->m_HasText;
+      case (int)Media::TextRecording::Role::ContactMethod        :
+         return QVariant::fromValue(m_pContactMethod);
+      case (int)Media::TextRecording::Role::DeliveryStatus       :
+         return QVariant::fromValue(m_pMessage->deliveryStatus);
+      case (int)Media::TextRecording::Role::FormattedHtml        :
+         return QVariant::fromValue(m_pMessage->getFormattedHtml());
+      case (int)Media::TextRecording::Role::LinkList             :
+         return QVariant::fromValue(m_pMessage->m_LinkList);
+      case (int)Media::TextRecording::Role::Id                   :
+         return QVariant::fromValue(m_pMessage->id);
+      default:
+         break;
+   }
+
+   return {};
+}
+
+QVariant Media::TextRecording::roleData(int row, int role) const
+{
+   if (row < -d_ptr->m_lNodes.size() || row >= d_ptr->m_lNodes.size())
+      return {};
+
+   // Allow reverse lookup too as the last messages are the most relevant
+   if (row < 0)
+      row = d_ptr->m_lNodes.size()+row;
+
+   Q_ASSERT(row < d_ptr->m_lNodes.size());
+
+   return d_ptr->m_lNodes[row]->roleData(role);
+}
+
 ///Get data from the model
 QVariant InstantMessagingModel::data( const QModelIndex& idx, int role) const
 {
-   if (idx.column() == 0) {
-      ::TextMessageNode* n = m_pRecording->d_ptr->m_lNodes[idx.row()];
-      switch (role) {
-         case Qt::DisplayRole:
-            return QVariant(n->m_pMessage->m_PlainText);
-         case Qt::DecorationRole         :
-            if (n->m_pMessage->direction == Media::Media::Direction::IN)
-               return GlobalInstances::pixmapManipulator().decorationRole(n->m_pContactMethod);
-            else if (m_pRecording->call() && m_pRecording->call()->account()
-              && m_pRecording->call()->account()->contactMethod()->contact()) {
-               auto cm = m_pRecording->call()->account()->contactMethod();
-               return GlobalInstances::pixmapManipulator().decorationRole(cm);
-            } else if (n->m_pMessage->direction == Media::Media::Direction::OUT && n->m_pContactMethod->account()){
-                return GlobalInstances::pixmapManipulator().decorationRole(n->m_pContactMethod->account());
-            } else {
-                /* It's most likely an account that doesn't exist anymore
-                 * Use a fallback image in pixmapManipulator
-                */
-                return GlobalInstances::pixmapManipulator().decorationRole((ContactMethod*)nullptr);
-            }
-            break;
-         case (int)Media::TextRecording::Role::Direction            :
-            return QVariant::fromValue(n->m_pMessage->direction);
-         case (int)Media::TextRecording::Role::AuthorDisplayname    :
-         case (int)Ring::Role::Name                                 :
-            if (n->m_pMessage->direction == Media::Media::Direction::IN)
-               return n->m_pContactMethod->roleData(static_cast<int>(Ring::Role::Name));
-            else
-               return tr("Me");
-         case (int)Media::TextRecording::Role::AuthorUri            :
-         case (int)Ring::Role::Number                               :
-            return n->m_pContactMethod->uri();
-         case (int)Media::TextRecording::Role::AuthorPresenceStatus :
-            // Always consider "self" as present
-            if (n->m_pMessage->direction == Media::Media::Direction::OUT)
-               return true;
-            else
-               return n->m_pContactMethod->contact() ?
-                  n->m_pContactMethod->contact()->isPresent() : n->m_pContactMethod->isPresent();
-         case (int)Media::TextRecording::Role::Timestamp            :
-            return (uint)n->m_pMessage->timestamp;
-         case (int)Media::TextRecording::Role::IsRead               :
-            return (int)n->m_pMessage->isRead;
-         case (int)Media::TextRecording::Role::FormattedDate        :
-            return QDateTime::fromTime_t(n->m_pMessage->timestamp).toString();
-         case (int)Media::TextRecording::Role::IsStatus             :
-            return n->m_pMessage->type == Serializable::Message::Type::STATUS;
-         case (int)Media::TextRecording::Role::HTML                 :
-            return QVariant(n->m_pMessage->m_HTML);
-         case (int)Media::TextRecording::Role::HasText              :
-            return n->m_pMessage->m_HasText;
-         case (int)Media::TextRecording::Role::ContactMethod        :
-            return QVariant::fromValue(n->m_pContactMethod);
-         case (int)Media::TextRecording::Role::DeliveryStatus       :
-            return QVariant::fromValue(n->m_pMessage->deliveryStatus);
-         case (int)Media::TextRecording::Role::FormattedHtml        :
-            return QVariant::fromValue(n->m_pMessage->getFormattedHtml());
-         case (int)Media::TextRecording::Role::LinkList             :
-            return QVariant::fromValue(n->m_pMessage->m_LinkList);
-         case (int)Media::TextRecording::Role::Id                   :
-            return QVariant::fromValue(n->m_pMessage->id);
-         default:
-            break;
-      }
-   }
-   return QVariant();
+   if ((!idx.isValid()) || idx.column())
+      return {};
+
+   return m_pRecording->roleData(idx.row(), role);
 }
 
 ///Number of row
@@ -951,3 +972,5 @@ void InstantMessagingModel::clear()
 
     endResetModel();
 }
+
+// kate: space-indent on; indent-width 3; replace-tabs on;

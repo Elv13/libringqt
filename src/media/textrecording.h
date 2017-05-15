@@ -93,7 +93,9 @@ public:
    int                 size                     (                         ) const;
    bool                hasMimeType              ( const QString& mimeType ) const;
    QStringList         mimeTypes                (                         ) const;
+   QVariant            roleData                 ( int row, int role       ) const;
    QVector<ContactMethod*> peers                (                         ) const;
+
 
    //Helper
    void setAllRead();
