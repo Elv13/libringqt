@@ -35,24 +35,24 @@ public:
    typedef double Position;
 
    //Properties
-   Q_PROPERTY( QUrl                  path                 READ path                                                   )
-   Q_PROPERTY( AVRecording::Position position             READ position                                               )
-   Q_PROPERTY( int                   duration             READ duration                                               )
-   Q_PROPERTY( QString               formattedTimeElapsed READ formattedTimeElapsed NOTIFY formattedTimeElapsedChanged)
-   Q_PROPERTY( QString               formattedDuration    READ formattedDuration    NOTIFY formattedDurationChanged   )
-   Q_PROPERTY( QString               formattedTimeLeft    READ formattedTimeLeft    NOTIFY formattedTimeLeftChanged   )
+   Q_PROPERTY( QUrl    path                 READ path                 CONSTANT                          )
+   Q_PROPERTY( double  position             READ position             NOTIFY playbackPositionChanged    )
+   Q_PROPERTY( int     duration             READ duration             CONSTANT                          )
+   Q_PROPERTY( QString formattedTimeElapsed READ formattedTimeElapsed NOTIFY formattedTimeElapsedChanged)
+   Q_PROPERTY( QString formattedDuration    READ formattedDuration    NOTIFY formattedDurationChanged   )
+   Q_PROPERTY( QString formattedTimeLeft    READ formattedTimeLeft    NOTIFY formattedTimeLeftChanged   )
 
    //Constructor
    explicit AVRecording();
    virtual ~AVRecording();
 
    //Getter
-   QUrl                  path                () const;
-   AVRecording::Position position            () const;
-   int                   duration            () const;
-   QString               formattedTimeElapsed() const;
-   QString               formattedDuration   () const;
-   QString               formattedTimeLeft   () const;
+   QUrl       path                () const;
+   double     position            () const;
+   int        duration            () const;
+   QString    formattedTimeElapsed() const;
+   QString    formattedDuration   () const;
+   QString    formattedTimeLeft   () const;
 
    //Setter
    void setPath(const QUrl& path);
@@ -62,18 +62,18 @@ private:
    Q_DECLARE_PRIVATE(AVRecording)
 
 public Q_SLOTS:
-   void play (                           );
-   void stop (                           );
-   void pause(                           );
-   void seek ( AVRecording::Position pos );
-   void reset(                           );
+   void play (            );
+   void stop (            );
+   void pause(            );
+   void seek ( double pos );
+   void reset(            );
 
 Q_SIGNALS:
    /**
     * The recording playback position changed
     * @args pos The position, in percent
     */
-   void playbackPositionChanged(AVRecording::Position pos);
+   void playbackPositionChanged(double pos);
    ///The recording playback has stopped
    void stopped();
    ///The recording playback has started
@@ -88,4 +88,3 @@ Q_SIGNALS:
 };
 
 }
-

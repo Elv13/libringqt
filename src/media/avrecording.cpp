@@ -119,7 +119,7 @@ QUrl Media::AVRecording::path() const
 }
 
 ///Get the current playback position (0.0 if not playing)
-Media::AVRecording::Position Media::AVRecording::position() const
+double Media::AVRecording::position() const
 {
    return d_ptr->m_Position;
 }
@@ -213,7 +213,7 @@ void Media::AVRecording::pause()
  * @note only available during playback
  * @args pos The position, in percent
  */
-void Media::AVRecording::seek(AVRecording::Position pos)
+void Media::AVRecording::seek(double pos)
 {
    CallManagerInterface& callManager = CallManager::instance();
    Q_NOREPLY callManager.recordPlaybackSeek(pos);

@@ -35,6 +35,9 @@ class LIB_EXPORT Media : public QObject
    Q_OBJECT
    friend class ::CallModelPrivate;
 public:
+   Q_PROPERTY(Direction direction READ direction)
+   Q_PROPERTY(Call*     call      READ call)
+
    enum class Type {
       AUDIO = 0, /*!< */
       VIDEO = 1, /*!< */
@@ -42,6 +45,7 @@ public:
       FILE  = 3, /*!< */
       COUNT__
    };
+   Q_ENUMS(Type)
 
    enum class State {
       ACTIVE = 0, /*!< The media is currently in progress       */
@@ -50,12 +54,14 @@ public:
       OVER   = 3, /*!< The media is terminated                  */
       COUNT__
    };
+   Q_ENUMS(State)
 
    enum class Direction {
       IN , /*!< The media is coming from the peer */
       OUT, /*!< The media is going to the peer    */
       COUNT__
    };
+   Q_ENUMS(Direction)
 
    enum class Action {
       MUTE     , /*!< Mute this media   */
@@ -63,6 +69,7 @@ public:
       TERMINATE, /*!< End this media    */
       COUNT__
    };
+   Q_ENUMS(Action)
 
    //Getter
    virtual Media::Type type() = 0;
@@ -95,6 +102,8 @@ private:
 };
 
 }
+
+Q_DECLARE_METATYPE(Media::Media*)
 Q_DECLARE_METATYPE(Media::Media::Direction)
 
 Media::Media* operator<<(Media::Media* m, Media::Media::Action a);

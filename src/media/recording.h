@@ -39,13 +39,15 @@ class LIB_EXPORT Recording : public ItemBase
 public:
 
    //Properties
-   Q_PROPERTY( Recording::Type     type                 READ type                                                   )
+   Q_PROPERTY(Type  type READ type)
+   Q_PROPERTY(Call* call READ call) //Prevent setting from QML
 
    enum class Type {
       AUDIO_VIDEO, /*!< The recording is a single file, playable by the daemon */
       TEXT       , /*!< The recording is an encoded text stream and a position */
       /*FILE*/
    };
+   Q_ENUMS(Type)
 
    //Constructor
    explicit Recording(const Recording::Type type);
@@ -64,3 +66,4 @@ private:
 };
 
 }
+Q_DECLARE_METATYPE(::Media::Recording*)

@@ -96,6 +96,7 @@ public:
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName                                        )
 
+   Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
 
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )

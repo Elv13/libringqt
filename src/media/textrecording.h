@@ -49,6 +49,12 @@ class LIB_EXPORT TextRecording : public Recording
 
 public:
 
+    Q_PROPERTY(QAbstractItemModel* instantMessagingModel           READ instantMessagingModel           CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* instantTextMessagingModel       READ instantTextMessagingModel       CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* unreadInstantTextMessagingModel READ unreadInstantTextMessagingModel CONSTANT)
+    Q_PROPERTY(bool                isEmpty                         READ isEmpty           NOTIFY messageInserted)
+    Q_PROPERTY(int                 size                            READ size              NOTIFY messageInserted)
+
    enum class Role {
       Direction            = static_cast<int>(Ring::Role::UserRole) + 1,
       AuthorDisplayname    ,
@@ -111,4 +117,5 @@ private:
 
 }
 
+Q_DECLARE_METATYPE(Media::TextRecording*)
 Q_DECLARE_METATYPE(Media::TextRecording::Status)
