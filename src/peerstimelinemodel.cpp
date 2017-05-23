@@ -21,20 +21,28 @@
 // libstdc++
 #include <algorithm>
 
+// Qt
+#include <QtCore/QSortFilterProxyModel>
+
 // Ring
 #include <contactmethod.h>
 #include <phonedirectorymodel.h>
 #include <private/modelutils.h>
+#include <historytimecategorymodel.h>
+
+#define NEVER static_cast<int>(HistoryTimeCategoryModel::HistoryConst::Never)
+class SummaryModel;
 
 struct CMTimelineNode final
 {
     explicit CMTimelineNode(ContactMethod* cm, time_t t=0):m_pCM(cm),m_Time(t) {}
-    int            m_Index { -1      };
-    time_t         m_Time  {  0      };
-    ContactMethod* m_pCM   { nullptr };
+    int            m_Index  { -1      };
+    time_t         m_Time   {  0      };
+    ContactMethod* m_pCM    { nullptr };
+    int            m_CatHead{ -1      };
 };
 
-class PeersTimelineModelPrivate : public QObject
+class PeersTimelineModelPrivate final : public QObject
 {
     Q_OBJECT
 public:
@@ -42,6 +50,9 @@ public:
     std::vector<CMTimelineNode*> m_lRows;
     QHash<ContactMethod*, CMTimelineNode*> m_hMapping;
     bool m_IsInit {false};
+    SummaryModel* m_pSummaryModel;
+    QSharedPointer<QAbstractItemModel> m_SummaryPtr {nullptr};
+    std::vector<CMTimelineNode*> m_lSummaryHead;
 
     // Helpers
     int init();
@@ -64,6 +75,34 @@ public Q_SLOTS:
     void slotDataChanged(const QModelIndex& tl, const QModelIndex& br);
 };
 
+/// Create a categorized "table of content" of the entries
+class SummaryModel final : public HistoryTimeCategoryModel
+{
+    Q_OBJECT
+public:
+    explicit SummaryModel(PeersTimelineModelPrivate* parent);
+    virtual ~SummaryModel();
+    virtual QVariant data(const QModelIndex& idx, int role ) const override;
+    virtual QHash<int,QByteArray> roleNames() const override;
+    void updateCategories(CMTimelineNode* node, time_t t);
+
+    PeersTimelineModelPrivate* d_ptr;
+public slots:
+    void reloadCategories();
+};
+
+/// Remove the empty timeline categories
+class SummaryModelProxy : public QSortFilterProxyModel
+{
+public:
+    explicit SummaryModelProxy(PeersTimelineModelPrivate* parent) :
+        QSortFilterProxyModel(), d_ptr(parent) {}
+
+    PeersTimelineModelPrivate* d_ptr;
+protected:
+    virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
+};
+
 PeersTimelineModel& PeersTimelineModel::instance()
 {
     static auto m_sInstance = new PeersTimelineModel();
@@ -75,6 +114,7 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractListModel(QCoreApplication::
     d_ptr(new PeersTimelineModelPrivate())
 {
     d_ptr->q_ptr = this;
+
     connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::lastUsedChanged,
         d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged);
     connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::rowsInserted,
@@ -198,6 +238,9 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t
         q_ptr->endMoveRows();
     }
 
+    if (m_pSummaryModel)
+        m_pSummaryModel->updateCategories(i, t);
+
     debugState();
 }
 
@@ -245,7 +288,13 @@ void PeersTimelineModelPrivate::slotContactMethodMerged(ContactMethod* cm, Conta
     q_ptr->endRemoveRows();
 
     m_hMapping.remove(cm);
+
+    // Not as efficient as it can be, but simple and rare
+    if (entry->m_CatHead != -1 && m_pSummaryModel)
+        m_pSummaryModel->reloadCategories();
+
     delete entry;
+
     debugState();
 }
 
@@ -276,7 +325,115 @@ int PeersTimelineModelPrivate::init()
         m_lRows.push_back(i);
     }
 
+    if (m_pSummaryModel) m_pSummaryModel->reloadCategories();
+
     return m_lRows.size();
 }
 
+/******************************************************
+ *               Timeline categories                  *
+ *****************************************************/
+
+SummaryModel::SummaryModel(PeersTimelineModelPrivate* parent) :
+    HistoryTimeCategoryModel(parent), d_ptr(parent)
+{
+    reloadCategories();
+}
+
+SummaryModel::~SummaryModel() {
+    d_ptr->m_pSummaryModel = nullptr;
+}
+
+QVariant SummaryModel::data(const QModelIndex& idx, int role) const
+{
+    if (!idx.isValid())
+        return {};
+
+    auto cur = d_ptr->m_lSummaryHead[idx.row()];
+
+    // Compute the total and visible distances between categories
+    switch (role) {
+        case (int)PeersTimelineModel::SummaryRoles::CATEGORY_ENTRIES: {
+            if (!cur) break;
+
+            if (idx.row() == NEVER)
+                return ((int) d_ptr->m_lRows.size()) - cur->m_Index;
+
+            int cnt = idx.row()+1;
+            auto next = d_ptr->m_lSummaryHead[cnt];
+
+            while((!next) && (++cnt) < NEVER && !(next = d_ptr->m_lSummaryHead[cnt]));
+
+            return (!next) ? 0 : next->m_Index - cur->m_Index;
+            } break;
+        case (int)PeersTimelineModel::SummaryRoles::TOTAL_ENTRIES:
+            return (int) d_ptr->m_lRows.size(); //FIXME use the proxy
+        case (int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES:
+            return d_ptr->q_ptr->timelineSummaryModel()->rowCount();
+    }
+
+    return HistoryTimeCategoryModel::data(idx, role);
+}
+
+QHash<int,QByteArray> SummaryModel::roleNames() const
+{
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+    if (!initRoles) {
+        roles[(int)PeersTimelineModel::SummaryRoles::CATEGORY_ENTRIES ] = "categoryEntries";
+        roles[(int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES] = "activeCategories";
+        roles[(int)PeersTimelineModel::SummaryRoles::TOTAL_ENTRIES    ] = "totalEntries";
+    }
+
+    return roles;
+}
+
+QSharedPointer<QAbstractItemModel> PeersTimelineModel::timelineSummaryModel() const
+{
+    if (!d_ptr->m_pSummaryModel) {
+        d_ptr->m_pSummaryModel = new SummaryModel(d_ptr);
+        auto m = new SummaryModelProxy(d_ptr);
+        d_ptr->m_SummaryPtr = QSharedPointer<SummaryModelProxy>(m);
+
+        // Transfer the ownership of m_pSummaryModel to the smart pointer
+        m->setSourceModel(d_ptr->m_pSummaryModel);
+        d_ptr->m_pSummaryModel->setParent(m);
+    }
+
+    return d_ptr->m_SummaryPtr;
+}
+
+/// Maintains a secondary index of summary categories
+void SummaryModel::updateCategories(CMTimelineNode* node, time_t t)
+{
+    const uint cat = (int) HistoryTimeCategoryModel::timeToHistoryConst(t);
+
+    Q_ASSERT(d_ptr->m_lSummaryHead.size() > cat);
+
+    if (d_ptr->m_lSummaryHead[cat] == nullptr || t > d_ptr->m_lSummaryHead[cat]->m_Time) {
+        d_ptr->m_lSummaryHead[cat] = node;
+        node->m_CatHead = cat;
+        emit dataChanged(index(cat,0), index(cat, 0));
+    }
+    else
+        node->m_CatHead = -1;
+}
+
+/// Perform a full reload instead of adding extra complexity to maintain the index.
+void SummaryModel::reloadCategories()
+{
+    d_ptr->m_lSummaryHead.resize(NEVER+1);
+    d_ptr->m_lSummaryHead.assign(NEVER+1, nullptr);
+
+    for (auto n : d_ptr->m_lRows)
+        updateCategories(n, n->m_Time);
+}
+
+/// Remove all categories without entries
+bool SummaryModelProxy::filterAcceptsRow (int row, const QModelIndex & srcParent) const
+{
+    return (!srcParent.isValid()) && row <= NEVER && row >= 0 && d_ptr->m_lSummaryHead[row];
+}
+
+#undef NEVER
 #include <peerstimelinemodel.moc>

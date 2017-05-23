@@ -55,6 +55,16 @@ class LIB_EXPORT PeersTimelineModel : public QAbstractListModel
     Q_OBJECT
 
 public:
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
+
+    /// Roles used in the `timelineSumaryModel`
+    enum class SummaryRoles {
+        CATEGORY_ENTRIES = Qt::UserRole + 1,
+        ACTIVE_CATEGORIES,
+        TOTAL_ENTRIES,
+    };
+    Q_ENUMS(SumaryRoles)
+
     // Singleton
     static PeersTimelineModel& instance();
 
@@ -64,6 +74,8 @@ public:
     virtual int         rowCount( const QModelIndex& parent = {}                            ) const override;
     virtual QModelIndex index   ( int row, int column, const QModelIndex& parent= {}        ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
+
+    QSharedPointer<QAbstractItemModel> timelineSummaryModel() const;
 
 private:
     explicit PeersTimelineModel();
