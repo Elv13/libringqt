@@ -24,7 +24,6 @@ ADD_DEFINITIONS("-std=c++1y")
 ADD_DEFINITIONS(
    ${QT_DEFINITIONS}
    -fexceptions
-   -O2
 )
 
 PROJECT(ringclient)
@@ -271,6 +270,7 @@ SET( libringclient_LIB_SRCS
   src/chainoftrustmodel.cpp
   src/pendingcontactrequestmodel.cpp
   src/peerstimelinemodel.cpp
+  src/peertimelinemodel.cpp
   src/video/devicemodel.cpp
   src/video/sourcemodel.cpp
   src/video/channel.cpp
@@ -424,6 +424,7 @@ SET( libringclient_LIB_HDRS
   src/collectionconfigurationinterface.h
   src/recentmodel.h
   src/peerstimelinemodel.h
+  src/peertimelinemodel.h
   src/chainoftrustmodel.h
   src/pendingcontactrequestmodel.h
   src/contactrequest.h
