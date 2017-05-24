@@ -162,7 +162,9 @@ namespace Media {
  * conversation is stored. This class is also used as backend for the
  * IM Model. The messages themselves are added by the Media::Text.
  */
-class TextRecordingPrivate {
+class TextRecordingPrivate : public QObject
+{
+    Q_OBJECT
 public:
    explicit TextRecordingPrivate(TextRecording* r);
 
@@ -185,6 +187,9 @@ public:
    bool updateMessageStatus(Serializable::Message* m, TextRecording::Status status);
 
    void clear();
+
+Q_SIGNALS:
+   void messageAdded(::TextMessageNode* m);
 
 private:
    TextRecording* q_ptr;

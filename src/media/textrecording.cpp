@@ -541,6 +541,8 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
       emit cm->unreadTextMessageCountChanged();
       emit cm->changed();
    }
+
+   emit messageAdded(n);
 }
 
 void Serializable::Payload::read(const QJsonObject &json)
