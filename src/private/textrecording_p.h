@@ -46,6 +46,8 @@ namespace Media {
  */
 namespace Serializable {
 
+class Group;
+
 class Payload {
 public:
    QString payload;
@@ -76,10 +78,12 @@ public:
    bool                    isRead    ;
    ///The contact method (incoming messages only)
    ContactMethod* contactMethod      ;
-   //The token of the message
+   ///The token of the message
    uint64_t                id        ;
-   //Delivery Status
+   ///Delivery Status
    Media::TextRecording::Status deliveryStatus;
+   ///The message parent group
+   Group*                  group     ;
 
    static const QRegularExpression m_linkRegex;
 

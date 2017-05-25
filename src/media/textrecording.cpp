@@ -473,7 +473,8 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
    m->direction = direction                        ;
    m->type      = Serializable::Message::Type::CHAT;
    m->authorSha1= cm->sha1()                       ;
-   m->id = id;
+   m->id        = id;
+   m->group     = m_pCurrentGroup;
 
    if (direction == Media::Media::Direction::OUT)
       m->isRead = true; // assume outgoing messages are read, since we're sending them
@@ -658,6 +659,7 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
       QJsonObject o = a[i].toObject();
       Message* message = new Message();
       message->contactMethod = sha1s[message->authorSha1];
+      message->group = this;
       message->read(o);
       messages.append(message);
    }
