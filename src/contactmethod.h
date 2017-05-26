@@ -98,6 +98,7 @@ public:
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
+   Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineModel READ timelineModel NOTIFY timelineMerged)
 
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
 
@@ -150,6 +151,7 @@ public:
    bool                  hasActiveVideo  () const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;
+   QSharedPointer<QAbstractItemModel> timelineModel() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles
@@ -254,6 +256,8 @@ Q_SIGNALS:
    void registeredNameSet(const QString& name);
    /// When the bookmark status changes
    void bookmarkedChanged(bool isBookmarked);
+   /// Emitted when the timeline is merged into another
+   void timelineMerged();
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

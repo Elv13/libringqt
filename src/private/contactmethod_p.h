@@ -50,6 +50,7 @@ public:
    QList<Call*>       m_lActiveCalls     ;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
+   QWeakPointer<QAbstractItemModel> m_TimelineModel;
 
    //Parents
    QList<ContactMethod*> m_lParents;

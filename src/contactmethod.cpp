@@ -45,6 +45,7 @@
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/cmcallsmodel.h"
+#include "peertimelinemodel.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -711,6 +712,19 @@ QSharedPointer<QAbstractItemModel> ContactMethod::callsModel() const
    }
 
    return d_ptr->m_CallsModel;
+}
+
+QSharedPointer<QAbstractItemModel> ContactMethod::timelineModel() const
+{
+   if (!d_ptr->m_TimelineModel) {
+      auto p = QSharedPointer<QAbstractItemModel>(
+          new PeerTimelineModel(const_cast<ContactMethod*>(this))
+      );
+      d_ptr->m_TimelineModel = p;
+      return p;
+   }
+
+   return d_ptr->m_TimelineModel;
 }
 
 QMimeData* ContactMethod::mimePayload() const

@@ -29,7 +29,9 @@ class QAbstractItemModel;
 class IMConversationManagerPrivate;
 class LocalTextRecordingEditor;
 class ContactMethod;
+class PeerTimelineModel;
 class InstantMessagingModel;
+class PeerTimelineModelPrivate;
 
 namespace Media {
 
@@ -46,6 +48,8 @@ class LIB_EXPORT TextRecording : public Recording
    friend class ::LocalTextRecordingEditor;
    friend class Text;
    friend class ::ContactMethod;
+   friend class ::PeerTimelineModel;
+   friend class ::PeerTimelineModelPrivate;
 
 public:
 
