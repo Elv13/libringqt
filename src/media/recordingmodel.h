@@ -21,19 +21,22 @@
 #include <QtCore/QHash>
 #include <QtCore/QStringList>
 
-//Ring
+// Qt
+class QItemSelectionModel;
+
+// Ring
 #include "collectionmanagerinterface.h"
 #include "collectioninterface.h"
 #include "typedefs.h"
 #include "contactmethod.h"
 
-class RecordingModelPrivate;
 class ContactMethod;
 
 namespace Media {
    class Recording;
    class TextRecording;
    class AVRecording;
+   class RecordingModelPrivate;
 
 /**
  * This model host the Ring recordings. Recording sessions span one or
@@ -52,52 +55,61 @@ class LIB_EXPORT RecordingModel :  public QAbstractItemModel, public CollectionM
    Q_OBJECT
    #pragma GCC diagnostic pop
 public:
+    // Properties
+    Q_PROPERTY(QItemSelectionModel* selectionModel  READ selectionModel  CONSTANT                           )
+    Q_PROPERTY(bool alwaysRecording                 READ isAlwaysRecording WRITE setAlwaysRecording         )
+    Q_PROPERTY(QString recordPath                   READ recordPath        WRITE setRecordPath              )
+    Q_PROPERTY(int unreadCount                      READ unreadCount       NOTIFY unreadMessagesCountChanged)
+    Q_PROPERTY(::Media::Recording* currentRecording READ currentRecording  NOTIFY currentRecordingChanged   )
 
-   //Constructor
-   virtual ~RecordingModel();
-   explicit RecordingModel(QObject* parent);
+    // Constructor
+    virtual ~RecordingModel();
+    explicit RecordingModel(QObject* parent);
 
-   virtual bool clearAllCollections() const override;
+    virtual bool clearAllCollections() const override;
 
-   //Model implementation
-   virtual bool          setData     ( const QModelIndex& index, const QVariant &value, int role   )       override;
-   virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole        ) const override;
-   virtual int           rowCount    ( const QModelIndex& parent = QModelIndex()                   ) const override;
-   virtual Qt::ItemFlags flags       ( const QModelIndex& index                                    ) const override;
-   virtual int           columnCount ( const QModelIndex& parent = QModelIndex()                   ) const override;
-   virtual QModelIndex   parent      ( const QModelIndex& index                                    ) const override;
-   virtual QModelIndex   index       ( int row, int column, const QModelIndex& parent=QModelIndex()) const override;
-   virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
-   virtual QHash<int,QByteArray> roleNames() const override;
+    // Model implementation
+    virtual bool          setData     ( const QModelIndex& index, const QVariant &value, int role   )       override;
+    virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole        ) const override;
+    virtual int           rowCount    ( const QModelIndex& parent = QModelIndex()                   ) const override;
+    virtual Qt::ItemFlags flags       ( const QModelIndex& index                                    ) const override;
+    virtual int           columnCount ( const QModelIndex& parent = QModelIndex()                   ) const override;
+    virtual QModelIndex   parent      ( const QModelIndex& index                                    ) const override;
+    virtual QModelIndex   index       ( int row, int column, const QModelIndex& parent=QModelIndex()) const override;
+    virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
+    virtual QHash<int,QByteArray> roleNames() const override;
 
-   //Getter
-   bool     isAlwaysRecording() const;
-   QString  recordPath       () const;
-   int      unreadCount      () const;
+    //Getter
+    bool                 isAlwaysRecording() const;
+    QString              recordPath       () const;
+    int                  unreadCount      () const;
+    QItemSelectionModel* selectionModel   () const;
+    Recording*           currentRecording () const;
 
-   //Setter
-   void setAlwaysRecording( bool            record );
-   void setRecordPath     ( const QString&  path   );
-   void clear             (                        );
+    //Setter
+    void setAlwaysRecording( bool            record );
+    void setRecordPath     ( const QString&  path   );
+    void clear             (                        );
 
-   //Mutator
-   TextRecording* createTextRecording(const ContactMethod* cm);
+    //Mutator
+    TextRecording* createTextRecording(const ContactMethod* cm);
 
-   //Singleton
-   static RecordingModel& instance();
+    //Singleton
+    static RecordingModel& instance();
 
 Q_SIGNALS:
-   void newTextMessage(::Media::TextRecording* t, ContactMethod* cm);
-   void unreadMessagesCountChanged(int unreadCount);
+    void newTextMessage(::Media::TextRecording* t, ContactMethod* cm);
+    void unreadMessagesCountChanged(int unreadCount);
+    void currentRecordingChanged(Recording* r);
 
 private:
-   RecordingModelPrivate* d_ptr;
-   Q_DECLARE_PRIVATE(RecordingModel)
+    RecordingModelPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(RecordingModel)
 
-   //Collection interface
-   virtual void collectionAddedCallback(CollectionInterface* backend) override;
-   virtual bool addItemCallback        (const Recording* item       ) override;
-   virtual bool removeItemCallback     (const Recording* item       ) override;
+    //Collection interface
+    virtual void collectionAddedCallback(CollectionInterface* backend) override;
+    virtual bool addItemCallback        (const Recording* item       ) override;
+    virtual bool removeItemCallback     (const Recording* item       ) override;
 };
 
 }
