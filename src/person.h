@@ -110,6 +110,9 @@ public:
    Q_PROPERTY( time_t                lastUsedTime   READ lastUsedTime                           )
    Q_PROPERTY( bool                  hasBeenCalled  READ hasBeenCalled                          )
 
+   Q_PROPERTY( QSharedPointer<QAbstractItemModel> phoneNumbersModel READ phoneNumbersModel CONSTANT)
+
+
    //Mutator
    Q_INVOKABLE void addAddress(const Address& addr);
    Q_INVOKABLE void addCustomField(const QString& key, const QString& value);
@@ -143,6 +146,7 @@ public:
    const  QString& department       () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
+   QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
 
    Q_INVOKABLE QVariant   roleData   (int role) const;
    Q_INVOKABLE QMimeData* mimePayload(        ) const;

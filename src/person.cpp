@@ -35,6 +35,7 @@
 #include "historytimecategorymodel.h"
 #include "numbercategorymodel.h"
 #include "numbercategory.h"
+#include "personcmmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/person_p.h"
@@ -360,6 +361,17 @@ ContactMethod* Person::lastUsedContactMethod() const
         [] (ContactMethod* a, ContactMethod* b) { return (a->lastUsed() < b->lastUsed()); }
     );
     return *lastUsed;
+}
+
+QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const
+{
+    if (!d_ptr->m_pPhoneNumbersModel) {
+        auto p = QSharedPointer<QAbstractItemModel>(new PersonCMModel(this));
+        d_ptr->m_pPhoneNumbersModel = p;
+        return p;
+    }
+
+    return d_ptr->m_pPhoneNumbersModel;
 }
 
 ///Set the phone number (type and number)
