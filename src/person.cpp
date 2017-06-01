@@ -36,6 +36,7 @@
 #include "numbercategorymodel.h"
 #include "numbercategory.h"
 #include "personcmmodel.h"
+#include "addressmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/person_p.h"
@@ -372,6 +373,17 @@ QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const
     }
 
     return d_ptr->m_pPhoneNumbersModel;
+}
+
+QSharedPointer<QAbstractItemModel> Person::addressesModel() const
+{
+    if (!d_ptr->m_pAddressModel) {
+        auto p = QSharedPointer<QAbstractItemModel>(new AddressModel(this));
+        d_ptr->m_pAddressModel = p;
+        return p;
+    }
+
+    return d_ptr->m_pAddressModel;
 }
 
 ///Set the phone number (type and number)
@@ -728,6 +740,12 @@ bool Person::operator==(const Person& other) const
 void Person::addAddress(const Person::Address& addr)
 {
    d_ptr->m_lAddresses << addr;
+}
+
+/// Returns the addresses associated with the person.
+const QList<Person::Address>& Person::addresses() const
+{
+    return d_ptr->m_lAddresses;
 }
 
 ///Add custom fields for contact profiles

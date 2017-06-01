@@ -328,6 +328,7 @@ SET( libringclient_LIB_SRCS
   src/private/threadworker.cpp
   src/private/cmcallsmodel.cpp
   src/private/personcmmodel.cpp
+  src/private/addressmodel.cpp
   src/mime.cpp
   src/smartinfohub.cpp
   src/usage_statistics.cpp

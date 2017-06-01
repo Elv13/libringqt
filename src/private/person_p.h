@@ -55,6 +55,7 @@ public:
    QList<ContactMethod*>    m_HiddenContactMethods;
 
    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
+   QWeakPointer<QAbstractItemModel> m_pAddressModel;
 
    /*
     * NOTE If new attributes are added, please update the explicit Person copy

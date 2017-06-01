@@ -73,6 +73,15 @@ public:
          explicit Address();
          virtual ~Address();
 
+         enum class Role {
+            ADDRESSLINE = Qt::UserRole+1,
+            CITY,
+            ZIPCODE,
+            STATE,
+            COUNTRY,
+            TYPE,
+         };
+
          //Getters
          QString addressLine() const;
          QString city       () const;
@@ -111,7 +120,7 @@ public:
    Q_PROPERTY( bool                  hasBeenCalled  READ hasBeenCalled                          )
 
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> phoneNumbersModel READ phoneNumbersModel CONSTANT)
-
+   Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
 
    //Mutator
    Q_INVOKABLE void addAddress(const Address& addr);
@@ -146,7 +155,9 @@ public:
    const  QString& department       () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
+   const QList<Address>& addresses        () const;
    QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
+   QSharedPointer<QAbstractItemModel> addressesModel() const;
 
    Q_INVOKABLE QVariant   roleData   (int role) const;
    Q_INVOKABLE QMimeData* mimePayload(        ) const;
