@@ -61,12 +61,15 @@ public:
       Uri          = static_cast<int>(Ring::Role::UserRole) + 1000,
       Object       ,
       CategoryIcon ,
+      CategoryName ,
+      IsReachable  ,
+      UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };
 
    //Properties
    Q_PROPERTY(Account*          account          READ account           WRITE setAccount              )
-   Q_PROPERTY(Person*           person           READ contact           WRITE setPerson               )
+   Q_PROPERTY(Person*           person           READ contact           WRITE setPerson NOTIFY contactChanged)
    Q_PROPERTY(int               lastUsed         READ lastUsed          WRITE setLastUsed             )
    Q_PROPERTY(QString           uri              READ uri                                             )
    Q_PROPERTY(int               callCount        READ callCount                                       )

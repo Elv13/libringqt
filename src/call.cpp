@@ -2264,6 +2264,8 @@ QVariant Call::roleData(int role) const
          return peerContactMethod()->supportPresence();
       case static_cast<int>(Call::Role::CategoryIcon):
          return peerContactMethod()->category()->icon(peerContactMethod()->isTracked(),peerContactMethod()->isPresent());
+      case static_cast<int>(Call::Role::CategoryName):
+         return peerContactMethod()->category()->name();
       case static_cast<int>(Call::Role::CallCount):
          return peerContactMethod()->callCount();
       case static_cast<int>(Call::Role::TotalSpentTime):

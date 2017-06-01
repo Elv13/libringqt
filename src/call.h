@@ -127,6 +127,7 @@ public:
       SupportPresence    , /*!<                                                                     */
       IsTracked          , /*!<                                                                     */
       CategoryIcon       , /*!<                                                                     */
+      CategoryName       , /*!<                                                                     */
       CallCount          , /*!< The number of calls made with the same phone number                 */
       TotalSpentTime     , /*!< The total time spent speaking to with this phone number             */
       Missed             , /*!< This call has been missed                                           */
@@ -272,10 +273,10 @@ public:
    Q_PROPERTY( bool               recordingAV        READ isAVRecording                             )
    Q_PROPERTY( UserActionModel*   userActionModel    READ userActionModel   CONSTANT                )
    Q_PROPERTY( QString            toHumanStateName   READ toHumanStateName                          )
-   Q_PROPERTY( bool               missed             READ isMissed                                  )
-   Q_PROPERTY( Direction          direction          READ direction                                 )
+   Q_PROPERTY( bool               missed             READ isMissed          CONSTANT                )
+   Q_PROPERTY( Direction          direction          READ direction         CONSTANT                )
    Q_PROPERTY( bool               hasVideo           READ hasVideo                                  )
-   Q_PROPERTY( Certificate*       certificate        READ certificate                               )
+   Q_PROPERTY( Certificate*       certificate        READ certificate       CONSTANT                )
    Q_PROPERTY( bool               hasParentCall      READ hasParentCall                             )
 
    //Read/write properties

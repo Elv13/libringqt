@@ -89,15 +89,40 @@ PhoneDirectoryModel& PhoneDirectoryModel::instance()
    return *instance;
 }
 
+/// To keep in sync with ContactMethod::roleData
 QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   /*static bool initRoles = false;
-   if (!initRoles) {
-      initRoles = true;
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+    if (!initRoles) {
 
-   }*/
-   return roles;
+        roles[ static_cast<int>(Call::Role::Name) ] = "name";
+        roles[ static_cast<int>(Call::Role::Number) ] = "number";
+        roles[ static_cast<int>(Call::Role::Direction) ] = "direction";
+        roles[ static_cast<int>(Call::Role::Date) ] = "date";
+        roles[ static_cast<int>(Call::Role::Length) ] = "length";
+        roles[ static_cast<int>(Call::Role::FormattedDate) ] = "formattedDate";
+        roles[ static_cast<int>(Call::Role::FuzzyDate) ] = "fuzzyDate";
+        roles[ static_cast<int>(Call::Role::HasAVRecording) ] = "hasAVRecording";
+        roles[ static_cast<int>(Call::Role::ContactMethod) ] = "contactMethod";
+        roles[ static_cast<int>(Call::Role::IsBookmark) ] = "isBookmark";
+        roles[ static_cast<int>(Call::Role::Filter) ] = "filter";
+        roles[ static_cast<int>(Call::Role::IsPresent) ] = "isPresent";
+        roles[ static_cast<int>(Call::Role::Photo) ] = "photo";
+        roles[ static_cast<int>(Call::Role::LifeCycleState) ] = "lifeCycleState";
+        roles[ static_cast<int>(Ring::Role::UnreadTextMessageCount) ] = "unreadTextMessageCount";
+        roles[ static_cast<int>(Ring::Role::IsRecording) ] = "isRecording";
+        roles[ static_cast<int>(Ring::Role::HasActiveCall) ] = "hasActiveCall";
+        roles[ static_cast<int>(Ring::Role::HasActiveVideo) ] = "hasActiveVideo";
+        roles[ static_cast<int>(ContactMethod::Role::Object) ] = "object";
+        roles[ static_cast<int>(ContactMethod::Role::Uri) ] = "uri";
+        roles[ static_cast<int>(ContactMethod::Role::CategoryIcon) ] = "categoryIcon";
+        roles[ static_cast<int>(ContactMethod::Role::CategoryName) ] = "categoryName";
+        roles[ static_cast<int>(ContactMethod::Role::IsReachable) ] = "isReachable";
+
+    }
+
+    return roles;
 }
 
 QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const

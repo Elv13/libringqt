@@ -166,6 +166,7 @@ QHash<int,QByteArray> CategorizedHistoryModel::roleNames() const
       roles.insert(static_cast<int>(Call::Role::DateOnly         ) , QByteArray("dateOnly"         ));
       roles.insert(static_cast<int>(Call::Role::DateTime         ) , QByteArray("dateTime"         ));
       roles.insert(static_cast<int>(Call::Role::CategoryIcon     ) , QByteArray("categoryIcon"     ));
+      roles.insert(static_cast<int>(Call::Role::CategoryName     ) , QByteArray("categoryName"     ));
       roles.insert(static_cast<int>(Call::Role::Certificate      ) , QByteArray("certificate"      ));
       roles.insert(static_cast<int>(Call::Role::ContactMethod    ) , QByteArray("contactMethod"    ));
       roles.insert(static_cast<int>(Call::Role::HasAudioRecording) , QByteArray("hasAudioRecording"));

@@ -669,6 +669,12 @@ QVariant ContactMethod::roleData(int role) const
          if (category())
             cat = d_ptr->m_pCategory->icon(isTracked(), isPresent());
          break;
+      case static_cast<int>(Role::CategoryName):
+         if (category())
+            cat = d_ptr->m_pCategory->name();
+         break;
+      case static_cast<int>(Role::IsReachable):
+          return isReachable();
       case static_cast<int>(Call::Role::LifeCycleState):
          return QVariant::fromValue(Call::LifeCycleState::FINISHED);
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):
