@@ -20,6 +20,8 @@
 //Internal
 #include "usage_statistics.h"
 
+class PeerTimelineModel;
+
 class ContactMethodPrivate {
 public:
    ContactMethodPrivate(const URI& number, NumberCategory* cat, ContactMethod::Type st,
@@ -50,7 +52,7 @@ public:
    QList<Call*>       m_lActiveCalls     ;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
-   QWeakPointer<QAbstractItemModel> m_TimelineModel;
+   QWeakPointer<PeerTimelineModel>  m_TimelineModel;
 
    //Parents
    QList<ContactMethod*> m_lParents;

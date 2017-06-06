@@ -722,15 +722,32 @@ QSharedPointer<QAbstractItemModel> ContactMethod::callsModel() const
 
 QSharedPointer<QAbstractItemModel> ContactMethod::timelineModel() const
 {
-   if (!d_ptr->m_TimelineModel) {
-      auto p = QSharedPointer<QAbstractItemModel>(
-          new PeerTimelineModel(const_cast<ContactMethod*>(this))
-      );
-      d_ptr->m_TimelineModel = p;
-      return p;
+   if (d_ptr->m_TimelineModel)
+      return d_ptr->m_TimelineModel;
+
+   // Check if a sibling contact method already build a timeline model
+   if (contact()) {
+      auto begin(contact()->d_ptr->m_Numbers.constBegin()), end(contact()->d_ptr->m_Numbers.constEnd());
+
+      auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
+         return cm->d_ptr->m_TimelineModel;
+      });
+
+      if (cmi != end) {
+         auto tml = (*cmi)->d_ptr->m_TimelineModel;
+
+         tml.data()->addContactMethod(const_cast<ContactMethod*>(this));
+         d_ptr->m_TimelineModel = tml;
+
+         return tml;
+      }
    }
 
-   return d_ptr->m_TimelineModel;
+   auto p = QSharedPointer<PeerTimelineModel>(
+      new PeerTimelineModel(const_cast<ContactMethod*>(this))
+   );
+   d_ptr->m_TimelineModel = p;
+   return p;
 }
 
 QMimeData* ContactMethod::mimePayload() const

@@ -43,6 +43,7 @@ class LIB_EXPORT Person : public ItemBase
    Q_OBJECT
    #pragma GCC diagnostic pop
 
+   // To check if a sibling phone numbers already build a timeline model
    friend class ContactMethod;
 
 public:
@@ -121,6 +122,7 @@ public:
 
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> phoneNumbersModel READ phoneNumbersModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
+   Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
 
    //Mutator
    Q_INVOKABLE void addAddress(const Address& addr);
@@ -158,6 +160,7 @@ public:
    const QList<Address>& addresses        () const;
    QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
+   QSharedPointer<QAbstractItemModel> timelineModel() const;
 
    Q_INVOKABLE QVariant   roleData   (int role) const;
    Q_INVOKABLE QMimeData* mimePayload(        ) const;

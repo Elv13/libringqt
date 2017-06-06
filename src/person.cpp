@@ -40,6 +40,7 @@
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/person_p.h"
+#include "private/contactmethod_p.h"
 #include "media/textrecording.h"
 #include "mime.h"
 
@@ -384,6 +385,32 @@ QSharedPointer<QAbstractItemModel> Person::addressesModel() const
     }
 
     return d_ptr->m_pAddressModel;
+}
+
+/**
+ * Returns a timeline model if and only if a person phone number was contacted.
+ *
+ * For "self manager" Person objects, it means it is *required* to set the phone
+ * numbers right.
+ */
+QSharedPointer<QAbstractItemModel> Person::timelineModel() const
+{
+    // See if one of the contact methods already built one
+    auto begin(d_ptr->m_Numbers.constBegin()), end(d_ptr->m_Numbers.constEnd());
+
+    auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
+        return cm->d_ptr->m_TimelineModel;
+    });
+
+    if (cmi != end)
+        return (*cmi)->timelineModel();
+
+    // Too bad, build one
+    if (auto cm = d_ptr->m_Numbers.first())
+        return cm->timelineModel();
+
+    // This person was never contacted
+    return QSharedPointer<QAbstractItemModel>();
 }
 
 ///Set the phone number (type and number)

@@ -18,8 +18,13 @@
  ***********************************************************************************/
 #include "peertimelinemodel.h"
 
+// LibStdC++
+#include <chrono>
+#include <memory>
+
 // Qt
 #include <QtCore/QUrl>
+#include <QtCore/QTimer>
 #include <QtCore/QDateTime>
 
 // Ring
@@ -77,8 +82,9 @@ class PeerTimelineModelPrivate : public QObject
 {
     Q_OBJECT
 public:
+    explicit PeerTimelineModelPrivate(PeerTimelineModel* parent);
+
     // Attributes
-    Media::TextRecording* m_pRecording {nullptr};
     ContactMethod*        m_pCM        {nullptr};
     Person*               m_pPerson    {nullptr};
 
@@ -92,6 +98,7 @@ public:
     PeerTimelineNode* m_pCurrentCallGroup {nullptr};
 
     QHash<Serializable::Group*, PeerTimelineNode*> m_hTextGroups;
+    QSet<ContactMethod*> m_hTrackedCMs;
 
     // Constants
     static const Matrix1D<PeerTimelineModel::NodeType ,QString> peerTimelineNodeName;
@@ -102,11 +109,15 @@ public:
     PeerTimelineNode* getGroup(TextMessageNode* message);
     void insert(PeerTimelineNode* n, time_t t, std::vector<PeerTimelineNode*>& in, const QModelIndex& parent = {});
     void init();
+    void disconnectOldCms();
 
     PeerTimelineModel* q_ptr;
 public Q_SLOTS:
     void slotMessageAdded(TextMessageNode* message);
     void slotCallAdded(Call* call);
+    void slotReload();
+    void slotClear(PeerTimelineNode* root = nullptr);
+    void slotContactChanged(Person* newContact, Person* oldContact);
 };
 
 const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::peerTimelineNodeName = {
@@ -120,31 +131,79 @@ const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::p
     { PeerTimelineModel::NodeType::EMAIL             , QStringLiteral( "email"            )},
 };
 
-PeerTimelineModel::PeerTimelineModel(Person* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate)
+
+PeerTimelineModelPrivate::PeerTimelineModelPrivate(PeerTimelineModel* parent) : q_ptr(parent)
 {
-//     d_ptr->
+    auto t = new QTimer(this);
+
+    t->setInterval(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::hours(1)
+        ).count()
+    );
+    t->start();
+
+    connect(t, &QTimer::timeout, this, &PeerTimelineModelPrivate::slotReload);
+
+    //TODO
+    // * Detect new person contact method
+    // * Merge the timeline when the contact is set
 }
 
-PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate)
+void PeerTimelineModelPrivate::init()
 {
-    d_ptr->q_ptr = this;
-    d_ptr->m_pCM = cm;
-    d_ptr->m_pRecording = cm->textRecording();
-    d_ptr->init();
-    connect(d_ptr->m_pRecording->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-        d_ptr, & PeerTimelineModelPrivate::slotMessageAdded);
+    if (m_pPerson) {
+        connect(m_pPerson, &Person::callAdded,
+            this, &PeerTimelineModelPrivate::slotCallAdded);
 
+        const auto cms = m_pPerson->phoneNumbers();
+
+        for (auto cm : qAsConst(cms))
+            q_ptr->addContactMethod(cm);
+    }
+    else {
+        m_hTrackedCMs.insert(m_pCM);
+
+        connect(m_pCM->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+            this, & PeerTimelineModelPrivate::slotMessageAdded);
+
+        connect(m_pCM, &ContactMethod::callAdded,
+            this, &PeerTimelineModelPrivate::slotCallAdded);
+
+        connect(m_pCM, &ContactMethod::contactChanged,
+            this, &PeerTimelineModelPrivate::slotContactChanged);
+
+        const auto calls = m_pCM->calls();
+
+        for (auto c : qAsConst(calls))
+            slotCallAdded(c);
+
+        for( auto m : qAsConst(m_pCM->textRecording()->d_ptr->m_lNodes))
+            slotMessageAdded(m);
+    }
+}
+
+PeerTimelineModel::PeerTimelineModel(Person* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
+{
+    d_ptr->m_pPerson = cm;
+    d_ptr->init();
+}
+
+PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
+{
     if (cm->contact())
-        connect(cm->contact(), &Person::callAdded,
-            d_ptr, &PeerTimelineModelPrivate::slotCallAdded);
+        d_ptr->m_pPerson = cm->contact();
     else
-        connect(cm, &ContactMethod::callAdded,
-            d_ptr, &PeerTimelineModelPrivate::slotCallAdded);
+        d_ptr->m_pCM = cm;
+
+    d_ptr->init();
 }
 
 PeerTimelineModel::~PeerTimelineModel()
 {
-   delete d_ptr;
+    d_ptr->disconnectOldCms();
+    d_ptr->slotClear();
+    delete d_ptr;
 }
 
 QHash<int,QByteArray> PeerTimelineModel::roleNames() const
@@ -244,12 +303,12 @@ int PeerTimelineModel::rowCount(const QModelIndex& par) const
     return n->m_lChildren.size();
 }
 
-int PeerTimelineModel::columnCount(const QModelIndex& parentIdx) const
+int PeerTimelineModel::columnCount(const QModelIndex& par) const
 {
-    if (!parentIdx.isValid())
+    if (!par.isValid())
         return 1;
 
-    const auto n = static_cast<PeerTimelineNode*>(parentIdx.internalPointer());
+    const auto n = static_cast<PeerTimelineNode*>(par.internalPointer());
 
     return n->m_lChildren.empty() ? 0 : 1;
 }
@@ -334,7 +393,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
     if (m_hCats.contains((int) cat))
         return m_hCats[(int) cat];
 
-    auto n = new PeerTimelineNode;
+    auto n          = new PeerTimelineNode;
     n->m_Type       = PeerTimelineModel::NodeType::TIME_CATEGORY;
     n->m_HistoryCat = cat;
     n->m_StartTime  = -(time_t) cat; //HACK
@@ -365,7 +424,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
         auto cat = getCategory(message->m_pMessage->timestamp);
 
         // Create a new entry
-        PeerTimelineNode* ret = new PeerTimelineNode;
+        auto ret       = new PeerTimelineNode;
         ret->m_Type    = PeerTimelineModel::NodeType::SECTION_DELIMITER;
         ret->m_pGroup  = g;
         ret->m_pParent = cat;
@@ -392,7 +451,7 @@ void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
     m_pCurrentTextGroup = group;
     m_pCurrentCallGroup = nullptr;
 
-    PeerTimelineNode* ret = new PeerTimelineNode;
+    auto ret         = new PeerTimelineNode;
     ret->m_Type      = PeerTimelineModel::NodeType::TEXT_MESSAGE;
     ret->m_pMessage  = message;
     ret->m_StartTime = message->m_pMessage->timestamp;
@@ -451,30 +510,127 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
     ]++;
 
     m_pCurrentCallGroup->m_EndTime = ret->m_EndTime;
-    const auto idx   = q_ptr->createIndex(
+
+    const auto idx = q_ptr->createIndex(
         m_pCurrentCallGroup->m_Index, 0, m_pCurrentCallGroup->m_pParent
     );
+
     emit q_ptr->dataChanged(idx, idx);
 }
 
-void PeerTimelineModelPrivate::init()
+/// To use with extreme restrict, this isn't really intended to be used directly
+void PeerTimelineModel::addContactMethod(ContactMethod* cm)
 {
-    for( auto m : qAsConst(m_pRecording->d_ptr->m_lNodes))
-        slotMessageAdded(m);
+    if (d_ptr->m_hTrackedCMs.contains(cm))
+        return;
 
+    const auto calls = cm->calls();
+
+    for (auto c : qAsConst(calls))
+        d_ptr->slotCallAdded(c);
+
+    for( auto m : qAsConst(cm->textRecording()->d_ptr->m_lNodes))
+        d_ptr->slotMessageAdded(m);
+
+    connect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+        d_ptr, &PeerTimelineModelPrivate::slotMessageAdded);
+
+    connect(cm, &ContactMethod::contactChanged,
+        d_ptr, &PeerTimelineModelPrivate::slotContactChanged);
+
+    d_ptr->m_hTrackedCMs.insert(cm);
+}
+
+void PeerTimelineModelPrivate::slotReload()
+{
+    // Eventually, this could be optimized to detect if `reset` is more efficient
+    // than individual `move` operation and pick the "right" mode. For now,
+    // `reset` creates more readable code, so that will be it.
+
+    q_ptr->beginResetModel();
+
+    // Keep the old sub-trees, there is no point in re-generating them
+    std::list< std::vector<PeerTimelineNode*> > entries;
+
+    for (auto n : m_lTimeCategories) {
+        entries.push_back(std::move(n->m_lChildren));
+        n->m_lChildren = {};
+    }
+
+    // Add all items to their new categories
+    for (auto nl : entries) {
+        for (auto n : nl) {
+            auto cat = getCategory(n->m_StartTime);
+
+            n->m_pParent = cat;
+            n->m_Index   = cat->m_lChildren.size();
+
+            cat->m_lChildren.push_back(n);
+        }
+    }
+
+    q_ptr->endResetModel();
+}
+
+void PeerTimelineModelPrivate::slotClear(PeerTimelineNode* root)
+{
+    for (auto n : root ? root->m_lChildren : m_lTimeCategories)
+        slotClear(n);
+
+    if (root)
+        delete root;
+    else {
+        m_lTimeCategories.clear();
+        m_hCats.clear();
+        m_hTextGroups.clear();
+        m_hTrackedCMs.clear();
+        m_pCurrentCallGroup = nullptr;
+        m_pCurrentTextGroup = nullptr;
+    }
+
+}
+
+void PeerTimelineModelPrivate::disconnectOldCms()
+{
     if (m_pPerson) {
+        disconnect(m_pPerson, &Person::callAdded,
+            this, &PeerTimelineModelPrivate::slotCallAdded);
+
         const auto cms = m_pPerson->phoneNumbers();
+
         for (auto cm : qAsConst(cms)) {
-            const auto calls = cm->calls();
-            for (auto c : qAsConst(calls))
-                slotCallAdded(c);
+            disconnect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+                this, &PeerTimelineModelPrivate::slotMessageAdded);
+
+            disconnect(cm, &ContactMethod::contactChanged,
+                this, &PeerTimelineModelPrivate::slotContactChanged);
         }
     }
     else {
-        const auto calls = m_pCM->calls();
-        for (auto c : qAsConst(calls))
-            slotCallAdded(c);
+        disconnect(m_pCM->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+            this, & PeerTimelineModelPrivate::slotMessageAdded);
+
+        disconnect(m_pCM, &ContactMethod::callAdded,
+            this, &PeerTimelineModelPrivate::slotCallAdded);
+
+        disconnect(m_pCM, &ContactMethod::contactChanged,
+            this, &PeerTimelineModelPrivate::slotContactChanged);
     }
+}
+
+/// Avoid showing mismatching data during/after merges to contact changes
+void PeerTimelineModelPrivate::
+slotContactChanged(Person* newContact, Person* oldContact)
+{
+    if ((!newContact) || newContact == oldContact)
+        return;
+
+    m_pPerson = newContact;
+
+    // Tracking what can and cannot be salvaged isn't worth it
+    disconnectOldCms();
+    slotClear();
+    init();
 }
 
 #include <peertimelinemodel.moc>

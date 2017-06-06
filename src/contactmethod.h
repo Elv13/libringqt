@@ -57,6 +57,9 @@ public:
    friend class CallPrivate;
    friend class AccountPrivate;
 
+    // To synchronize the timeline weak pointers
+    friend class Person;
+
    enum class Role {
       Uri          = static_cast<int>(Ring::Role::UserRole) + 1000,
       Object       ,

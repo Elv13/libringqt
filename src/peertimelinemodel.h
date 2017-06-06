@@ -85,6 +85,9 @@ public:
 
     virtual QHash<int,QByteArray> roleNames() const override;
 
+    // Mutator
+    void addContactMethod(ContactMethod* cm);
+
 private:
     PeerTimelineModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(PeerTimelineModel)
