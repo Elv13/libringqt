@@ -484,7 +484,11 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    //Too bad, lets create one
    ContactMethod* number = new ContactMethod(uri, NumberCategoryModel::instance().getCategory(type));
    number->setIndex(d_ptr->m_lNumbers.size());
+
+   beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
    d_ptr->m_lNumbers << number;
+   endInsertRows();
+
    connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
    connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
    connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
@@ -493,7 +497,6 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
 
    const QString hn = number->uri().hostname();
 
-   emit layoutChanged();
    if (!wrap) {
       wrap = new NumberWrapper();
       d_ptr->m_hDirectory[uri] = wrap;
@@ -601,7 +604,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
    number->setIndex( d_ptr->m_lNumbers.size());
    if (contact)
       number->setPerson(contact);
-   d_ptr->m_lNumbers << number;
+
    connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
    connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
    connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
@@ -630,7 +633,10 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
 
    }
    wrap->numbers << number;
-   emit layoutChanged();
+
+   beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
+   d_ptr->m_lNumbers << number;
+   endInsertRows();
 
    // perform a username lookup for new CM with RingID
    if (number->uri().protocolHint() == URI::ProtocolHint::RING)
@@ -711,7 +717,7 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
             currentIndex--;
          } while (currentIndex && m_lPopularityIndex[currentIndex-1]->callCount() < number->callCount());
          number->setPopularityIndex(currentIndex);
-         emit q_ptr->layoutChanged();
+
          if (m_pPopularModel)
             m_pPopularModel->reload();
       }
@@ -721,7 +727,7 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
          if (m_pPopularModel)
             m_pPopularModel->addRow();
          number->setPopularityIndex(m_lPopularityIndex.size()-1);
-         emit q_ptr->layoutChanged();
+
       }
       //The top 10 is full, but this number just made it to the top 10
       else if (currentIndex == -1 && m_lPopularityIndex.size() >= 10 && m_lPopularityIndex[9] != number && m_lPopularityIndex[9]->callCount() < number->callCount()) {

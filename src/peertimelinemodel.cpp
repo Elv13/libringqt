@@ -202,7 +202,11 @@ PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm)
 PeerTimelineModel::~PeerTimelineModel()
 {
     d_ptr->disconnectOldCms();
+
+    beginResetModel();
     d_ptr->slotClear();
+    endResetModel();
+
     delete d_ptr;
 }
 
@@ -629,7 +633,11 @@ slotContactChanged(Person* newContact, Person* oldContact)
 
     // Tracking what can and cannot be salvaged isn't worth it
     disconnectOldCms();
+
+    q_ptr->beginResetModel();
     slotClear();
+    q_ptr->endResetModel();
+
     init();
 }
 
