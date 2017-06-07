@@ -26,12 +26,14 @@
 
 // Ring
 #include <contactmethod.h>
+#include <person.h>
 #include <phonedirectorymodel.h>
 #include <private/modelutils.h>
 #include <historytimecategorymodel.h>
 
 #define NEVER static_cast<int>(HistoryTimeCategoryModel::HistoryConst::Never)
 class SummaryModel;
+class RecentCmModel;
 
 struct CMTimelineNode final
 {
@@ -53,6 +55,7 @@ public:
     SummaryModel* m_pSummaryModel;
     QSharedPointer<QAbstractItemModel> m_SummaryPtr {nullptr};
     std::vector<CMTimelineNode*> m_lSummaryHead;
+    QWeakPointer<RecentCmModel> m_MostRecentCMPtr;
 
     // Helpers
     int init();
@@ -102,6 +105,20 @@ public:
 protected:
     virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
 };
+
+/// Remove the empty timeline categories
+class RecentCmModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+public:
+    explicit RecentCmModel(PeersTimelineModelPrivate* parent) :
+        QSortFilterProxyModel(), d_ptr(parent) {}
+
+    PeersTimelineModelPrivate* d_ptr;
+protected:
+    virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
+};
+
 
 PeersTimelineModel& PeersTimelineModel::instance()
 {
@@ -433,6 +450,42 @@ void SummaryModel::reloadCategories()
 bool SummaryModelProxy::filterAcceptsRow (int row, const QModelIndex & srcParent) const
 {
     return (!srcParent.isValid()) && row <= NEVER && row >= 0 && d_ptr->m_lSummaryHead[row];
+}
+
+/// Remove all categories without entries
+bool RecentCmModel::filterAcceptsRow (int row, const QModelIndex & srcParent) const
+{
+    if (srcParent.isValid())
+        return false;
+
+    if (row > (int) d_ptr->m_lRows.size())
+        return false;
+
+    auto n = d_ptr->m_lRows[row];
+
+    //FIXME There's still duplicate if the person was never contacted but has
+    // multiple contact methods
+
+    // Also flush is "myself" entries that could have become true after they
+    // were first inserted.
+    return (!n->m_pCM->isDuplicate()) && (!n->m_pCM->isSelf()) && (
+           (!n->m_pCM->contact())
+        || (!n->m_pCM->contact()->lastUsedContactMethod()) // that would be a bug
+        || n->m_pCM->contact()->lastUsedContactMethod() == n->m_pCM
+    );
+}
+
+/// Only keep the most recently contacted contact method
+QSharedPointer<QAbstractItemModel> PeersTimelineModel::deduplicatedTimelineModel() const
+{
+    if (!d_ptr->m_MostRecentCMPtr) {
+        QSharedPointer<RecentCmModel> m = QSharedPointer<RecentCmModel>(new RecentCmModel(d_ptr));
+        m->setSourceModel(const_cast<PeersTimelineModel*>(this));
+        d_ptr->m_MostRecentCMPtr = m;
+        return m;
+    }
+
+    return d_ptr->m_MostRecentCMPtr;
 }
 
 #undef NEVER
