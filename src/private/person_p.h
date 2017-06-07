@@ -51,8 +51,7 @@ public:
    bool                     m_isPlaceHolder       ;
    QList<Person::Address>   m_lAddresses          ;
    QHash<QString, QString>  m_lCustomAttributes   ;
-   ::time_t                 m_LastUsed            ;
-   bool                     m_LastUsedInit        ;
+   ContactMethod*           m_LastUsedCM {nullptr};
    QList<ContactMethod*>    m_HiddenContactMethods;
 
    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
@@ -87,6 +86,7 @@ public:
    void registerContactMethod(ContactMethod* m);
 
 public Q_SLOTS:
-   void slotLastUsedTimeChanged(::time_t t);
-   void slotCallAdded          (Call *call);
+   void slotLastUsedTimeChanged(::time_t t       );
+   void slotLastContactMethod  (ContactMethod* cm);
+   void slotCallAdded          (Call *call       );
 };

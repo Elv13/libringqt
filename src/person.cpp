@@ -192,13 +192,13 @@ void PersonPrivate::registerContactMethod(ContactMethod* m)
    connect(m, &ContactMethod::lastUsedChanged, this, &PersonPrivate::slotLastUsedTimeChanged);
    connect(m, &ContactMethod::callAdded, this, &PersonPrivate::slotCallAdded);
 
-   if (m->lastUsed() > m_LastUsed)
-      slotLastUsedTimeChanged(m->lastUsed());
+   if ((!m_LastUsedCM) || m->lastUsed() > m_LastUsedCM->lastUsed())
+      slotLastContactMethod(m);
 }
 
 PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
    m_Numbers(),m_DisplayPhoto(false),m_Active(true),m_isPlaceHolder(false),
-   m_LastUsed(0),m_LastUsedInit(false), q_ptr(contact)
+   q_ptr(contact)
 {
    moveToThread(QCoreApplication::instance()->thread());
    setParent(contact);
@@ -265,8 +265,7 @@ d_ptr(new PersonPrivate(this))
    d_ptr->m_isPlaceHolder        = other.d_ptr->m_isPlaceHolder       ;
    d_ptr->m_lAddresses           = other.d_ptr->m_lAddresses          ;
    d_ptr->m_lCustomAttributes    = other.d_ptr->m_lCustomAttributes   ;
-   d_ptr->m_LastUsed             = other.d_ptr->m_LastUsed            ;
-   d_ptr->m_LastUsedInit         = other.d_ptr->m_LastUsedInit        ;
+   d_ptr->m_LastUsedCM           = other.d_ptr->m_LastUsedCM          ;
    d_ptr->m_HiddenContactMethods = other.d_ptr->m_HiddenContactMethods;
 }
 
@@ -359,10 +358,7 @@ const QString& Person::department() const
 /// Get the last ContactMethod used with that person.
 ContactMethod* Person::lastUsedContactMethod() const
 {
-    auto lastUsed = std::max_element(phoneNumbers().begin(), phoneNumbers().end(),
-        [] (ContactMethod* a, ContactMethod* b) { return (a->lastUsed() < b->lastUsed()); }
-    );
-    return *lastUsed;
+    return d_ptr->m_LastUsedCM;
 }
 
 QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const
@@ -551,22 +547,16 @@ bool Person::isPlaceHolder() const
     return d_ptr->m_isPlaceHolder;
 }
 
-/** Get the last time this person was contacted
- *  @warning This method complexity is O(N)
+/** Get the last time this person was contacted.
+ * This method returns zero when the person was never contacted.
  *  @todo Implement some caching
  */
 time_t Person::lastUsedTime() const
 {
-   if (!d_ptr->m_LastUsedInit) {
-      for (int i=0;i<phoneNumbers().size();i++) {
-         if (phoneNumbers().at(i)->lastUsed() > d_ptr->m_LastUsed)
-            d_ptr->m_LastUsed = phoneNumbers().at(i)->lastUsed();
-      }
-      d_ptr->m_LastUsedInit = true;
-      if (d_ptr->m_LastUsed)
-         emit lastUsedTimeChanged(d_ptr->m_LastUsed);
-   }
-   return d_ptr->m_LastUsed;
+   if (!d_ptr->m_LastUsedCM)
+      return 0;
+
+   return d_ptr->m_LastUsedCM->lastUsed();
 }
 
 ///Return if one of the ContactMethod support presence
@@ -742,9 +732,9 @@ bool PersonPlaceHolder::merge(Person* contact)
 void Person::replaceDPointer(Person* c)
 {
 
-   if (d_ptr->m_LastUsed > c->lastUsedTime()) {
-      c->d_ptr->m_LastUsed = d_ptr->m_LastUsed;
-      emit c->lastUsedTimeChanged(d_ptr->m_LastUsed);
+   if (d_ptr->m_LastUsedCM && lastUsedTime() > c->lastUsedTime()) {
+      c->d_ptr->m_LastUsedCM = d_ptr->m_LastUsedCM;
+      emit c->lastUsedTimeChanged(d_ptr->m_LastUsedCM->lastUsed());
    }
 
    this->d_ptr = c->d_ptr;
@@ -822,10 +812,26 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
 
 void PersonPrivate::slotLastUsedTimeChanged(::time_t t)
 {
-   m_LastUsed = t;
+   Q_UNUSED(t)
 
-   foreach (Person* c,m_lParents) {
-      emit c->lastUsedTimeChanged(t);
+   auto cm = qobject_cast<ContactMethod*>(sender());
+
+   // This function should always be called by a contactmethod signal. Otherwise
+   // the timestamp comes from an unknown source and cannot be traced.
+   Q_ASSERT(cm);
+
+   slotLastContactMethod(cm);
+}
+
+void PersonPrivate::slotLastContactMethod(ContactMethod* cm)
+{
+   if (cm && q_ptr->lastUsedTime() > cm->lastUsed())
+      return;
+
+   m_LastUsedCM = cm;
+
+   foreach (Person* c, m_lParents) {
+      emit c->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
    }
 }
 
