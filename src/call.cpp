@@ -545,11 +545,12 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
    time_t         stopTimeStamp   = hc[ Call::HistoryMapFields::TIMESTAMP_STOP  ].toUInt() ;
    QByteArray accId               = hc[ Call::HistoryMapFields::ACCOUNT_ID      ].toLatin1();
 
-   if (accId.isEmpty()) {
-      qWarning() << "A history call has an invalid account identifier";
-
-      // DISABLED: removed IP2IP support, tuleap: #448
-      //   accId = DRing::Account::ProtocolNames::IP2IP;
+   // This will happen if an account is deleted. As it can be very verbose,
+   // print the error only once
+   static bool printed = false;
+   if (accId.isEmpty() && !printed) {
+      qWarning() << "At least one history call has an invalid account identifier";
+      printed = true;
    }
 
    //This corruption has been fixed a while back, but invalid items may still exist

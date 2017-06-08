@@ -2510,8 +2510,7 @@ void AccountPrivate::reload()
    if (!q_ptr->isNew()) {
       if (m_hAccountDetails.size())
          qDebug() << "Reloading" << q_ptr->id() << q_ptr->alias();
-      else
-         qDebug() << "Loading" << q_ptr->id();
+
       ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
       QMap<QString,QString> aDetails = configurationManager.getAccountDetails(q_ptr->id());
 
