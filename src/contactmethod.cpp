@@ -136,6 +136,13 @@ d_ptr(new ContactMethodPrivate(number,cat,st,this))
 
 ContactMethod::~ContactMethod()
 {
+   // This means there's still something connected to the timeline, but it
+   // will crash if it tries to access it, so it has to go.
+   if (d_ptr->m_TimelineModel) {
+      qWarning() << "Deleting a timeline with active references";
+      delete d_ptr->m_TimelineModel.data();
+   }
+
    d_ptr->m_lParents.removeAll(this);
    if (!d_ptr->m_lParents.size())
       delete d_ptr;
