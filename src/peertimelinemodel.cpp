@@ -118,6 +118,7 @@ public Q_SLOTS:
     void slotReload();
     void slotClear(PeerTimelineNode* root = nullptr);
     void slotContactChanged(Person* newContact, Person* oldContact);
+    void slotTextRecordingAdded(Media::TextRecording* r);
 };
 
 const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::peerTimelineNodeName = {
@@ -164,8 +165,7 @@ void PeerTimelineModelPrivate::init()
     else {
         m_hTrackedCMs.insert(m_pCM);
 
-        connect(m_pCM->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-            this, & PeerTimelineModelPrivate::slotMessageAdded);
+        slotTextRecordingAdded(m_pCM->textRecording());
 
         connect(m_pCM, &ContactMethod::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
@@ -173,13 +173,18 @@ void PeerTimelineModelPrivate::init()
         connect(m_pCM, &ContactMethod::contactChanged,
             this, &PeerTimelineModelPrivate::slotContactChanged);
 
+        connect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
+            this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
+
         const auto calls = m_pCM->calls();
 
         for (auto c : qAsConst(calls))
             slotCallAdded(c);
 
-        for( auto m : qAsConst(m_pCM->textRecording()->d_ptr->m_lNodes))
-            slotMessageAdded(m);
+        const auto trs = m_pCM->alternativeTextRecordings();
+
+        for (auto t : qAsConst(trs))
+            slotTextRecordingAdded(t);
     }
 }
 
@@ -533,14 +538,20 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
     for (auto c : qAsConst(calls))
         d_ptr->slotCallAdded(c);
 
-    for( auto m : qAsConst(cm->textRecording()->d_ptr->m_lNodes))
-        d_ptr->slotMessageAdded(m);
+    d_ptr->slotTextRecordingAdded(cm->textRecording());
 
     connect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
         d_ptr, &PeerTimelineModelPrivate::slotMessageAdded);
 
     connect(cm, &ContactMethod::contactChanged,
         d_ptr, &PeerTimelineModelPrivate::slotContactChanged);
+
+    connect(cm, &ContactMethod::alternativeTextRecordingAdded,
+        d_ptr, &PeerTimelineModelPrivate::slotTextRecordingAdded);
+
+    const auto trs = cm->alternativeTextRecordings();
+    for (auto t : qAsConst(trs))
+        d_ptr->slotTextRecordingAdded(t);
 
     d_ptr->m_hTrackedCMs.insert(cm);
 }
@@ -608,11 +619,17 @@ void PeerTimelineModelPrivate::disconnectOldCms()
 
             disconnect(cm, &ContactMethod::contactChanged,
                 this, &PeerTimelineModelPrivate::slotContactChanged);
+
+            disconnect(cm, &ContactMethod::alternativeTextRecordingAdded,
+                this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
         }
     }
     else {
         disconnect(m_pCM->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-            this, & PeerTimelineModelPrivate::slotMessageAdded);
+            this, &PeerTimelineModelPrivate::slotMessageAdded);
+
+        disconnect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
+            this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
 
         disconnect(m_pCM, &ContactMethod::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
@@ -639,6 +656,17 @@ slotContactChanged(Person* newContact, Person* oldContact)
     q_ptr->endResetModel();
 
     init();
+}
+
+
+void PeerTimelineModelPrivate::
+slotTextRecordingAdded(Media::TextRecording* r)
+{
+    for (auto m : qAsConst(r->d_ptr->m_lNodes))
+        slotMessageAdded(m);
+
+    connect(r->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+        this, &PeerTimelineModelPrivate::slotMessageAdded);
 }
 
 #include <peertimelinemodel.moc>

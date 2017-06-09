@@ -50,6 +50,7 @@ public:
    QString            m_RegisteredName   ;
    UsageStatistics    m_UsageStats       ;
    QList<Call*>       m_lActiveCalls     ;
+   QVector<Media::TextRecording*> m_lAltTR;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<PeerTimelineModel>  m_TimelineModel;
@@ -72,6 +73,7 @@ public:
    void addActiveCall(Call* c);
    void removeActiveCall(Call* c);
    void setTextRecording(Media::TextRecording* r);
+   void addAlternativeTextRecording(Media::TextRecording* recording);
    void setCertificate (Certificate*);
    void setRegisteredName(const QString& registeredName);
 

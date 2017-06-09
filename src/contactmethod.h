@@ -156,6 +156,8 @@ public:
    bool                  hasActiveCall   () const;
    bool                  hasActiveVideo  () const;
 
+   QVector<Media::TextRecording*> alternativeTextRecordings() const;
+
    QSharedPointer<QAbstractItemModel> callsModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;
 
@@ -264,6 +266,8 @@ Q_SIGNALS:
    void bookmarkedChanged(bool isBookmarked);
    /// Emitted when the timeline is merged into another
    void timelineMerged();
+   /// When a new alternative TextRecording is added
+   void alternativeTextRecordingAdded(Media::TextRecording* t);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

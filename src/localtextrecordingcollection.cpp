@@ -218,6 +218,7 @@ bool LocalTextRecordingCollection::load()
                             cm->d_ptr->setTextRecording(r);
                         } else {
                             qWarning() << "CM already has text recording" << cm;
+                            cm->d_ptr->addAlternativeTextRecording(r);
                         }
                     }
                 } else {

@@ -244,6 +244,12 @@ void ContactMethod::setPerson(Person* contact)
    if (d_ptr->m_pPerson == contact)
       return;
 
+   // This *will* have bad side effects. Better just call
+   // `PhoneDirectoryModel::getNumber()` to get a new ContactMethod.
+   if (d_ptr->m_pPerson && contact && contact->uid() != d_ptr->m_pPerson->uid())
+      qWarning() << "WARNING: There's already a contact, this is a bug"
+         << contact << d_ptr->m_pPerson;
+
    d_ptr->m_pPerson = contact;
 
    //The sha1 is no longer valid
@@ -894,6 +900,12 @@ bool ContactMethod::merge(ContactMethod* other)
    if ((!registeredName().isEmpty()) && other->registeredName().isEmpty())
       other->d_ptr->setRegisteredName(registeredName());
 
+   // Avoid losing chat data
+   if (d_ptr->m_pTextRecording && d_ptr->m_pTextRecording->size() > 0 &&
+    d_ptr->m_pTextRecording != other->d_ptr->m_pTextRecording) {
+       other->d_ptr->addAlternativeTextRecording(d_ptr->m_pTextRecording);
+   }
+
    const QString oldName = primaryName();
 
    ContactMethodPrivate* currentD = d_ptr;
@@ -920,6 +932,7 @@ bool ContactMethod::merge(ContactMethod* other)
    currentD->m_lParents.removeAll(this);
    if (!currentD->m_lParents.size())
       delete currentD;
+
    return true;
 }
 
@@ -1002,6 +1015,34 @@ void ContactMethodPrivate::setCertificate(Certificate* certificate)
 void ContactMethodPrivate::setTextRecording(Media::TextRecording* r)
 {
    m_pTextRecording = r;
+}
+
+/**
+ * This list will have entries in 2 case:
+ *
+ *  * A message was sent between the time the CM was created from a name and
+ *   name service lookup finished (or timeout). In that case, the deduplication
+ *   will register an alternative TextRecording. Note that in the future, they
+ *   could be merged into the primary one to avoid the issue persisting across
+ *   restart
+ *  * When a contact was added after the first communication. In this case,
+ *    there will be a hashed recording based on both the SHA1 of the CM and
+ *    the SHA1 of the CM+Person. They could also be merged so the issue
+ *    doesn't persist across restart.
+ *
+ */
+QVector<Media::TextRecording*> ContactMethod::alternativeTextRecordings() const
+{
+    return d_ptr->m_lAltTR;
+}
+
+void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* recording)
+{
+    Q_ASSERT(recording != m_pTextRecording);
+
+    m_lAltTR << recording;
+    foreach (ContactMethod* n, m_lParents)
+        emit n->alternativeTextRecordingAdded(recording);
 }
 
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
