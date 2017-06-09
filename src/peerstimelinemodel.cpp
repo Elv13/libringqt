@@ -136,6 +136,8 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractListModel(QCoreApplication::
 {
     d_ptr->q_ptr = this;
 
+    d_ptr->init();
+
     connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::lastUsedChanged,
         d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged);
     connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::rowsInserted,
@@ -221,11 +223,15 @@ void PeersTimelineModelPrivate::debugState()
 #endif
 }
 
+
 /**
  * Insert or move contact methods in the model
  */
 void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t t)
 {
+    if (cm->type() == ContactMethod::Type::TEMPORARY || cm->type() == ContactMethod::Type::BLANK)
+        return;
+
     auto i = m_hMapping.value(cm);
     if (!i) {
         i = new CMTimelineNode(cm);
