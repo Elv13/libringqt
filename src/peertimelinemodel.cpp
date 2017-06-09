@@ -119,6 +119,7 @@ public Q_SLOTS:
     void slotClear(PeerTimelineNode* root = nullptr);
     void slotContactChanged(Person* newContact, Person* oldContact);
     void slotTextRecordingAdded(Media::TextRecording* r);
+    void slotPhoneNumberChanged();
 };
 
 const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::peerTimelineNodeName = {
@@ -156,6 +157,12 @@ void PeerTimelineModelPrivate::init()
     if (m_pPerson) {
         connect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
+
+        connect(m_pPerson, &Person::relatedContactMethodsAdded,
+            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+
+        connect(m_pPerson, &Person::phoneNumbersChanged,
+            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
         auto cms = m_pPerson->relatedContactMethods();
         cms.append(m_pPerson->phoneNumbers());
@@ -378,6 +385,15 @@ bool PeerTimelineModel::setData(const QModelIndex& idx, const QVariant &value, i
 void PeerTimelineModelPrivate::insert(PeerTimelineNode* n, time_t t,
     std::vector<PeerTimelineNode*>& in, const QModelIndex& parent)
 {
+    // Many, if not most, elements are already sorted, speedup this case
+    if (in.size() > 0 && in[in.size()-1]->m_StartTime < t) {
+        n->m_Index = in.size();
+        q_ptr->beginInsertRows(parent, n->m_Index, n->m_Index);
+        in.push_back(n);
+        q_ptr->endInsertRows();
+        return;
+    }
+
     static PeerTimelineNode fake;
     fake.m_StartTime = t;
 
@@ -531,8 +547,11 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
 /// To use with extreme restrict, this isn't really intended to be used directly
 void PeerTimelineModel::addContactMethod(ContactMethod* cm)
 {
-    if (d_ptr->m_hTrackedCMs.contains(cm))
-        return;
+    // Only add new content, also check for potential aliases
+    foreach (auto ocm, d_ptr->m_hTrackedCMs) {
+        if ( (*cm) == (*ocm))
+            return;
+    }
 
     const auto calls = cm->calls();
 
@@ -555,6 +574,17 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
         d_ptr->slotTextRecordingAdded(t);
 
     d_ptr->m_hTrackedCMs.insert(cm);
+}
+
+void PeerTimelineModelPrivate::slotPhoneNumberChanged()
+{
+    auto cms = m_pPerson->relatedContactMethods();
+    cms.append(m_pPerson->phoneNumbers());
+
+    for (auto cm : qAsConst(cms))
+        q_ptr->addContactMethod(cm);
+
+    //TODO detect removed CMs and reload
 }
 
 void PeerTimelineModelPrivate::slotReload()
@@ -603,7 +633,6 @@ void PeerTimelineModelPrivate::slotClear(PeerTimelineNode* root)
         m_pCurrentCallGroup = nullptr;
         m_pCurrentTextGroup = nullptr;
     }
-
 }
 
 void PeerTimelineModelPrivate::disconnectOldCms()
@@ -611,6 +640,12 @@ void PeerTimelineModelPrivate::disconnectOldCms()
     if (m_pPerson) {
         disconnect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
+
+        disconnect(m_pPerson, &Person::relatedContactMethodsAdded,
+            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+
+        disconnect(m_pPerson, &Person::phoneNumbersChanged,
+            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
         // Add both phone number and whatever links to this person
         auto cms = m_pPerson->relatedContactMethods();
@@ -649,9 +684,14 @@ slotContactChanged(Person* newContact, Person* oldContact)
     if ((!newContact) || newContact == oldContact)
         return;
 
+    // Will happen if the original contact was a placeholder
+    if (oldContact && newContact->uid() == oldContact->uid())
+        return;
+
     m_pPerson = newContact;
 
     // Tracking what can and cannot be salvaged isn't worth it
+    q_ptr->beginResetModel();
     disconnectOldCms();
 
     q_ptr->beginResetModel();
@@ -659,6 +699,7 @@ slotContactChanged(Person* newContact, Person* oldContact)
     q_ptr->endResetModel();
 
     init();
+    q_ptr->endResetModel();
 }
 
 
