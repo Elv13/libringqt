@@ -189,6 +189,11 @@ void PersonPrivate::phoneNumbersAboutToChange()
 void PersonPrivate::registerContactMethod(ContactMethod* m)
 {
    m_HiddenContactMethods << m;
+
+   foreach (Person* c,m_lParents) {
+      emit c->relatedContactMethodsAdded(m);
+   }
+
    connect(m, &ContactMethod::lastUsedChanged, this, &PersonPrivate::slotLastUsedTimeChanged);
    connect(m, &ContactMethod::callAdded, this, &PersonPrivate::slotCallAdded);
 
@@ -294,6 +299,18 @@ Person::~Person()
 const Person::ContactMethods& Person::phoneNumbers() const
 {
    return d_ptr->m_Numbers;
+}
+
+/**
+ * Over time, more ContactMethods are associated with a Person. For example,
+ * if the person move and get a new phone number (and lose the old one) or
+ * change country. Other example could be losing the Ring account private
+ * key and having to create a new one. There is other accidental instances
+ * caused by various race conditions.
+ */
+Person::ContactMethods Person::relatedContactMethods() const
+{
+    return d_ptr->m_HiddenContactMethods;
 }
 
 ///Get the nickname

@@ -145,6 +145,7 @@ public:
 
    //Getters
    const  ContactMethods& phoneNumbers() const;
+   ContactMethods relatedContactMethods() const;
    const  QString& nickName         () const;
    const  QString& firstName        () const;
    const  QString& secondName       () const;
@@ -219,6 +220,7 @@ Q_SIGNALS:
    void lastUsedTimeChanged       ( long long      ) const;
    ///A new call used a ContactMethod associated with this Person
    void callAdded                 ( Call*          );
+   void relatedContactMethodsAdded( ContactMethod* );
 
 protected:
    //Presence secret methods

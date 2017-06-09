@@ -157,7 +157,8 @@ void PeerTimelineModelPrivate::init()
         connect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
 
-        const auto cms = m_pPerson->phoneNumbers();
+        auto cms = m_pPerson->relatedContactMethods();
+        cms.append(m_pPerson->phoneNumbers());
 
         for (auto cm : qAsConst(cms))
             q_ptr->addContactMethod(cm);
@@ -611,7 +612,9 @@ void PeerTimelineModelPrivate::disconnectOldCms()
         disconnect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
 
-        const auto cms = m_pPerson->phoneNumbers();
+        // Add both phone number and whatever links to this person
+        auto cms = m_pPerson->relatedContactMethods();
+        cms.append(m_pPerson->phoneNumbers());
 
         for (auto cm : qAsConst(cms)) {
             disconnect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,

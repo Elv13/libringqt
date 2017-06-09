@@ -52,7 +52,7 @@ public:
    QList<Person::Address>   m_lAddresses          ;
    QHash<QString, QString>  m_lCustomAttributes   ;
    ContactMethod*           m_LastUsedCM {nullptr};
-   QList<ContactMethod*>    m_HiddenContactMethods;
+   QVector<ContactMethod*>  m_HiddenContactMethods;
 
    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
    QWeakPointer<QAbstractItemModel> m_pAddressModel;
