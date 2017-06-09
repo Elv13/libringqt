@@ -37,6 +37,10 @@ class RecentCmModel;
 
 struct CMTimelineNode final
 {
+    enum InsertStatus {
+        NEW = -1
+    };
+
     explicit CMTimelineNode(ContactMethod* cm, time_t t=0):m_pCM(cm),m_Time(t) {}
     int            m_Index  { -1      };
     time_t         m_Time   {  0      };
@@ -204,15 +208,17 @@ std::vector<CMTimelineNode*>::iterator PeersTimelineModelPrivate::getNextIndex(t
 /// Extra code for the integration tests (slow for-loop)
 void PeersTimelineModelPrivate::debugState()
 {
-//#if ENABLE_TEST_ASSERTS //TODO uncomment once it's stable enough
-    bool correct(true), correct2(true);
-    for (uint i = 0; i < m_lRows.size()-1; i++) {
+#if ENABLE_TEST_ASSERTS
+    bool correct(true), correct2(true), correct3(true);
+    for (uint i = 0; i < m_lRows.size()  - 1; i++) {
         correct2 &= m_lRows[i]->m_Time  <= m_lRows[i+1]->m_Time;
         correct  &= m_lRows[i]->m_Index == m_lRows[i+1]->m_Index+1;
+        correct3 &= m_lRows[i]->m_Index == (int) realIndex(i);
     }
     Q_ASSERT(correct );
     Q_ASSERT(correct2);
-//#endif
+    Q_ASSERT(correct3);
+#endif
 }
 
 /**
@@ -220,10 +226,6 @@ void PeersTimelineModelPrivate::debugState()
  */
 void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t t)
 {
-    // Don't load anything until the model is in use
-    if ((!m_IsInit) || cm->isDuplicate() || cm->isSelf())
-        return;
-
     auto i = m_hMapping.value(cm);
     if (!i) {
         i = new CMTimelineNode(cm);
@@ -237,7 +239,7 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t
     const auto dtEnd = std::distance(it, m_lRows.end());
     i->m_Time        = t;
 
-    if (i->m_Index == -1 || it == m_lRows.begin()) {
+    if (i->m_Index == CMTimelineNode::NEW || it == m_lRows.begin()) {
         i->m_Index = dtEnd;
 
         q_ptr->beginInsertRows({}, dtEnd, dtEnd);
@@ -280,6 +282,7 @@ slotDataChanged(const QModelIndex& tl, const QModelIndex& br)
 {
     const auto m = &PhoneDirectoryModel::instance();
     const auto r = static_cast<int>(PhoneDirectoryModel::Role::Object);
+
     ModelUtils::for_each_role<ContactMethod*>(m, r, [this](ContactMethod* cm) {
         if (auto i = m_hMapping.value(cm)) {
             const auto idx = q_ptr->index(i->m_Index, 0);
@@ -329,8 +332,7 @@ int PeersTimelineModelPrivate::init()
     const auto r = static_cast<int>(PhoneDirectoryModel::Role::Object);
 
     ModelUtils::for_each_role<ContactMethod*>(m, r, [&map](ContactMethod* cm) {
-        if ((!cm->isDuplicate()) && !cm->isSelf())
-            map.insert(cm->lastUsed(), cm);
+        map.insert(cm->lastUsed(), cm);
     });
 
     int pos(map.size());
@@ -341,6 +343,8 @@ int PeersTimelineModelPrivate::init()
         m_hMapping[cm] = i;
         m_lRows.push_back(i);
     }
+
+    debugState();
 
     if (m_pSummaryModel) m_pSummaryModel->reloadCategories();
 
@@ -453,7 +457,7 @@ bool SummaryModelProxy::filterAcceptsRow (int row, const QModelIndex & srcParent
 }
 
 /// Remove all categories without entries
-bool RecentCmModel::filterAcceptsRow (int row, const QModelIndex & srcParent) const
+bool RecentCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) const
 {
     if (srcParent.isValid())
         return false;
@@ -461,7 +465,7 @@ bool RecentCmModel::filterAcceptsRow (int row, const QModelIndex & srcParent) co
     if (row > (int) d_ptr->m_lRows.size())
         return false;
 
-    auto n = d_ptr->m_lRows[row];
+    auto n = d_ptr->m_lRows[d_ptr->realIndex(row)];
 
     //FIXME There's still duplicate if the person was never contacted but has
     // multiple contact methods
