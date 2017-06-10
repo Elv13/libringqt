@@ -19,14 +19,14 @@
 
 #include <QtCore/QAbstractTableModel>
 #include "typedefs.h"
-#include "phonedirectorymodel.h"
-#include <itemdataroles.h>
 
 //Qt
 class QItemSelectionModel;
 
 //Ring
-class ContactMethod;
+#include <phonedirectorymodel.h>
+#include <itemdataroles.h>
+#include <contactmethod.h>
 class Call;
 
 //Private
@@ -40,15 +40,17 @@ public:
    //Properties
    Q_PROPERTY(QString prefix READ prefix)
    Q_PROPERTY(bool displayMostUsedNumbers READ displayMostUsedNumbers WRITE setDisplayMostUsedNumbers)
+   Q_PROPERTY(Call* call READ call WRITE setCall)
 
    enum Role {
-      ALTERNATE_ACCOUNT= (int)Ring::Role::UserRole,
+      ALTERNATE_ACCOUNT = (int)ContactMethod::Role::UserData,
       FORCE_ACCOUNT,
       ACCOUNT      ,
       PEER_NAME    ,
+      ACCOUNT_ALIAS,
    };
 
-   NumberCompletionModel();
+   explicit NumberCompletionModel();
    virtual ~NumberCompletionModel();
 
    //Abstract model member

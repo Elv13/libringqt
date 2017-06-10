@@ -95,6 +95,9 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
     static bool initRoles = false;
     if (!initRoles) {
+        QHash<int, QByteArray>::const_iterator i;
+        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+            roles[i.key()] = i.value();
 
         roles[ static_cast<int>(Call::Role::Name) ] = "name";
         roles[ static_cast<int>(Call::Role::Number) ] = "number";

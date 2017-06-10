@@ -149,14 +149,15 @@ NumberCompletionModel::~NumberCompletionModel()
 
 QHash<int,QByteArray> NumberCompletionModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+   static QHash<int, QByteArray> roles = PhoneDirectoryModel::instance().roleNames();
    static bool initRoles = false;
 
    if (!initRoles) {
       initRoles = true;
-      roles[Role::ALTERNATE_ACCOUNT]= "AlternateAccount";
-      roles[Role::FORCE_ACCOUNT    ]= "ForceAccount"    ;
-      roles[Role::ACCOUNT          ]= "Account"         ;
+      roles[Role::ALTERNATE_ACCOUNT]= "alternateAccount";
+      roles[Role::FORCE_ACCOUNT    ]= "forceAccount"    ;
+      roles[Role::ACCOUNT          ]= "account"         ;
+      roles[Role::ACCOUNT_ALIAS    ]= "accountAlias"    ;
    }
 
    return roles;
@@ -171,20 +172,18 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
    const ContactMethod* n = i.value();
    const int weight     = i.key  ();
 
-   bool needAcc = (role>=100 || role == Qt::UserRole) && n->account() /*&& n->account() != AvailableAccountModel::currentDefaultAccount()*/
-                  && !n->account()->isIp2ip();
+   const bool needAcc = (role>=100 || role == Qt::UserRole) && n->account() /*&& n->account() != AvailableAccountModel::currentDefaultAccount()*/
+        && !n->account()->isIp2ip();
 
    switch (static_cast<NumberCompletionModelPrivate::Columns>(index.column())) {
       case NumberCompletionModelPrivate::Columns::CONTENT:
          switch (role) {
             case Qt::DisplayRole:
-               return n->uri();
+               return n->primaryName();
             case Qt::ToolTipRole:
                return QString("<table><tr><td>%1</td></tr><tr><td>%2</td></tr></table>")
                   .arg(n->primaryName())
                   .arg(n->category() ? n->category()->name() : QString());
-            case Qt::DecorationRole:
-               return n->icon();
             case NumberCompletionModel::Role::ALTERNATE_ACCOUNT:
             case Qt::UserRole:
                if (needAcc)
@@ -199,30 +198,15 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
                if (needAcc)
                   return QVariant::fromValue(n->account());
                break;
-            case static_cast<int>(Ring::Role::ObjectType):
-               return QVariant::fromValue(Ring::ObjectType::ContactMethod);
-            case static_cast<int>(Ring::Role::Object):
-               return QVariant::fromValue(const_cast<ContactMethod*>(n));
+            case static_cast<int>(Role::ACCOUNT_ALIAS):
+               return n->account() ? n->account()->alias() : QString();
          };
-         break;
+         return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:
-         switch (role) {
-            case Qt::DisplayRole:
-               return n->primaryName();
-            case Qt::DecorationRole:
-               if (n->contact())
-                  return n->contact()->photo();
-         };
-         break;
+         return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::ACCOUNT:
-         switch (role) {
-            case Qt::DisplayRole:
-            {
-                auto acc = n->account() ? n->account() : AvailableAccountModel::currentDefaultAccount();
-                if (acc)
-                    return acc->alias();
-            }
-         };
+         if(auto acc = n->account() ? n->account() : AvailableAccountModel::currentDefaultAccount())
+            return acc->roleData(role);
          break;
       case NumberCompletionModelPrivate::Columns::WEIGHT:
          switch (role) {
@@ -281,6 +265,9 @@ bool NumberCompletionModel::setData(const QModelIndex& index, const QVariant &va
 //Set the current call
 void NumberCompletionModel::setCall(Call* call)
 {
+   if (call == d_ptr->m_pCall)
+      return;
+
    d_ptr->resetSelectionModel();
 
    if (d_ptr->m_pCall)
@@ -354,7 +341,7 @@ void NumberCompletionModelPrivate::updateModel()
       locateNumberRange( m_Prefix, numbers );
 
       if (m_Prefix.protocolHint() == URI::ProtocolHint::RING) {
-         for (TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
+         for (TemporaryContactMethod* cm : qAsConst(m_hRingTemporaryNumbers)) {
             const int weight = getWeight(cm->account());
             if (weight) {
                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
@@ -363,7 +350,7 @@ void NumberCompletionModelPrivate::updateModel()
             }
          }
       } else {
-         for (auto cm : m_hSipTemporaryNumbers) {
+         for (auto cm : qAsConst(m_hSipTemporaryNumbers)) {
             if (!cm) continue;
             if (auto weight = getWeight(cm->account())) {
                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
@@ -373,7 +360,7 @@ void NumberCompletionModelPrivate::updateModel()
          }
       }
 
-      for (ContactMethod* n : numbers) {
+      for (ContactMethod* n : qAsConst(numbers)) {
          if (m_UseUnregisteredAccount || ((n->account() && n->account()->registrationState() == Account::RegistrationState::READY)
           || !n->account())) {
             q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
