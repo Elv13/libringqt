@@ -160,6 +160,7 @@ QHash<int,QByteArray> NumberCompletionModel::roleNames() const
       roles[Role::FORCE_ACCOUNT    ]= "forceAccount"    ;
       roles[Role::ACCOUNT          ]= "account"         ;
       roles[Role::ACCOUNT_ALIAS    ]= "accountAlias"    ;
+      roles[Role::IS_TEMP          ]= "temporary"       ;
    }
 
    return roles;
@@ -202,6 +203,8 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
                break;
             case static_cast<int>(Role::ACCOUNT_ALIAS):
                return n->account() ? n->account()->alias() : QString();
+            case static_cast<int>(Role::IS_TEMP):
+               return n->type() == ContactMethod::Type::TEMPORARY;
          };
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:

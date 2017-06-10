@@ -48,6 +48,7 @@ public:
       ACCOUNT      ,
       PEER_NAME    ,
       ACCOUNT_ALIAS,
+      IS_TEMP      ,
    };
 
    explicit NumberCompletionModel();
