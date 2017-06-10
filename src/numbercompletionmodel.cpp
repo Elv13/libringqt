@@ -80,6 +80,8 @@ public:
    QHash<Account*,TemporaryContactMethod*> m_hRingTemporaryNumbers;
    QHash<int, TemporaryContactMethod*> m_pPreferredTemporaryNumbers;
 
+   QPair<bool, bool> matchSipAndRing(const URI& uri) const;
+
 public Q_SLOTS:
    void setPrefix(const QString& str);
 
@@ -299,11 +301,15 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
       q_ptr->endRemoveRows();
    }
 
-   if (m_Prefix.protocolHint() == URI::ProtocolHint::RING) {
+   auto show = matchSipAndRing(m_Prefix);
+
+   if (show.second) {
       for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
          cm->setUri(m_Prefix);
       }
-   } else {
+   }
+
+   if (show.first) {
       for(auto cm : m_hSipTemporaryNumbers) {
          if (cm)
             cm->setUri(m_Prefix);
@@ -329,6 +335,28 @@ ContactMethod* NumberCompletionModel::number(const QModelIndex& idx) const
    return nullptr;
 }
 
+QPair<bool, bool> NumberCompletionModelPrivate::matchSipAndRing(const URI& uri) const
+{
+    bool showSip(false), showRing(false);
+
+    switch(uri.protocolHint()) {
+        case URI::ProtocolHint::SIP_OTHER:
+        showSip = true;
+        showRing = true;
+        break;
+        case URI::ProtocolHint::RING:
+        case URI::ProtocolHint::RING_USERNAME:
+        showRing = true;
+        break;
+        case URI::ProtocolHint::IP:
+        case URI::ProtocolHint::SIP_HOST:
+        showSip = true;
+        break;
+    }
+
+    return {showSip, showRing};
+}
+
 void NumberCompletionModelPrivate::updateModel()
 {
    QSet<ContactMethod*> numbers;
@@ -340,7 +368,9 @@ void NumberCompletionModelPrivate::updateModel()
       locateNameRange  ( m_Prefix, numbers );
       locateNumberRange( m_Prefix, numbers );
 
-      if (m_Prefix.protocolHint() == URI::ProtocolHint::RING) {
+      auto show = matchSipAndRing(m_Prefix);
+
+      if (show.second) {
          for (TemporaryContactMethod* cm : qAsConst(m_hRingTemporaryNumbers)) {
             const int weight = getWeight(cm->account());
             if (weight) {
@@ -349,7 +379,9 @@ void NumberCompletionModelPrivate::updateModel()
                q_ptr->endInsertRows();
             }
          }
-      } else {
+      }
+
+      if (show.first) {
          for (auto cm : qAsConst(m_hSipTemporaryNumbers)) {
             if (!cm) continue;
             if (auto weight = getWeight(cm->account())) {

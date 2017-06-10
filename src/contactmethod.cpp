@@ -419,6 +419,10 @@ bool ContactMethod::haveCalled() const
 ///Best bet for this person real name
 QString ContactMethod::primaryName() const
 {
+   if (type() == ContactMethod::Type::TEMPORARY) {
+      return uri();
+   }
+
    //Compute the primary name
    if (d_ptr->m_PrimaryName_cache.isEmpty()) {
       QString ret;
