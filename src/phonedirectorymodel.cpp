@@ -356,7 +356,7 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
       //Let make sure none is created in the future for nothing
       if (!wrap) {
          //It won't be a duplicate as none exist for this URI
-         wrap = new NumberWrapper();
+         wrap = new NumberWrapper(extendedUri);
          m_hDirectory    [extendedUri] = wrap;
          m_hSortedNumbers[extendedUri] = wrap;
          wrap->numbers << number;
@@ -501,7 +501,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    const QString hn = number->uri().hostname();
 
    if (!wrap) {
-      wrap = new NumberWrapper();
+      wrap = new NumberWrapper(uri);
       d_ptr->m_hDirectory[uri] = wrap;
       d_ptr->m_hSortedNumbers[uri] = wrap;
    }
@@ -614,7 +614,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
    connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged );
    connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
    if (!wrap) {
-      wrap = new NumberWrapper();
+      wrap = new NumberWrapper(strippedUri);
       d_ptr->m_hDirectory    [strippedUri] = wrap;
       d_ptr->m_hSortedNumbers[strippedUri] = wrap;
 
@@ -623,7 +623,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
          const QString extendedUri = strippedUri+'@'+account->hostname();
          //Also check if it hasn't been created by setAccount
          if ((!wrap2) && (!d_ptr->m_hDirectory[extendedUri])) {
-            wrap2 = new NumberWrapper();
+            wrap2 = new NumberWrapper(extendedUri);
             d_ptr->m_hDirectory    [extendedUri] = wrap2;
             d_ptr->m_hSortedNumbers[extendedUri] = wrap2;
          }
@@ -809,7 +809,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
          foreach(const QString& chunk, split) {
             NumberWrapper* wrap = m_hNumbersByNames[chunk];
             if (!wrap) {
-               wrap = new NumberWrapper();
+               wrap = new NumberWrapper(chunk);
                m_hNumbersByNames[chunk] = wrap;
                m_lSortedNames[chunk]    = wrap;
             }
@@ -820,7 +820,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
       }
       NumberWrapper* wrap = m_hNumbersByNames[lower];
       if (!wrap) {
-         wrap = new NumberWrapper();
+         wrap = new NumberWrapper(lower);
          m_hNumbersByNames[lower] = wrap;
          m_lSortedNames[lower]    = wrap;
       }
@@ -860,7 +860,7 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(const Account* account, Name
                 // collision with a SIP account.
                 if (!m_hDirectory.contains(name)) {
                     //TODO support multiple name service, use proper URIs for names
-                    auto wrap2 = new NumberWrapper();
+                    auto wrap2 = new NumberWrapper(name);
                     m_hDirectory    [name] = wrap2;
                     m_hSortedNumbers[name] = wrap2;
                     wrap2->numbers << cm;

@@ -27,6 +27,8 @@ class PhoneDirectoryModel;
 //Internal data structures
 ///@struct NumberWrapper Wrap phone numbers to prevent collisions
 struct NumberWrapper {
+   explicit NumberWrapper(const QString& k) : key(k) {}
+   QString key;
    QVector<ContactMethod*> numbers;
 };
 

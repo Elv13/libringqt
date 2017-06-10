@@ -416,77 +416,29 @@ void NumberCompletionModelPrivate::updateModel()
 
 void NumberCompletionModelPrivate::getRange(QMap<QString,NumberWrapper*> map, const QString& prefix, QSet<ContactMethod*>& set) const
 {
-   if (prefix.isEmpty() || map.isEmpty())
-      return;
+    if (prefix.isEmpty() || map.isEmpty())
+        return;
 
-   QMap<QString,NumberWrapper*>::iterator iBeg = map.begin();
-   QMap<QString,NumberWrapper*>::iterator iEnd = map.end  ()-1;
+    static NumberWrapper fake("");
+    fake.key = prefix;
 
-   const QString pref = prefix.toLower();
+    auto start = std::lower_bound(map.constBegin(), map.constEnd(), &fake,
+      [](NumberWrapper* candidate, NumberWrapper* target) {
+        return candidate->key.toLower().left(target->key.size()) < target->key;
+    });
 
-   const int prefixLen = pref.size();
-   int size = map.size()/2;
-   bool startOk(false),endOk(false);
+    auto end = std::upper_bound(start, map.constEnd(), &fake,
+      [](NumberWrapper* target, NumberWrapper* candidate) {
+        return candidate->key.toLower().left(target->key.size()) > target->key;
+    });
 
-   while (size > 1 && !(startOk&&endOk)) {
-      QMap<QString,NumberWrapper*>::iterator mid;
+    if (start == map.constEnd())
+        return;
 
-      if (size > 7)
-         mid = (iBeg+size);
-      else {
-         //We have to be careful with "::ceil" it may cause an overflow in some rare case
-         int toAdd = size-1;
-         mid = iBeg;
-
-         while (toAdd && mid != map.end()) {
-            ++mid;
-            --toAdd;
-         }
-
-      }
-
-      if (mid != map.end() && mid.key().left(prefixLen) == pref && iBeg.key().left(prefixLen) < pref) {
-         //Too far, need to go back
-         iBeg = mid;
-
-         while ((iBeg-1).key().left(prefixLen) == pref && iBeg != map.begin())
-            iBeg--;
-
-         startOk = true;
-      }
-      else if ((!startOk) && mid != map.end() && mid.key().left(prefixLen) < pref) {
-         iBeg = mid;
-      }
-      else if(!endOk) {
-         iEnd = mid;
-      }
-
-      while ((iEnd).key().left(prefixLen) == pref && iEnd+1 != map.end()) {
-         ++iEnd;
-      }
-
-      endOk = (iEnd.key().left(prefixLen) == pref);
-
-      size = (int)::ceil((static_cast<float>(size))/2.0f);
-   }
-
-   while (iBeg.key().left(prefixLen) != pref && iBeg != map.end() && iBeg != iEnd)
-      ++iBeg;
-
-   if (iEnd == iBeg && iBeg.key().left(prefixLen) != pref) {
-      iEnd = map.end();
-      iBeg = map.end();
-   }
-
-   while(iBeg != iEnd) {
-      foreach(ContactMethod* n,iBeg.value()->numbers) {
-         if (n) {
-            set << n;
-         }
-      }
-
-      ++iBeg;
-   }
+    std::for_each(start, end, [&set](NumberWrapper* n) {
+        for (auto cm : qAsConst(n->numbers))
+            if (cm) set << cm;
+    });
 }
 
 void NumberCompletionModelPrivate::locateNameRange(const QString& prefix, QSet<ContactMethod*>& set)
