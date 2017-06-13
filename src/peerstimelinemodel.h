@@ -19,10 +19,13 @@
 #pragma once
 
 #include <QtCore/QAbstractListModel>
+#include <QtCore/QItemSelectionModel>
 
 #include "typedefs.h"
 
 #include <memory>
+
+class ContactMethod;
 
 class PeersTimelineModelPrivate;
 
@@ -80,6 +83,8 @@ public:
 
     QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel() const;
 
+    QModelIndex contactMethodIndex(ContactMethod* cm) const;
+
 private:
     explicit PeersTimelineModel();
     virtual ~PeersTimelineModel();
@@ -87,3 +92,22 @@ private:
     PeersTimelineModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(PeersTimelineModel)
 };
+
+class PeersTimelineSelectionModelPrivate;
+
+class LIB_EXPORT PeersTimelineSelectionModel : public QItemSelectionModel
+{
+    Q_OBJECT
+public:
+    Q_PROPERTY(ContactMethod* contactMethod READ contactMethod WRITE setContactMethod)
+
+    explicit PeersTimelineSelectionModel();
+    virtual ~PeersTimelineSelectionModel();
+
+    ContactMethod* contactMethod() const;
+    void setContactMethod(ContactMethod* cm);
+private:
+    PeersTimelineSelectionModelPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(PeersTimelineSelectionModel)
+};
+Q_DECLARE_METATYPE(PeersTimelineSelectionModel*);

@@ -498,5 +498,56 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::deduplicatedTimelineModel
     return d_ptr->m_MostRecentCMPtr;
 }
 
+QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
+{
+    if (!cm)
+        return {};
+
+    auto n = d_ptr->m_hMapping.value(cm);
+    if (!n)
+        return {};
+
+    return createIndex(n->m_Index, 0, n);
+}
+
+class PeersTimelineSelectionModelPrivate
+{
+public:
+    QSharedPointer<QAbstractItemModel> m_pModel;
+};
+
+PeersTimelineSelectionModel::PeersTimelineSelectionModel() :
+    QItemSelectionModel(nullptr),
+    d_ptr(new PeersTimelineSelectionModelPrivate)
+{
+    d_ptr->m_pModel = PeersTimelineModel::instance().deduplicatedTimelineModel();
+    setModel(d_ptr->m_pModel.data());
+    setParent(d_ptr->m_pModel.data());
+}
+
+PeersTimelineSelectionModel::~PeersTimelineSelectionModel()
+{
+    delete d_ptr;
+}
+
+ContactMethod* PeersTimelineSelectionModel::contactMethod() const
+{
+    const auto cur = currentIndex();
+
+    if (!cur.isValid())
+        return nullptr;
+
+    return qvariant_cast<ContactMethod*>(cur.data((int)Ring::Role::Object));
+}
+
+void PeersTimelineSelectionModel::setContactMethod(ContactMethod* cm)
+{
+    auto idx = PeersTimelineModel::instance().contactMethodIndex(cm);
+
+    auto pidx = qobject_cast<RecentCmModel*>(d_ptr->m_pModel.data())->mapFromSource(idx);
+
+    setCurrentIndex(pidx, QItemSelectionModel::ClearAndSelect);
+}
+
 #undef NEVER
 #include <peerstimelinemodel.moc>
