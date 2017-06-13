@@ -42,13 +42,24 @@ public:
    Q_PROPERTY(bool displayMostUsedNumbers READ displayMostUsedNumbers WRITE setDisplayMostUsedNumbers)
    Q_PROPERTY(Call* call READ call WRITE setCall)
 
+   enum class LookupStatus {
+       NOT_APPLICABLE,
+       IN_PROGRESS,
+       SUCCESS,
+       FAILURE,
+       COUNT__
+   };
+   Q_ENUMS(LookupStatus)
+
    enum Role {
       ALTERNATE_ACCOUNT = (int)ContactMethod::Role::UserData,
-      FORCE_ACCOUNT,
-      ACCOUNT      ,
-      PEER_NAME    ,
-      ACCOUNT_ALIAS,
-      IS_TEMP      ,
+      FORCE_ACCOUNT      ,
+      ACCOUNT            ,
+      PEER_NAME          ,
+      ACCOUNT_ALIAS      ,
+      IS_TEMP            ,
+      NAME_STATUS        ,
+      NAME_STATUS_SRING  ,
    };
 
    explicit NumberCompletionModel();
@@ -88,4 +99,7 @@ Q_SIGNALS:
    void enabled(bool);
 
 };
+
+Q_DECLARE_METATYPE(NumberCompletionModel*)
+Q_DECLARE_METATYPE(NumberCompletionModel::LookupStatus)
 

@@ -20,6 +20,7 @@
 //Qt
 #include <QtCore/QCoreApplication>
 #include <QtCore/QItemSelectionModel>
+#include <QtCore/QTimer>
 
 //System
 #include <cmath>
@@ -36,7 +37,9 @@
 #include "accountmodel.h"
 #include "availableaccountmodel.h"
 #include "numbercategorymodel.h"
+#include "namedirectory.h"
 #include "person.h"
+#include "private/matrixutils.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -75,12 +78,15 @@ public:
    bool                          m_DisplayMostUsedNumbers;
    QItemSelectionModel*          m_pSelectionModel       ;
    bool                          m_HasCustomSelection    ;
+   QHash<QString, QString>       m_hNameCache            ;
 
    QHash<Account*,TemporaryContactMethod*> m_hSipTemporaryNumbers;
    QHash<Account*,TemporaryContactMethod*> m_hRingTemporaryNumbers;
    QHash<int, TemporaryContactMethod*> m_pPreferredTemporaryNumbers;
 
    QPair<bool, bool> matchSipAndRing(const URI& uri) const;
+   NumberCompletionModel::LookupStatus entryStatus(const ContactMethod* cm) const;
+   QString entryStatusName(const ContactMethod* cm) const;
 
 public Q_SLOTS:
    void setPrefix(const QString& str);
@@ -90,6 +96,9 @@ public Q_SLOTS:
 
    void resetSelectionModel();
    void slotSelectionChanged(const QModelIndex& sel, const QModelIndex& prev);
+
+   void slotRegisteredNameFound(const Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name);
+   void slotClearNameCache();
 
 private:
    NumberCompletionModel* q_ptr;
@@ -120,6 +129,15 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
 
    connect(&AccountModel::instance(), &AccountModel::accountAdded  , this, &NumberCompletionModelPrivate::accountAdded  );
    connect(&AccountModel::instance(), &AccountModel::accountRemoved, this, &NumberCompletionModelPrivate::accountRemoved);
+
+   connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound,
+      this, &NumberCompletionModelPrivate::slotRegisteredNameFound);
+
+   auto t = new QTimer(this);
+   t->setInterval(5 * 60 * 1000);
+   connect(t, &QTimer::timeout, this, &NumberCompletionModelPrivate::slotClearNameCache);
+   t->start();
+
 }
 
 NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
@@ -161,6 +179,8 @@ QHash<int,QByteArray> NumberCompletionModel::roleNames() const
       roles[Role::ACCOUNT          ]= "account"         ;
       roles[Role::ACCOUNT_ALIAS    ]= "accountAlias"    ;
       roles[Role::IS_TEMP          ]= "temporary"       ;
+      roles[Role::NAME_STATUS      ]= "nameStatus"      ;
+      roles[Role::NAME_STATUS_SRING]= "nameStatusString";
    }
 
    return roles;
@@ -205,6 +225,10 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
                return n->account() ? n->account()->alias() : QString();
             case static_cast<int>(Role::IS_TEMP):
                return n->type() == ContactMethod::Type::TEMPORARY;
+            case static_cast<int>(Role::NAME_STATUS):
+               return QVariant::fromValue(d_ptr->entryStatus(n));
+            case static_cast<int>(Role::NAME_STATUS_SRING):
+               return d_ptr->entryStatusName(n);
          };
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:
@@ -309,6 +333,11 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
    if (show.second) {
       for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
          cm->setUri(m_Prefix);
+
+         // Perform name lookups
+         if (str.size() >=3 && !m_hNameCache.contains(str)) {
+            NameDirectory::instance().lookupName(cm->account(), {}, str);
+         }
       }
    }
 
@@ -623,14 +652,68 @@ void NumberCompletionModelPrivate::accountRemoved(Account* a)
    if (!cm)
       cm = m_hRingTemporaryNumbers[a];
 
-   m_hSipTemporaryNumbers[a] = nullptr;
-   m_hRingTemporaryNumbers  [a] = nullptr;
+   m_hSipTemporaryNumbers [a] = nullptr;
+   m_hRingTemporaryNumbers[a] = nullptr;
 
    setPrefix(q_ptr->prefix());
 
    if (cm) {
       delete cm;
    }
+}
+
+void NumberCompletionModelPrivate::slotRegisteredNameFound(const Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
+{
+    Q_UNUSED(account)
+
+    // Check if there's a match
+    for (TemporaryContactMethod* cm : qAsConst(m_hRingTemporaryNumbers)) {
+        if (cm->uri() == name) {
+
+            // Cache the names for up to 5 minutes to prevent useless deaemon calls
+            m_hNameCache[name] = status == NameDirectory::LookupStatus::SUCCESS ?
+                address : QStringLiteral("-1");
+
+            // Until the patch to cleanup model insertion is merged, this will
+            // have to do.
+            emit q_ptr->dataChanged(q_ptr->index(0,0), q_ptr->index(m_hNumbers.size()-1, 0));
+        }
+    }
+}
+
+void NumberCompletionModelPrivate::slotClearNameCache()
+{
+    m_hNameCache.clear();
+}
+
+NumberCompletionModel::LookupStatus NumberCompletionModelPrivate::entryStatus(const ContactMethod* cm) const
+{
+    if (cm->type() == ContactMethod::Type::TEMPORARY) {
+        if (m_hNameCache.contains(cm->uri())) {
+            return m_hNameCache[cm->uri()] == QLatin1String("-1") ?
+                NumberCompletionModel::LookupStatus::FAILURE:
+                NumberCompletionModel::LookupStatus::SUCCESS;
+        }
+        else
+            return NumberCompletionModel::LookupStatus::IN_PROGRESS;
+    }
+
+    return cm->registeredName().isEmpty() ?
+        NumberCompletionModel::LookupStatus::NOT_APPLICABLE :
+        NumberCompletionModel::LookupStatus::SUCCESS;
+}
+
+
+QString NumberCompletionModelPrivate::entryStatusName(const ContactMethod* cm) const
+{
+    static const Matrix1D<NumberCompletionModel::LookupStatus ,QString> names = {
+        {NumberCompletionModel::LookupStatus::NOT_APPLICABLE, QObject::tr("N/A"       )},
+        {NumberCompletionModel::LookupStatus::IN_PROGRESS   , QObject::tr("Looking up")},
+        {NumberCompletionModel::LookupStatus::SUCCESS       , QObject::tr("Found"     )},
+        {NumberCompletionModel::LookupStatus::FAILURE       , QObject::tr("Not found" )},
+    };
+
+    return names[entryStatus(cm)];
 }
 
 #include <numbercompletionmodel.moc>
