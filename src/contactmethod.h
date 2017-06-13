@@ -101,6 +101,7 @@ public:
    Q_PROPERTY(QString           registeredName   READ registeredName    NOTIFY registeredNameSet      )
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName                                        )
+   Q_PROPERTY(Type              type             READ type                                            )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
