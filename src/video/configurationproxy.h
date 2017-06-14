@@ -41,6 +41,9 @@ public:
    static QItemSelectionModel& channelSelectionModel   ();
    static QItemSelectionModel& resolutionSelectionModel();
    static QItemSelectionModel& rateSelectionModel      ();
+
+   static bool isDecodingAccelerated();
+   static void setDecodingAccelerated(bool state);
 };
 
 } //namespace Video
