@@ -577,6 +577,7 @@ UserActionModel::UserActionModel(Call* parent, const FlagPack<UserActionModel::C
    d_ptr->m_Mode = UserActionModelPrivate::UserActionModelMode::CALL;
    d_ptr->m_pCall = parent;
 
+   connect(parent, &Call::stateChanged, d_ptr.data(), &UserActionModelPrivate::updateActions);
    connect(&AccountModel::instance(), SIGNAL(accountStateChanged(Account*,Account::RegistrationState)), d_ptr.data(), SLOT(slotStateChanged()));
    d_ptr->updateActions();
 }
