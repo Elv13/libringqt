@@ -261,6 +261,7 @@ public:
 
    //Read only properties
    Q_PROPERTY( Call::State        state              READ state             NOTIFY stateChanged     )
+   Q_PROPERTY( Call::LifeCycleState lifeCycleState   READ lifeCycleState    NOTIFY stateChanged     )
    Q_PROPERTY( QString            historyId          READ historyId                                 )
    Q_PROPERTY( Account*           account            READ account                                   )
    Q_PROPERTY( bool               isHistory          READ isHistory                                 )
