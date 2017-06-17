@@ -215,12 +215,12 @@ Q_SIGNALS:
    ///The number of and/or the contact methods themselvesd are about to change
    void phoneNumbersAboutToChange (                );
    ///The person data were merged from another source
-   void rebased                   ( Person*        );
+   void rebased                   ( Person* other  );
    ///The last time there was an interaction with this person changed
    void lastUsedTimeChanged       ( long long      ) const;
    ///A new call used a ContactMethod associated with this Person
-   void callAdded                 ( Call*          );
-   void relatedContactMethodsAdded( ContactMethod* );
+   void callAdded                 ( Call* call     );
+   void relatedContactMethodsAdded( ContactMethod* cm );
 
 protected:
    //Presence secret methods
