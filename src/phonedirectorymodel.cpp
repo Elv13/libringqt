@@ -464,21 +464,6 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged);
    connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
 
-    // add the new cm into the historic.
-    for (auto col : CategorizedHistoryModel::instance().collections(CollectionInterface::SupportedFeatures::ADD)) {
-        if (col->id() == "mhb") {
-            QMap<QString,QString> hc;
-            hc[Call::HistoryMapFields::PEER_NUMBER ] = number->uri();
-            // it matters to set a value to hc[Call::HistoryMapFields::CALLID ], but the value itself doesn't matter
-            hc[Call::HistoryMapFields::CALLID ] = "0";
-
-            if (auto fakeCall = Call::buildHistoryCall(hc))
-                col->add(fakeCall);
-            else
-                qDebug() << "buildHistoryCall() has returned an invalid Call object.";
-        }
-    }
-
    const QString hn = number->uri().hostname();
 
    emit layoutChanged();
