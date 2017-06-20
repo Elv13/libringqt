@@ -410,76 +410,78 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
 ///Add new information to existing numbers and try to merge
 ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, const URI& strippedUri, Account* account, Person* contact, const QString& type)
 {
-   //TODO pick the best URI
-   //TODO the account hostname change corner case
-   //TODO search for account that has the same hostname as the URI
-   if (wrap) {
-      foreach(ContactMethod* number, wrap->numbers) {
+    //TODO pick the best URI
+    //TODO the account hostname change corner case
+    //TODO search for account that has the same hostname as the URI
 
-         //BEGIN Check if contact can be set
+    if (!wrap)
+        return nullptr;
 
-         //Check if the contact is compatible
-         const bool hasCompatiblePerson = contact && (
-               (!number->contact())
-            || (
-                  (number->contact()->uid() == contact->uid())
-               && number->contact() != contact
-            )
-         );
+    for (auto number : qAsConst(wrap->numbers)) {
 
-         //Check if the URI match
-         const bool hasCompatibleURI =  hasCompatiblePerson && (number->uri().hasHostname()?(
-               /* Has hostname */
-                   strippedUri == number->uri()
-                   /* Something with an hostname can be used with IP2IP */ //TODO support DHT here
-               || (account && account->isIp2ip())
-            ) : ( /* Has no hostname */
-                  number->account() && number->uri()+'@'+number->account()->hostname() == strippedUri
-            ));
+        //BEGIN Check if contact can be set
 
-         //Check if the account is compatible
-         const bool hasCompatibleAccount = hasCompatibleURI && ((!account)
+
+        //Check if the contact is compatible
+        const bool hasCompatiblePerson = (contact && (
+            (!number->contact())
+        || (
+                (number->contact()->uid() == contact->uid())
+            && number->contact() != contact
+        )
+        )) || !contact;
+
+        if (!hasCompatiblePerson)
+            continue;
+
+        //Check if the URI match
+        const bool hasCompatibleURI = number->uri() == strippedUri || (number->uri().hasHostname()?(
+            /* Has hostname */
+                strippedUri == number->uri()
+                /* Something with an hostname can be used with IP2IP */
+            || (account && account->isIp2ip())
+        ) : ( /* Has no hostname */
+                number->account() && number->uri()+'@'+number->account()->hostname() == strippedUri
+        ));
+
+        if (!hasCompatibleURI)
+            continue;
+
+        //Check if the account is compatible
+        const bool hasCompatibleAccount = ((!account)
             || (!number->account())
             /* Direct match, this is always valid */
             || (account == number->account())
             /* IP2IP is a special case */ //TODO support DHT here
             || (
-                  account->isIp2ip()
-                  && strippedUri.hasHostname()
-               ));
+                    account->isIp2ip()
+                    && strippedUri.hasHostname()
+                ));
 
-         //TODO the Display name could be used to influence the choice
-         //It would need to ignore all possible translated values of unknown
-         //and only be available when another information match
+        if (!hasCompatibleAccount)
+            continue;
 
-         //If everything match, set the contact
-         if (hasCompatibleAccount)
-            number->setPerson(contact);
-         //END Check if the contact can be set
+        //TODO the Display name could be used to influence the choice
+        //It would need to ignore all possible translated values of unknown
+        //and only be available when another information match
 
+        //If everything match, complete the candidate
+        auto cat = number->category() ? number->category() :
+            NumberCategoryModel::instance().getCategory(type);
 
-         //BEGIN Check is account can be set
-         // Try to match the account
-         // Not perfect, but better than ignoring the high probabilities
-         //TODO only do it is hostname match
-         if ((!account) || account != number->account()) {
+        if (contact)
+            number->setPerson   ( contact         );
 
-            if (account && (!contact) && !number->account())
-               setAccount(number,account);
+        if (cat)
+            number->setCategory ( cat             );
 
-            //Set a type, this has low probabilities of being invalid
-            if ((!number->hasType()) && (!type.isEmpty())) {
-               number->setCategory(NumberCategoryModel::instance().getCategory(type));
-            }
+        if (account)
+            setAccount          ( number, account );
 
-            //We already have enough information to confirm the choice
-            if (contact && number->contact() &&((contact->uid()) == number->contact()->uid()))
-               return number;
-         }
-         //END Check is account can be set
-      }
-   }
-   return nullptr;
+        return number;
+    }
+
+    return nullptr;
 }
 
 /**
@@ -555,10 +557,21 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
    //Check if the URI is complete or short
    const bool hasAtSign = strippedUri.hasHostname();
 
+    // Append the account hostname, this should always reach the same destination
+    // as long as the server implementation isn't buggy.
+    const auto extendedUri = (hasAtSign || !account) ? uri : QString("%1@%2")
+       .arg(strippedUri)
+       .arg(account->hostname());
+
    //Try to see if there is a better candidate with a suffix (LAN only)
    if ( !hasAtSign && account ) {
-      //Append the account hostname
-      wrap2 = d_ptr->m_hDirectory[strippedUri+'@'+account->hostname()];
+
+      // Attempt an early candidate using the extended URI. The later
+      // `confirmedCandidate2` will attempt a similar, but less likely case.
+      if ((wrap2 = d_ptr->m_hDirectory.value(extendedUri))) {
+         if (auto cm = d_ptr->fillDetails(wrap2, extendedUri, account, contact, type))
+            return cm;
+      }
    }
 
    //Check
@@ -630,6 +643,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
 
    //Create the number
    ContactMethod* number = new ContactMethod(strippedUri,NumberCategoryModel::instance().getCategory(type));
+
    number->setAccount(account);
    number->setIndex( d_ptr->m_lNumbers.size());
    if (contact)
@@ -647,7 +661,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
 
       //Also add its alternative URI, it should be safe to do
       if ( !hasAtSign && account && !account->hostname().isEmpty() ) {
-         const QString extendedUri = strippedUri+'@'+account->hostname();
+
          //Also check if it hasn't been created by setAccount
          if ((!wrap2) && (!d_ptr->m_hDirectory[extendedUri])) {
             wrap2 = new NumberWrapper(extendedUri);

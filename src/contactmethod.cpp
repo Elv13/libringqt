@@ -217,6 +217,9 @@ time_t ContactMethod::lastUsed() const
 ///Set this number default account
 void ContactMethod::setAccount(Account* account)
 {
+   if (account == d_ptr->m_pAccount)
+      return;
+
    //Add the statistics
    if (account && !d_ptr->m_pAccount)
        account->usageStats += d_ptr->m_UsageStats;
@@ -315,6 +318,10 @@ bool ContactMethod::setType(ContactMethod::Type t)
 {
    if (d_ptr->m_Type == ContactMethod::Type::BLANK)
       return false;
+
+   if (t == d_ptr->m_Type)
+      return true;
+
    if (account() && t == ContactMethod::Type::ACCOUNT) {
       if (account()->supportPresenceSubscribe()) {
          d_ptr->m_Tracked = true; //The daemon will init the tracker itself
