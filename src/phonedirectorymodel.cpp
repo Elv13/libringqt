@@ -159,6 +159,12 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return number->contact()?number->contact()->formattedName():QVariant();
          }
          break;
+      case PhoneDirectoryModelPrivate::Columns::IS_SELF:
+         switch (role) {
+            case Qt::DisplayRole:
+               return number->isSelf();
+         }
+         break;
       case PhoneDirectoryModelPrivate::Columns::ACCOUNT:
          switch (role) {
             case Qt::DisplayRole:
@@ -295,7 +301,7 @@ int PhoneDirectoryModel::rowCount(const QModelIndex& parent ) const
 
 int PhoneDirectoryModel::columnCount(const QModelIndex& parent ) const
 {
-   return parent.isValid() ? 0 : 20;
+   return parent.isValid() ? 0 : 21;
 }
 
 Qt::ItemFlags PhoneDirectoryModel::flags(const QModelIndex& index ) const
@@ -332,9 +338,30 @@ QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientatio
 {
    Q_UNUSED(section)
    Q_UNUSED(orientation)
-   static const QString headers[] = {tr("URI"), tr("Type"), tr("Person"), tr("Account"), tr("State"), tr("Call count"), tr("Week count"),
-   tr("Trimester count"), tr("Have Called"), tr("Last used"), tr("Name_count"),tr("Total (in seconds)"), tr("Popularity_index"),
-   tr("Bookmarked"), tr("Tracked"), tr("Has certificate"), tr("Present"), tr("Presence message"), tr("Uid"), tr("Registered name") };
+   static const QString headers[] = {
+      tr("URI"),
+      tr("Type"),
+      tr("Person"),
+      tr("Is self"),
+      tr("Account"),
+      tr("State"),
+      tr("Call count"),
+      tr("Week count"),
+      tr("Trimester count"),
+      tr("Have Called"),
+      tr("Last used"),
+      tr("Name_count"),
+      tr("Total (in seconds)"),
+      tr("Popularity_index"),
+      tr("Bookmarked"),
+      tr("Tracked"),
+      tr("Has certificate"),
+      tr("Present"),
+      tr("Presence message"),
+      tr("Uid"),
+      tr("Registered name")
+   };
+
    if (role == Qt::DisplayRole) return headers[section];
    return QVariant();
 }
