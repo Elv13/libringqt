@@ -29,7 +29,7 @@ public:
     QVariant   callPhoto(const ContactMethod* n, const QSize& size, bool displayPresence = true) override;
     QVariant   numberCategoryIcon(const QVariant& p, const QSize& size, bool displayPresence = false, bool isPresent = false) override;
     QVariant   securityIssueIcon(const QModelIndex& index) override;
-    QByteArray toByteArray(const QVariant& pxm) override;
+    QByteArray toByteArray(const QVariant& pxm, const QString& type = "PNG") override;
     QVariant   personPhoto(const QByteArray& data, const QString& type = "PNG") override;
     QVariant   collectionIcon(const CollectionInterface* interface, PixmapManipulatorI::CollectionIconHint hint = PixmapManipulatorI::CollectionIconHint::NONE) const override;
     QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const override;
