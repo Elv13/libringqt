@@ -281,11 +281,24 @@ void VCardUtils::addContactMethod(const QString& type, const QString& num)
 
 void VCardUtils::addPhoto(const QByteArray img)
 {
-   m_vCard << (QString::fromUtf8(Property::PHOTO) +
-               QString::fromUtf8(Delimiter::SEPARATOR_TOKEN) +
-               "ENCODING=BASE64" +
-               QString::fromUtf8(Delimiter::SEPARATOR_TOKEN) +
-               "TYPE=PNG:" + img.toBase64().trimmed());
+    const auto base64 = img.toBase64().trimmed();
+    static auto header = QString::fromUtf8(Property::PHOTO) +
+                QString::fromUtf8(Delimiter::SEPARATOR_TOKEN) +
+                "ENCODING=BASE64" +
+                QString::fromUtf8(Delimiter::SEPARATOR_TOKEN) +
+                "TYPE=PNG:";
+
+    const int offset = 76 - header.size();
+
+    // Images are big, something less than 3 lines is impossible
+    if (base64.size() < 3*80)
+        return;
+
+    m_vCard << (header + base64.left(offset));
+
+    // QByteArray has built-in anti overflow, no need to replicate the logic
+    for (int i = offset; i < base64.size(); i += std::min(base64.size() - i, 75))
+        m_vCard << (' ' + base64.mid(i, 75));
 }
 
 const QByteArray VCardUtils::endVCard()
