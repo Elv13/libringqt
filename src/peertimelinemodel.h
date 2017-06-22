@@ -66,6 +66,9 @@ public:
 
     enum class Role {
         NodeType = 2 << 16,
+        CategoryEntries,
+        TotalEntries,
+        ActiveCategories,
         EndAt,
     };
 
