@@ -545,6 +545,11 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
    time_t         stopTimeStamp   = hc[ Call::HistoryMapFields::TIMESTAMP_STOP  ].toUInt() ;
    QByteArray accId               = hc[ Call::HistoryMapFields::ACCOUNT_ID      ].toLatin1();
 
+   if (Q_UNLIKELY(number.isEmpty())) {
+      qWarning() << "Invalid history entry" << hc;
+      return nullptr;
+   }
+
    // This will happen if an account is deleted. As it can be very verbose,
    // print the error only once
    static bool printed = false;

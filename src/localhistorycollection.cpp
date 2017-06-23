@@ -234,6 +234,9 @@ bool LocalHistoryCollection::load()
          if ((line.isEmpty() || !line.size()) && hc.size()) {
             Call* pastCall = Call::buildHistoryCall(hc);
 
+            if (!pastCall)
+               continue;
+
             if (!isLimited || ( (now - pastCall->startTimeStamp()) < dayLimit) ) {
                pastCall->setCollection(this);
                editor<Call>()->addExisting(pastCall);

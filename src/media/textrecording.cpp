@@ -713,6 +713,16 @@ void Serializable::Peers::read (const QJsonObject &json)
    QJsonArray a2 = json["peers"].toArray();
    for (int i = 0; i < a2.size(); ++i) {
       QJsonObject o = a2[i].toObject();
+
+      // It should never happen, but there is some corner case where it might
+      // anyway, like when some data is deleted, but not some other and the
+      // file is resaved. Tracking the problem source is not worth it as the
+      // data will be worthless.
+      if (o["uri"].toString().isEmpty()) {
+          qWarning() << "Corrupted chat history entry: Missing URI";
+          continue;
+      }
+
       Peer* peer = new Peer();
       peer->read(o);
       m_hSha1[peer->sha1] = peer->m_pContactMethod;
