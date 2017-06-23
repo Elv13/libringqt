@@ -487,6 +487,37 @@ ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, cons
     return nullptr;
 }
 
+/// Detect some common invalid entries
+bool PhoneDirectoryModel::ensureValidity(const URI& uri, Account* a)
+{
+    if (Q_UNLIKELY(uri.isEmpty())) {
+        qWarning() << "Trying to create a contact method with an empty URI" << a;
+        return false;
+    }
+
+    if (a && uri.schemeType() != URI::SchemeType::NONE) {
+        switch(uri.schemeType()) {
+            case URI::SchemeType::NONE:
+            case URI::SchemeType::COUNT__:
+                break;
+            case URI::SchemeType::SIP:
+            case URI::SchemeType::SIPS:
+                if (Q_UNLIKELY(a->protocol() == Account::Protocol::RING)) {
+                    qWarning() << "Trying to create a SIP contact method with a RING account" << uri;
+                    return false;
+                }
+                break;
+            case URI::SchemeType::RING:
+                if (Q_UNLIKELY(a->protocol() == Account::Protocol::SIP)) {
+                    qWarning() << "Trying to create a RING contact method with a SIP account" << uri;
+                    return false;
+                }
+        }
+    }
+
+    return true;
+}
+
 /**
  * This version of getNumber() try to get a phone number with a contact from an URI and account
  * It will also try to attach an account to existing numbers. This is not 100% reliable, but
@@ -551,6 +582,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
 {
    //Remove extra data such as "<sip:" from the main URI
    const URI strippedUri(uri);
+
+   //One cause of duplicate is when something like ring:foo happen on SIP accounts.
+   ensureValidity(strippedUri, account);
 
    //See if the number is already loaded
    NumberWrapper* wrap  = d_ptr->m_hDirectory[strippedUri];

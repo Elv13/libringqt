@@ -100,6 +100,9 @@ public:
    //Static
    QVector<ContactMethod*> getNumbersByPopularity() const;
 
+   //Helpers
+   static bool ensureValidity(const URI& uri, Account* a);
+
 private:
    //Constructor
    explicit PhoneDirectoryModel(QObject* parent = nullptr);
