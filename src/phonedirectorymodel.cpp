@@ -523,16 +523,9 @@ bool PhoneDirectoryModel::ensureValidity(const URI& uri, Account* a)
  * It will also try to attach an account to existing numbers. This is not 100% reliable, but
  * it is correct often enough to do it.
  */
-ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Account* account, const QString& type)
+ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, const QString& type)
 {
    return getNumber(uri,nullptr,account,type);
-}
-
-
-ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, const QString& type)
-{
-    const URI strippedUri(uri);
-    return getNumber(strippedUri, type);
 }
 
 ///Return/create a number when no information is available
@@ -578,7 +571,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
 }
 
 ///Create a number when a more information is available duplicated ones
-ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contact, Account* account, const QString& type)
+ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
    //Remove extra data such as "<sip:" from the main URI
    const URI strippedUri(uri);
@@ -596,9 +589,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const QString& uri, Person* contac
 
     // Append the account hostname, this should always reach the same destination
     // as long as the server implementation isn't buggy.
-    const auto extendedUri = (hasAtSign || !account) ? uri : QString("%1@%2")
+    const auto extendedUri = (hasAtSign || !account) ? uri : URI(QString("%1@%2")
        .arg(strippedUri)
-       .arg(account->hostname());
+       .arg(account->hostname()));
 
    //Try to see if there is a better candidate with a suffix (LAN only)
    if ( !hasAtSign && account ) {

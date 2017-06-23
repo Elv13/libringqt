@@ -79,10 +79,9 @@ public:
    static PhoneDirectoryModel& instance();
 
    //Factory
-   Q_INVOKABLE ContactMethod* getNumber(const QString& uri, const QString& type = QString());
-   Q_INVOKABLE ContactMethod* getNumber(const URI& uri,     const QString& type = QString());
-   Q_INVOKABLE ContactMethod* getNumber(const QString& uri, Account* account, const QString& type = QString());
-   Q_INVOKABLE ContactMethod* getNumber(const QString& uri, Person* contact, Account* account = nullptr, const QString& type = QString());
+   Q_INVOKABLE ContactMethod* getNumber(const URI& uri, const QString& type = {});
+   Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Account* account, const QString& type = {});
+   Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Person* contact, Account* account = nullptr, const QString& type = {});
    Q_INVOKABLE ContactMethod* fromHash (const QString& hash);
    Q_INVOKABLE ContactMethod* fromTemporary(const TemporaryContactMethod* number);
 

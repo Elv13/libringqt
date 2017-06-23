@@ -87,6 +87,7 @@ public:
    URI(const URI&     other);
 
    URI(const QString& other);
+   URI(const QByteArray& other);
    virtual ~URI();
 
    ///@enum SchemeType The very first part of the URI followed by a ':'

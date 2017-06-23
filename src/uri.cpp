@@ -122,7 +122,14 @@ URI::URI() : QString(), d_ptr(new URIPrivate(this))
 URI::URI(const QString& other) : URI()
 {
    d_ptr->m_Stripped              = URIPrivate::strip(other,d_ptr->m_HeaderType);
-   (*static_cast<QString*>(this)) = d_ptr->m_Stripped                           ;
+   (*static_cast<QString*>(this)) = d_ptr->m_Stripped;
+}
+
+URI::URI(const QByteArray& other) : URI()
+{
+   QString s(other);
+   d_ptr->m_Stripped              = URIPrivate::strip(s ,d_ptr->m_HeaderType);
+   (*static_cast<QString*>(this)) = d_ptr->m_Stripped;
 }
 
 ///Copy constructor
