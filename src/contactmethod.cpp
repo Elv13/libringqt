@@ -696,6 +696,14 @@ QVariant ContactMethod::roleData(int role) const
          break;
       case static_cast<int>(Role::IsReachable):
           return isReachable();
+      case static_cast<int>(Role::Filter):
+          return QString("%1//%2//%3//%4//%5//%6")
+            .arg(bestName())
+            .arg(primaryName())
+            .arg(uri())
+            .arg(account() ? account()->alias() : QString())
+            .arg(contact() ? contact()->formattedName() : QString())
+            .arg(registeredName());
       case static_cast<int>(Call::Role::LifeCycleState):
          return QVariant::fromValue(Call::LifeCycleState::FINISHED);
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):

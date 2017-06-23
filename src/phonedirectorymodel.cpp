@@ -143,6 +143,8 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return QVariant::fromValue(const_cast<ContactMethod*>(number));
             case Qt::ToolTipRole:
                 return number->isDuplicate() ? "Is duplicate" : QString();
+            default:
+                return number->roleData(role);
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::TYPE:
@@ -336,8 +338,9 @@ bool PhoneDirectoryModel::setData(const QModelIndex& index, const QVariant &valu
 
 QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientation, int role ) const
 {
-   Q_UNUSED(section)
-   Q_UNUSED(orientation)
+   if (orientation == Qt::Vertical)
+      return {};
+
    static const QString headers[] = {
       tr("URI"),
       tr("Type"),
