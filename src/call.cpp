@@ -535,8 +535,7 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
 {
    const QString& callId          = hc[ Call::HistoryMapFields::CALLID          ]          ;
    const QString& name            = hc[ Call::HistoryMapFields::DISPLAY_NAME    ]          ;
-   const QString& number          = hc[ Call::HistoryMapFields::PEER_NUMBER     ]          ;
-   //const QString& type            = hc[ Call::HistoryMapFields::STATE           ]          ;
+   const URI& number              = hc[ Call::HistoryMapFields::PEER_NUMBER     ]          ;
    const QString& direction       = hc[ Call::HistoryMapFields::DIRECTION       ]          ;
    const QString& rec_path        = hc[ Call::HistoryMapFields::RECORDING_PATH  ]          ;
    const QString& cert_path       = hc[ Call::HistoryMapFields::CERT_PATH       ]          ;
@@ -549,6 +548,12 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
       qWarning() << "Invalid history entry" << hc;
       return nullptr;
    }
+
+   auto acc = AccountModel::instance().getById(accId);
+
+   // Older history files may still have invalid entries, get rid of them
+   if ((!PhoneDirectoryModel::ensureValidity(number, acc)) && startTimeStamp == stopTimeStamp)
+       return nullptr;
 
    // This will happen if an account is deleted. As it can be very verbose,
    // print the error only once
@@ -569,7 +574,6 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
    if (!contactUid.isEmpty())
       ct = PersonModel::instance().getPlaceHolder(contactUid.toLatin1());
 
-   Account*        acc            = AccountModel::instance().getById(accId);
    ContactMethod*  nb             = PhoneDirectoryModel::instance().getNumber(number,ct,acc);
 
    Call*           call           = new Call(Call::State::OVER, (name == "empty")?QString():name, nb, acc );
