@@ -32,6 +32,7 @@
 #include "collectionmodel.h"
 #include "collectioneditor.h"
 #include "transitionalpersonbackend.h"
+#include "peerprofilecollection2.h"
 
 //Qt
 #include <QtCore/QHash>
@@ -346,23 +347,41 @@ bool PersonModel::removeItemCallback(const Person* item)
 ///We cannot trust the UID in the vCard for uniqueness. We can only rely on the RingID to be unique.
 bool PersonModel::addPeerProfile(Person* person)
 {
-   if (!person or not person->collection()) return false;
+    if ((!person) || not person->collection())
+        return false;
 
-   // check if this person is saved in the PeerProfileCollection, "ppc"
-   if (person->collection() != &TransitionalPersonBackend::instance() and
-       person->collection()->name() != "ppc")
-   {
-      qWarning() << "About to add Person to the PeerProfileCollection which is part of another collection";
-   }
+    if (Q_UNLIKELY(person->collection()->name() == QLatin1String("ppc"))) {
+        qWarning() << "Trying to add a peer profile that has already been added";
+        return true;
+    }
 
-   for (auto col : collections(CollectionInterface::SupportedFeatures::ADD)) {
-       //Only add profile to peer profile collection
-       if (col->id() == "ppc") {
-           col->add(person);
-           return true;
-       }
-   }
-   return false;
+    if (Q_UNLIKELY(person->collection() != &TransitionalPersonBackend::instance())) {
+        qWarning() << "About to add Person to the PeerProfileCollection which is part of another collection";
+        return false;
+    }
+
+    if (Q_UNLIKELY(person->phoneNumbers().isEmpty())) {
+        qWarning() << "Trying to add an user profile linked to nobody, aborting";
+        return false;
+    }
+
+    const auto cols = collections(CollectionInterface::SupportedFeatures::ADD);
+    const auto iter = std::find_if(cols.constBegin(), cols.constEnd(), [](CollectionInterface* c) {
+        return c->id() == "ppc";
+    });
+
+    static bool printOnce = true;
+    if (Q_UNLIKELY(printOnce && iter == cols.constEnd())) {
+        qWarning() << "Cannot find any compatible collection to store the users profile";
+        printOnce = false;
+        return false;
+    }
+
+    auto ppc = static_cast<PeerProfileCollection2*>(*iter);
+
+    ppc->add(person);
+
+    return true;
 }
 
 ///@deprecated
