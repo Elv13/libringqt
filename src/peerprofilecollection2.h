@@ -73,6 +73,8 @@ public:
     void setMergeOption(Person::Role role, MergeOption option);
     MergeOption mergeOption(Person::Role);
 
+    void mergePersons(Person* p);
+
 private:
     PeerProfileCollection2Private* d_ptr;
     Q_DECLARE_PRIVATE(PeerProfileCollection2)

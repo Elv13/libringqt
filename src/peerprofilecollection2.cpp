@@ -21,6 +21,9 @@
 
 #include <QtCore/QStandardPaths>
 
+#include <person.h>
+#include <contactmethod.h>
+
 class PeerProfileCollection2Private final
 {
 public:
@@ -34,6 +37,8 @@ public:
         static QString p = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/peer_profiles/";
         return p;
     }
+
+    void quickMerge(Person* source, Person* target) const;
 };
 
 PeerProfileCollection2Private::PeerProfileCollection2Private(PeerProfileCollection2* parent) : q_ptr(parent)
@@ -86,4 +91,64 @@ PeerProfileCollection2::MergeOption PeerProfileCollection2::mergeOption(Person::
 {
     //TODO
     return {};
+}
+
+void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) const
+{
+    bool changed = false;
+
+    // First, merge the strings
+    for (QByteArray prop : {"nickName"    , "firstName", "secondName", "formattedName",
+                            "organization", "preferredEmail", "group", "department"}) {
+        if (target->property(prop).toString().isEmpty()) {
+            changed = true;
+            target->setProperty(prop, source->property(prop));
+        }
+    }
+
+    if (target->photo().isNull() && !source->photo().isNull()) {
+        changed = true;
+        target->setPhoto(source->photo());
+    }
+
+    QSet<QString> dedup;
+
+    auto pn = target->phoneNumbers();
+
+    for (auto cm : qAsConst(pn))
+        dedup.insert(cm->uri());
+
+    for (auto cm : qAsConst(source->phoneNumbers())) {
+        if (!dedup.contains(cm->uri())) {
+            changed = true;
+            pn << cm;
+            target->setContactMethods(pn);
+        }
+    }
+
+    if (changed)
+        target->save();
+}
+
+void PeerProfileCollection2::mergePersons(Person* p)
+{
+    switch (defaultMode()) {
+        case DefaultMode::NEW_CONTACT:
+            for (auto cm : qAsConst(p->phoneNumbers()))
+                cm->setPerson(p);
+            p->save();
+            break;
+        case DefaultMode::IGNORE_DUPLICATE:
+            //p->merge(p->phoneNumbers().first()->contact());
+            //TODO check if it's safe to delete it yet
+            break;
+        case DefaultMode::QUICK_MERGE:
+            d_ptr->quickMerge(p, p->phoneNumbers().first()->contact());
+            break;
+        case DefaultMode::ALWAYS_ASK:
+            //TODO
+            break;
+        case DefaultMode::CUSTOM:
+            break;
+    }
 }

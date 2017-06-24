@@ -379,7 +379,12 @@ bool PersonModel::addPeerProfile(Person* person)
 
     auto ppc = static_cast<PeerProfileCollection2*>(*iter);
 
-    ppc->add(person);
+    if (person->phoneNumbers().first()->contact() != person) {
+        ppc->mergePersons(person);
+    }
+    else {
+        ppc->add(person);
+    }
 
     return true;
 }
