@@ -49,6 +49,8 @@ public:
    virtual bool       isEnabled() const override;
    virtual QByteArray id       () const override;
 
+   QString path() const;
+
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
 private:

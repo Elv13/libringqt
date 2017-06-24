@@ -258,6 +258,10 @@ QByteArray FallbackPersonCollection::id() const
    return "fpc2"+d_ptr->m_Path.toLatin1();
 }
 
+QString FallbackPersonCollection::path() const
+{
+    return d_ptr->m_Path.toLatin1();
+}
 
 void FallbackPersonCollectionPrivate::loadAsync()
 {
