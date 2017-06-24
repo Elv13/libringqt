@@ -190,12 +190,11 @@ bool LocalProfileCollection::reload()
 FlagPack<CollectionInterface::SupportedFeatures> LocalProfileCollection::supportedFeatures() const
 {
    return
-      CollectionInterface::SupportedFeatures::NONE       |
-      CollectionInterface::SupportedFeatures::LOAD       |
-      CollectionInterface::SupportedFeatures::CLEAR      |
-      CollectionInterface::SupportedFeatures::REMOVE     |
-      CollectionInterface::SupportedFeatures::MANAGEABLE |
-      CollectionInterface::SupportedFeatures::ADD        ;
+      CollectionInterface::SupportedFeatures::NONE   |
+      CollectionInterface::SupportedFeatures::LOAD   |
+      CollectionInterface::SupportedFeatures::CLEAR  |
+      CollectionInterface::SupportedFeatures::REMOVE |
+      CollectionInterface::SupportedFeatures::ADD    ;
 }
 
 bool LocalProfileCollection::clear()

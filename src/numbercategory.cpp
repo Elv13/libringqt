@@ -99,9 +99,8 @@ int NumberCategory::key() const
 
 FlagPack<CollectionInterface::SupportedFeatures> NumberCategory::supportedFeatures() const
 {
-   return CollectionInterface::SupportedFeatures::NONE         |
-          CollectionInterface::SupportedFeatures::MANAGEABLE   |
-          CollectionInterface::SupportedFeatures::LOAD         ;
+   return CollectionInterface::SupportedFeatures::NONE |
+          CollectionInterface::SupportedFeatures::LOAD ;
 }
 
 void NumberCategory::setIcon(const QVariant& pixmap)
