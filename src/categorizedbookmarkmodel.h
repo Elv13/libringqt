@@ -87,5 +87,6 @@ private:
 
 public Q_SLOTS:
    void reloadCategories();
+   void clear();
 };
 

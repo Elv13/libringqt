@@ -454,6 +454,11 @@ void CategorizedBookmarkModel::remove(const QModelIndex& idx)
    collections()[0]->editor<ContactMethod>()->remove(getNumber(idx));
 }
 
+void CategorizedBookmarkModel::clear()
+{
+    collections()[0]->clear();
+}
+
 ContactMethod* CategorizedBookmarkModel::getNumber(const QModelIndex& idx)
 {
    if (idx.isValid()) {
