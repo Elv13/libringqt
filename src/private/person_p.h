@@ -27,6 +27,7 @@
 #include "person.h"
 class ContactMethod;
 class PeerTimelineModel;
+class PersonStatistics;
 
 class PersonPrivate final : public QObject
 {
@@ -53,6 +54,7 @@ public:
    QHash<QString, QString>  m_lCustomAttributes   ;
    ContactMethod*           m_LastUsedCM {nullptr};
    QVector<ContactMethod*>  m_HiddenContactMethods;
+   PersonStatistics*        m_pStats              ;
 
    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
    QWeakPointer<QAbstractItemModel> m_pAddressModel;

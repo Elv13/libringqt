@@ -33,7 +33,6 @@ class QString;
 #include "typedefs.h"
 #include "itemdataroles.h"
 #include "namedirectory.h"
-#include "usage_statistics.h"
 
 class CredentialModel         ;
 class ContactMethod           ;
@@ -49,6 +48,7 @@ class NetworkInterfaceModel   ;
 class KeyExchangeModelPrivate ;
 class PendingContactRequestModel;
 class Profile;
+class UsageStatistics;
 class ContactRequest;
 class BannedContactModel;
 
@@ -381,6 +381,7 @@ class LIB_EXPORT Account : public ItemBase {
       QAbstractItemModel*       knownCertificateModel      () const;
       QAbstractItemModel*       bannedCertificatesModel    () const;
       QAbstractItemModel*       allowedCertificatesModel   () const;
+      UsageStatistics*          usageStatistics            () const;
       PendingContactRequestModel* pendingContactRequestModel   () const;
       BannedContactModel* bannedContactModel() const;
 
@@ -564,16 +565,13 @@ class LIB_EXPORT Account : public ItemBase {
       static Account::RegistrationState fromDaemonName(const QString& st);
       void regenSecurityValidation();
 
-      //Variable
-      UsageStatistics usageStats;
-
    public Q_SLOTS:
       void setEnabled(bool checked);
 
    private:
       //Constructors
       explicit Account();
-      ~Account();
+      virtual ~Account();
 
       QSharedPointer<AccountPrivate> d_ptr;
       Q_DECLARE_PRIVATE(Account)

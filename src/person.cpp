@@ -42,6 +42,7 @@
 #include "private/person_p.h"
 #include "private/contactmethod_p.h"
 #include "media/textrecording.h"
+#include "private/personstatistics.hpp"
 #include "mime.h"
 
 // Std
@@ -376,6 +377,15 @@ const QString& Person::department() const
 ContactMethod* Person::lastUsedContactMethod() const
 {
     return d_ptr->m_LastUsedCM;
+}
+
+UsageStatistics* Person::usageStatistics() const
+{
+    if (!d_ptr->m_pStats) {
+        d_ptr->m_pStats = new PersonStatistics(this);
+    }
+
+    return d_ptr->m_pStats;
 }
 
 QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const

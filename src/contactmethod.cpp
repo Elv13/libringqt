@@ -42,6 +42,7 @@
 #include "certificatemodel.h"
 #include "media/textrecording.h"
 #include "mime.h"
+#include "usagestatistics.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/cmcallsmodel.h"
@@ -50,6 +51,37 @@
 //Private
 #include "private/phonedirectorymodel_p.h"
 #include "private/textrecording_p.h"
+
+class UsageStatisticsPrivate
+{
+public:
+    int          m_TotalSeconds  { 0   };  ///< cummulated usage in number of seconds
+    int          m_LastWeekCount { 0   }; ///< XXX: not documented, not clear
+    int          m_LastTrimCount { 0   }; ///< XXX: not documented, not clear
+    time_t       m_LastUsed      { 0   };        ///< last usage time
+    bool         m_HaveCalled    {false};    ///< has object been called? (used for call type object)
+    QList<Call*> m_lCalls               ;
+    QList<Call*> m_lActiveCalls         ;
+
+    // Mutators
+    void setHaveCalled();
+
+    /// \brief Update usage using a time range.
+    ///
+    /// All values are updated using given <tt>[start, stop]</tt> time range.
+    /// \a start and \a stop are given in seconds.
+    ///
+    /// \param start starting time of usage
+    /// \param stop ending time of usage, must be greater than \a start
+    void update(time_t start, time_t stop);
+
+    /// \brief Use this method to update lastUsed time by a new time only if sooner.
+    ///
+    /// \return \a true if the update has been effective.
+    bool setLastUsed(time_t new_time);
+
+    void append(UsageStatistics* other);
+};
 
 void ContactMethodPrivate::callAdded(Call* call)
 {
@@ -214,6 +246,11 @@ time_t ContactMethod::lastUsed() const
    return d_ptr->m_UsageStats.lastUsed();
 }
 
+UsageStatistics* ContactMethod::usageStatistics() const
+{
+   return &d_ptr->m_UsageStats;
+}
+
 ///Set this number default account
 void ContactMethod::setAccount(Account* account)
 {
@@ -221,8 +258,8 @@ void ContactMethod::setAccount(Account* account)
       return;
 
    //Add the statistics
-   if (account && !d_ptr->m_pAccount)
-       account->usageStats += d_ptr->m_UsageStats;
+   if (account && !d_ptr->m_pAccount && account->usageStatistics())
+       account->usageStatistics()->d_ptr->append(&d_ptr->m_UsageStats);
 
    d_ptr->m_pAccount = account;
 
@@ -336,7 +373,7 @@ bool ContactMethod::setType(ContactMethod::Type t)
 ///Update the last time used only if t is more recent than m_LastUsed
 void ContactMethod::setLastUsed(time_t t)
 {
-    if (d_ptr->m_UsageStats.setLastUsed(t))
+    if (d_ptr->m_UsageStats.d_ptr->setLastUsed(t))
        emit lastUsedChanged(t);
 }
 
@@ -405,7 +442,7 @@ ContactMethod::Type ContactMethod::type() const
 ///Return the number of calls from this number
 int ContactMethod::callCount() const
 {
-   return d_ptr->m_UsageStats.totalCount();
+   return d_ptr->m_UsageStats.d_ptr->m_lCalls.size();
 }
 
 uint ContactMethod::weekCount() const
@@ -420,7 +457,7 @@ uint ContactMethod::trimCount() const
 
 bool ContactMethod::haveCalled() const
 {
-   return d_ptr->m_UsageStats.haveCalled();
+   return d_ptr->m_UsageStats.hasBeenCalled();
 }
 
 ///Best bet for this person real name
@@ -497,7 +534,7 @@ QString ContactMethod::getBestId() const
 /// Returns if this contact method is currently involved in a recording
 bool ContactMethod::isRecording() const
 {
-   for (auto c : qAsConst(d_ptr->m_lActiveCalls)) {
+   for (auto c : qAsConst(d_ptr->m_UsageStats.d_ptr->m_lActiveCalls)) {
       //TODO if video recording is ever supported, extend the if
       if (c->isRecording(Media::Media::Type::AUDIO, Media::Media::Direction::OUT))
          return true;
@@ -508,13 +545,13 @@ bool ContactMethod::isRecording() const
 /// Returns if this contact method currently has ongoing calls
 bool ContactMethod::hasActiveCall() const
 {
-   return !d_ptr->m_lActiveCalls.isEmpty();
+   return !d_ptr->m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
 }
 
 /// Returns if this contact method currently has active video streams
 bool ContactMethod::hasActiveVideo() const
 {
-   for (auto c : qAsConst(d_ptr->m_lActiveCalls)) {
+   for (auto c : qAsConst(d_ptr->m_UsageStats.d_ptr->m_lActiveCalls)) {
       if (c->videoRenderer())
          return true;
    }
@@ -602,7 +639,7 @@ QByteArray ContactMethod::sha1() const
 ///Return all calls from this number
 QList<Call*> ContactMethod::calls() const
 {
-   return d_ptr->m_lCalls;
+   return d_ptr->m_UsageStats.d_ptr->m_lCalls;
 }
 
 ///Return the phonenumber position in the popularity index
@@ -620,7 +657,8 @@ QVariant ContactMethod::roleData(int role) const
 {
    QVariant cat;
 
-   auto lastCall = d_ptr->m_lCalls.isEmpty() ? nullptr : d_ptr->m_lCalls.last();
+   auto lastCall = d_ptr->m_UsageStats.d_ptr->m_lCalls.isEmpty()
+      ? nullptr : d_ptr->m_UsageStats.d_ptr->m_lCalls.last();
 
    switch (role) {
       case static_cast<int>(Ring::Role::Name):
@@ -790,25 +828,25 @@ void ContactMethod::addCall(Call* call)
    if (!call) return;
 
    d_ptr->m_Type = ContactMethod::Type::USED;
-   d_ptr->m_lCalls << call;
+   d_ptr->m_UsageStats.d_ptr->m_lCalls << call;
 
    // call setLastUsed first so that we emit lastUsedChanged()
    auto time = call->startTimeStamp();
    setLastUsed(time);
 
    //Update the contact method statistics
-   d_ptr->m_UsageStats.update(call->startTimeStamp(), call->stopTimeStamp());
+   d_ptr->m_UsageStats.d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
    if (d_ptr->m_pAccount)
-      d_ptr->m_pAccount->usageStats.update(call->startTimeStamp(), call->stopTimeStamp());
+      d_ptr->m_pAccount->usageStatistics()->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
 
    if (call->direction() == Call::Direction::OUTGOING) {
-      d_ptr->m_UsageStats.setHaveCalled();
+      d_ptr->m_UsageStats.d_ptr->setHaveCalled();
       if (d_ptr->m_pAccount)
-         d_ptr->m_pAccount->usageStats.setHaveCalled();
+         d_ptr->m_pAccount->usageStatistics()->d_ptr->setHaveCalled();
    }
 
    if (d_ptr->m_pAccount)
-       d_ptr->m_pAccount->usageStats.setLastUsed(time);
+       d_ptr->m_pAccount->usageStatistics()->d_ptr->setLastUsed(time);
 
    d_ptr->callAdded(call);
    d_ptr->changed();
@@ -1093,13 +1131,13 @@ bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads
  */
 void ContactMethodPrivate::addActiveCall(Call* c)
 {
-    m_lActiveCalls << c;
+    m_UsageStats.d_ptr->m_lActiveCalls << c;
     changed();
 }
 
 void ContactMethodPrivate::removeActiveCall(Call* c)
 {
-    m_lActiveCalls.removeAll(c);
+    m_UsageStats.d_ptr->m_lActiveCalls.removeAll(c);
     changed();
 }
 
@@ -1134,4 +1172,89 @@ QVariant TemporaryContactMethod::icon() const
    return QVariant(); //TODO use the pixmapmanipulator to get a better icon
 }
 
+/************************************************************************************
+ *                                                                                  *
+ *                                  Statistics                                      *
+ *                                                                                  *
+ ***********************************************************************************/
+
+UsageStatistics::UsageStatistics() : d_ptr(new UsageStatisticsPrivate)
+{}
+
+UsageStatistics::~UsageStatistics()
+{}
+
+int UsageStatistics::totalSeconds() const
+{
+    return d_ptr->m_TotalSeconds;
+}
+
+int UsageStatistics::lastWeekCount() const
+{
+    return d_ptr->m_LastWeekCount;
+}
+
+int UsageStatistics::lastTrimCount() const
+{
+    return d_ptr->m_LastTrimCount;
+}
+
+time_t UsageStatistics::lastUsed() const
+{
+    return d_ptr->m_LastUsed;
+}
+
+bool UsageStatistics::hasBeenCalled() const
+{
+    return d_ptr->m_HaveCalled;
+}
+
+//Mutators
+
+void UsageStatisticsPrivate::setHaveCalled()
+{
+    m_HaveCalled = true;
+}
+
+/// \brief Update usage using a time range.
+///
+/// All values are updated using given <tt>[start, stop]</tt> time range.
+/// \a start and \a stop are given in seconds.
+///
+/// \param start starting time of usage
+/// \param stop ending time of usage, must be greater than \a start
+void UsageStatisticsPrivate::update(time_t start, time_t stop)
+{
+    setLastUsed(start);
+    m_TotalSeconds += stop - start;
+    time_t now;
+    ::time(&now);
+    if (now - 3600*24*7 < stop)
+        ++m_LastWeekCount;
+    if (now - 3600*24*7*15 < stop)
+        ++m_LastTrimCount;
+}
+
+/// \brief Use this method to update lastUsed time by a new time only if sooner.
+///
+/// \return \a true if the update has been effective.
+bool UsageStatisticsPrivate::setLastUsed(time_t new_time)
+{
+    if (new_time > m_LastUsed) {
+        m_LastUsed = new_time;
+        return true;
+    }
+
+    return false;
+}
+
+void UsageStatisticsPrivate::append(UsageStatistics* rhs)
+{
+    m_LastWeekCount += rhs->d_ptr->m_LastWeekCount;
+    m_LastTrimCount += rhs->d_ptr->m_LastTrimCount;
+    setLastUsed(rhs->d_ptr->m_LastUsed);
+}
+
 Q_DECLARE_METATYPE(QList<Call*>)
+
+#include <contactmethod.moc>

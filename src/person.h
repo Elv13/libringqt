@@ -32,6 +32,7 @@ class AddressPrivate;
 class Account;
 class CollectionInterface;
 class PersonPlaceHolderPrivate;
+class UsageStatistics;
 
 #include "typedefs.h"
 
@@ -160,6 +161,7 @@ public:
    const  QVariant photo            () const;
    const  QString& group            () const;
    const  QString& department       () const;
+   UsageStatistics* usageStatistics () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
    const QList<Address>& addresses        () const;

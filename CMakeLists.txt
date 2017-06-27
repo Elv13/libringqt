@@ -331,7 +331,6 @@ SET( libringclient_LIB_SRCS
   src/private/addressmodel.cpp
   src/mime.cpp
   src/smartinfohub.cpp
-  src/usage_statistics.cpp
 
   #Extension
   src/extensions/presencecollectionextension.cpp
@@ -438,7 +437,7 @@ SET( libringclient_LIB_HDRS
   src/dbuserrorhandlerdefault.h
   src/itemdataroles.h
   src/smartinfohub.h
-  src/usage_statistics.h
+  src/usagestatistics.h
   src/bannedcontactmodel.h
 )
 
@@ -607,6 +606,8 @@ SET(libringclient_PRIVATE_HDRS
    src/private/imconversationmanagerprivate.h
    src/private/smartInfoHub_p.h
    src/private/certificatemodel_p.h
+   src/usagestatistics.h
+   src/private/personstatistics.hpp
 )
 
 IF(${ENABLE_LIBWRAP} MATCHES true)

@@ -35,16 +35,17 @@ class AccountPrivate;
 class Person;
 class Call;
 class ContactMethodPrivate;
+class ContactMethodDirectoryPrivate;
 class TemporaryContactMethod;
 class NumberCategory;
 class TemporaryContactMethodPrivate;
 class InstantMessagingModel;
 class Certificate;
+class UsageStatistics;
 
 namespace Media {
    class TextRecording;
 }
-
 
 ///ContactMethod: represent a phone number
 class LIB_EXPORT ContactMethod : public ItemBase
@@ -157,6 +158,7 @@ public:
    bool                  isRecording     () const;
    bool                  hasActiveCall   () const;
    bool                  hasActiveVideo  () const;
+   UsageStatistics*      usageStatistics () const;
 
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 

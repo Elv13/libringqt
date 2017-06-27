@@ -71,6 +71,7 @@
 #include "private/securityevaluationmodel_p.h"
 #include "extensions/securityevaluationextension.h"
 #include "bannedcontactmodel.h"
+#include "usagestatistics.h"
 
 // define
 #define TO_BOOL ?"true":"false"
@@ -184,6 +185,11 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
        tracked_buddy->setTracked(true);
        tracked_buddy->setPresent(tracked_buddy_present);
    }
+
+    const QString currentUri = QString("%1@%2").arg(a->username()).arg(a->d_ptr->m_HostName);
+
+    a->d_ptr->m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, a);
+    a->d_ptr->m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
 
    return a;
 } //buildExistingAccountFromId
@@ -633,29 +639,37 @@ NetworkInterfaceModel* Account::networkInterfaceModel() const
    return d_ptr->m_pNetworkInterfaceModel;
 }
 
+UsageStatistics* Account::usageStatistics() const
+{
+    if (!d_ptr->m_pAccountNumber)
+        return nullptr;
+
+    return contactMethod()->usageStatistics();
+}
+
 bool Account::isUsedForOutgogingCall() const
 {
-   return usageStats.haveCalled();
+   return usageStatistics()->hasBeenCalled();
 }
 
 uint Account::totalCallCount() const
 {
-   return usageStats.totalCount();
+   return contactMethod()->callCount();
 }
 
 uint Account::weekCallCount() const
 {
-   return usageStats.lastWeekCount();
+   return usageStatistics()->lastWeekCount();
 }
 
 uint Account::trimesterCallCount() const
 {
-   return usageStats.lastTrimCount();
+   return usageStatistics()->lastTrimCount();
 }
 
 time_t Account::lastUsed() const
 {
-   return usageStats.lastUsed();
+   return usageStatistics()->lastUsed();
 }
 
 /*******************************************************************************

@@ -18,7 +18,7 @@
 #pragma once
 
 //Internal
-#include "usage_statistics.h"
+#include "usagestatistics.h"
 
 class PeerTimelineModel;
 
@@ -32,12 +32,9 @@ public:
    bool               m_Tracked          ;
    Person*            m_pPerson          ;
    Account*           m_pAccount         ;
-   QList<Call*>       m_lCalls           ;
-   int                m_PopularityIndex  ;
    QString            m_MostCommonName   ;
    QHash<QString,QPair<int,time_t>> m_hNames;
    bool               m_hasType          ;
-   int                m_Index            ;
    bool               m_IsBookmark       ;
    QString            m_Uid              ;
    QString            m_PrimaryName_cache;
@@ -49,8 +46,11 @@ public:
    Certificate*       m_pCertificate;
    QString            m_RegisteredName   ;
    UsageStatistics    m_UsageStats       ;
-   QList<Call*>       m_lActiveCalls     ;
    QVector<Media::TextRecording*> m_lAltTR;
+
+   // PhoneDirectoryModel attributes
+   int                m_Index            ;
+   int                m_PopularityIndex  ;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<PeerTimelineModel>  m_TimelineModel;
