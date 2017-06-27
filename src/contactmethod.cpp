@@ -268,6 +268,7 @@ void ContactMethod::setAccount(Account* account)
 ///Set this number contact
 void ContactMethod::setPerson(Person* contact)
 {
+
    Person* old = d_ptr->m_pPerson;
    if (d_ptr->m_pPerson == contact)
       return;

@@ -224,13 +224,10 @@ private:
  */
 struct TextMessageNode
 {
-   TextMessageNode() : m_pNext(nullptr),m_pContactMethod(nullptr)
-   {}
-
-   Serializable::Message* m_pMessage      ;
-   ContactMethod*         m_pContactMethod;
-   TextMessageNode*       m_pNext         ;
-   int                    m_row           ;
+   Serializable::Message* m_pMessage      {nullptr};
+   ContactMethod*         m_pContactMethod{nullptr};
+   TextMessageNode*       m_pNext         {nullptr};
+   int                    m_row           {  -1   };
 
    QVariant roleData(int role) const;
 };

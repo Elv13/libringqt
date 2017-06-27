@@ -266,7 +266,6 @@ SET( libringclient_LIB_SRCS
   src/ciphermodel.cpp
   src/accountstatusmodel.cpp
   src/codecmodel.cpp
-  src/recentmodel.cpp
   src/chainoftrustmodel.cpp
   src/pendingcontactrequestmodel.cpp
   src/peerstimelinemodel.cpp
@@ -423,7 +422,6 @@ SET( libringclient_LIB_HDRS
   src/securityflaw.h
   src/collectioncreationinterface.h
   src/collectionconfigurationinterface.h
-  src/recentmodel.h
   src/peerstimelinemodel.h
   src/peertimelinemodel.h
   src/chainoftrustmodel.h

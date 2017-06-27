@@ -327,13 +327,9 @@ QModelIndex ProfileModel::mapFromSource(const QModelIndex& idx) const
     auto accNode = d_ptr->nodeForAccount(acc);
 
     //Something is wrong, there is an orphan
-    if (!accNode) {
+    if (!accNode)
         return QModelIndex();
-    }
 
-    if (!accNode) {
-        qDebug() << "No profile is assigned to this account" << acc->alias();
-    }
     return index(accNode->m_Index, 0, index(accNode->parent->m_Index, 0, QModelIndex()));
 }
 

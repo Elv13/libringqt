@@ -484,8 +484,11 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
    QMapIterator<QString, QString> iter(message);
    while (iter.hasNext()) {
       iter.next();
-      if (iter.key().left(profileSize) == RingMimes::PROFILE_VCF)
-          return;
+      if (iter.key().left(profileSize) == RingMimes::PROFILE_VCF) {
+         delete m;
+         return;
+      }
+
       if (iter.value() != QLatin1String("application/resource-lists+xml")) { //This one is useless
          const QString mimeType = iter.key();
 

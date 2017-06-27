@@ -230,8 +230,10 @@ void CategorizedBookmarkModel::reloadCategories()
             d_ptr->m_Tracked[bookmark] = conn;
          }
       }
-      else
+      else {
+         delete bm;
          qDebug() << "ERROR count";
+      }
    }
 
 

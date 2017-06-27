@@ -59,12 +59,12 @@ public:
    //Attributes
    QList<CodecData*>      m_lCodecs        ;
    QMap<int,bool>         m_lEnabledCodecs ;
-   Account*               m_pAccount       ;
+   Account*               m_pAccount       {nullptr};
    QSortFilterProxyModel* m_pAudioProxy    ;
    QSortFilterProxyModel* m_pVideoProxy    ;
    QStringList            m_lMimes         ;
    QItemSelectionModel*   m_pSelectionModel;
-   CodecModel::EditState  m_EditState      ;
+   CodecModel::EditState  m_EditState      {CodecModel::EditState::LOADING};
    static Matrix2D<CodecModel::EditState, CodecModel::EditAction,CodecModelFct> m_mStateMachine;
 
    //Callbacks
@@ -107,7 +107,6 @@ CodecModel::CodecModel(Account* account) :
 QAbstractListModel(account?(QObject*)account:(QObject*)QCoreApplication::instance()), d_ptr(new CodecModelPrivate(this))
 {
    Q_ASSERT(account);
-   d_ptr->m_EditState = CodecModel::EditState::LOADING;
    d_ptr->m_pAccount = account;
 
    // New accounts don't have ID yet, avoid a warning

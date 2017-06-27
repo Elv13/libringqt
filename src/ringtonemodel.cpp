@@ -45,7 +45,7 @@ public:
    Ringtone*                            m_pCurrent         ;
    QHash<Account*,int>                  m_hCurrent         ;
    QHash<Account*,QItemSelectionModel*> m_hSelectionModels ;
-   LocalRingtoneCollection*             m_pCollection      ;
+   LocalRingtoneCollection*             m_pCollection      {nullptr};
    QHash<const Ringtone*,Account*>      m_hPendingSelection;
    bool                                 m_isPlaying        ;
 

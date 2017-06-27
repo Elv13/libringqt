@@ -28,7 +28,7 @@ public:
 
    //Attributes
    QVector<ContactRequest*> m_lRequests;
-   Account*               m_pAccount ;
+   Account*                 m_pAccount {nullptr};
 
    //Helper
    void addRequest   (ContactRequest* r);

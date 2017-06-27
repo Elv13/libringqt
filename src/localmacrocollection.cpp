@@ -72,7 +72,7 @@ public:
 constexpr const char LocalMacroCollectionPrivate::FILENAME[];
 
 LocalMacroCollection::LocalMacroCollection(CollectionMediator<Macro>* mediator) :
-   CollectionInterface(new LocalMacroEditor(mediator))
+   CollectionInterface(new LocalMacroEditor(mediator)), d_ptr(new LocalMacroCollectionPrivate)
 {
    load();
 }

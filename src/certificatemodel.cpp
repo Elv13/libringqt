@@ -690,7 +690,7 @@ Certificate* CertificateModel::getCertificateFromId(const QString& id, Account* 
          CertificateNode* cat = d_ptr->m_hStrToCat.value(category);
 
          if (!cat) {
-            cat = d_ptr->createCategory(category, a?QString("%1 certificates").arg(a->alias()):QString(), QString());
+            cat = d_ptr->createCategory(category, QString("%1 certificates").arg(a->alias()), QString());
          }
 
          d_ptr->addToTree(cert,cat);
