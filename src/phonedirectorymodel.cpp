@@ -46,6 +46,13 @@
 //Private
 #include "private/phonedirectorymodel_p.h"
 
+class ContactMethodDirectoryPrivate
+{
+public:
+   int m_Index          {-1};
+   int m_PopularityIndex{-1};
+};
+
 PhoneDirectoryModelPrivate::PhoneDirectoryModelPrivate(PhoneDirectoryModel* parent) : QObject(parent), q_ptr(parent),
 m_CallWithAccount(false),m_pPopularModel(nullptr)
 {
@@ -235,7 +242,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
       case PhoneDirectoryModelPrivate::Columns::POPULARITY_INDEX:
          switch (role) {
             case Qt::DisplayRole:
-               return number->popularityIndex();
+               return number->dir_d_ptr->m_PopularityIndex;
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::BOOKMARED:
@@ -534,7 +541,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    NumberWrapper* wrap = d_ptr->m_hDirectory[uri];
    if (wrap) {
       ContactMethod* nb = wrap->numbers[0];
-      if ((!nb->hasType()) && (!type.isEmpty())) {
+      if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
          nb->setCategory(NumberCategoryModel::instance().getCategory(type));
       }
       return nb;
@@ -542,7 +549,8 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
 
    //Too bad, lets create one
    ContactMethod* number = new ContactMethod(uri, NumberCategoryModel::instance().getCategory(type));
-   number->setIndex(d_ptr->m_lNumbers.size());
+   number->dir_d_ptr = new ContactMethodDirectoryPrivate;
+   number->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
 
    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
    d_ptr->m_lNumbers << number;
@@ -673,9 +681,10 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    //Create the number
    ContactMethod* number = new ContactMethod(strippedUri,NumberCategoryModel::instance().getCategory(type));
+   number->dir_d_ptr = new ContactMethodDirectoryPrivate;
 
    number->setAccount(account);
-   number->setIndex( d_ptr->m_lNumbers.size());
+   number->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
    if (contact)
       number->setPerson(contact);
 
@@ -779,7 +788,7 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
 
    ContactMethod* number = qobject_cast<ContactMethod*>(sender());
    if (number) {
-      int currentIndex = number->popularityIndex();
+      int currentIndex = number->dir_d_ptr->m_PopularityIndex;
 
       //The number is already in the top 10 and just passed the "index-1" one
       if (currentIndex > 0 && m_lPopularityIndex[currentIndex-1]->callCount() < number->callCount()) {
@@ -787,10 +796,10 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
             ContactMethod* tmp = m_lPopularityIndex[currentIndex-1];
             m_lPopularityIndex[currentIndex-1] = number;
             m_lPopularityIndex[currentIndex  ] = tmp   ;
-            tmp->setPopularityIndex(tmp->popularityIndex()+1);
+            tmp->dir_d_ptr->m_PopularityIndex++;
             currentIndex--;
          } while (currentIndex && m_lPopularityIndex[currentIndex-1]->callCount() < number->callCount());
-         number->setPopularityIndex(currentIndex);
+         number->dir_d_ptr->m_PopularityIndex = currentIndex;
 
          if (m_pPopularModel)
             m_pPopularModel->reload();
@@ -800,15 +809,15 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
          m_lPopularityIndex << number;
          if (m_pPopularModel)
             m_pPopularModel->addRow();
-         number->setPopularityIndex(m_lPopularityIndex.size()-1);
+         number->dir_d_ptr->m_PopularityIndex = m_lPopularityIndex.size()-1;
 
       }
       //The top 10 is full, but this number just made it to the top 10
       else if (currentIndex == -1 && m_lPopularityIndex.size() >= 10 && m_lPopularityIndex[9] != number && m_lPopularityIndex[9]->callCount() < number->callCount()) {
          ContactMethod* tmp = m_lPopularityIndex[9];
-         tmp->setPopularityIndex(-1);
+         tmp->dir_d_ptr->m_PopularityIndex = -1;
          m_lPopularityIndex[9]     = number;
-         number->setPopularityIndex(9);
+         number->dir_d_ptr->m_PopularityIndex = 9;
          emit tmp->changed();
          emit number->changed();
          if (m_pPopularModel)
@@ -826,7 +835,7 @@ void PhoneDirectoryModelPrivate::slotChanged()
 {
    ContactMethod* number = qobject_cast<ContactMethod*>(sender());
    if (number) {
-      const int idx = number->index();
+      const int idx = number->dir_d_ptr->m_Index;
 #ifndef NDEBUG
       if (idx<0)
          qDebug() << "Invalid slotChanged() index!" << idx;

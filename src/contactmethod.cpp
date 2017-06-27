@@ -149,9 +149,9 @@ const ContactMethod* ContactMethod::BLANK()
 
 ContactMethodPrivate::ContactMethodPrivate(const URI& uri, NumberCategory* cat, ContactMethod::Type st, ContactMethod* q) :
    m_Uri(uri),m_pCategory(cat),m_Tracked(false),m_Present(false),
-   m_Type(st),m_PopularityIndex(-1),m_pPerson(nullptr),m_pAccount(nullptr),
+   m_Type(st),m_pPerson(nullptr),m_pAccount(nullptr),
    m_IsBookmark(false),
-   m_Index(-1),m_hasType(false),m_pTextRecording(nullptr), m_pCertificate(nullptr), q_ptr(q)
+   m_hasType(false),m_pTextRecording(nullptr), m_pCertificate(nullptr), q_ptr(q)
 {}
 
 ///Constructor
@@ -209,18 +209,6 @@ QString ContactMethod::presenceMessage() const
 ///Return the number
 URI ContactMethod::uri() const {
    return d_ptr->m_Uri ;
-}
-
-///This phone number has a type
-bool ContactMethod::hasType() const
-{
-   return d_ptr->m_hasType;
-}
-
-///Protected getter to get the number index
-int ContactMethod::index() const
-{
-   return d_ptr->m_Index;
 }
 
 ///Return the phone number type
@@ -305,24 +293,6 @@ void ContactMethod::setPerson(Person* contact)
    d_ptr->changed();
 
    emit contactChanged(contact, old);
-}
-
-///Protected setter to set if there is a type
-void ContactMethod::setHasType(bool value)
-{
-   d_ptr->m_hasType = value;
-}
-
-///Protected setter to set the PhoneDirectoryModel index
-void ContactMethod::setIndex(int value)
-{
-   d_ptr->m_Index = value;
-}
-
-///Protected setter to change the popularity index
-void ContactMethod::setPopularityIndex(int value)
-{
-   d_ptr->m_PopularityIndex = value;
 }
 
 void ContactMethod::setCategory(NumberCategory* cat)
@@ -640,12 +610,6 @@ QByteArray ContactMethod::sha1() const
 QList<Call*> ContactMethod::calls() const
 {
    return d_ptr->m_UsageStats.d_ptr->m_lCalls;
-}
-
-///Return the phonenumber position in the popularity index
-int ContactMethod::popularityIndex() const
-{
-   return d_ptr->m_PopularityIndex;
 }
 
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const

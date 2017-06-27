@@ -48,10 +48,6 @@ public:
    UsageStatistics    m_UsageStats       ;
    QVector<Media::TextRecording*> m_lAltTR;
 
-   // PhoneDirectoryModel attributes
-   int                m_Index            ;
-   int                m_PopularityIndex  ;
-
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<PeerTimelineModel>  m_TimelineModel;
 

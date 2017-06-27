@@ -48,7 +48,6 @@ public:
    int      key (                                      ) const;
    QVariant icon(bool isTracked, bool isPresent = false) const;
 
-
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
    virtual bool load() override;
 

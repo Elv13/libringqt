@@ -79,7 +79,6 @@ public:
    Q_PROPERTY(QString           uri              READ uri                                             )
    Q_PROPERTY(int               callCount        READ callCount                                       )
    Q_PROPERTY(QList<Call*>      calls            READ calls                                           )
-   Q_PROPERTY(int               popularityIndex  READ popularityIndex                                 )
    Q_PROPERTY(bool              bookmarked       READ isBookmarked WRITE setBookmarked NOTIFY bookmarkedChanged )
    Q_PROPERTY(QString           uid              READ uid               WRITE setUid                  )
    Q_PROPERTY(bool              isTracked        READ isTracked         NOTIFY trackedChanged         )
@@ -137,7 +136,6 @@ public:
    uint                  trimCount       () const;
    bool                  haveCalled      () const;
    QList<Call*>          calls           () const;
-   int                   popularityIndex () const;
    QHash<QString, QPair<int, time_t>> alternativeNames() const;
    QString               primaryName     () const;
    bool                  isBookmarked    () const;
@@ -212,14 +210,7 @@ protected:
    //PhoneDirectoryModel mutator
    bool merge(ContactMethod* other);
 
-   //Getter
-   bool hasType() const;
-   int  index() const;
-
-   //Setter
-   void setHasType(bool value);
-   void setIndex(int value);
-   void setPopularityIndex(int value);
+   ContactMethodDirectoryPrivate* dir_d_ptr {nullptr};
 
    //Many phone numbers can have the same "d" if they were merged
    ContactMethodPrivate* d_ptr;
