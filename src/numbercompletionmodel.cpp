@@ -332,6 +332,9 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
 
    if (show.second) {
       for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
+         if (!cm)
+            continue;
+
          cm->setUri(m_Prefix);
 
          // Perform name lookups
@@ -652,8 +655,8 @@ void NumberCompletionModelPrivate::accountRemoved(Account* a)
    if (!cm)
       cm = m_hRingTemporaryNumbers[a];
 
-   m_hSipTemporaryNumbers [a] = nullptr;
-   m_hRingTemporaryNumbers[a] = nullptr;
+   m_hSipTemporaryNumbers.remove(a);
+   m_hRingTemporaryNumbers.remove(a);
 
    setPrefix(q_ptr->prefix());
 
