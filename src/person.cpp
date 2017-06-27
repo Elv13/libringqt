@@ -653,6 +653,7 @@ QVariant Person::roleData(int role) const
       case Qt::DisplayRole:
       case Qt::EditRole:
       case static_cast<int>(Ring::Role::Name):
+      case static_cast<int>(Person::Role::FormattedName):
          return QVariant(formattedName());
       case static_cast<int>(Ring::Role::Number):
          {
@@ -687,6 +688,12 @@ QVariant Person::roleData(int role) const
          return filterString();
       case static_cast<int>(Ring::Role::IsPresent):
          return isPresent();
+      case static_cast<int>(Person::Role::LastName):
+          return secondName();
+      case static_cast<int>(Person::Role::PrimaryName):
+          return firstName();
+      case static_cast<int>(Person::Role::NickName):
+          return nickName();
       case static_cast<int>(Person::Role::IdOfLastCMUsed):
          {
             auto cm = lastUsedContactMethod();

@@ -53,10 +53,14 @@ public:
       Group             ,
       Department        ,
       PreferredEmail    ,
+      FormattedName     ,
       FormattedLastUsed ,
       IndexedLastUsed   ,
       DatedLastUsed     ,
       IdOfLastCMUsed    ,
+      LastName          ,
+      PrimaryName       ,
+      NickName          ,
       Object            ,
       Filter            , //All roles, all at once
       DropState         = static_cast<int>(Ring::Role::DropState), //State for drag and drop

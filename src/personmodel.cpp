@@ -136,6 +136,10 @@ QHash<int,QByteArray> PersonModel::roleNames() const
       roles[ (int)Person::Role::FormattedLastUsed ] = "formattedLastUsed";
       roles[ (int)Person::Role::IndexedLastUsed   ] = "indexedLastUsed";
       roles[ (int)Person::Role::DatedLastUsed     ] = "datedLastUsed";
+      roles[ (int)Person::Role::FormattedName     ] = "formattedName";
+      roles[ (int)Person::Role::LastName          ] = "lastName";
+      roles[ (int)Person::Role::PrimaryName       ] = "primaryName";
+      roles[ (int)Person::Role::NickName          ] = "nickName";
       roles[ (int)Person::Role::Filter            ] = "filter"; //All roles, all at once
       roles[ (int)Person::Role::DropState         ] = "dropState"; //State for drag and drop
    }
