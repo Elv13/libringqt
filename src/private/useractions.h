@@ -443,9 +443,7 @@ bool addToPerson(ContactMethod* cm)
    if (!p || !(p->collection()->supportedFeatures() & CollectionInterface::SupportedFeatures::EDIT))
       return false;
 
-   auto numbers = p->phoneNumbers();
-   numbers << cm;
-   p->setContactMethods(numbers);
+   p->addPhoneNumber(cm);
 
    return p->save();
 }
@@ -463,9 +461,7 @@ bool addToPerson(Person* p)
    if (!cm)
       return false;
 
-   auto numbers = p->phoneNumbers();
-   numbers << cm;
-   p->setContactMethods(numbers);
+   p->addPhoneNumber(cm);
 
    return p->save();
 }
