@@ -131,6 +131,7 @@ public:
 
    //Mutator
    Q_INVOKABLE void addAddress(const Address& addr);
+   Q_INVOKABLE void addPhoneNumber(ContactMethod* cm);
    Q_INVOKABLE void addCustomField(const QString& key, const QString& value);
    Q_INVOKABLE const QByteArray toVCard(QList<Account*> accounts = {}) const;
 
@@ -227,6 +228,7 @@ Q_SIGNALS:
    ///A new call used a ContactMethod associated with this Person
    void callAdded                 ( Call* call     );
    void relatedContactMethodsAdded( ContactMethod* cm );
+   void relatedContactMethodsRemoved( ContactMethod* cm );
 
 protected:
    //Presence secret methods

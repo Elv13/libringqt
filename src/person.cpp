@@ -793,6 +793,31 @@ void Person::addAddress(const Person::Address& addr)
    d_ptr->m_lAddresses << addr;
 }
 
+void Person::addPhoneNumber(ContactMethod* cm)
+{
+    if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
+        return;
+
+    if (Q_UNLIKELY(d_ptr->m_Numbers.indexOf(cm) != -1)) {
+        qWarning() << this << "already has the phone number" << cm;
+        return;
+    }
+
+    if (Q_UNLIKELY(cm->contact() && cm->contact()->d_ptr != d_ptr)) {
+        qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
+    }
+
+    d_ptr->m_Numbers << cm;
+
+    d_ptr->phoneNumbersChanged();
+
+    if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
+        d_ptr->m_HiddenContactMethods.removeAll(cm);
+        foreach (Person* c, d_ptr->m_lParents)
+            emit c->relatedContactMethodsRemoved(cm);
+    }
+}
+
 /// Returns the addresses associated with the person.
 const QList<Person::Address>& Person::addresses() const
 {
