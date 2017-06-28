@@ -24,6 +24,7 @@
 class URIPrivate
 {
 public:
+
    ///Strings associated with SchemeType
    static const Matrix1D<URI::SchemeType, const char*> schemeNames;
 
@@ -61,12 +62,13 @@ public:
    bool              m_HintParsed  ;
    bool              m_IsHNParsed  ;
    int               m_Port        ;
+   char              m_CharSet  {(char)0xFF};
 
    //Helper
    static QString strip(const QString& uri, URI::SchemeType& scheme);
    void parse();
    void parseHostname();
-   static bool checkIp(const QString& str, bool &isHash, const URI::SchemeType& scheme);
+   static char checkIp(const QString& str, const URI::SchemeType& scheme);
    URI::Transport nameToTransport(const QByteArray& name);
    void parseAttribute(const QByteArray& extHn, const int start, const int pos);
 private:
@@ -280,26 +282,58 @@ URI::SchemeType URI::schemeType() const
 }
 
 /**
+ * Return the union of all the valid character sets.
+ *
+ * This is used, for example, for parsing vCard
+ */
+FlagPack<URI::CharSet> URI::charSets() const
+{
+    protocolHint();
+
+    return static_cast<URI::CharSet>(d_ptr->m_CharSet);
+}
+
+/**
  * "Fast" Ipv4 and Ipv6 check, accept 999.999.999.999, :::::::::FF and other
  * atrocities, but at least perform a O(N) ish check and validate the hash
  *
  * @param str an uservalue (faster the scheme and before the "at" sign)
  * @param [out] isHash if the content is pure hexadecimal ASCII
  */
-bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType& scheme)
+char URIPrivate::checkIp(const QString& str, const URI::SchemeType& scheme)
 {
+   typedef URI::CharSet CF;
+
    const QByteArray raw = str.toLatin1();
-   int max = str.size();
+   const int max = str.size();
 
-   if (max < 3 || max > 45 || (!isHash && scheme == URI::SchemeType::RING))
-      return false;
+   // Don't bother with short or long strings, they will always end up OTHER
+   if (max < 3 || max > 40)
+      return CF::OTHER;
 
+   // Assume they are IPs until proven otherwise
+   char flags = CF::IP;
+
+   // Phone numbers are not supported on RING accounts
+   flags |= scheme != URI::SchemeType::RING ?
+      CF::PHONE : CF::OTHER;
+
+   // Assume Ring hashes are always 40 chars long
+   flags |= (scheme == URI::SchemeType::RING && max == 40) ?
+      CF::HASH : CF::OTHER;
+
+   /*
+    * dc: dots
+    * sc: semicolor
+    * d : decimal
+    * hx: hexadecimal
+    */
    uchar dc(0),sc(0),i(0),d(0),hx(1);
 
    while (i < max) {
       switch(raw[i]) {
          case '.':
-            isHash = false;
+            flags &= ~CF::HASH;
             d = 0;
             dc++;
             break;
@@ -308,10 +342,14 @@ bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType
          case '6': case '7': case '8':
          case '9':
             if (++d > 3 && dc)
-               return false;
+                flags &= ~CF::IPv4;
             break;
+         case '(': case ')': case ' ':
+         case '-': case '#': case '*':
+             flags &= CF::PHONE;
+             break;
          case ':':
-            isHash = false;
+            flags &= ~CF::HASH;
             sc++;
             //No break
             [[clang::fallthrough]];
@@ -320,14 +358,19 @@ bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType
          case 'a': case 'b': case 'c':
          case 'd': case 'e': case 'f':
             hx = 0;
+            flags &= ~CF::PHONE;
             break;
          default:
-            isHash = false;
-            return false;
+            flags &= ~CF::HASH;
       };
       i++;
    }
-   return (hx && dc == 3 && d < 4) ^ (sc > 1 && dc==0);
+
+   // Check IP formatting and discard invalid ones
+   if (!(hx && dc == 3 && d < 4) ^ (sc > 1 && dc==0))
+       flags &= CF::HASH | CF::PHONE;
+
+   return flags;
 }
 
 /**
@@ -342,17 +385,19 @@ bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType
        const_cast<URI*>(this)->d_ptr->parse();
 
     if (!d_ptr->m_HintParsed) {
-       bool isHash = d_ptr->m_Userinfo.size() == 40;
-
        URI::ProtocolHint hint;
 
+       //Read the string to see what kind of chars are used
+       d_ptr->m_CharSet = URIPrivate::checkIp(
+          d_ptr->m_Userinfo, d_ptr->m_HeaderType
+       );
+
        //Step 1: Check IP
-       if (URIPrivate::checkIp(d_ptr->m_Userinfo, isHash, d_ptr->m_HeaderType)) {
+       if (d_ptr->m_CharSet & CharSet::IP) {
            hint = URI::ProtocolHint::IP;
        }
        //Step 2: Check RING hash
-       else if (isHash)
-       {
+       else if (d_ptr->m_CharSet & CharSet::HASH) {
            hint = URI::ProtocolHint::RING;
        }
        //Step 3: Not a hash but it begins with ring:. This is a username.
@@ -360,8 +405,7 @@ bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType
            hint = URI::ProtocolHint::RING_USERNAME;
        }
        //Step 4: Check for SIP URIs
-       else if (d_ptr->m_HeaderType == URI::SchemeType::SIP)
-       {
+       else if (d_ptr->m_HeaderType == URI::SchemeType::SIP) {
            //Step 4.1: Check for SIP URI with hostname
            if (d_ptr->m_HasAt) {
                hint = URI::ProtocolHint::SIP_HOST;
@@ -372,12 +416,13 @@ bool URIPrivate::checkIp(const QString& str, bool &isHash, const URI::SchemeType
            }
        }
        //Step 5: Assume SIP
+       // it could also be registered names
        else {
            hint = URI::ProtocolHint::SIP_OTHER;
        }
 
        d_ptr->m_ProtocolHint = hint;
-       d_ptr->m_HintParsed = true;
+       d_ptr->m_HintParsed   = true;
     }
     return d_ptr->m_ProtocolHint;
  }

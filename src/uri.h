@@ -121,6 +121,19 @@ public:
    Q_ENUMS(URI::Transport)
 
    /**
+    * This enum store the result of the character class parser.
+    */
+   enum CharSet : char {
+      OTHER = 0x0 << 0, /*!< anything else           */
+      IPv4  = 0x1 << 0, /*!< `0-9` and `.`           */
+      IPv6  = 0x1 << 1, /*!< `0-0, `a-f`, `A-F`, `:` */
+      HASH  = 0x1 << 2, /*!< `0-0, `a-f`, `A-F`      */
+      PHONE = 0x1 << 3, /*!< `0-9`, `-`, ` `, `()`   */
+      IP    = CharSet::IPv4 | CharSet::IPv6
+   };
+   Q_ENUMS(URI::CharSet)
+
+   /**
     * @enum Section flags associated with each logical sections of the URI
     *
     * Those sections can be packed into a block to be used to define the
@@ -178,6 +191,8 @@ public:
    int        port          () const;
    SchemeType schemeType    () const;
    ProtocolHint protocolHint() const;
+
+   FlagPack<URI::CharSet> charSets() const;
 
    //Setter
    void setSchemeType(SchemeType t);
