@@ -36,6 +36,7 @@
 #include <private/vcardutils.h>
 #include <private/textrecording_p.h>
 #include <private/imconversationmanagerprivate.h>
+#include <peerprofilecollection2.h>
 #include <accountmodel.h>
 #include <personmodel.h>
 
@@ -78,7 +79,7 @@ class ProfileChunk
 {
 public:
    //Helper
-   static Person* addChunk( const QMap<QString,QString>& args, const QString& payload, ContactMethod *contactMethod);
+   static bool addChunk( const QMap<QString,QString>& args, const QString& payload, ContactMethod *contactMethod);
 
 private:
    //Attributes
@@ -105,7 +106,7 @@ IMConversationManagerPrivate& IMConversationManagerPrivate::instance()
    return *instance;
 }
 
-Person* ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString& payload, ContactMethod *contactMethod)
+bool ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString& payload, ContactMethod *contactMethod)
 {
     const int total  = args[ "of"   ].toInt();
     const int part   = args[ "part" ].toInt();
@@ -119,12 +120,12 @@ Person* ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString
     }
 
     if (part < 1 and part > total)
-        return nullptr;
+        return false;
 
     c->m_hParts[part] = payload;
 
     if (c->m_hParts.size() != c->m_PartsCount)
-        return nullptr;
+        return false;
 
     QByteArray cv;
     for (int i=0; i < c->m_PartsCount; ++i) {
@@ -134,7 +135,23 @@ Person* ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString
     m_hRequest[id] = nullptr;
     delete c;
 
-    return VCardUtils::mapToPersonFromReceivedProfile(contactMethod, cv);
+    // Notify the peer profile collection it has a potentially new entry
+    static PeerProfileCollection2* ppc = nullptr;
+
+    // The peer profile collection is not mandatory, but should never change
+    // over the application lifetime.
+    if (!ppc) {
+        const auto cols = PersonModel::instance().collections(CollectionInterface::SupportedFeatures::ADD);
+        const auto iter = std::find_if(cols.constBegin(), cols.constEnd(), [](CollectionInterface* c) {
+            return c->id() == "ppc";
+        });
+        ppc = static_cast<PeerProfileCollection2*>(*iter);
+    }
+
+    if (ppc)
+        return ppc->importPayload(contactMethod, cv);
+
+    return false;
 }
 
 ///Called when a new message is incoming
@@ -154,10 +171,8 @@ void IMConversationManagerPrivate::newMessage(const QString& callId, const QStri
       iter.next();
 
       if (iter.key().left(profileSize) == RingMimes::PROFILE_VCF) {
-          auto args = VCardUtils::parseMimeAttributes(iter.key());
-          if (auto person = ProfileChunk::addChunk(args, iter.value(), call->peerContactMethod())) {
-              PersonModel::instance().addPeerProfile(person);
-          }
+         auto args = VCardUtils::parseMimeAttributes(iter.key());
+         ProfileChunk::addChunk(args, iter.value(), call->peerContactMethod());
          return;
       }
    }

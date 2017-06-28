@@ -57,7 +57,7 @@ public:
    bool operator==(const ContactRequest& another) const;
 
 private:
-   explicit ContactRequest(Account* a, Person* p, const QString& id = QString(), time_t time = -1);
+   explicit ContactRequest(Account* a, const QString& id = QString(), time_t time = -1, const QByteArray& payload = {});
    virtual ~ContactRequest();
 
    ContactRequestPrivate* d_ptr;

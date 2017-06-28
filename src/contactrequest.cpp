@@ -24,8 +24,11 @@
 #include <account.h>
 #include <certificate.h>
 #include <certificatemodel.h>
+#include <phonedirectorymodel.h>
+#include "private/vcardutils.h"
 #include "itembase.h"
 #include "personmodel.h"
+#include <peerprofilecollection2.h>
 
 //DRing
 #include "dbus/configurationmanager.h"
@@ -34,16 +37,19 @@ class ContactRequestPrivate
 {
 public:
    //Attributes
-   QDateTime    m_Time        ;
-   Certificate* m_pCertificate;
-   Account*     m_pAccount    ;
-   Person*      m_pPeer       ;
+   QDateTime      m_Time                 ;
+   Certificate*   m_pCertificate         ;
+   ContactMethod* m_pContactMethod       ;
+   Account*       m_pAccount             ;
+   Person*        m_pPeer       {nullptr};
 };
 
-ContactRequest::ContactRequest(Account* a, Person* p, const QString& id, time_t time) : QObject(a), d_ptr(new ContactRequestPrivate)
+ContactRequest::ContactRequest(Account* a, const QString& id, time_t time, const QByteArray& payload) : QObject(a), d_ptr(new ContactRequestPrivate)
 {
+   d_ptr->m_pContactMethod = PhoneDirectoryModel::instance().getNumber(id, a);
+   d_ptr->m_pPeer = VCardUtils::mapToPersonFromReceivedProfile(d_ptr->m_pContactMethod, payload);
+
    d_ptr->m_pAccount     = a;
-   d_ptr->m_pPeer        = p;
    d_ptr->m_Time         = QDateTime::fromTime_t(time);
    d_ptr->m_pCertificate = CertificateModel::instance().getCertificateFromId(id, a);
 }
@@ -89,7 +95,22 @@ ContactRequest::setPeer(Person* person)
 bool ContactRequest::accept()
 {
    if (ConfigurationManager::instance().acceptTrustRequest(d_ptr->m_pAccount->id(), d_ptr->m_pCertificate->remoteId())) {
-      PersonModel::instance().addPeerProfile(peer());
+      // Notify the peer profile collection it has a potentially new entry
+      static PeerProfileCollection2* ppc = nullptr;
+
+      // The peer profile collection is not mandatory, but should never change
+      // over the application lifetime.
+      if (!ppc) {
+         const auto cols = PersonModel::instance().collections(CollectionInterface::SupportedFeatures::ADD);
+         const auto iter = std::find_if(cols.constBegin(), cols.constEnd(), [](CollectionInterface* c) {
+             return c->id() == "ppc";
+         });
+         ppc = static_cast<PeerProfileCollection2*>(*iter);
+      }
+
+      if (ppc)
+         ppc->add(peer());
+
       emit requestAccepted();
       return true;
    }
@@ -99,6 +120,7 @@ bool ContactRequest::accept()
 bool ContactRequest::discard()
 {
    if (ConfigurationManager::instance().discardTrustRequest(d_ptr->m_pAccount->id(), d_ptr->m_pCertificate->remoteId())) {
+      delete peer();
       emit requestDiscarded();
       return true;
    }

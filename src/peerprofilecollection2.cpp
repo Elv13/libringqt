@@ -22,6 +22,7 @@
 #include <QtCore/QStandardPaths>
 
 #include <person.h>
+#include <vcardutils.h>
 #include <contactmethod.h>
 
 class PeerProfileCollection2Private final
@@ -38,6 +39,7 @@ public:
         return p;
     }
 
+    void mergePersons(Person* source, ContactMethod* target) const;
     void quickMerge(Person* source, Person* target) const;
 };
 
@@ -100,7 +102,7 @@ void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) c
     // First, merge the strings
     for (QByteArray prop : {"nickName"    , "firstName", "secondName", "formattedName",
                             "organization", "preferredEmail", "group", "department"}) {
-        if (target->property(prop).toString().isEmpty()) {
+        if (target->property(prop).toString().isEmpty() && !source->property(prop).toString().isEmpty()) {
             changed = true;
             target->setProperty(prop, source->property(prop));
         }
@@ -121,8 +123,7 @@ void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) c
     for (auto cm : qAsConst(source->phoneNumbers())) {
         if (!dedup.contains(cm->uri())) {
             changed = true;
-            pn << cm;
-            target->setContactMethods(pn);
+            target->addPhoneNumber(cm);
         }
     }
 
@@ -130,25 +131,68 @@ void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) c
         target->save();
 }
 
-void PeerProfileCollection2::mergePersons(Person* p)
+void PeerProfileCollection2Private::mergePersons(Person* source, ContactMethod* target) const
 {
-    switch (defaultMode()) {
-        case DefaultMode::NEW_CONTACT:
-            for (auto cm : qAsConst(p->phoneNumbers()))
-                cm->setPerson(p);
-            p->save();
-            break;
-        case DefaultMode::IGNORE_DUPLICATE:
+    switch (m_Mode) {
+        case PeerProfileCollection2::DefaultMode::NEW_CONTACT:
+            target->setPerson(source);
+            q_ptr->add(source);
+            source->save();
+            return;
+        case PeerProfileCollection2::DefaultMode::IGNORE_DUPLICATE:
             //p->merge(p->phoneNumbers().first()->contact());
             //TODO check if it's safe to delete it yet
             break;
-        case DefaultMode::QUICK_MERGE:
-            d_ptr->quickMerge(p, p->phoneNumbers().first()->contact());
+        case PeerProfileCollection2::DefaultMode::QUICK_MERGE:
+            quickMerge(source, target->contact());
             break;
-        case DefaultMode::ALWAYS_ASK:
+        case PeerProfileCollection2::DefaultMode::ALWAYS_ASK:
             //TODO
             break;
-        case DefaultMode::CUSTOM:
+        case PeerProfileCollection2::DefaultMode::CUSTOM:
             break;
     }
+
+    delete source;
+}
+
+///When we get a peer profile, its a vCard from a ContactRequest or a Call. We need to verify if
+///this is Person which already exists, and so we simply need to update our existing vCard, or if
+///this is a new Person, in which case we'll save a new vCard.
+///We cannot trust the UID in the vCard for uniqueness. We can only rely on the RingID to be unique.
+bool PeerProfileCollection2::importPayload(ContactMethod* cm, const QByteArray& payload)
+{
+    auto person = VCardUtils::mapToPerson(payload, true);
+
+    if (Q_UNLIKELY(!person)) {
+        qWarning() << "Expected a vCard, but got something else";
+        return false;
+    }
+
+    const bool hasPerson = cm->contact();
+
+    if (!hasPerson) {
+        person->addPhoneNumber(cm);
+        cm->setPerson(person);
+        add(person);
+        person->save();
+        return true;
+    }
+
+    // If the other contact is also a peer profile, merging both should be
+    // an higher priority
+    //TODO const bool isPeer = cm->contact()->collection() == this;
+
+    // Check if one of the phone number matches
+    const auto iter = std::find_if(cm->contact()->phoneNumbers().constBegin(), cm->contact()->phoneNumbers().constEnd(), [cm](ContactMethod* cm2) {
+        return (*cm2) == cm;
+    });
+
+    // Always assume the user wants Ring to do this for her/him
+    if (iter == cm->contact()->phoneNumbers().constEnd())
+        cm->contact()->addPhoneNumber(cm);
+
+    d_ptr->mergePersons(person, cm);
+
+    return true;
 }

@@ -474,7 +474,7 @@ void AccountModelPrivate::slotIncomingContactRequest(const QString& accountId, c
    }
 
    /* do not pass a person before the contact request was added to his model */
-   ContactRequest* r = new ContactRequest(a, nullptr, ringID, time);
+   ContactRequest* r = new ContactRequest(a, ringID, time);
    a->pendingContactRequestModel()->d_ptr->addRequest(r);
 
    auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);

@@ -53,9 +53,6 @@ public:
    explicit PersonModel(QObject* parent = nullptr);
    virtual ~PersonModel();
 
-   //Mutator
-   bool addPeerProfile(Person* c);
-
    //Getters
    Person* getPersonByUid   ( const QByteArray& uid );
    Person* getPlaceHolder(const QByteArray& uid );

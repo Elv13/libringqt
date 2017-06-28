@@ -24,6 +24,7 @@
 #include <typedefs.h>
 
 class Person;
+class ContactMethod;
 class PeerProfileCollection2Private;
 
 template<typename T> class CollectionMediator;
@@ -73,7 +74,7 @@ public:
     void setMergeOption(Person::Role role, MergeOption option);
     MergeOption mergeOption(Person::Role);
 
-    void mergePersons(Person* p);
+    bool importPayload(ContactMethod* cm, const QByteArray& payload);
 
 private:
     PeerProfileCollection2Private* d_ptr;

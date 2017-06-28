@@ -153,10 +153,7 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
          auto ringID = tr_info[DRing::Account::TrustRequest::FROM];
          auto timeReceived = tr_info[DRing::Account::TrustRequest::RECEIVED].toInt();
 
-         auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
-         auto person = VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload);
-
-         auto contactRequest = new ContactRequest(a, person, ringID, timeReceived);
+         auto contactRequest = new ContactRequest(a, ringID, timeReceived, payload);
          a->pendingContactRequestModel()->d_ptr->addRequest(contactRequest);
       }
    }

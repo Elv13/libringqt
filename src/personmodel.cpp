@@ -345,54 +345,6 @@ bool PersonModel::removeItemCallback(const Person* item)
    return item;
 }
 
-///When we get a peer profile, its a vCard from a ContactRequest or a Call. We need to verify if
-///this is Person which already exists, and so we simply need to update our existing vCard, or if
-///this is a new Person, in which case we'll save a new vCard.
-///We cannot trust the UID in the vCard for uniqueness. We can only rely on the RingID to be unique.
-bool PersonModel::addPeerProfile(Person* person)
-{
-    if ((!person) || not person->collection())
-        return false;
-
-    if (Q_UNLIKELY(person->collection()->name() == QLatin1String("ppc"))) {
-        qWarning() << "Trying to add a peer profile that has already been added";
-        return true;
-    }
-
-    if (Q_UNLIKELY(person->collection() != &TransitionalPersonBackend::instance())) {
-        qWarning() << "About to add Person to the PeerProfileCollection which is part of another collection";
-        return false;
-    }
-
-    if (Q_UNLIKELY(person->phoneNumbers().isEmpty())) {
-        qWarning() << "Trying to add an user profile linked to nobody, aborting";
-        return false;
-    }
-
-    const auto cols = collections(CollectionInterface::SupportedFeatures::ADD);
-    const auto iter = std::find_if(cols.constBegin(), cols.constEnd(), [](CollectionInterface* c) {
-        return c->id() == "ppc";
-    });
-
-    static bool printOnce = true;
-    if (Q_UNLIKELY(printOnce && iter == cols.constEnd())) {
-        qWarning() << "Cannot find any compatible collection to store the users profile";
-        printOnce = false;
-        return false;
-    }
-
-    auto ppc = static_cast<PeerProfileCollection2*>(*iter);
-
-    if (person->phoneNumbers().first()->contact() != person) {
-        ppc->mergePersons(person);
-    }
-    else {
-        ppc->add(person);
-    }
-
-    return true;
-}
-
 ///@deprecated
 bool PersonModel::addNewPerson(Person* c, CollectionInterface* backend)
 {

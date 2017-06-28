@@ -414,6 +414,41 @@ Person* VCardUtils::mapToPerson(const QHash<QByteArray, QByteArray>& vCard, QLis
 }
 
 /**
+ * Create a new Person from the vCard payload.
+ */
+Person* VCardUtils::mapToPerson(const QByteArray& payload, bool purgeUntrusted)
+{
+    auto person = new Person();
+
+    const auto vCard = toHashMap(payload);
+
+    QHashIterator<QByteArray, QByteArray> it(vCard);
+    while (it.hasNext()) {
+        it.next();
+
+        // Only keep phone numbers
+        if (it.key() == VCardUtils::Property::TELEPHONE) {
+            URI uri(it.value());
+
+            if (!(uri.charSets() & URI::CharSet::PHONE))
+                continue;
+        }
+
+        // Do not trust UID from incoming vcard, we can't be sure that its unique, we will generate our own
+        if (purgeUntrusted && it.key() == VCardUtils::Property::UID) continue;
+
+        // This shouldn't be there anyways, but ignore it if it is
+        if (purgeUntrusted && it.key() == VCardUtils::Property::X_RINGACCOUNT) continue;
+
+        vc_mapper->metacall(person, it.key(), it.value().trimmed());
+    }
+
+    vc_mapper->apply();
+
+    return person;
+}
+
+/**
  * There are many instances when we can receive a payload which contains a vCard. The vCard is
  * received from a ContactMethod so we want to check if this CM already has a Person we want to
  * update from the new vCard, or else create a new Person. We also can't trust the contents of the
@@ -430,22 +465,29 @@ Person* VCardUtils::mapToPersonFromReceivedProfile(ContactMethod *contactMethod,
      *       from the same RingID, or maybe even use that Person and add this CM to its list of
      *       numbers
      */
-    auto person = contactMethod->contact();
+    Person* person = nullptr;//contactMethod->contact();
     if (!person) {
         person = new Person();
         person->setContactMethods({contactMethod});
         contactMethod->setPerson(person);
     }
-    auto vCard = toHashMap(payload);
+    const auto vCard = toHashMap(payload);
 
     QHashIterator<QByteArray, QByteArray> it(vCard);
     while (it.hasNext()) {
         it.next();
 
-        // Do not trust a ringid from an incoming vcard, it could have been falsified.
-        if (it.key() == VCardUtils::Property::TELEPHONE) continue;
+        // Only keep phone numbers
+        if (it.key() == VCardUtils::Property::TELEPHONE) {
+            URI uri(it.value());
+
+            if (!(uri.charSets() & URI::CharSet::PHONE))
+                continue;
+        }
+
         // Do not trust UID from incoming vcard, we can't be sure that its unique, we will generate our own
         if (it.key() == VCardUtils::Property::UID) continue;
+
         // This shouldn't be there anyways, but ignore it if it is
         if (it.key() == VCardUtils::Property::X_RINGACCOUNT) continue;
 
