@@ -104,8 +104,8 @@ public:
    bool                hasMimeType              ( const QString& mimeType ) const;
    QStringList         mimeTypes                (                         ) const;
    QVariant            roleData                 ( int row, int role       ) const;
+   virtual QVariant    roleData                 ( int role                ) const override;
    QVector<ContactMethod*> peers                (                         ) const;
-
 
    //Helper
    void setAllRead();

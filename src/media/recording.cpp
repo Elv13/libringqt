@@ -64,4 +64,10 @@ void Media::Recording::setCall(Call* call)
    d_ptr->m_pCall = call;
 }
 
+QVariant Media::Recording::roleData(int role) const
+{
+    Q_UNUSED(role)
+    return {};
+}
+
 #include <recording.moc>

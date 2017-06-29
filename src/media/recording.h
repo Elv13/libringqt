@@ -57,6 +57,8 @@ public:
    Recording::Type type() const;
    Call* call() const;
 
+   virtual QVariant roleData(int role) const;
+
    //Setter
    void setCall(Call* call);
 

@@ -112,6 +112,19 @@ Media::AVRecording::~AVRecording()
    delete d_ptr;
 }
 
+QVariant Media::AVRecording::roleData(int role) const
+{
+    if (call())
+        return call()->roleData(role);
+
+    switch(role) {
+        case Qt::DisplayRole:
+            return tr("N/A");
+    }
+
+   return {};
+}
+
 ///Return this recording path, if any
 QUrl Media::AVRecording::path() const
 {

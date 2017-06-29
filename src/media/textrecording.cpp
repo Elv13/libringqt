@@ -804,6 +804,21 @@ QHash<int,QByteArray> InstantMessagingModel::roleNames() const
    return roles;
 }
 
+QVariant Media::TextRecording::roleData(int role) const
+{
+   switch(role) {
+      case Qt::DisplayRole:
+         return peers().size() ? peers().first()->primaryName() : roleData(-1, Qt::DisplayRole);
+      case (int) Ring::Role::Length:
+         return QString::number(size()) + tr(" elements");
+      case (int) Ring::Role::FormattedLastUsed:
+         return d_ptr->m_lNodes.isEmpty() ? tr("N/A") :
+            QDateTime::fromTime_t(d_ptr->m_lNodes.last()->m_pMessage->timestamp).toString();
+   }
+
+   return {};
+}
+
 QVariant TextMessageNode::roleData(int role) const
 {
    switch (role) {

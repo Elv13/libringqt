@@ -54,6 +54,8 @@ public:
    QString    formattedDuration   () const;
    QString    formattedTimeLeft   () const;
 
+   virtual QVariant roleData(int role) const override;
+
    //Setter
    void setPath(const QUrl& path);
 
