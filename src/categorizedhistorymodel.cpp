@@ -179,6 +179,7 @@ QHash<int,QByteArray> CategorizedHistoryModel::roleNames() const
       roles.insert(static_cast<int>(Call::Role::SecurityLevelIcon) , QByteArray("securityLevelIcon"));
       roles.insert(static_cast<int>(Call::Role::SupportPresence  ) , QByteArray("supportPresence"  ));
       roles.insert(static_cast<int>(Call::Role::TotalSpentTime   ) , QByteArray("totalSpentTime"   ));
+      roles.insert(static_cast<int>(Call::Role::AudioRecording   ) , QByteArray("audioRecording"   ));
 
       QHash<int, QByteArray>::const_iterator i;
       for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)

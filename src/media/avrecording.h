@@ -41,6 +41,8 @@ public:
    Q_PROPERTY( QString formattedTimeElapsed READ formattedTimeElapsed NOTIFY formattedTimeElapsedChanged)
    Q_PROPERTY( QString formattedDuration    READ formattedDuration    NOTIFY formattedDurationChanged   )
    Q_PROPERTY( QString formattedTimeLeft    READ formattedTimeLeft    NOTIFY formattedTimeLeftChanged   )
+   Q_PROPERTY( bool    isCurrent            READ isCurrent            NOTIFY currentStatusChanged       )
+   Q_PROPERTY( bool    isPlaying            READ isPlaying            NOTIFY playingStatusChanged       )
 
    //Constructor
    explicit AVRecording();
@@ -53,6 +55,8 @@ public:
    QString    formattedTimeElapsed() const;
    QString    formattedDuration   () const;
    QString    formattedTimeLeft   () const;
+   bool       isCurrent           () const;
+   bool       isPlaying           () const;
 
    virtual QVariant roleData(int role) const override;
 
@@ -86,7 +90,10 @@ Q_SIGNALS:
    void formattedDurationChanged   (const QString& formattedValue);
    ///Emitted when the formatted time left string change
    void formattedTimeLeftChanged   (const QString& formattedValue);
-
+   ///When this recording is selected as the current one
+   void currentStatusChanged(bool);
+   ///When this recording is playing
+   void playingStatusChanged(bool);
 };
 
 }

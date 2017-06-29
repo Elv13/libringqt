@@ -254,6 +254,7 @@ QHash<int,QByteArray> CallModel::roleNames() const
       roles.insert(static_cast<int>(Call::Role::LifeCycleState  ) ,QByteArray("lifeCycleState")  );
       roles.insert(static_cast<int>(Call::Role::DateOnly        ) ,QByteArray("dateOnly")        );
       roles.insert(static_cast<int>(Call::Role::DateTime        ) ,QByteArray("dateTime")        );
+      roles.insert(static_cast<int>(Call::Role::AudioRecording  ) ,QByteArray("audioRecording")  );
    }
    return roles;
 }

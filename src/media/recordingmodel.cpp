@@ -87,12 +87,13 @@ public:
     ~RecordingModelPrivate();
 
     // Attributes
-    std::vector<RecordingNode*>    m_lCategories             ;
-    RecordingNode*                 m_pText          {nullptr};
-    RecordingNode*                 m_pAudioVideo    {nullptr};
-    LocalTextRecordingCollection*  m_pTextRecordingCollection;
-    int                            m_UnreadCount    { 0     };
-    QItemSelectionModel*           m_pSelectionModel{nullptr};
+    std::vector<RecordingNode*>      m_lCategories             ;
+    QHash<Recording*,RecordingNode*> m_hMapping                ;
+    RecordingNode*                   m_pText          {nullptr};
+    RecordingNode*                   m_pAudioVideo    {nullptr};
+    LocalTextRecordingCollection*    m_pTextRecordingCollection;
+    int                              m_UnreadCount    { 0     };
+    QItemSelectionModel*             m_pSelectionModel{nullptr};
 
     // Helpers
     void initCategories();
@@ -382,6 +383,7 @@ bool Media::RecordingModel::addItemCallback(const Recording* item)
     n->m_Index       = idx;
     n->m_pParent     = parent;
     parent->m_lChildren.push_back(n);
+    d_ptr->m_hMapping[n->m_pRec] = n;
 
     endInsertRows();
 
@@ -525,6 +527,18 @@ Media::Recording* Media::RecordingModel::currentRecording() const
     const auto modelItem = static_cast<RecordingNode*>(idx.internalPointer());
 
     return modelItem->m_pRec;
+}
+
+
+void Media::RecordingModel::setCurrentRecording( Recording* recording )
+{
+    if (!d_ptr->m_hMapping.contains(recording))
+        return;
+
+    auto n   = d_ptr->m_hMapping[recording];
+    auto idx = createIndex(n->m_Index, 0, n);
+
+    selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect);
 }
 
 QVariant RecordingSubTreeProxy::data(const QModelIndex& index, int role) const

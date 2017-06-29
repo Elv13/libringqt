@@ -60,7 +60,7 @@ public:
     Q_PROPERTY(bool alwaysRecording                 READ isAlwaysRecording WRITE setAlwaysRecording         )
     Q_PROPERTY(QString recordPath                   READ recordPath        WRITE setRecordPath              )
     Q_PROPERTY(int unreadCount                      READ unreadCount       NOTIFY unreadMessagesCountChanged)
-    Q_PROPERTY(::Media::Recording* currentRecording READ currentRecording  NOTIFY currentRecordingChanged   )
+    Q_PROPERTY(::Media::Recording* currentRecording READ currentRecording  WRITE setCurrentRecording NOTIFY currentRecordingChanged   )
 
     // Constructor
     virtual ~RecordingModel();
@@ -89,9 +89,10 @@ public:
     QAbstractItemModel*  textRecordingModel () const;
 
     //Setter
-    void setAlwaysRecording( bool            record );
-    void setRecordPath     ( const QString&  path   );
-    void clear             (                        );
+    void setAlwaysRecording ( bool            record );
+    void setRecordPath      ( const QString&  path   );
+    void clear              (                        );
+    void setCurrentRecording( Recording* recording   );
 
     //Mutator
     TextRecording* createTextRecording(const ContactMethod* cm);

@@ -2295,6 +2295,10 @@ QVariant Call::roleData(int role) const
          return isMissed();
       case static_cast<int>(Call::Role::LifeCycleState):
          return QVariant::fromValue(lifeCycleState());
+      case static_cast<int>(Call::Role::AudioRecording):
+          if (d_ptr->m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::IN]->size() > 0)
+              return QVariant::fromValue(d_ptr->m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::IN]->first());
+          break;
       case static_cast<int>(Call::Role::DTMFAnimState):
          return property("DTMFAnimState");
       case static_cast<int>(Call::Role::LastDTMFidx):

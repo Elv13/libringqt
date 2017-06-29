@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -22,20 +22,22 @@
 
 //Ring
 #include <callmodel.h>
+#include <media/recordingmodel.h>
 
 namespace Media {
 
-class AVRecordingPrivate {
+class AVRecordingPrivate final {
 public:
    AVRecordingPrivate(AVRecording* r);
 
    //Attributes
-   QUrl                  m_Path    ;
-   AVRecording::Position m_Position;
-   int                   m_Duration;
-   bool                  m_IsPaused;
-   int                   m_Elapsed ;
-   int                   m_Left    ;
+   QUrl                  m_Path      {     };
+   AVRecording::Position m_Position  { 0.0 };
+   int                   m_Duration  {  0  };
+   bool                  m_IsPaused  {false};
+   bool                  m_IsPlaying {false};
+   int                   m_Elapsed   {  0  };
+   int                   m_Left      {  0  };
 
    //Constants
    constexpr static const char minutes[] = "%1:%2";
@@ -58,11 +60,12 @@ constexpr const char AVRecordingPrivate::hours  [];
 /**
  * Keep track of currently active recordings
  */
-class RecordingPlaybackManager : public QObject
+class RecordingPlaybackManager final : public QObject
 {
    Q_OBJECT
 public:
-   RecordingPlaybackManager();
+   explicit RecordingPlaybackManager();
+   virtual ~RecordingPlaybackManager() {}
 
    //Attributes
    QList<Media::AVRecording*>         m_lActiveRecordings;
@@ -97,8 +100,7 @@ RecordingPlaybackManager& RecordingPlaybackManager::instance()
 }
 
 
-Media::AVRecordingPrivate::AVRecordingPrivate(AVRecording* r) : q_ptr(r),m_Position(0.0),m_Duration(0),m_IsPaused(false),
-m_Elapsed(0),m_Left(0)
+Media::AVRecordingPrivate::AVRecordingPrivate(AVRecording* r) : q_ptr(r)
 {
 
 }
@@ -185,12 +187,17 @@ void Media::AVRecording::setPath(const QUrl& path)
 ///Play (or resume) the playback
 void Media::AVRecording::play()
 {
+   RecordingModel::instance().setCurrentRecording(this);
+
    RecordingPlaybackManager::instance().activateRecording(this);
 
    CallManagerInterface& callManager = CallManager::instance();
    const bool retval = callManager.startRecordedFilePlayback(path().path());
-   if (retval)
+   if (retval) {
+      d_ptr->m_IsPlaying = true;
+      emit playingStatusChanged(true);
       emit started();
+   }
 
    if (d_ptr->m_IsPaused) {
       seek(d_ptr->m_Position);
@@ -201,8 +208,13 @@ void Media::AVRecording::play()
 ///Stop the playback, cancel any pause point
 void Media::AVRecording::stop()
 {
+   if (!d_ptr->m_IsPlaying)
+      return;
+
    CallManagerInterface& callManager = CallManager::instance();
    Q_NOREPLY callManager.stopRecordedFilePlayback(path().path());
+   d_ptr->m_IsPlaying = false;
+   emit playingStatusChanged(false);
    emit stopped();
 
    RecordingPlaybackManager::instance().desactivateRecording(this);
@@ -301,6 +313,16 @@ void RecordingPlaybackManager::desactivateRecording(Media::AVRecording* r)
 {
    m_lActiveRecordings.removeAll(r);
    m_hActiveRecordings.remove(m_hActiveRecordings.key(r));
+}
+
+bool Media::AVRecording::isCurrent() const
+{
+    return RecordingModel::instance().currentRecording() == this;
+}
+
+bool Media::AVRecording::isPlaying() const
+{
+    return RecordingModel::instance().currentRecording() == this && d_ptr->m_IsPlaying;
 }
 
 #include <avrecording.moc>
