@@ -60,6 +60,23 @@ struct RecordingNode final
     RecordingNode*              m_pParent   {nullptr};
 };
 
+class RecordingSubTreeProxy : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    explicit RecordingSubTreeProxy(Media::RecordingModelPrivate* d, RecordingNode* root) :
+        QAbstractListModel(&Media::RecordingModel::instance()), m_pRoot(root), d_ptr(d) {}
+
+    virtual ~RecordingSubTreeProxy() {}
+
+    virtual QVariant data ( const QModelIndex& index, int role) const override;
+    virtual int rowCount( const QModelIndex& parent) const override;
+
+private:
+    Media::RecordingModelPrivate* d_ptr;
+    RecordingNode* m_pRoot;
+};
+
 namespace Media {
 
 class RecordingModelPrivate final : public QObject
@@ -218,7 +235,7 @@ QVariant Media::RecordingModel::data( const QModelIndex& index, int role) const
                 }
             }
             else if(avRec && avRec->call())
-                return avRec->call()->roleData(role);
+                return avRec->roleData(role);
             break;
         case 1:
             switch (role) {
@@ -508,6 +525,37 @@ Media::Recording* Media::RecordingModel::currentRecording() const
     const auto modelItem = static_cast<RecordingNode*>(idx.internalPointer());
 
     return modelItem->m_pRec;
+}
+
+QVariant RecordingSubTreeProxy::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid())
+        return {};
+
+    return m_pRoot->m_lChildren[index.row()]->m_pRec->roleData(role);
+}
+
+int RecordingSubTreeProxy::rowCount( const QModelIndex& parent) const
+{
+    return parent.isValid() ? 0 : m_pRoot->m_lChildren.size();
+}
+
+QAbstractItemModel* Media::RecordingModel::audioRecordingModel() const
+{
+    static auto p = new RecordingSubTreeProxy(
+        instance().d_ptr, instance().d_ptr->m_lCategories[1]
+    );
+
+    return p;
+}
+
+QAbstractItemModel* Media::RecordingModel::textRecordingModel() const
+{
+    static auto p = new RecordingSubTreeProxy(
+        instance().d_ptr, instance().d_ptr->m_lCategories[0]
+    );
+
+    return p;
 }
 
 #include <recordingmodel.moc>

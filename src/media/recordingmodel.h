@@ -80,11 +80,13 @@ public:
     virtual QHash<int,QByteArray> roleNames() const override;
 
     //Getter
-    bool                 isAlwaysRecording() const;
-    QString              recordPath       () const;
-    int                  unreadCount      () const;
-    QItemSelectionModel* selectionModel   () const;
-    Recording*           currentRecording () const;
+    bool                 isAlwaysRecording  () const;
+    QString              recordPath         () const;
+    int                  unreadCount        () const;
+    QItemSelectionModel* selectionModel     () const;
+    Recording*           currentRecording   () const;
+    QAbstractItemModel*  audioRecordingModel() const;
+    QAbstractItemModel*  textRecordingModel () const;
 
     //Setter
     void setAlwaysRecording( bool            record );
