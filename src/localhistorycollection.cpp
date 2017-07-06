@@ -217,19 +217,22 @@ bool LocalHistoryCollection::load()
 
    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QLatin1Char('/') +"history.ini");
    if ( file.open(QIODevice::ReadOnly | QIODevice::Text) ) {
-      QMap<QString,QString> hc;
-      QStringList lines;
+      QMap<QStringRef,QStringRef> hc;
 
-      while (!file.atEnd())
-         lines << file.readLine().trimmed();
+      // QByteArray -> QString since there is no QByteArrayRef and the
+      // data is UTF anyway
+      const QString data = file.readAll();
       file.close();
+
+      //TODO support windows again
+      QVector<QStringRef> lines = QStringRef(&data).trimmed().split('\n');
 
       const bool      isLimited = CategorizedHistoryModel::instance().isHistoryLimited();
       const long long dayLimit  = CategorizedHistoryModel::instance().historyLimit() * 24 * 3600;
 
       time_t now = time(0); // get time now
 
-      for (const QString& line : lines) {
+      for (const QStringRef& line : qAsConst(lines)) {
          //The item is complete
          if ((line.isEmpty() || !line.size()) && hc.size()) {
             Call* pastCall = Call::buildHistoryCall(hc);
@@ -246,7 +249,7 @@ bool LocalHistoryCollection::load()
          }
          // Add to the current set
          else {
-            const int idx = line.indexOf("=");
+            const int idx = line.indexOf('=');
             if (idx >= 0)
                hc[line.left(idx)] = line.right(line.size()-idx-1);
          }

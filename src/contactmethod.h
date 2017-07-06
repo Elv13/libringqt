@@ -78,7 +78,7 @@ public:
    Q_PROPERTY(int               lastUsed         READ lastUsed          WRITE setLastUsed             )
    Q_PROPERTY(QString           uri              READ uri                                             )
    Q_PROPERTY(int               callCount        READ callCount                                       )
-   Q_PROPERTY(QList<Call*>      calls            READ calls                                           )
+   Q_PROPERTY(const QList<Call*> calls           READ calls                                           )
    Q_PROPERTY(bool              bookmarked       READ isBookmarked WRITE setBookmarked NOTIFY bookmarkedChanged )
    Q_PROPERTY(QString           uid              READ uid               WRITE setUid                  )
    Q_PROPERTY(bool              isTracked        READ isTracked         NOTIFY trackedChanged         )
@@ -135,7 +135,7 @@ public:
    uint                  weekCount       () const;
    uint                  trimCount       () const;
    bool                  haveCalled      () const;
-   QList<Call*>          calls           () const;
+   const QList<Call*>    calls           () const;
    QHash<QString, QPair<int, time_t>> alternativeNames() const;
    QString               primaryName     () const;
    bool                  isBookmarked    () const;

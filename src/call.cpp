@@ -231,6 +231,20 @@ const TypedStateMachine< TypedStateMachine< bool , Call::LifeCycleState > , Call
 /*^^ A call _can_ be created on hold (conference) and as over (peer hang up before pickup)
  the progress->failure one is an implementation bug*/
 
+const QString Call::HistoryMapFields::ACCOUNT_ID        = QStringLiteral("accountid"      );
+const QString Call::HistoryMapFields::CALLID            = QStringLiteral("callid"         );
+const QString Call::HistoryMapFields::DISPLAY_NAME      = QStringLiteral("display_name"   );
+const QString Call::HistoryMapFields::PEER_NUMBER       = QStringLiteral("peer_number"    );
+const QString Call::HistoryMapFields::RECORDING_PATH    = QStringLiteral("recordfile"     );
+const QString Call::HistoryMapFields::STATE             = QStringLiteral("state"          );
+const QString Call::HistoryMapFields::TIMESTAMP_START   = QStringLiteral("timestamp_start");
+const QString Call::HistoryMapFields::TIMESTAMP_STOP    = QStringLiteral("timestamp_stop" );
+const QString Call::HistoryMapFields::MISSED            = QStringLiteral("missed"         );
+const QString Call::HistoryMapFields::DIRECTION         = QStringLiteral("direction"      );
+const QString Call::HistoryMapFields::CONTACT_USED      = QStringLiteral("contact_used"   );
+const QString Call::HistoryMapFields::CONTACT_UID       = QStringLiteral("contact_uid"    );
+const QString Call::HistoryMapFields::NUMBER_TYPE       = QStringLiteral("number_type"    );
+const QString Call::HistoryMapFields::CERT_PATH         = QStringLiteral("cert_path"      );
 
 QDebug LIB_EXPORT operator<<(QDebug dbg, const CallPrivate::DaemonState& c );
 
@@ -390,7 +404,7 @@ void CallPrivate::deleteCall(Call* call)
 
 void CallPrivate::updateOutgoingMedia(const MapStringString& details)
 {
-   auto list = q_ptr->media(Media::Media::Type::VIDEO, Media::Media::Direction::OUT);
+   const auto list = q_ptr->media(Media::Media::Type::VIDEO, Media::Media::Direction::OUT);
    QString video_source  = details[ DRing::Call::Details::VIDEO_SOURCE];
 
    if (video_source.length() <= 0 && list.isEmpty()) {
@@ -404,8 +418,8 @@ void CallPrivate::updateOutgoingMedia(const MapStringString& details)
        mediaFactory<Media::Video>(direction);
    }
 
-   list = q_ptr->media(Media::Media::Type::VIDEO, Media::Media::Direction::OUT);
-   Media::Video* media_video = static_cast<Media::Video*>(list[0]);
+   const auto list2 = q_ptr->media(Media::Media::Type::VIDEO, Media::Media::Direction::OUT);
+   Media::Video* media_video = static_cast<Media::Video*>(list2[0]);
    media_video->sourceModel()->setUsedIndex(video_source);
    return;
 }
@@ -531,18 +545,18 @@ Call* CallPrivate::buildDialingCall(const QString& peerName, Account* account, C
  ****************************************************************************/
 
 ///Build a call that is already over
-Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
+Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
 {
-   const QString& callId          = hc[ Call::HistoryMapFields::CALLID          ]          ;
-   const QString& name            = hc[ Call::HistoryMapFields::DISPLAY_NAME    ]          ;
-   const URI& number              = hc[ Call::HistoryMapFields::PEER_NUMBER     ]          ;
-   const QString& direction       = hc[ Call::HistoryMapFields::DIRECTION       ]          ;
-   const QString& rec_path        = hc[ Call::HistoryMapFields::RECORDING_PATH  ]          ;
-   const QString& cert_path       = hc[ Call::HistoryMapFields::CERT_PATH       ]          ;
-   const bool     missed          = hc[ Call::HistoryMapFields::MISSED          ] == "1"   ;
-   time_t         startTimeStamp  = hc[ Call::HistoryMapFields::TIMESTAMP_START ].toUInt() ;
-   time_t         stopTimeStamp   = hc[ Call::HistoryMapFields::TIMESTAMP_STOP  ].toUInt() ;
-   QByteArray accId               = hc[ Call::HistoryMapFields::ACCOUNT_ID      ].toLatin1();
+   const QStringRef callId        = hc[ QStringRef(&Call::HistoryMapFields::CALLID          )]          ;
+   const QStringRef name          = hc[ QStringRef(&Call::HistoryMapFields::DISPLAY_NAME    )]          ;
+   const URI        number        = hc[ QStringRef(&Call::HistoryMapFields::PEER_NUMBER     )]          ;
+   const QStringRef direction     = hc[ QStringRef(&Call::HistoryMapFields::DIRECTION       )]          ;
+   const QStringRef rec_path      = hc[ QStringRef(&Call::HistoryMapFields::RECORDING_PATH  )]          ;
+   const QStringRef cert_path     = hc[ QStringRef(&Call::HistoryMapFields::CERT_PATH       )]          ;
+   const bool     missed          = hc[ QStringRef(&Call::HistoryMapFields::MISSED          )] == QStringLiteral("1");
+   time_t         startTimeStamp  = hc[ QStringRef(&Call::HistoryMapFields::TIMESTAMP_START )].toUInt() ;
+   time_t         stopTimeStamp   = hc[ QStringRef(&Call::HistoryMapFields::TIMESTAMP_STOP  )].toUInt() ;
+   QByteArray accId               = hc[ QStringRef(&Call::HistoryMapFields::ACCOUNT_ID      )].toLatin1();
 
    if (Q_UNLIKELY(number.isEmpty())) {
       qWarning() << "Invalid history entry" << hc;
@@ -569,19 +583,19 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
 
    //Try to assiciate a contact now, the real contact object is probably not
    //loaded yet, but we can get a placeholder for now
-   const QString& contactUid = hc[ Call::HistoryMapFields::CONTACT_UID ];
+   const QStringRef contactUid = hc[ QStringRef(&Call::HistoryMapFields::CONTACT_UID) ];
    Person* ct = nullptr;
    if (!contactUid.isEmpty())
       ct = PersonModel::instance().getPlaceHolder(contactUid.toLatin1());
 
    ContactMethod*  nb             = PhoneDirectoryModel::instance().getNumber(number,ct,acc);
 
-   Call*           call           = new Call(Call::State::OVER, (name == "empty")?QString():name, nb, acc );
-   call->d_ptr->m_DringId         = callId;
+   Call*           call           = new Call(Call::State::OVER, (name == QLatin1String("empty"))?QString():name.toString(), nb, acc );
+   call->d_ptr->m_DringId         = callId.toString();
 
    call->d_ptr->m_pStopTimeStamp  = stopTimeStamp ;
    call->d_ptr->setStartTimeStamp(startTimeStamp);
-   call->d_ptr->setRecordingPath (rec_path);
+   call->d_ptr->setRecordingPath (rec_path.toString());
    call->d_ptr->m_History         = true;
    call->d_ptr->m_Account         = AccountModel::instance().getById(accId);
 
@@ -613,7 +627,7 @@ Call* Call::buildHistoryCall(const QMap<QString,QString>& hc)
 
    //Check the certificate
    if (!cert_path.isEmpty()) {
-      call->d_ptr->m_pCertificate = CertificateModel::instance().getCertificateFromPath(cert_path,acc);
+      call->d_ptr->m_pCertificate = CertificateModel::instance().getCertificateFromPath(cert_path.toString(),acc);
    }
 
    //Allow the certificate
@@ -1025,7 +1039,7 @@ void CallPrivate::removeRenderer(Video::Renderer* renderer)
    return;
 }
 
-QList<Media::Media*> Call::media(Media::Media::Type type, Media::Media::Direction direction) const
+const QList<Media::Media*> Call::media(Media::Media::Type type, Media::Media::Direction direction) const
 {
    return *(d_ptr->m_mMedias[type][direction]);
 }
@@ -1045,7 +1059,7 @@ bool Call::isRecording(Media::Media::Type type, Media::Media::Direction directio
    return d_ptr->m_mIsRecording[type][direction];
 }
 
-QList<Media::Recording*> Call::recordings(Media::Media::Type type, Media::Media::Direction direction) const
+const QList<Media::Recording*> Call::recordings(Media::Media::Type type, Media::Media::Direction direction) const
 {
    //Note that the recording are not Media attributes to avoid keeping "terminated" media
    //for history call.
@@ -1477,7 +1491,8 @@ void CallPrivate::terminateMedia()
    //Delete remaining media
    for (const auto t : EnumIterator<Media::Media::Type>() ) {
       for (const auto d : EnumIterator<Media::Media::Direction>() ) {
-         for (auto m : q_ptr->media(t,d) ) {
+         const auto media = q_ptr->media(t,d);
+         for (auto m : qAsConst(media)) {
             m << Media::Media::Action::TERMINATE;
             m_mMedias[t][d]->removeAll(m);
             //TODO keep the media for history visualization purpose if it has a recording

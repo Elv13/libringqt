@@ -447,7 +447,7 @@ QString ContactMethod::primaryName() const
          QString toReturn = uri();
          QPair<int, time_t> max = {0, 0};
 
-         for (QHash<QString,QPair<int, time_t>>::const_iterator i = d_ptr->m_hNames.begin(); i != d_ptr->m_hNames.end(); ++i) {
+         for (QHash<QString,QPair<int, time_t>>::const_iterator i = d_ptr->m_hNames.constBegin(); i != d_ptr->m_hNames.constEnd(); ++i) {
              if (this->protocolHint() == URI::ProtocolHint::RING &&
                      i.value().second > max.second) {
                  max.second = i.value().second;
@@ -460,8 +460,8 @@ QString ContactMethod::primaryName() const
          }
          ret = toReturn;
       }
-      const_cast<ContactMethod*>(this)->d_ptr->m_PrimaryName_cache = ret;
-      const_cast<ContactMethod*>(this)->d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
+      d_ptr->m_PrimaryName_cache = ret;
+      d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
    }
    //Fallback: Use the URI
    if (d_ptr->m_PrimaryName_cache.isEmpty()) {
@@ -547,7 +547,7 @@ QString ContactMethod::bestId() const
  */
 bool ContactMethod::isDuplicate() const
 {
-   return d_ptr->m_lParents.first() != this;
+   return d_ptr->m_lParents.constFirst() != this;
 }
 
 ///Is this number bookmarked
@@ -608,7 +608,7 @@ QByteArray ContactMethod::sha1() const
 }
 
 ///Return all calls from this number
-QList<Call*> ContactMethod::calls() const
+const QList<Call*> ContactMethod::calls() const
 {
    return d_ptr->m_UsageStats.d_ptr->m_lCalls;
 }
@@ -623,7 +623,7 @@ QVariant ContactMethod::roleData(int role) const
    QVariant cat;
 
    auto lastCall = d_ptr->m_UsageStats.d_ptr->m_lCalls.isEmpty()
-      ? nullptr : d_ptr->m_UsageStats.d_ptr->m_lCalls.last();
+      ? nullptr : d_ptr->m_UsageStats.d_ptr->m_lCalls.constLast();
 
    switch (role) {
       case static_cast<int>(Ring::Role::Name):

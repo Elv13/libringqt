@@ -37,7 +37,7 @@ public:
    bool               m_hasType          ;
    bool               m_IsBookmark       ;
    QString            m_Uid              ;
-   QString            m_PrimaryName_cache;
+   mutable QString    m_PrimaryName_cache;
    URI                m_Uri              ;
    QByteArray         m_Sha1             ;
    ContactMethod::Type  m_Type           ;

@@ -194,7 +194,7 @@ void AccountStatusModel::addSipRegistrationEvent(const QString& fallbackMessage,
       endInsertRows();
    }
    else
-      d_ptr->m_lRows.last()->counter++;
+      d_ptr->m_lRows.constLast()->counter++;
 }
 
 void AccountStatusModel::addTransportEvent(const QString& fallbackMessage, int errorCode)
@@ -205,7 +205,7 @@ void AccountStatusModel::addTransportEvent(const QString& fallbackMessage, int e
       endInsertRows();
    }
    else
-      d_ptr->m_lRows.last()->counter++;
+      d_ptr->m_lRows.constLast()->counter++;
 }
 
 QString AccountStatusModel::lastErrorMessage() const
@@ -213,7 +213,7 @@ QString AccountStatusModel::lastErrorMessage() const
    if (d_ptr->m_lRows.isEmpty())
       return QString();
 
-   return d_ptr->m_lRows.last()->description;
+   return d_ptr->m_lRows.constLast()->description;
 }
 
 int AccountStatusModel::lastErrorCode() const
@@ -221,7 +221,7 @@ int AccountStatusModel::lastErrorCode() const
    if (d_ptr->m_lRows.isEmpty())
       return -1;
 
-   return d_ptr->m_lRows.last()->code;
+   return d_ptr->m_lRows.constLast()->code;
 }
 
 time_t AccountStatusModel::lastTimeStamp() const
@@ -229,5 +229,5 @@ time_t AccountStatusModel::lastTimeStamp() const
    if (d_ptr->m_lRows.isEmpty())
       return d_ptr->m_FallbackTime_t;
 
-   return d_ptr->m_lRows.last()->timestamp;
+   return d_ptr->m_lRows.constLast()->timestamp;
 }

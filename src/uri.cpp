@@ -19,8 +19,6 @@
 
 #include "private/matrixutils.h"
 
-#include <QRegularExpression>
-
 class URIPrivate
 {
 public:
@@ -32,9 +30,6 @@ public:
    static const Matrix1D<URI::Transport, const char*> transportNames;
 
    static const QString whitespaceCharClass;
-
-   static const QRegularExpression startWhitespaceMatcher;
-   static const QRegularExpression endWhitespaceMatcher;
 
    ///Attributes names
    struct Constants {
@@ -65,7 +60,7 @@ public:
    char              m_CharSet  {(char)0xFF};
 
    //Helper
-   static QString strip(const QString& uri, URI::SchemeType& scheme);
+   static QString strip(const QStringRef& uri, URI::SchemeType& scheme);
    void parse();
    void parseHostname();
    static char checkIp(const QString& str, const URI::SchemeType& scheme);
@@ -99,15 +94,6 @@ const Matrix1D<URI::SchemeType, const char*> URIPrivate::schemeNames = {{
    /*RING = */ "ring:",
 }};
 
-const QString URIPrivate::whitespaceCharClass = QStringLiteral("[\\h\\x{200B}\\x{200C}\\x{200D}\\x{FEFF}]+");
-
-const QRegularExpression URIPrivate::startWhitespaceMatcher = QRegularExpression(
-                                                   "^" + URIPrivate::whitespaceCharClass,
-                                                   QRegularExpression::UseUnicodePropertiesOption);
-const QRegularExpression URIPrivate::endWhitespaceMatcher = QRegularExpression(
-                                                   URIPrivate::whitespaceCharClass + "$",
-                                                   QRegularExpression::UseUnicodePropertiesOption);
-
 URIPrivate::URIPrivate(URI* uri) : m_Parsed(false),m_HeaderType(URI::SchemeType::NONE),q_ptr(uri),
 m_hasChevrons(false),m_HasAt(false),m_ProtocolHint(URI::ProtocolHint::SIP_OTHER),m_HintParsed(false),
 m_IsHNParsed(false),m_Port(-1),m_Transport(URI::Transport::NOT_SET)
@@ -121,16 +107,23 @@ URI::URI() : QString(), d_ptr(new URIPrivate(this))
 }
 
 ///Constructor
+URI::URI(const QStringRef& other) : URI()
+{
+   Q_ASSERT(other.string());
+   d_ptr->m_Stripped              = URIPrivate::strip(other, d_ptr->m_HeaderType);
+   (*static_cast<QString*>(this)) = d_ptr->m_Stripped;
+}
+
 URI::URI(const QString& other) : URI()
 {
-   d_ptr->m_Stripped              = URIPrivate::strip(other,d_ptr->m_HeaderType);
+   d_ptr->m_Stripped              = URIPrivate::strip(QStringRef(&other),d_ptr->m_HeaderType);
    (*static_cast<QString*>(this)) = d_ptr->m_Stripped;
 }
 
 URI::URI(const QByteArray& other) : URI()
 {
    QString s(other);
-   d_ptr->m_Stripped              = URIPrivate::strip(s ,d_ptr->m_HeaderType);
+   d_ptr->m_Stripped              = URIPrivate::strip(QStringRef(&s) ,d_ptr->m_HeaderType);
    (*static_cast<QString*>(this)) = d_ptr->m_Stripped;
 }
 
@@ -175,15 +168,13 @@ URI& URI::operator=(const URI& o)
 }
 
 ///Strip out <sip:****> from the URI
-QString URIPrivate::strip(const QString& uri, URI::SchemeType& scheme)
+QString URIPrivate::strip(const QStringRef& uri, URI::SchemeType& scheme)
 {
    if (uri.isEmpty())
       return {};
 
    /* remove whitespace at the start and end */
-   auto uriTrimmed = uri;
-   uriTrimmed.replace(startWhitespaceMatcher, "");
-   uriTrimmed.replace(endWhitespaceMatcher, "");
+   auto uriTrimmed = uri.trimmed();
 
    int start(uriTrimmed[0] == '<'?1:0),end(uriTrimmed.size()-1); //Other type of comparisons were too slow
 
@@ -221,7 +212,7 @@ QString URIPrivate::strip(const QString& uri, URI::SchemeType& scheme)
       //TODO there may be a ';' section with arguments, check
    }
 
-   return uriTrimmed.mid(start,end-start+1);
+   return uriTrimmed.mid(start,end-start+1).toString();
 }
 
 /**

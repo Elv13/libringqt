@@ -524,17 +524,17 @@ Credential* CredentialModel::primaryCredential(Credential::Type type)
       case Credential::Type::STUN:
          if (!d_ptr->m_pStunCat || !d_ptr->m_pStunCat->m_lChildren.size())
             addCredentials(Credential::Type::STUN);
-         return d_ptr->m_pStunCat->m_lChildren.first()->m_pCredential;
+         return d_ptr->m_pStunCat->m_lChildren.constFirst()->m_pCredential;
          break;
       case Credential::Type::TURN:
          if (!d_ptr->m_pTurnCat || !d_ptr->m_pTurnCat->m_lChildren.size())
             addCredentials(Credential::Type::TURN);
-         return d_ptr->m_pTurnCat->m_lChildren.first()->m_pCredential;
+         return d_ptr->m_pTurnCat->m_lChildren.constFirst()->m_pCredential;
          break;
       case Credential::Type::SIP:
          if (!d_ptr->m_pSipCat || !d_ptr->m_pSipCat->m_lChildren.size())
             addCredentials(Credential::Type::SIP);
-         return d_ptr->m_pSipCat->m_lChildren.first()->m_pCredential;
+         return d_ptr->m_pSipCat->m_lChildren.constFirst()->m_pCredential;
          break;
       case Credential::Type::COUNT__:
          break;

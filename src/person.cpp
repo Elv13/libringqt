@@ -429,7 +429,7 @@ QSharedPointer<QAbstractItemModel> Person::timelineModel() const
         return (*cmi)->timelineModel();
 
     // Too bad, build one
-    if (auto cm = d_ptr->m_Numbers.first())
+    if (auto cm = d_ptr->m_Numbers.constFirst())
         return cm->timelineModel();
 
     // This person was never contacted

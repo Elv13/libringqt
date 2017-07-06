@@ -497,7 +497,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
         ret->m_pParent = cat;
 
         // Take the oldest message (for consistency)
-        ret->m_StartTime = ret->m_pGroup->messages.first()->timestamp;
+        ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp;
 
         Q_ASSERT(g->messages.isEmpty() == false);
 

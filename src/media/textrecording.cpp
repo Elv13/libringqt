@@ -808,7 +808,7 @@ QVariant Media::TextRecording::roleData(int role) const
 {
    switch(role) {
       case Qt::DisplayRole:
-         return peers().size() ? peers().first()->primaryName() : roleData(-1, Qt::DisplayRole);
+         return peers().size() ? peers().constFirst()->primaryName() : roleData(-1, Qt::DisplayRole);
       case (int) Ring::Role::Length:
          return QString::number(size()) + tr(" elements");
       case (int) Ring::Role::FormattedLastUsed:

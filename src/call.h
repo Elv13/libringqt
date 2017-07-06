@@ -235,20 +235,20 @@ public:
    ///TODO should be deprecated when a better factory system is implemented
    class HistoryMapFields {
    public:
-      constexpr static const char* ACCOUNT_ID        = "accountid"      ;
-      constexpr static const char* CALLID            = "callid"         ;
-      constexpr static const char* DISPLAY_NAME      = "display_name"   ;
-      constexpr static const char* PEER_NUMBER       = "peer_number"    ;
-      constexpr static const char* RECORDING_PATH    = "recordfile"     ;
-      constexpr static const char* STATE             = "state"          ;
-      constexpr static const char* TIMESTAMP_START   = "timestamp_start";
-      constexpr static const char* TIMESTAMP_STOP    = "timestamp_stop" ;
-      constexpr static const char* MISSED            = "missed"         ;
-      constexpr static const char* DIRECTION         = "direction"      ;
-      constexpr static const char* CONTACT_USED      = "contact_used"   ;
-      constexpr static const char* CONTACT_UID       = "contact_uid"    ;
-      constexpr static const char* NUMBER_TYPE       = "number_type"    ;
-      constexpr static const char* CERT_PATH         = "cert_path"      ;
+      static const QString ACCOUNT_ID      ;
+      static const QString CALLID          ;
+      static const QString DISPLAY_NAME    ;
+      static const QString PEER_NUMBER     ;
+      static const QString RECORDING_PATH  ;
+      static const QString STATE           ;
+      static const QString TIMESTAMP_START ;
+      static const QString TIMESTAMP_STOP  ;
+      static const QString MISSED          ;
+      static const QString DIRECTION       ;
+      static const QString CONTACT_USED    ;
+      static const QString CONTACT_UID     ;
+      static const QString NUMBER_TYPE     ;
+      static const QString CERT_PATH       ;
    };
 
    //TODO should be deprecated when a better factory system is implemented
@@ -288,7 +288,7 @@ public:
    Q_PROPERTY( QString            dialNumber         READ dialNumber        WRITE setDialNumber      NOTIFY dialNumberChanged(QString))
 
    //Constructors & Destructors
-   static Call* buildHistoryCall  (const QMap<QString,QString>& hc);
+   static Call* buildHistoryCall  (const QMap<QStringRef,QStringRef>& hc);
 
    //Static getters
    static const QString      toHumanStateName ( const Call::State );
@@ -329,8 +329,8 @@ public:
 
    template<typename T>
    T* firstMedia(Media::Media::Direction direction) const;
-   QList<Media::Recording*> recordings  (Media::Media::Type type, Media::Media::Direction direction) const;
-   QList<Media::Media*>     media       (Media::Media::Type type, Media::Media::Direction direction) const;
+   const QList<Media::Recording*> recordings  (Media::Media::Type type, Media::Media::Direction direction) const;
+   const QList<Media::Media*> media       (Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     hasMedia    (Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     hasRecording(Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     isRecording (Media::Media::Type type, Media::Media::Direction direction) const;

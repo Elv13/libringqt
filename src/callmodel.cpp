@@ -659,8 +659,8 @@ void CallModelPrivate::removeCall(Call* call, bool noEmit)
       if (topLevel->call_real->type() == Call::Type::CONFERENCE &&
          (!topLevel->m_lChildren.size()
             //HACK Make a simple validation to prevent ERROR->ERROR->ERROR state loop for conferences
-            || topLevel->m_lChildren.first()->call_real->state() == Call::State::ERROR
-            || topLevel->m_lChildren.last() ->call_real->state() == Call::State::ERROR))
+            || topLevel->m_lChildren.constFirst()->call_real->state() == Call::State::ERROR
+            || topLevel->m_lChildren.constLast() ->call_real->state() == Call::State::ERROR))
             removeConference(topLevel->call_real);
    }
 //    if (!noEmit)
@@ -1021,7 +1021,7 @@ QMimeData* CallModel::mimeData(const QModelIndexList& indexes) const
 {
 
    if (indexes.size() == 1) {
-      const QModelIndex idx = indexes.first();
+      const QModelIndex idx = indexes.constFirst();
       if (idx.isValid()) {
          Call* call = getCall(idx);
          if (call) {

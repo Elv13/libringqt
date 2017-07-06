@@ -87,6 +87,7 @@ public:
    URI(const URI&     other);
 
    URI(const QString& other);
+   URI(const QStringRef& other);
    URI(const QByteArray& other);
    virtual ~URI();
 
