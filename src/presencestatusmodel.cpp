@@ -374,7 +374,7 @@ void PresenceStatusModel::setDefaultStatus( const QModelIndex& idx )
    if (!idx.isValid()) return;
    if (d_ptr->m_pDefaultStatus) {
       d_ptr->m_pDefaultStatus->defaultStatus = false;
-      const QModelIndex& oldIdx = index(d_ptr->m_lStatuses.indexOf(d_ptr->m_pDefaultStatus),static_cast<int>(PresenceStatusModel::Columns::Default));
+      const auto oldIdx = index(d_ptr->m_lStatuses.indexOf(d_ptr->m_pDefaultStatus),static_cast<int>(PresenceStatusModel::Columns::Default));
       emit dataChanged(oldIdx,oldIdx);
    }
    d_ptr->m_pDefaultStatus = d_ptr->m_lStatuses[idx.row()];

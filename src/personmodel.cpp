@@ -280,10 +280,11 @@ bool PersonModel::addItemCallback(const Person* c)
    emit newPersonAdded(c);
 
    //Add the contact method nodes
-   const QModelIndex& idx = index(inode.m_Index,0);
+   const auto idx = index(inode.m_Index,0);
    beginInsertRows(idx,0,c->phoneNumbers().size());
    inode.m_lChildren.reserve(c->phoneNumbers().size());
-   for (auto& m : c->phoneNumbers()) {
+   const auto cms = c->phoneNumbers();
+   for (auto& m : qAsConst(cms)) {
       inode.m_lChildren.emplace_back(new PersonItemNode {m, PersonItemNode::NodeType::NUMBER});
       auto& child = *inode.m_lChildren.back().get();
       child.m_Index = inode.m_lChildren.size() - 1;
@@ -314,7 +315,8 @@ bool PersonModel::removeItemCallback(const Person* item)
       auto person = d_ptr->m_lPersons[nodeIdx]->m_pPerson.get();
       if (person == item) {
 
-          for ( const auto cm : person->phoneNumbers() )
+          const auto cms = person->phoneNumbers();
+          for ( const auto cm : qAsConst(cms) )
               // cm is not linked to any person anymore
               cm->setPerson(nullptr);
 

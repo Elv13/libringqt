@@ -261,7 +261,7 @@ void CategorizedHistoryModelPrivate::add(Call* call)
 
    HistoryNode* tl = getCategory(call);
 
-   const QModelIndex& parentIdx = q_ptr->index(tl->m_Index, 0);
+   const auto parentIdx = q_ptr->index(tl->m_Index, 0);
 
    q_ptr->beginInsertRows(parentIdx,tl->m_lChildren.size(),tl->m_lChildren.size());
 
@@ -560,7 +560,7 @@ bool CategorizedHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction
       Call*      call          = CallModel::instance().fromMime(encodedCallId);
 
       if (call) {
-         const QModelIndex& idx = index(row,column,parentIdx);
+         const auto idx = index(row,column,parentIdx);
 
          if (idx.isValid()) {
             const Call* target = static_cast<HistoryNode*>(idx.internalPointer())->m_pCall;

@@ -226,7 +226,7 @@ void ProfileModelPrivate::slotDataChanged(const QModelIndex& tl,const QModelInde
     if (!tl.isValid() || (!br.isValid()))
         return;
 
-    const QModelIndex& idx = q_ptr->mapFromSource(tl);
+    const auto idx = q_ptr->mapFromSource(tl);
     emit q_ptr->dataChanged(idx, idx);
 }
 
@@ -465,7 +465,7 @@ QItemSelectionModel* ProfileModel::selectionModel() const
         d_ptr->m_pSelectionModel = new QItemSelectionModel(const_cast<ProfileModel*>(this));
 
         connect(d_ptr->m_pSelectionModel, &QItemSelectionModel::currentChanged, [this](const QModelIndex& i) {
-            const QModelIndex& accIdx = mapToSource(i);
+            const auto accIdx = mapToSource(i);
             AccountModel::instance().selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
         });
     }
@@ -479,7 +479,7 @@ QItemSelectionModel* ProfileModel::sortedProxySelectionModel() const
         d_ptr->m_pSortedProxySelectionModel = new QItemSelectionModel(static_cast<QSortFilterProxyModel*>(sortedProxyModel()));
 
         connect(d_ptr->m_pSortedProxySelectionModel, &QItemSelectionModel::currentChanged, [this](const QModelIndex& i) {
-            const QModelIndex& accIdx = mapToSource(
+            const auto accIdx = mapToSource(
                 static_cast<QSortFilterProxyModel*>(sortedProxyModel())->mapToSource(i)
             );
             AccountModel::instance().selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);

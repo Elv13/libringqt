@@ -373,7 +373,7 @@ void CollectionModelPrivate::registerNew(CollectionInterface* col)
       item->manageableCount++;
       while(par) {
          par->manageableCount++;
-         const QModelIndex& idx = q_ptr->createIndex(par->row,0,par);
+         const auto idx = q_ptr->createIndex(par->row,0,par);
          emit q_ptr->dataChanged(idx,idx);
          par = par->parent;
       }

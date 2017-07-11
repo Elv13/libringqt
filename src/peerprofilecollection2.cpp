@@ -115,12 +115,14 @@ void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) c
 
     QSet<QString> dedup;
 
-    auto pn = target->phoneNumbers();
+    const auto pn = target->phoneNumbers();
 
     for (auto cm : qAsConst(pn))
         dedup.insert(cm->uri());
 
-    for (auto cm : qAsConst(source->phoneNumbers())) {
+    const auto pn2 = target->phoneNumbers();
+
+    for (auto cm : qAsConst(pn2)) {
         if (!dedup.contains(cm->uri())) {
             changed = true;
             target->addPhoneNumber(cm);

@@ -457,14 +457,14 @@ void CredentialModelPrivate::reload()
       //SIP
       const VectorMapStringString credentials = configurationManager.getCredentials(m_pAccount->id());
       for (int i=0; i < credentials.size(); i++) {
-         const QModelIndex& idx = q_ptr->addCredentials(Credential::Type::SIP);
+         const auto idx = q_ptr->addCredentials(Credential::Type::SIP);
          q_ptr->setData(idx,credentials[i][ DRing::Account::ConfProperties::USERNAME ],CredentialModel::Role::NAME    );
          q_ptr->setData(idx,credentials[i][ DRing::Account::ConfProperties::PASSWORD ],CredentialModel::Role::PASSWORD);
          q_ptr->setData(idx,credentials[i][ DRing::Account::ConfProperties::REALM    ],CredentialModel::Role::REALM   );
       }
 
       //TURN
-      const QModelIndex& idx = q_ptr->addCredentials(Credential::Type::TURN);
+      const auto idx = q_ptr->addCredentials(Credential::Type::TURN);
       const QString usern = m_pAccount->accountDetail(DRing::Account::ConfProperties::TURN::SERVER_UNAME);
       const QString passw = m_pAccount->accountDetail(DRing::Account::ConfProperties::TURN::SERVER_PWD  );
       const QString realm = m_pAccount->accountDetail(DRing::Account::ConfProperties::TURN::SERVER_REALM);

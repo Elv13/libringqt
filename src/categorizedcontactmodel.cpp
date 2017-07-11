@@ -151,12 +151,15 @@ ContactTreeNode::~ContactTreeNode()
 
 QModelIndex CategorizedContactModelPrivate::getIndex(int row, int column, ContactTreeNode* parent)
 {
+   if (column)
+      return {};
+
    return q_ptr->createIndex(row,column,parent);
 }
 
 void ContactTreeNode::slotChanged()
 {
-   const QModelIndex& self = m_pModel->d_ptr->getIndex(m_Index,0,this);
+   const QModelIndex self = m_pModel->d_ptr->getIndex(m_Index,0,this);
 
    if (!self.isValid()) return;
 
@@ -165,8 +168,17 @@ void ContactTreeNode::slotChanged()
       n->m_Visible = n->m_pContact && n->m_pContact->isActive();
    emit m_pModel->dataChanged(self,self);
 
-   const QModelIndex& tl = m_pModel->index(0,0,self);
-   const QModelIndex& br = m_pModel->index(0,m_pModel->rowCount(self),self);
+   if (n->m_lChildren.isEmpty())
+       return;
+
+   const auto tl = m_pModel->index(0,0,self);
+   const auto br = m_pModel->index(n->m_lChildren.size()-1, 0, self);
+
+   qDebug() << n << static_cast<ContactTreeNode*>(tl.internalPointer())
+   << static_cast<ContactTreeNode*>(br.internalPointer());
+
+   Q_ASSERT(tl.isValid() && br.isValid());
+
    emit m_pModel->dataChanged(tl, br);
 }
 
@@ -174,16 +186,20 @@ void ContactTreeNode::slotContactMethodsChanged()
 {
    const QModelIndex idx = m_pModel->d_ptr->getIndex(m_Index,0,this);
 
+   const auto cms = m_pContact->phoneNumbers();
+
    //After discussion, it was decided that contacts with only 1 phone number should
    //be handled differently and the additional complexity isn't worth it
-   if (m_pContact->phoneNumbers().size() > 1) {
-      m_pModel->beginInsertRows(idx,0,m_pContact->phoneNumbers().size()-1);
-      for (int i = 0; i < m_pContact->phoneNumbers().size(); ++i) {
-         ContactTreeNode* n2 = new ContactTreeNode(m_pContact->phoneNumbers()[i],m_pModel);
+   if (cms.size() > 1) {
+      m_pModel->beginInsertRows(idx,0, cms.size()-1);
+
+      for (int i = 0; i < cms.size(); ++i) {
+         ContactTreeNode* n2 = new ContactTreeNode(cms[i],m_pModel);
          n2->m_Index = m_lChildren.size();
          n2->setParent(this);
          m_lChildren << n2;
       }
+
       m_pModel->endInsertRows();
    }
    emit m_pModel->dataChanged(idx,idx);
@@ -195,11 +211,13 @@ void ContactTreeNode::slotContactMethodsAboutToChange()
 
    if (m_lChildren.size() > 0) {
       m_pModel->beginRemoveRows(idx,0,m_lChildren.size()-1);
+
       while (m_lChildren.size()) {
          auto node = m_lChildren.at(0);
          m_lChildren.removeAt(0);
          delete node;
       }
+
       m_pModel->endRemoveRows();
    }
 }
@@ -298,11 +316,11 @@ ContactTreeNode* CategorizedContactModelPrivate::getContactTopLevelItem(const QS
       ContactTreeNode* item = new ContactTreeNode(category,q_ptr);
       m_hCategories[category] = item;
       item->m_Index = m_lCategoryCounter.size();
-//       emit layoutAboutToBeChanged();
-      q_ptr->beginInsertRows(QModelIndex(),m_lCategoryCounter.size(),m_lCategoryCounter.size()); {
-         m_lCategoryCounter << item;
-      } q_ptr->endInsertRows();
-//       emit layoutChanged();
+
+      q_ptr->beginInsertRows({}, m_lCategoryCounter.size(), m_lCategoryCounter.size());
+      m_lCategoryCounter << item;
+      q_ptr->endInsertRows();
+
    }
    ContactTreeNode* item = m_hCategories[category];
    return item;
@@ -310,19 +328,20 @@ ContactTreeNode* CategorizedContactModelPrivate::getContactTopLevelItem(const QS
 
 void CategorizedContactModelPrivate::reloadCategories()
 {
-   emit q_ptr->layoutAboutToBeChanged(); //FIXME far from optimal
+   //TODO This could be optimized
+   q_ptr->beginResetModel();
+
    m_hCategories.clear();
-   q_ptr->beginRemoveRows(QModelIndex(),0,m_lCategoryCounter.size()-1);
-   foreach(ContactTreeNode* item,m_lCategoryCounter) {
+   for (auto item : qAsConst(m_lCategoryCounter))
       delete item;
-   }
-   q_ptr->endRemoveRows();
    m_lCategoryCounter.clear();
-   for(int i=0; i < PersonModel::instance().rowCount();i++) {
+
+   q_ptr->endResetModel();
+
+   for (int i=0; i < PersonModel::instance().rowCount();i++) {
       Person* cont = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Person::Role::Object));
       slotContactAdded(cont);
    }
-   emit q_ptr->layoutChanged();
 }
 
 void CategorizedContactModelPrivate::slotContactRemoved(const Person* c) {
@@ -341,20 +360,36 @@ void CategorizedContactModelPrivate::slotContactAdded(const Person* c)
    contactNode->setParent(item);
    contactNode->m_Index = item->m_lChildren.size();
    //emit layoutAboutToBeChanged();
-   q_ptr->beginInsertRows(q_ptr->index(item->m_Index,0,QModelIndex()),item->m_lChildren.size(),item->m_lChildren.size()); {
-      item->m_lChildren << contactNode;
-   } q_ptr->endInsertRows();
+   q_ptr->beginInsertRows(q_ptr->index(item->m_Index,0,QModelIndex()),item->m_lChildren.size(),item->m_lChildren.size());
+
+   item->m_lChildren << contactNode;
+
+   q_ptr->endInsertRows();
+
    reloadTreeVisibility(item);
 
    if (c->phoneNumbers().size() > 1) {
-      q_ptr->beginInsertRows(q_ptr->createIndex(contactNode->m_Index,0,contactNode),0,c->phoneNumbers().size() - 1);
-      foreach (ContactMethod* m, c->phoneNumbers() ) { //TODO check if this can be merged with slotContactMethodCountChanged
+      const auto parentIdx = q_ptr->createIndex(contactNode->m_Index,0,contactNode);
+      const int first(contactNode->m_lChildren.size()), last(contactNode->m_lChildren.size() + c->phoneNumbers().size() - 1);
+      q_ptr->beginInsertRows(parentIdx, first, last);
+
+      const auto cms = c->phoneNumbers();
+      for (auto m : qAsConst(cms)) {
+         //TODO check if this can be merged with slotContactMethodCountChanged
          ContactTreeNode* n2 = new ContactTreeNode(m,q_ptr);
          n2->m_Index = contactNode->m_lChildren.size();
-         n2->setParent(contactNode);
+
+         // Set it first to avoid `dataChanged()` being emitted within the critical section
+         n2->m_pParent = contactNode;
+
          contactNode->m_lChildren << n2;
       }
+
       q_ptr->endInsertRows();
+
+      for (int i = first; i <= last; i++) {
+         contactNode->m_lChildren[i]->setParent(contactNode);
+      }
    }
 
    //emit layoutChanged();
@@ -420,7 +455,7 @@ bool CategorizedContactModel::dropMimeData(const QMimeData *data, Qt::DropAction
                      case 0: //Do nothing when there is no phone numbers
                         return false;
                      case 1: //Call when there is one
-                        CallModel::instance().transfer(call,ct->phoneNumbers()[0]);
+                        CallModel::instance().transfer(call,ct->phoneNumbers().first());
                         break;
                      default:
                         //TODO
@@ -489,6 +524,9 @@ QModelIndex CategorizedContactModel::parent( const QModelIndex& index) const
 
 QModelIndex CategorizedContactModel::index( int row, int column, const QModelIndex& parent) const
 {
+   if (column)
+      return {};
+
    if (!parent.isValid() && row < d_ptr->m_lCategoryCounter.size()) {
       return createIndex(row,column,d_ptr->m_lCategoryCounter[row]);
    }
@@ -518,7 +556,7 @@ QMimeData* CategorizedContactModel::mimeData(const QModelIndexList &indexes) con
                const Person* ct = modelItem->m_pContact;
                if (ct) {
                   if (ct->phoneNumbers().size() == 1) {
-                     mimeData->setData(RingMimes::PHONENUMBER , ct->phoneNumbers()[0]->toHash().toUtf8());
+                     mimeData->setData(RingMimes::PHONENUMBER , ct->phoneNumbers().first()->toHash().toUtf8());
                   }
                   mimeData->setData(RingMimes::CONTACT , ct->uid());
                }
@@ -548,7 +586,6 @@ int CategorizedContactModel::acceptedPayloadTypes()
 {
    return CallModel::DropPayloadType::CALL;
 }
-
 
 
 /*****************************************************************************

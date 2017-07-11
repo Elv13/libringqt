@@ -330,7 +330,7 @@ void CodecModelPrivate::reload()
       );
 
       if (!findCodec(aCodec)) {
-         const QModelIndex& idx = add();
+         const auto idx = add();
          q_ptr->setData(idx,QString::number(aCodec), CodecModel::Role::ID);
       }
 
@@ -362,7 +362,7 @@ void CodecModelPrivate::reload()
       );
 
       if (!findCodec(aCodec)) {
-         const QModelIndex& idx = add();
+         const auto idx = add();
          q_ptr->setData(idx,QString::number(aCodec), CodecModel::Role::ID);
       }
 
@@ -392,7 +392,7 @@ void CodecModelPrivate::save()
    //Update active codec list
    VectorUInt _codecList;
    for (int i = 0; i < q_ptr->rowCount();i++) {
-      const QModelIndex& idx = q_ptr->index(i,0);
+      const auto idx = q_ptr->index(i,0);
       if (q_ptr->data(idx,Qt::CheckStateRole) == Qt::Checked) {
          _codecList << q_ptr->data(idx,CodecModel::Role::ID).toInt();
       }
@@ -403,7 +403,7 @@ void CodecModelPrivate::save()
 
    //Update codec details
    for (int i=0; i < q_ptr->rowCount();i++) {
-      const QModelIndex& idx = q_ptr->index(i,0);
+      const auto idx = q_ptr->index(i,0);
       MapStringString codecDetails;
       codecDetails[ DRing::Account::ConfProperties::CodecInfo::NAME        ] = q_ptr->data(idx,CodecModel::Role::NAME).toString();
       codecDetails[ DRing::Account::ConfProperties::CodecInfo::SAMPLE_RATE ] = q_ptr->data(idx,CodecModel::Role::SAMPLERATE).toString();
@@ -462,7 +462,7 @@ bool CodecModel::performAction(const CodecModel::EditAction action)
 bool CodecModel::moveUp()
 {
    if (d_ptr->m_pSelectionModel) {
-      const QModelIndex& idx = d_ptr->m_pSelectionModel->currentIndex();
+      const auto idx = d_ptr->m_pSelectionModel->currentIndex();
       if (dropMimeData(mimeData({idx}), Qt::MoveAction, idx.row()-1, idx.column(),idx.parent())) {
          d_ptr->m_pSelectionModel->setCurrentIndex(index(idx.row()-1,idx.column()), QItemSelectionModel::ClearAndSelect);
          return true;
@@ -475,7 +475,7 @@ bool CodecModel::moveUp()
 bool CodecModel::moveDown()
 {
    if (d_ptr->m_pSelectionModel) {
-      const QModelIndex& idx = d_ptr->m_pSelectionModel->currentIndex();
+      const auto idx = d_ptr->m_pSelectionModel->currentIndex();
       if (dropMimeData(mimeData({idx}), Qt::MoveAction, idx.row()+1, idx.column(),idx.parent())) {
          d_ptr->m_pSelectionModel->setCurrentIndex(index(idx.row()+1,idx.column()), QItemSelectionModel::ClearAndSelect);
          return true;
@@ -529,7 +529,7 @@ QSortFilterProxyModel* CodecModel::audioCodecs() const
 QModelIndex CodecModelPrivate::getIndexofCodecByID(int id)
 {
    for (int i=0; i < q_ptr->rowCount();i++) {
-      const QModelIndex& idx = q_ptr->index(i,0);
+      const auto idx = q_ptr->index(i,0);
       if (q_ptr->data(idx, CodecModel::Role::ID) == id)
          return idx;
    }

@@ -178,7 +178,7 @@ Ringtone* RingtoneModel::currentRingTone(Account* a) const
    if ((!a) || (!d_ptr->m_hSelectionModels[a]))
       return nullptr;
 
-   const QModelIndex& idx = d_ptr->m_hSelectionModels[a]->currentIndex();
+   const auto idx = d_ptr->m_hSelectionModels[a]->currentIndex();
 
    return idx.isValid() ? d_ptr->m_lRingtone[idx.row()] : nullptr;
 }
@@ -242,7 +242,7 @@ void RingtoneModelPrivate::slotStopTimer()
       CallManagerInterface& callManager = CallManager::instance();
       callManager.stopRecordedFilePlayback(m_pCurrent->path());
       m_isPlaying = false;
-      const QModelIndex& idx = q_ptr->index(m_lRingtone.indexOf(m_pCurrent),0);
+      const auto idx = q_ptr->index(m_lRingtone.indexOf(m_pCurrent),0);
       emit q_ptr->dataChanged(idx,q_ptr->index(idx.row(),1));
       m_pCurrent = nullptr;
       m_pTimer->stop();

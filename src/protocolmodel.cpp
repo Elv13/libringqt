@@ -130,7 +130,7 @@ QItemSelectionModel* ProtocolModel::selectionModel() const
 
       const Account::Protocol proto    = d_ptr->m_pAccount ? d_ptr->m_pAccount->protocol() : Account::Protocol::RING;
 
-      const QModelIndex& idx = index(static_cast<int>(proto),0);
+      const auto idx = index(static_cast<int>(proto),0);
       d_ptr->m_pSelectionModel->setCurrentIndex(idx,QItemSelectionModel::ClearAndSelect);
 
       connect(d_ptr->m_pSelectionModel,&QItemSelectionModel::currentChanged,d_ptr,&ProtocolModelPrivate::slotSelectionChanged);

@@ -660,7 +660,7 @@ int AccountModel::importAccounts(const QString& filePath, const QString& passwor
 bool AccountModel::moveUp()
 {
    if (d_ptr->m_pSelectionModel) {
-      const QModelIndex& idx = d_ptr->m_pSelectionModel->currentIndex();
+      const auto idx = d_ptr->m_pSelectionModel->currentIndex();
 
       if (!idx.isValid())
          return false;
@@ -676,7 +676,7 @@ bool AccountModel::moveUp()
 bool AccountModel::moveDown()
 {
    if (d_ptr->m_pSelectionModel) {
-      const QModelIndex& idx = d_ptr->m_pSelectionModel->currentIndex();
+      const auto idx = d_ptr->m_pSelectionModel->currentIndex();
 
       if (!idx.isValid())
          return false;

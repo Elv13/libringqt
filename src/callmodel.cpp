@@ -1444,7 +1444,7 @@ void CallModelPrivate::slotDTMFPlayed( const QString& str )
       else                           idx = -1          ;
       call->setProperty("latestDtmfIdx",idx);
    }
-   const QModelIndex& idx = q_ptr->getIndex(call);
+   const auto idx = q_ptr->getIndex(call);
    q_ptr->setData(idx,50, static_cast<int>(Call::Role::DTMFAnimState));
 }
 

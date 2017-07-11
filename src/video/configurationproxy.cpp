@@ -162,7 +162,7 @@ void ConfigurationProxyPrivate::changeRate()
 void ConfigurationProxyPrivate::updateDeviceSelection()
 {
    if (ConfigurationProxyPrivate::m_spDeviceModel) {
-      const QModelIndex& idx = ConfigurationProxyPrivate::m_spDeviceModel->index(Video::DeviceModel::instance().activeIndex(),0);
+      const auto idx = ConfigurationProxyPrivate::m_spDeviceModel->index(Video::DeviceModel::instance().activeIndex(),0);
       if (idx.row() != Video::ConfigurationProxy::deviceSelectionModel().currentIndex().row())
          Video::ConfigurationProxy::deviceSelectionModel().setCurrentIndex(idx , QItemSelectionModel::ClearAndSelect);
    }
@@ -174,7 +174,7 @@ void ConfigurationProxyPrivate::updateChannelSelection()
    if (dev) {
       Video::Channel* chan = dev->activeChannel();
       if (chan) {
-         const QModelIndex& newIdx = dev->index(chan->relativeIndex(),0);
+         const auto newIdx = dev->index(chan->relativeIndex(),0);
          if (newIdx.row() != Video::ConfigurationProxy::channelSelectionModel().currentIndex().row())
             Video::ConfigurationProxy::channelSelectionModel().setCurrentIndex(newIdx, QItemSelectionModel::ClearAndSelect );
       }
@@ -187,7 +187,7 @@ void ConfigurationProxyPrivate::updateResolutionSelection()
    if (chan) {
       Video::Resolution* res = chan->activeResolution();
       if (res) {
-         const QModelIndex& newIdx = chan->index(res->relativeIndex(),0);
+         const auto newIdx = chan->index(res->relativeIndex(),0);
          if (newIdx.row() != Video::ConfigurationProxy::resolutionSelectionModel().currentIndex().row())
             Video::ConfigurationProxy::resolutionSelectionModel().setCurrentIndex(newIdx, QItemSelectionModel::ClearAndSelect);
       }
@@ -200,7 +200,7 @@ void ConfigurationProxyPrivate::updateRateSelection()
    if (res) {
       Video::Rate* rate = res->activeRate();
       if (rate) {
-         const QModelIndex& newIdx = res->index(rate->relativeIndex(),0);
+         const auto newIdx = res->index(rate->relativeIndex(),0);
          if (newIdx.row() != Video::ConfigurationProxy::rateSelectionModel().currentIndex().row())
             Video::ConfigurationProxy::rateSelectionModel().setCurrentIndex(newIdx, QItemSelectionModel::ClearAndSelect);
       }

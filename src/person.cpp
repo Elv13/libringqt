@@ -297,7 +297,7 @@ Person::~Person()
 }
 
 ///Get the phone number list
-const Person::ContactMethods& Person::phoneNumbers() const
+Person::ContactMethods Person::phoneNumbers() const
 {
    return d_ptr->m_Numbers;
 }
@@ -315,60 +315,60 @@ Person::ContactMethods Person::relatedContactMethods() const
 }
 
 ///Get the nickname
-const QString& Person::nickName() const
+QString Person::nickName() const
 {
    return d_ptr->m_NickName;
 }
 
 ///Get the firstname
-const QString& Person::firstName() const
+QString Person::firstName() const
 {
    return d_ptr->m_FirstName;
 }
 
 ///Get the second/family name
-const QString& Person::secondName() const
+QString Person::secondName() const
 {
    return d_ptr->m_SecondName;
 }
 
 ///Get the photo
-const QVariant Person::photo() const
+QVariant Person::photo() const
 {
    return d_ptr->m_vPhoto;
 }
 
 ///Get the formatted name
-const QString& Person::formattedName() const
+QString Person::formattedName() const
 {
    return d_ptr->m_FormattedName;
 }
 
 ///Get the organisation
-const QString& Person::organization()  const
+QString Person::organization()  const
 {
    return d_ptr->m_Organization;
 }
 
 ///Get the preferred email
-const QString& Person::preferredEmail()  const
+QString Person::preferredEmail()  const
 {
    return d_ptr->m_PreferredEmail;
 }
 
 ///Get the unique identifier (used for drag and drop)
-const QByteArray& Person::uid() const
+QByteArray Person::uid() const
 {
    return d_ptr->m_Uid;
 }
 
 ///Get the group
-const QString& Person::group() const
+QString Person::group() const
 {
    return d_ptr->m_Group;
 }
 
-const QString& Person::department() const
+QString Person::department() const
 {
    return d_ptr->m_Department;
 }
@@ -437,8 +437,11 @@ QSharedPointer<QAbstractItemModel> Person::timelineModel() const
 }
 
 ///Set the phone number (type and number)
-void Person::setContactMethods(ContactMethods numbers)
+void Person::setContactMethods(const ContactMethods& numbers)
 {
+   //TODO make a diff instead of full reload
+   const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
+
    d_ptr->phoneNumbersAboutToChange();
    for (ContactMethod* n : d_ptr->m_Numbers) {
       disconnect(n,SIGNAL(presentChanged(bool)),this,SLOT(slotPresenceChanged()));
@@ -446,7 +449,8 @@ void Person::setContactMethods(ContactMethods numbers)
       disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &PersonPrivate::changed);
       disconnect(n, &ContactMethod::callAdded, d_ptr, &PersonPrivate::slotCallAdded);
    }
-   d_ptr->m_Numbers = numbers;
+
+   d_ptr->m_Numbers = ContactMethods::fromList(dedup.toList());
 
    for (ContactMethod* n : d_ptr->m_Numbers) {
       connect(n,SIGNAL(presentChanged(bool)),this,SLOT(slotPresenceChanged()));
@@ -819,7 +823,7 @@ void Person::addPhoneNumber(ContactMethod* cm)
 }
 
 /// Returns the addresses associated with the person.
-const QList<Person::Address>& Person::addresses() const
+QList<Person::Address> Person::addresses() const
 {
     return d_ptr->m_lAddresses;
 }

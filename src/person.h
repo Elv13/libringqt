@@ -150,22 +150,22 @@ public:
    virtual ~Person();
 
    //Getters
-   const  ContactMethods& phoneNumbers() const;
+   ContactMethods phoneNumbers() const;
    ContactMethods relatedContactMethods() const;
-   const  QString& nickName         () const;
-   const  QString& firstName        () const;
-   const  QString& secondName       () const;
-   const  QString& formattedName    () const;
-   const  QString& organization     () const;
-   const  QByteArray& uid           () const;
-   const  QString& preferredEmail   () const;
-   const  QVariant photo            () const;
-   const  QString& group            () const;
-   const  QString& department       () const;
+   QString nickName         () const;
+   QString firstName        () const;
+   QString secondName       () const;
+   QString formattedName    () const;
+   QString organization     () const;
+   QByteArray uid           () const;
+   QString preferredEmail   () const;
+   QVariant photo           () const;
+   QString group            () const;
+   QString department       () const;
    UsageStatistics* usageStatistics () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
-   const QList<Address>& addresses        () const;
+   QList<Address> addresses        () const;
    QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;
@@ -187,7 +187,7 @@ public:
    bool hasRecording(Media::Media::Type type, Media::Media::Direction direction) const;
 
    //Setters
-   void setContactMethods ( ContactMethods           );
+   void setContactMethods ( const ContactMethods&    );
    void setFormattedName  ( const QString&    name   );
    void setNickName       ( const QString&    name   );
    void setFirstName      ( const QString&    name   );

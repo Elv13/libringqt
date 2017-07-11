@@ -82,7 +82,7 @@ QVariant AvailableAccountModel::data(const QModelIndex& idx,int role ) const
 ///Disable the unavailable accounts
 Qt::ItemFlags AvailableAccountModel::flags (const QModelIndex& idx) const
 {
-   const QModelIndex& src = mapToSource(idx);
+   const auto src = mapToSource(idx);
    if (qvariant_cast<Account::RegistrationState>(src.data(static_cast<int>(Account::Role::RegistrationState))) != Account::RegistrationState::READY)
       return Qt::NoItemFlags;
    return sourceModel()->flags(idx);

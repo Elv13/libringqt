@@ -367,7 +367,7 @@ QVariant PrefixAndSeverityProxyModel::data(const QModelIndex& index, int role) c
             break;
          //Map source column 1 to 2
          case (int)AccountChecksModel::Columns::RESULT: {
-            const QModelIndex& srcIdx = sourceModel()->index(index.row(),1);
+            const auto srcIdx = sourceModel()->index(index.row(),1);
             c = qvariant_cast<Certificate::Checks>(srcIdx.data((int)CertificateModel::Role::check));
 
             switch(role) {
@@ -641,8 +641,8 @@ SecurityEvaluationModel::~SecurityEvaluationModel()
 
 bool SecurityEvaluationModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
-   const QModelIndex& idx  = sourceModel()->index(source_row,0,source_parent);
-   const QModelIndex& idx2 = sourceModel()->index(source_row,2,source_parent);
+   const auto idx  = sourceModel()->index(source_row,0,source_parent);
+   const auto idx2 = sourceModel()->index(source_row,2,source_parent);
    const Severity     s    = qvariant_cast<Severity>(idx.data((int)SecurityEvaluationModel::Role::Severity));
    return s != Severity::UNSUPPORTED && idx2.data(Qt::DisplayRole).toBool() == false;
 }
@@ -693,9 +693,9 @@ SecurityEvaluationModel::SecurityLevel SecurityEvaluationModelPrivate::maxSecuri
    SecurityLevel maxLevel = SecurityLevel::COMPLETE;
 
    for (int i=0; i < m->rowCount();i++) {
-      const QModelIndex&  idx      = m->index(i,0);
+      const auto idx = m->index(i,0);
 
-      const Severity      severity = qvariant_cast<Severity>(
+      const Severity severity = qvariant_cast<Severity>(
          idx.data((int) SecurityEvaluationModel::Role::Severity)
       );
 

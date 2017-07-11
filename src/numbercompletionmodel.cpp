@@ -580,7 +580,7 @@ bool NumberCompletionModel::callSelectedNumber()
    if (!d_ptr->m_pSelectionModel || !d_ptr->m_pCall)
       return false;
 
-   const QModelIndex& idx = d_ptr->m_pSelectionModel->currentIndex();
+   const auto idx = d_ptr->m_pSelectionModel->currentIndex();
 
    if (!idx.isValid())
       return false;

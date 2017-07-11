@@ -52,13 +52,14 @@ private:
     template<typename T> T sum(T(UsageStatistics::*M)(void)const) const {
         T ret {};
 
-        for (auto cm : qAsConst(m_pPerson->phoneNumbers())) {
+        const auto cms = m_pPerson->phoneNumbers();
+        for (auto cm : qAsConst(cms)) {
             ret += (cm->usageStatistics()->*M)();
         }
 
-        const auto cms = m_pPerson->relatedContactMethods();
+        const auto cms2 = m_pPerson->relatedContactMethods();
 
-        for (auto cm : qAsConst(cms)) {
+        for (auto cm : qAsConst(cms2)) {
             ret += (cm->usageStatistics()->*M)();
         }
 

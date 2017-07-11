@@ -108,7 +108,8 @@ bool FallbackPersonBackendEditor::save(const Person* item)
    //An UID is required
    if (item->uid().isEmpty()) {
       QCryptographicHash hash(QCryptographicHash::Sha1);
-      for (ContactMethod* n : item->phoneNumbers())
+      const auto cms = item->phoneNumbers();
+      for (ContactMethod* n : qAsConst(cms))
          hash.addData(n->uri().toLatin1());
       hash.addData(item->formattedName().toLatin1());
       QByteArray random;
