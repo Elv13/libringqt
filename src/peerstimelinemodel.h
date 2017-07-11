@@ -59,7 +59,7 @@ class LIB_EXPORT PeersTimelineModel : public QAbstractListModel
 
 public:
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
-    Q_PROPERTY(QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel READ deduplicatedTimelineModel)
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel READ deduplicatedTimelineModel CONSTANT)
 
     /// Roles used in the `timelineSumaryModel`
     enum class SummaryRoles {
