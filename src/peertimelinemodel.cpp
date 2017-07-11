@@ -514,6 +514,9 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
 
 void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 {
+    if (message->m_pMessage->m_PlainText.isEmpty())
+        return;
+
     auto group = getGroup(message);
     m_pCurrentTextGroup = group;
     m_pCurrentCallGroup = nullptr;
