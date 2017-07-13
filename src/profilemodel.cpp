@@ -724,9 +724,8 @@ bool ProfileModel::remove(const QModelIndex& idx)
         return false;
     }
 
-    for (auto colI : collections(CollectionInterface::SupportedFeatures::ADD)) {
-        colI->editor<Profile>()->remove(n->m_uContent.m_pProfile);
-    }
+    n->m_uContent.m_pProfile->remove();
+
     return true;
 }
 
