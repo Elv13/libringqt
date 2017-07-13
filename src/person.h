@@ -132,7 +132,7 @@ public:
    //Mutator
    Q_INVOKABLE void addAddress(const Address& addr);
    Q_INVOKABLE void addPhoneNumber(ContactMethod* cm);
-   Q_INVOKABLE void addCustomField(const QString& key, const QString& value);
+   Q_INVOKABLE void addCustomField(const QByteArray& key, const QByteArray& value);
    Q_INVOKABLE const QByteArray toVCard(QList<Account*> accounts = {}) const;
 
 protected:
@@ -166,6 +166,7 @@ public:
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
    QList<Address> addresses        () const;
+   QMultiMap<QByteArray, QByteArray> otherFields() const;
    QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;

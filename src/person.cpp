@@ -828,8 +828,14 @@ QList<Person::Address> Person::addresses() const
     return d_ptr->m_lAddresses;
 }
 
+/// Anything that didn't fit in the Person fields
+QMultiMap<QByteArray, QByteArray> Person::otherFields() const
+{
+    return d_ptr->m_lCustomAttributes;
+}
+
 ///Add custom fields for contact profiles
-void Person::addCustomField(const QString& key, const QString& value)
+void Person::addCustomField(const QByteArray& key, const QByteArray& value)
 {
    d_ptr->m_lCustomAttributes.insert(key, value);
 }
@@ -861,8 +867,8 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
       maker.addAddress(addr);
    }
 
-   foreach (const QString& key , d_ptr->m_lCustomAttributes.keys()) {
-      maker.addProperty(key, d_ptr->m_lCustomAttributes.value(key));
+   for (auto i = d_ptr->m_lCustomAttributes.constBegin(); i != d_ptr->m_lCustomAttributes.constEnd(); i++) {
+      maker.addProperty(i.key(), i.value());
    }
 
    foreach (Account* acc , accounts) {

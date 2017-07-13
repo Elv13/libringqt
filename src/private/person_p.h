@@ -51,10 +51,11 @@ public:
    bool                     m_Active              ;
    bool                     m_isPlaceHolder       ;
    QList<Person::Address>   m_lAddresses          ;
-   QHash<QString, QString>  m_lCustomAttributes   ;
    ContactMethod*           m_LastUsedCM {nullptr};
    QVector<ContactMethod*>  m_HiddenContactMethods;
    PersonStatistics*        m_pStats              ;
+
+   QMultiMap<QByteArray, QByteArray>  m_lCustomAttributes;
 
    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
    QWeakPointer<QAbstractItemModel> m_pAddressModel;
