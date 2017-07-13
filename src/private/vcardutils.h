@@ -69,7 +69,7 @@ public:
 
    void startVCard(const QString& version);
    void addProperty(const char* prop, const QString& value);
-   void addProperty(const QString& prop, const QString& value);
+   void addProperty(const QByteArray& prop, const QString& value);
    void addEmail(const QString& type, const QString& num);
    void addAddress(const Person::Address& addr);
    void addContactMethod(const QString& type, const QString& num);

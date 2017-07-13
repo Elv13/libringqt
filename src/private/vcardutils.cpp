@@ -210,7 +210,9 @@ struct VCardMapper final {
             return true;
          }
 
-         return false;
+         c->addCustomField(key, value);
+
+         return true;
       }
       (this->*(m_hHash[settings[0].toLatin1()]))(c,key,value);
       return true;
@@ -238,7 +240,7 @@ void VCardUtils::addProperty(const char* prop, const QString& value)
    m_vCard << (QString::fromUtf8(prop) + ':' + value);
 }
 
-void VCardUtils::addProperty(const QString& prop, const QString& value)
+void VCardUtils::addProperty(const QByteArray& prop, const QString& value)
 {
    if (value.isEmpty() || value == QString(';'))
       return;
@@ -247,14 +249,14 @@ void VCardUtils::addProperty(const QString& prop, const QString& value)
 
 void VCardUtils::addEmail(const QString& type, const QString& email)
 {
-   addProperty(QString("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg("TYPE=").arg(type), email);
+   addProperty(QString("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg("TYPE=").arg(type).toLatin1(), email);
 }
 
 void VCardUtils::addAddress(const Person::Address& addr)
 {
-   QString prop = QString("%1%2%3").arg(Property::ADDRESS)
+   const QByteArray prop = QString("%1%2%3").arg(Property::ADDRESS)
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.type());
+         .arg(addr.type()).toLatin1();
 
    //First two fiels are left empty for now, they are for Postal box and Extended Address
    QString value = QString("%1%2%3%4%5%6%7%8%9%10%11")
@@ -275,8 +277,8 @@ void VCardUtils::addAddress(const Person::Address& addr)
 
 void VCardUtils::addContactMethod(const QString& type, const QString& num)
 {
-   QString prop = QString(Property::TELEPHONE) + QString(Delimiter::SEPARATOR_TOKEN) + type;
-   addProperty(prop, num);
+   const auto prop = QString(Property::TELEPHONE) + QString(Delimiter::SEPARATOR_TOKEN) + type;
+   addProperty(prop.toLatin1(), num);
 }
 
 void VCardUtils::addPhoto(const QByteArray img)
