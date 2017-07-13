@@ -174,9 +174,6 @@ void ContactTreeNode::slotChanged()
    const auto tl = m_pModel->index(0,0,self);
    const auto br = m_pModel->index(n->m_lChildren.size()-1, 0, self);
 
-   qDebug() << n << static_cast<ContactTreeNode*>(tl.internalPointer())
-   << static_cast<ContactTreeNode*>(br.internalPointer());
-
    Q_ASSERT(tl.isValid() && br.isValid());
 
    emit m_pModel->dataChanged(tl, br);
