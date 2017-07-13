@@ -24,6 +24,8 @@ class Profile;
 
 template<typename T> class CollectionMediator;
 
+class LocalProfileCollectionPrivate;
+
 class LIB_EXPORT LocalProfileCollection : public CollectionInterface
 {
 public:
@@ -43,5 +45,6 @@ public:
     virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
 private:
-    void setupDefaultProfile();
+    LocalProfileCollectionPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(LocalProfileCollection)
 };

@@ -1,6 +1,8 @@
 /****************************************************************************
  *   Copyright (C) 2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2017 by Bluesystems                                      *
  *   Author : Alexandre Lision <alexandre.lision@savoirfairelinux.com>      *
+ *   Author : Emmanuel Lepage Vallee <elv1313@gmail.com>                    *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
  *   modify it under the terms of the GNU Lesser General Public             *
@@ -31,7 +33,63 @@
 #include "private/vcardutils.h"
 #include "account.h"
 #include "accountmodel.h"
+#include "personmodel.h"
 #include "person.h"
+#include "fallbackpersoncollection.h"
+
+/// Avoid copy paste
+class ProfileVCardCollection final : public FallbackPersonCollection
+{
+public:
+    explicit ProfileVCardCollection(CollectionMediator<Person>* mediator, const QString& path = {});
+    virtual ~ProfileVCardCollection() {}
+
+    virtual QString    name     () const override;
+    virtual QString    category () const override;
+    virtual QByteArray id       () const override;
+    virtual FlagPack<CollectionInterface::SupportedFeatures> supportedFeatures() const override;
+};
+
+ProfileVCardCollection::
+ProfileVCardCollection(CollectionMediator<Person>* mediator, const QString& path) :
+    FallbackPersonCollection(mediator, path, false)
+{
+}
+
+QString ProfileVCardCollection::name () const
+{
+    return QObject::tr("Own profiles vCard collection");
+}
+
+QString ProfileVCardCollection::category () const
+{
+    return QObject::tr("Profile Collection");
+}
+
+QByteArray ProfileVCardCollection::id() const
+{
+   return "pvcc";
+}
+
+FlagPack<CollectionInterface::SupportedFeatures> ProfileVCardCollection::supportedFeatures() const
+{
+   return
+      CollectionInterface::SupportedFeatures::NONE   |
+      CollectionInterface::SupportedFeatures::LOAD   |
+      CollectionInterface::SupportedFeatures::CLEAR  |
+      CollectionInterface::SupportedFeatures::SAVE   |
+      CollectionInterface::SupportedFeatures::EDIT   |
+      CollectionInterface::SupportedFeatures::REMOVE |
+      CollectionInterface::SupportedFeatures::ADD    ;
+}
+
+class LocalProfileCollectionPrivate
+{
+public:
+    void setupDefaultProfile();
+
+    LocalProfileCollection* q_ptr;
+};
 
 class LocalProfileEditor final : public CollectionEditor<Profile>
 {
@@ -42,6 +100,8 @@ public:
    virtual bool edit       ( Profile*       item ) override;
    virtual bool addNew     ( Profile*       item ) override;
    virtual bool addExisting( const Profile* item ) override;
+
+    ProfileVCardCollection* m_pVCardCollection;
 
 private:
     virtual QVector<Profile*> items() const override;
@@ -57,42 +117,50 @@ private:
 LocalProfileEditor::LocalProfileEditor(CollectionMediator<Profile>* m, LocalProfileCollection* parent) :
 CollectionEditor<Profile>(m),m_pCollection(parent)
 {
+    const QString profilesDir(
+        QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/profiles/"
+    );
 
+    m_pVCardCollection = PersonModel::instance().addCollection<ProfileVCardCollection, QString>(
+        profilesDir, LoadOptions::FORCE_ENABLED
+    );
 }
 
 LocalProfileCollection::LocalProfileCollection(CollectionMediator<Profile>* mediator) :
-CollectionInterface(new LocalProfileEditor(mediator,this))
+CollectionInterface(new LocalProfileEditor(mediator,this)), d_ptr(new LocalProfileCollectionPrivate)
 {
-
+    d_ptr->q_ptr = this;
 }
 
 LocalProfileCollection::~LocalProfileCollection()
 {
-
+    delete d_ptr;
 }
 
 bool LocalProfileEditor::save(const Profile* pro)
 {
-    const auto& filename = path(pro);
-    const auto& result = pro->person()->toVCard(pro->accounts().toList());
-
-    qDebug() << "Saving profile in:" << filename;
-    QFile file {filename};
-
-    if (Q_UNLIKELY(!file.open(QIODevice::WriteOnly))) {
-        qWarning() << "Can't write to" << filename;
+    if (!pro->isActive())
         return false;
+
+    Q_ASSERT(pro->person()->collection() == m_pVCardCollection);
+
+    // Update the profile list
+    pro->person()->removeAllCustomFields("X-RINGACCOUNTID");
+
+    for (auto a : qAsConst(pro->accounts())) {
+        pro->person()->addCustomField("X-RINGACCOUNTID", a->id());
     }
 
-    file.write(result);
-    file.close();
+    pro->person()->save();
+
     return true;
 }
 
 bool LocalProfileEditor::remove(const Profile* item)
 {
-    if (QFile::remove(path(item))) {
+    if (item->person()->remove()) {
         mediator()->removeItem(item);
+        Q_ASSERT(!item->person()->isActive());
         return true;
     }
 
@@ -101,8 +169,8 @@ bool LocalProfileEditor::remove(const Profile* item)
 
 bool LocalProfileEditor::edit( Profile* item)
 {
-   Q_UNUSED(item)
-   return false;
+    Q_UNUSED(item)
+    return false;
 }
 
 bool LocalProfileEditor::addNew(Profile* pro)
@@ -110,6 +178,7 @@ bool LocalProfileEditor::addNew(Profile* pro)
     pro->person()->ensureUid();
     qDebug() << "Creating new profile" << pro->person()->uid();
     m_lItems << pro;
+    pro->person()->setCollection(m_pVCardCollection);
     pro->setCollection(m_pCollection);
     mediator()->addItem(pro);
     save(pro);
@@ -118,33 +187,34 @@ bool LocalProfileEditor::addNew(Profile* pro)
 
 bool LocalProfileEditor::addExisting(const Profile* item)
 {
-   m_lItems << const_cast<Profile*>(item);
-   mediator()->addItem(item);
-   return true;
+    m_lItems << const_cast<Profile*>(item);
+    item->person()->setCollection(m_pVCardCollection);
+    mediator()->addItem(item);
+    return true;
 }
 
 QVector<Profile*> LocalProfileEditor::items() const
 {
-   return m_lItems;
+    return m_lItems;
 }
 
 QString LocalProfileEditor::path(const Profile* p) const
 {
-   const QDir profilesDir = (QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/";
-   profilesDir.mkpath(profilesDir.path());
-   return QString("%1/%2.vcf")
-      .arg(profilesDir.absolutePath())
-      .arg(QString(p->person()->uid()));
+    const QDir profilesDir = (QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/";
+    profilesDir.mkpath(profilesDir.path());
+    return QString("%1/%2.vcf")
+        .arg(profilesDir.absolutePath())
+        .arg(QString(p->person()->uid()));
 }
 
 QString LocalProfileCollection::name () const
 {
-   return QObject::tr("Local profiles");
+    return QObject::tr("Local profiles");
 }
 
 QString LocalProfileCollection::category () const
 {
-   return QObject::tr("Profile Collection");
+    return QObject::tr("Profile Collection");
 }
 
 QVariant LocalProfileCollection::icon() const
@@ -157,28 +227,38 @@ bool LocalProfileCollection::isEnabled() const
    return true;
 }
 
+static QVector<Account*> getAccountList(const QList<QByteArray>& accs)
+{
+    QVector<Account*> ret;
+    for (const auto& id : qAsConst(accs)) {
+        if (auto a = AccountModel::instance().getById(id))
+            ret << a;
+    }
+
+    return ret;
+}
+
 bool LocalProfileCollection::load()
 {
     const QDir profilesDir = (QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/";
+
     qDebug() << "Loading vcf from:" << profilesDir;
 
-    const QStringList entries = profilesDir.entryList({QStringLiteral("*.vcf")}, QDir::Files);
-    bool hasProfile = false;
+    auto e = static_cast<LocalProfileEditor*>(editor<Profile>());
 
-    foreach (const QString& item , entries) {
-        hasProfile = true;
-        auto personProfile = new Person(nullptr);
-        QList<Account*> accs;
-        VCardUtils::mapToPerson(personProfile,QUrl(profilesDir.path()+'/'+item),&accs);
-        auto profile = new Profile(this, personProfile);
-        profile->setAccounts(accs.toVector());
-        editor<Profile>()->addExisting(profile);
+    const auto vCards = e->m_pVCardCollection->items<Person>();
+
+    for (auto p : qAsConst(vCards)) {
+        auto profile = new Profile(this, p);
+        profile->setCollection(this);
+        profile->setAccounts(getAccountList(p->getCustomFields("X-RINGACCOUNTID")));
+        e->addExisting(profile);
     }
 
-    if (!hasProfile) {
-        //Ring needs at least one global profile
-        setupDefaultProfile();
-    }
+    // No profiles found, create one
+    if (vCards.isEmpty())
+        d_ptr->setupDefaultProfile();
+
     return true;
 }
 
@@ -189,33 +269,33 @@ bool LocalProfileCollection::reload()
 
 FlagPack<CollectionInterface::SupportedFeatures> LocalProfileCollection::supportedFeatures() const
 {
-   return
-      CollectionInterface::SupportedFeatures::NONE   |
-      CollectionInterface::SupportedFeatures::LOAD   |
-      CollectionInterface::SupportedFeatures::CLEAR  |
-      CollectionInterface::SupportedFeatures::REMOVE |
-      CollectionInterface::SupportedFeatures::ADD    ;
+    return
+        CollectionInterface::SupportedFeatures::NONE   |
+        CollectionInterface::SupportedFeatures::LOAD   |
+        CollectionInterface::SupportedFeatures::CLEAR  |
+        CollectionInterface::SupportedFeatures::REMOVE |
+        CollectionInterface::SupportedFeatures::ADD    ;
 }
 
 bool LocalProfileCollection::clear()
 {
-   QFile::remove((QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/");
-   return true;
+    QFile::remove((QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/");
+    return true;
 }
 
 QByteArray LocalProfileCollection::id() const
 {
-   return "lpc";
+    return "lpc";
 }
 
-void LocalProfileCollection::setupDefaultProfile()
+void LocalProfileCollectionPrivate::setupDefaultProfile()
 {
-   auto profile = new Profile(this, new Person());
-   profile->person()->setFormattedName(QObject::tr("Default"));
+    auto profile = new Profile(q_ptr, new Person());
+    profile->person()->setFormattedName(QObject::tr("Default"));
 
-   for (int i = 0 ; i < AccountModel::instance().size() ; i++) {
-       profile->addAccount(AccountModel::instance()[i]);
-   }
+    for (int i = 0 ; i < AccountModel::instance().size() ; i++) {
+        profile->addAccount(AccountModel::instance()[i]);
+    }
 
-   editor<Profile>()->addNew(profile);
+    q_ptr->editor<Profile>()->addNew(profile);
 }
