@@ -834,10 +834,23 @@ QMultiMap<QByteArray, QByteArray> Person::otherFields() const
     return d_ptr->m_lCustomAttributes;
 }
 
+/// Get the custom fields for a specific key
+QList<QByteArray> Person::getCustomFields(const QByteArray& name) const
+{
+    return d_ptr->m_lCustomAttributes.values("X-RINGACCOUNTID");
+}
+
 ///Add custom fields for contact profiles
 void Person::addCustomField(const QByteArray& key, const QByteArray& value)
 {
    d_ptr->m_lCustomAttributes.insert(key, value);
+}
+
+///Remove all custom fields corresponding to the key
+///@return The number of elements removed
+int Person::removeAllCustomFields(const QByteArray& key)
+{
+    return d_ptr->m_lCustomAttributes.remove(key);
 }
 
 const QByteArray Person::toVCard(QList<Account*> accounts) const

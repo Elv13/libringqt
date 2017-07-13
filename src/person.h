@@ -133,7 +133,9 @@ public:
    Q_INVOKABLE void addAddress(const Address& addr);
    Q_INVOKABLE void addPhoneNumber(ContactMethod* cm);
    Q_INVOKABLE void addCustomField(const QByteArray& key, const QByteArray& value);
+   Q_INVOKABLE int  removeAllCustomFields(const QByteArray& key);
    Q_INVOKABLE const QByteArray toVCard(QList<Account*> accounts = {}) const;
+   Q_INVOKABLE QList<QByteArray> getCustomFields(const QByteArray& name) const;
 
 protected:
    //The D-Pointer can be shared if a PlaceHolderPerson is merged with a real one
