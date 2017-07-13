@@ -153,6 +153,8 @@ bool FallbackPersonBackendEditor::remove(const Person* item)
    if (ret) {
       ret &= mediator()->removeItem(item);
    }
+   else
+      qWarning() << "Failed to delete" << path;
 
    return ret;
 }
