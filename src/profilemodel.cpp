@@ -741,7 +741,7 @@ bool ProfileModelPrivate::addProfile(Person* person, const QString& name, Collec
         profile = new Profile(col, person);
     }
     else {
-        auto p = new Person(col);
+        auto p = new Person();
         profile = new Profile(col, p);
         QString profileName = name;
         if (profileName.isEmpty()) {
