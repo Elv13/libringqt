@@ -62,9 +62,10 @@ class FallbackPersonCollectionPrivate final : public QObject
    Q_OBJECT
 public:
    FallbackPersonCollectionPrivate(FallbackPersonCollection* parent, CollectionMediator<Person>* mediator, const QString& path);
-   CollectionMediator<Person>*  m_pMediator;
-   QString                      m_Path     ;
-   QString                      m_Name     ;
+   CollectionMediator<Person>*  m_pMediator   ;
+   QString                      m_Path        ;
+   QString                      m_Name        ;
+   bool                         m_Async {true};
 
    FallbackPersonCollection* q_ptr;
 
@@ -90,9 +91,10 @@ FallbackPersonCollectionPrivate::FallbackPersonCollectionPrivate(FallbackPersonC
       m_Name = "vCard";
 }
 
-FallbackPersonCollection::FallbackPersonCollection(CollectionMediator<Person>* mediator, const QString& path, FallbackPersonCollection* parent) :
+FallbackPersonCollection::FallbackPersonCollection(CollectionMediator<Person>* mediator, const QString& path, bool async, FallbackPersonCollection* parent) :
 CollectionInterface(new FallbackPersonBackendEditor(mediator,path),parent),d_ptr(new FallbackPersonCollectionPrivate(this,mediator,path))
 {
+    d_ptr->m_Async = async;
 }
 
 FallbackPersonCollection::~FallbackPersonCollection()
@@ -212,7 +214,7 @@ bool FallbackPersonCollection::isEnabled() const
 
 bool FallbackPersonCollection::load()
 {
-   new ThreadWorker([this]() {
+   auto l = [this]() {
       bool ok;
       Q_UNUSED(ok)
       QList< Person* > ret =  VCardUtils::loadDir(QUrl(d_ptr->m_Path),ok,static_cast<FallbackPersonBackendEditor*>(editor<Person>())->m_hPaths);
@@ -220,7 +222,12 @@ bool FallbackPersonCollection::load()
          p->setCollection(this);
          editor<Person>()->addExisting(p);
       }
-   });
+   };
+
+   if (d_ptr->m_Async)
+      new ThreadWorker(l);
+   else
+      l();
 
    //Add all sub directories as new backends
    QTimer::singleShot(0,d_ptr,SLOT(loadAsync()));
