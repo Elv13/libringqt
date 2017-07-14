@@ -65,11 +65,6 @@ void NameDirectoryPrivate::slotRegisteredNameFound(const QString& accountId, int
     if (name.isEmpty())
         return;
 
-    if (accountId.isEmpty()) {
-        qWarning() << "Got a registered name answer with invalid parameter" << name;
-        return;
-    }
-
     switch (static_cast<NameDirectory::LookupStatus>(status)) {
         case NameDirectory::LookupStatus::INVALID_NAME:
             qDebug() << "lookup name is INVALID:" << name << accountId;
