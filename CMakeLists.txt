@@ -1,5 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+IF(POLICY CMP0053)
+   CMAKE_POLICY(SET CMP0053 NEW)
+ENDIF(POLICY CMP0053)
+
 IF(POLICY CMP0022)
    CMAKE_POLICY(SET CMP0022 NEW)
 ENDIF(POLICY CMP0022)
@@ -41,7 +45,7 @@ ENDIF()
 
 SET(CMAKE_AUTOMOC TRUE)
 
-SET(LOCAL_CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+SET(LOCAL_CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${LOCAL_CMAKE_MODULE_PATH})
 
 SET(QT5_MODULE_PATH ${QT5_PATH}/lib/cmake)
@@ -166,11 +170,11 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF("${ENABLE_LIBWRAP}" MATCHES true)
    # The daemon is only required for when using direct linking
-   IF (${RING_FOUND} MATCHES "false")
-      MESSAGE(FATAL_ERROR "The daemon is required")
-   ENDIF()
+#   IF (${RING_FOUND} MATCHES "false")
+#      MESSAGE(FATAL_ERROR "The daemon is required")
+#   ENDIF()
 
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/src/qtwrapper)
+   ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper)
    ADD_DEFINITIONS(-DENABLE_LIBWRAP=true) # Use native calls (no dbus)
    ADD_DEFINITIONS(-Wno-unknown-pragmas)
    SET(ENABLE_QT5 true) # Use Qt5
@@ -638,7 +642,7 @@ ENDIF()
 
 IF(${ENABLE_LIBWRAP} MATCHES true)
    TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
-      ${CMAKE_SOURCE_DIR}/src/qtwrapper/
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper/
    )
 ENDIF()
 
@@ -713,7 +717,8 @@ TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
 
 IF(${ENABLE_LIBWRAP} MATCHES true)
    IF(NOT ${ring_BIN} MATCHES "ring_BIN-NOTFOUND")
-      TARGET_LINK_LIBRARIES( ringclient
+      SET(EXTRA_EXPORT_TARGET qtwrapper)
+      TARGET_LINK_LIBRARIES( ringclient PRIVATE
          qtwrapper
          ${ring_BIN}
       )
@@ -760,7 +765,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    ENDIF()
 ENDIF()
 
-EXPORT(TARGETS ringclient
+EXPORT(TARGETS ringclient ${EXTRA_EXPORT_TARGET}
   FILE "${PROJECT_BINARY_DIR}/LibRingClientTargets.cmake")
 
 SET_TARGET_PROPERTIES( ringclient
@@ -841,10 +846,10 @@ INSTALL( FILES ${libringclient_CONFIG_PATH}
 # translations
 IF( Qt5LinguistTools_FOUND )
    # translation template file
-   SET(TS_TEMPLATE ${CMAKE_SOURCE_DIR}/translations/lrc_en.ts)
+   SET(TS_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/translations/lrc_en.ts)
 
    # get all translation files except the template
-   FILE(GLOB TS_FILES ${CMAKE_SOURCE_DIR}/translations/*.ts)
+   FILE(GLOB TS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/translations/*.ts)
    LIST(REMOVE_ITEM TS_FILES ${TS_TEMPLATE})
 
    # compiled .qm files

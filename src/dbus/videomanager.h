@@ -18,7 +18,7 @@
 #pragma once
 
 #ifdef ENABLE_LIBWRAP
- #include "videomanager_wrap.h"
+ #include "../qtwrapper/videomanager_wrap.h"
 #else
  #include "video_dbus_interface.h"
  #include <QDBusPendingReply>
