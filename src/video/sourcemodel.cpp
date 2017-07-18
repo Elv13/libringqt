@@ -21,6 +21,8 @@
 #include "../dbus/videomanager.h"
 #include "devicemodel.h"
 #include <media_const.h>
+#include <globalinstances.h>
+#include <interfaces/pixmapmanipulatori.h>
 
 namespace Video {
 class SourceModelPrivate : public QObject
@@ -88,23 +90,26 @@ QHash<int,QByteArray> Video::SourceModel::roleNames() const
 
 QVariant Video::SourceModel::data( const QModelIndex& index, int role ) const
 {
+   if (index.isValid() && role == Qt::DecorationRole)
+      return GlobalInstances::pixmapManipulator().videoDeviceIcon(index);
+
    switch (index.row()) {
       case ExtendedDeviceList::NONE:
          switch(role) {
             case Qt::DisplayRole:
-               return tr("NONE");
+               return tr("Disable video");
          };
          break;
       case ExtendedDeviceList::SCREEN:
          switch(role) {
             case Qt::DisplayRole:
-               return tr("SCREEN");
+               return tr("Screen sharing");
          };
          break;
       case ExtendedDeviceList::FILE:
          switch(role) {
             case Qt::DisplayRole:
-               return tr("FILE");
+               return tr("File streaming");
          };
          break;
       default:

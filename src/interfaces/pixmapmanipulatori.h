@@ -76,6 +76,7 @@ public:
     virtual QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const = 0;
     virtual QVariant   historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const = 0;
     virtual QVariant   contactSortingCategoryIcon(const CategorizedContactModel::SortedProxy::Categories cat) const = 0;
+    virtual QVariant   videoDeviceIcon(const QModelIndex& idx) const = 0;
     virtual QVariant   decorationRole(const QModelIndex&   index) = 0;
     virtual QVariant   decorationRole(const Call*          c    ) = 0;
     virtual QVariant   decorationRole(const ContactMethod* cm   ) = 0;

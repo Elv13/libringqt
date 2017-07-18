@@ -110,6 +110,12 @@ QVariant PixmapManipulatorDefault::contactSortingCategoryIcon(const CategorizedC
     return QVariant();
 }
 
+QVariant PixmapManipulatorDefault::videoDeviceIcon(const QModelIndex& idx) const
+{
+    Q_UNUSED(idx)
+    return {};
+}
+
 QVariant PixmapManipulatorDefault::decorationRole(const QModelIndex& index)
 {
    Q_UNUSED(index)

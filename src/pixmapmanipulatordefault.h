@@ -35,6 +35,7 @@ public:
     QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const override;
     QVariant   historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const override;
     QVariant   contactSortingCategoryIcon(const CategorizedContactModel::SortedProxy::Categories cat) const override;
+    QVariant   videoDeviceIcon(const QModelIndex& idx) const override;
     QVariant   decorationRole(const QModelIndex& index) override;
     QVariant   decorationRole(const Call*              c    ) override;
     QVariant   decorationRole(const ContactMethod*     cm   ) override;

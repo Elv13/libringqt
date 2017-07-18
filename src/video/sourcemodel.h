@@ -41,6 +41,8 @@ public:
       FILE   ,
       COUNT__
    };
+   Q_ENUMS(ExtendedDeviceList)
+
    virtual QVariant      data     ( const QModelIndex& index, int role = Qt::DisplayRole     ) const override;
    virtual int           rowCount ( const QModelIndex& parent = QModelIndex()                ) const override;
    virtual Qt::ItemFlags flags    ( const QModelIndex& index                                 ) const override;
@@ -67,3 +69,5 @@ public Q_SLOTS:
 };
 
 }
+
+Q_DECLARE_METATYPE(Video::SourceModel*)
