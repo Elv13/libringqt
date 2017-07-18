@@ -879,6 +879,16 @@ const QString Call::formattedName() const
     return name;
 }
 
+///
+Video::SourceModel* Call::sourceModel() const
+{
+    if (auto v = firstMedia<Media::Video>(Media::Media::Direction::OUT)) {
+        return v->sourceModel();
+    }
+
+    return nullptr;
+}
+
 ///If this call is encrypted, return the certificate associated with it
 Certificate* Call::certificate() const
 {

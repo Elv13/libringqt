@@ -44,6 +44,7 @@ namespace Video {
    class Manager;
    class Renderer;
    class ManagerPrivate;
+   class SourceModel;
 }
 
 namespace Media {
@@ -280,6 +281,7 @@ public:
    Q_PROPERTY( bool               hasVideo           READ hasVideo                                  )
    Q_PROPERTY( Certificate*       certificate        READ certificate       CONSTANT                )
    Q_PROPERTY( bool               hasParentCall      READ hasParentCall                             )
+   Q_PROPERTY( Video::SourceModel* sourceModel       READ sourceModel       NOTIFY mediaAdded       )
 
    //Read/write properties
    Q_PROPERTY( ContactMethod*     peerContactMethod  READ peerContactMethod WRITE setPeerContactMethod)
@@ -322,6 +324,7 @@ public:
    bool                     hasParentCall    () const;
    QDateTime                dateTime         () const;
    QDate                    date             () const;
+   Video::SourceModel*      sourceModel      () const;
 
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;
