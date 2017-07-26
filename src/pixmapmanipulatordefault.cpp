@@ -116,6 +116,12 @@ QVariant PixmapManipulatorDefault::videoDeviceIcon(const QModelIndex& idx) const
     return {};
 }
 
+QString PixmapManipulatorDefault::takeSnapshot(Call* call)
+{
+    Q_UNUSED(call)
+    return {};
+}
+
 QVariant PixmapManipulatorDefault::decorationRole(const QModelIndex& index)
 {
    Q_UNUSED(index)

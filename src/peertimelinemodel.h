@@ -58,7 +58,8 @@ public:
         CALL_GROUP        , /*!< Like: "2 incoming, 2 outgoind, 2 missed" one after the other*/
         CALL              , /*!< An history or active Call        */
         AUDIO_RECORDING   , /*!< An history call with autio media */
-        SCREENSHOT, //TODO
+        SNAPSHOT_GROUP    , /*!< A group of video frames from the same call */
+        SNAPSHOT          , /*!< Saved frames from the video stream */
         EMAIL, //TODO
         COUNT__
     };

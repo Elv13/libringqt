@@ -38,6 +38,7 @@ namespace RingMimes {
    constexpr static const char* AUDIO_CODEC = "text/ring.codec.audio"    ;
    constexpr static const char* VIDEO_CODEC = "text/ring.codec.video"    ;
    constexpr static const char* PROFILE_VCF = "x-ring/ring.profile.vcard";
+   constexpr static const char* SNAPSHOT    = "x-ring/snapshot"          ;
    constexpr static const char* VCF         = "text/vcard"               ;
    constexpr static const char* XVCF        = "text/x-vcard"             ;
    constexpr static const char* MAC_VCF     = "application/vcard"        ;

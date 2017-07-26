@@ -41,6 +41,8 @@ public:
    virtual bool unmute() override;
    ::Video::SourceModel* sourceModel() const;
 
+   bool takeSnapshot() const;
+
 private:
    Video(Call* parent, const Media::Direction direction);
    virtual ~Video();

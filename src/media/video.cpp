@@ -21,9 +21,16 @@
 #include <media_const.h>
 #include <video/sourcemodel.h>
 #include "dbus/callmanager.h"
+#include <globalinstances.h>
 
 //Ring
 #include <call.h>
+#include <mime.h>
+#include <contactmethod.h>
+#include <interfaces/pixmapmanipulatori.h>
+#include "private/textrecording_p.h"
+#include <media/textrecording.h>
+#include <media/text.h>
 
 class MediaVideoPrivate
 {
@@ -33,24 +40,40 @@ public:
 
 Media::Video::Video(Call* parent, const Media::Direction direction) : Media::Media(parent, direction), d_ptr(new MediaVideoPrivate())
 {
-   Q_ASSERT(parent);
+    Q_ASSERT(parent);
 }
 
 Media::Media::Type Media::Video::type()
 {
-   return Media::Media::Type::VIDEO;
+    return Media::Media::Type::VIDEO;
 }
 
 bool Media::Video::mute()
 {
-   CallManagerInterface& callManager = CallManager::instance();
-   return callManager.muteLocalMedia(call()->dringId(),DRing::Media::Details::MEDIA_TYPE_VIDEO,true);
+    CallManagerInterface& callManager = CallManager::instance();
+    return callManager.muteLocalMedia(call()->dringId(),DRing::Media::Details::MEDIA_TYPE_VIDEO,true);
 }
 
 bool Media::Video::unmute()
 {
-   CallManagerInterface& callManager = CallManager::instance();
-   return callManager.muteLocalMedia(call()->dringId(),DRing::Media::Details::MEDIA_TYPE_VIDEO,false);
+    CallManagerInterface& callManager = CallManager::instance();
+    return callManager.muteLocalMedia(call()->dringId(),DRing::Media::Details::MEDIA_TYPE_VIDEO,false);
+}
+
+bool Media::Video::takeSnapshot() const
+{
+    if (!call())
+        return false;
+
+    const auto path = GlobalInstances::pixmapManipulator().takeSnapshot(call());
+    auto textR = call()->peerContactMethod()->textRecording();
+
+    if (path.isEmpty() || !textR)
+        return false;
+
+    textR->d_ptr->insertNewSnapshot(call(), path);
+
+    return true;
 }
 
 Video::SourceModel* Media::Video::sourceModel() const
@@ -64,5 +87,5 @@ Video::SourceModel* Media::Video::sourceModel() const
 
 Media::Video::~Video()
 {
-   delete d_ptr;
+    delete d_ptr;
 }

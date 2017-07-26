@@ -60,8 +60,9 @@ public:
 class Message {
 public:
    enum class Type {
-      CHAT  , /*!< Normal message between the peer                                           */
-      STATUS, /*!< "Room status" message, such as new participants or participants that left */
+      CHAT    , /*!< Normal message between the peer                                           */
+      STATUS  , /*!< "Room status" message, such as new participants or participants that left */
+      SNAPSHOT, /*!< An image or clip extracted from the video                                 */
    };
 
    ///The time associated with this message
@@ -92,7 +93,9 @@ public:
    QString m_HTML;
    QString m_FormattedHtml;
    QList<QUrl> m_LinkList;
-   bool    m_HasText;
+   bool    m_HasText     {false};
+   bool    m_HasSnapshot {false};
+   bool    m_HasUri      {false};
 
    void read (const QJsonObject &json);
    void write(QJsonObject       &json) const;
@@ -118,12 +121,15 @@ public:
 
 class Group {
 public:
+
    ///The group ID (necessary to untangle the graph
    int id;
    ///All messages from this chunk
    QList<Message*> messages;
    ///If the conversion add new participants, a new file will be created
    QString nextGroupSha1;
+   ///The group type
+   Message::Type type {Message::Type::CHAT};
    ///This is the group identifier in the file described by `nextGroupSha1`
    int nextGroupId;
    ///The account used for this conversation
@@ -186,6 +192,8 @@ public:
 
    //Helper
    void insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id = 0);
+   void insertNewSnapshot(Call* call, const QString& path);
+   void initGroup(Serializable::Message::Type t, ContactMethod* cm = nullptr);
    QHash<QByteArray,QByteArray> toJsons() const;
    void accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status);
    bool updateMessageStatus(Serializable::Message* m, TextRecording::Status status);
@@ -230,6 +238,7 @@ struct TextMessageNode
    int                    m_row           {  -1   };
 
    QVariant roleData(int role) const;
+   QVariant snapshotRoleData(int role) const;
 };
 
 ///Model for the Instant Messaging (IM) features

@@ -47,6 +47,7 @@ class LIB_EXPORT TextRecording : public Recording
    friend class ::IMConversationManagerPrivate;
    friend class ::LocalTextRecordingEditor;
    friend class Text;
+   friend class Video;
    friend class ::ContactMethod;
    friend class ::PeerTimelineModel;
    friend class ::PeerTimelineModelPrivate;

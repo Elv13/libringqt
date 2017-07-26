@@ -67,7 +67,7 @@ public:
    QSet<Account*> locateNumberRange(const QString& prefix, QSet<ContactMethod*>& set);
    uint getWeight(ContactMethod* number);
    uint getWeight(Account* account);
-   QSet<Account*> getRange(QMap<QString,NumberWrapper*> map, const QString& prefix, QSet<ContactMethod*>& set) const;
+   QSet<Account*> getRange(const QMap<QString,NumberWrapper*>& map, const QString& prefix, QSet<ContactMethod*>& set) const;
 
    //Attributes
    QMultiMap<int,ContactMethod*> m_hNumbers              ;
@@ -454,7 +454,7 @@ void NumberCompletionModelPrivate::updateModel()
    }
 }
 
-QSet<Account*> NumberCompletionModelPrivate::getRange(QMap<QString,NumberWrapper*> map, const QString& prefix, QSet<ContactMethod*>& set) const
+QSet<Account*> NumberCompletionModelPrivate::getRange(const QMap<QString,NumberWrapper*>& map, const QString& prefix, QSet<ContactMethod*>& set) const
 {
     if (prefix.isEmpty() || map.isEmpty())
         return {};

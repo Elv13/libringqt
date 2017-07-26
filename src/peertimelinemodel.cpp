@@ -68,7 +68,7 @@ struct PeerTimelineNode final {
         // Type::TIME_CATEGORY
         TimeCategoryData* m_pTimeCat;
 
-        // Type::SECTION_DELIMITER
+        // Type::SECTION_DELIMITER and Type::SNAPSHOT_GROUP
         Serializable::Group* m_pGroup;
 
         //CALL_GROUP
@@ -77,7 +77,7 @@ struct PeerTimelineNode final {
         // Type::CALL
         Call* m_pCall;
 
-        // Type::TEXT_MESSAGE
+        // Type::TEXT_MESSAGE and Type::SNAPSHOT
         TextMessageNode* m_pMessage;
     };
 
@@ -141,10 +141,10 @@ const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::p
     { PeerTimelineModel::NodeType::CALL_GROUP        , QStringLiteral( "callGroup"        )},
     { PeerTimelineModel::NodeType::CALL              , QStringLiteral( "call"             )},
     { PeerTimelineModel::NodeType::AUDIO_RECORDING   , QStringLiteral( "audioRecording"   )},
-    { PeerTimelineModel::NodeType::SCREENSHOT        , QStringLiteral( "screenshot"       )},
+    { PeerTimelineModel::NodeType::SNAPSHOT_GROUP    , QStringLiteral( "snapshotGroup"    )},
+    { PeerTimelineModel::NodeType::SNAPSHOT          , QStringLiteral( "snapshot"         )},
     { PeerTimelineModel::NodeType::EMAIL             , QStringLiteral( "email"            )},
 };
-
 
 PeerTimelineModelPrivate::PeerTimelineModelPrivate(PeerTimelineModel* parent) : q_ptr(parent)
 {
@@ -314,6 +314,7 @@ QVariant PeerTimelineModel::data( const QModelIndex& idx, int role) const
         case PeerTimelineModel::NodeType::SECTION_DELIMITER:
         case PeerTimelineModel::NodeType::CALL_GROUP:
             return d_ptr->groupRoleData(n, role);
+        case PeerTimelineModel::NodeType::SNAPSHOT:
         case PeerTimelineModel::NodeType::TEXT_MESSAGE:
             return n->m_pMessage->roleData(role);
         case PeerTimelineModel::NodeType::TIME_CATEGORY:
@@ -322,7 +323,7 @@ QVariant PeerTimelineModel::data( const QModelIndex& idx, int role) const
         case PeerTimelineModel::NodeType::CALL:
             return n->m_pCall->roleData(role);
         case PeerTimelineModel::NodeType::AUDIO_RECORDING:
-        case PeerTimelineModel::NodeType::SCREENSHOT:
+        case PeerTimelineModel::NodeType::SNAPSHOT_GROUP:
         case PeerTimelineModel::NodeType::EMAIL:
         case PeerTimelineModel::NodeType::COUNT__:
             break;
@@ -467,7 +468,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
 
     m_hCats[(int) cat] = n;
 
-    // A little hacky. To reduce the code complecity, it cast the cat to time_t
+    // A little hacky. To reduce the code complexity, it cast the cat to time_t
     // in order to mutualize the insertion code. Otherwise the `insert()` code
     // would be copy/pasted 9 times...
     insert(n, -(time_t) cat, m_lTimeCategories);
@@ -477,7 +478,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
 
 PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
 {
-    auto g = message->m_pMessage->group;
+    const auto g = message->m_pMessage->group;
     Q_ASSERT(g);
 
     if (m_pCurrentTextGroup && g == m_pCurrentTextGroup->m_pGroup) {
@@ -490,9 +491,14 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
     else {
         auto cat = getCategory(message->m_pMessage->timestamp);
 
+        // Snapshot have their own look and feel
+        const auto type = g->type == Serializable::Message::Type::SNAPSHOT ?
+            PeerTimelineModel::NodeType::SNAPSHOT_GROUP :
+            PeerTimelineModel::NodeType::SECTION_DELIMITER;
+
         // Create a new entry
         auto ret       = new PeerTimelineNode;
-        ret->m_Type    = PeerTimelineModel::NodeType::SECTION_DELIMITER;
+        ret->m_Type    = type;
         ret->m_pGroup  = g;
         ret->m_pParent = cat;
 
@@ -514,7 +520,12 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
 
 void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 {
-    if (message->m_pMessage->m_PlainText.isEmpty())
+    const auto messageType = message->m_pMessage->type == Serializable::Message::Type::SNAPSHOT ?
+        PeerTimelineModel::NodeType::SNAPSHOT :
+        PeerTimelineModel::NodeType::TEXT_MESSAGE;
+
+    // Do not show empty messages
+    if (message->m_pMessage->m_PlainText.isEmpty() && messageType != PeerTimelineModel::NodeType::SNAPSHOT)
         return;
 
     auto group = getGroup(message);
@@ -522,10 +533,10 @@ void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
     m_pCurrentCallGroup = nullptr;
 
     auto ret         = new PeerTimelineNode;
-    ret->m_Type      = PeerTimelineModel::NodeType::TEXT_MESSAGE;
     ret->m_pMessage  = message;
     ret->m_StartTime = message->m_pMessage->timestamp;
     ret->m_pParent   = group;
+    ret->m_Type      = messageType;
 
     insert(ret, ret->m_StartTime, group->m_lChildren, q_ptr->createIndex(group->m_Index, 0, group));
 

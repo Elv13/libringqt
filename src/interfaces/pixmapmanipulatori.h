@@ -84,6 +84,11 @@ public:
     virtual QVariant   decorationRole(const Account*       acc  ) = 0;
 
     /**
+     * Returns a path or {} when the snapshot could not be saved.
+     */
+    virtual QString takeSnapshot(Call* call) = 0;
+
+    /**
      * Return the icons associated with the action and its state
      */
     virtual QVariant userActionIcon(const UserActionElement& state) const = 0;

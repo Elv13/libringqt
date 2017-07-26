@@ -448,21 +448,81 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
     return t;
 }
 
-void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id)
+void Media::TextRecordingPrivate::initGroup(Serializable::Message::Type t, ContactMethod* cm)
 {
-    //Only create it if none was found on the disk
-    if (!m_pCurrentGroup) {
+    //Create new groups when:
+    // * None was found on the disk
+    // * The media type changed
+    // * [TODO] Once a timeout is reached
+
+    if ((!m_pCurrentGroup) || (m_pCurrentGroup->messages.size()
+      && m_pCurrentGroup->messages.constLast()->type != t)) {
         m_pCurrentGroup = new Serializable::Group();
+        m_pCurrentGroup->type = t;
 
         auto cMethod = q_ptr->call() ? q_ptr->call()->peerContactMethod() : cm;
 
-        Serializable::Peers* p = SerializableEntityManager::peer(cMethod);
+        auto p = SerializableEntityManager::peer(cMethod);
 
-        if (m_lAssociatedPeers.indexOf(p) == -1) {
+        if (m_lAssociatedPeers.indexOf(p) == -1)
             m_lAssociatedPeers << p;
-        }
+
         p->groups << m_pCurrentGroup;
-   }
+    }
+}
+
+void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& path)
+{
+    initGroup(Serializable::Message::Type::SNAPSHOT);
+
+    auto m = new Serializable::Message();
+
+    time_t currentTime;
+    ::time(&currentTime);
+
+    // Save the snapshot metadata
+    m->timestamp     = currentTime                          ;
+    m->m_HasSnapshot = true                                 ;
+    m->direction     = Media::Direction::IN                 ;
+    m->type          = Serializable::Message::Type::SNAPSHOT;
+    m->authorSha1    = call->peerContactMethod()->sha1()    ;
+    m->id            = currentTime^qrand()                  ;
+    m->group         = m_pCurrentGroup                      ;
+
+    m_pCurrentGroup->messages << m;
+
+    auto p = new Serializable::Payload();
+    p->mimeType = RingMimes::SNAPSHOT   ;
+    p->payload  = path;
+    m->payloads << p;
+
+    // Forces the lazy loading to happen
+    q_ptr->instantMessagingModel();
+
+    // Insert the message
+    ::TextMessageNode* n  = new ::TextMessageNode  ();
+    n->m_pMessage         = m                        ;
+    n->m_pContactMethod   = call->peerContactMethod();
+    n->m_row              = m_pImModel->rowCount   ();
+    m_pImModel->addRowBegin();
+    m_lNodes << n;
+    m_pImModel->addRowEnd();
+
+    n->m_pContactMethod->setLastUsed(currentTime);
+
+    // Save the conversation
+    q_ptr->save();
+
+    emit q_ptr->messageInserted(
+        {{p->mimeType, path}}, n->m_pContactMethod, m->direction
+    );
+
+    emit messageAdded(n);
+}
+
+void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id)
+{
+   initGroup(Serializable::Message::Type::CHAT, cm);
 
    //Create the message
    time_t currentTime;
@@ -656,6 +716,7 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
    id            = json["id"           ].toInt   ();
    nextGroupSha1 = json["nextGroupSha1"].toString();
    nextGroupId   = json["nextGroupId"  ].toInt   ();
+   type          = static_cast<Message::Type>(json["type"].toInt());
 
    QJsonArray a = json["messages"].toArray();
    for (int i = 0; i < a.size(); ++i) {
@@ -670,9 +731,10 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
 
 void Serializable::Group::write(QJsonObject &json) const
 {
-   json["id"            ] = id           ;
-   json["nextGroupSha1" ] = nextGroupSha1;
-   json["nextGroupId"   ] = nextGroupId  ;
+   json["id"            ] = id                    ;
+   json["nextGroupSha1" ] = nextGroupSha1         ;
+   json["nextGroupId"   ] = nextGroupId           ;
+   json["type"          ] = static_cast<int>(type);
 
    QJsonArray a;
    for (const Message* m : messages) {
@@ -819,8 +881,24 @@ QVariant Media::TextRecording::roleData(int role) const
    return {};
 }
 
+
+QVariant TextMessageNode::snapshotRoleData(int role) const
+{
+    Q_ASSERT(!m_pMessage->payloads.isEmpty());
+
+    switch(role) {
+        case Qt::DisplayRole:
+            return m_pMessage->payloads.first()->payload;
+    }
+
+    return {};
+}
+
 QVariant TextMessageNode::roleData(int role) const
 {
+   if (m_pMessage->type == Serializable::Message::Type::SNAPSHOT)
+       return snapshotRoleData(role);
+
    switch (role) {
       case Qt::DisplayRole:
          return QVariant(m_pMessage->m_PlainText);
@@ -1005,4 +1083,4 @@ void InstantMessagingModel::clear()
     endResetModel();
 }
 
-// kate: space-indent on; indent-width 3; replace-tabs on;
+// kate: space-indent on; indent-width 4; replace-tabs on;
