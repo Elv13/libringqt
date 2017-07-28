@@ -602,6 +602,7 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
 /// To use with extreme restrict, this isn't really intended to be used directly
 void PeerTimelineModel::addContactMethod(ContactMethod* cm)
 {
+
     // Only add new content, also check for potential aliases
     foreach (auto ocm, d_ptr->m_hTrackedCMs) {
         if ( (*cm) == (*ocm))
@@ -614,9 +615,6 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
         d_ptr->slotCallAdded(c);
 
     d_ptr->slotTextRecordingAdded(cm->textRecording());
-
-    connect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-        d_ptr, &PeerTimelineModelPrivate::slotMessageAdded);
 
     connect(cm, &ContactMethod::contactChanged,
         d_ptr, &PeerTimelineModelPrivate::slotContactChanged);
