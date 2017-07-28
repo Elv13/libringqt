@@ -95,6 +95,17 @@ void ContactMethodPrivate::changed()
       emit n->changed();
 }
 
+void ContactMethodPrivate::canSendTextsChanged()
+{
+    const bool v = q_ptr->canSendTexts();
+    const bool a = q_ptr->hasActiveCall();
+
+    for (auto n : qAsConst(m_lParents)) {
+        emit n->canSendTextsChanged (v);
+        emit n->hasActiveCallChanged(a);
+    }
+}
+
 void ContactMethodPrivate::presentChanged(bool s)
 {
    foreach (ContactMethod* n, m_lParents)
@@ -1067,20 +1078,63 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
         emit n->alternativeTextRecordingAdded(recording);
 }
 
+/**
+ * Detect every case where the capacity of a contact method to send (valid)
+ * text messages is affected.
+ */
+bool ContactMethod::canSendTexts(bool warn) const
+{
+    auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
+
+    // Texts might still fail, but there is no reliable way to know, assume the
+    // best.
+    if (hasActiveCall())
+        return true;
+
+    if (!selectedAccount) {
+        if (warn)
+            qWarning() << "Failed to send an offline text message. No account "
+                "available for this contactmethod";
+        return false;
+    }
+
+    if (selectedAccount->protocol() != Account::Protocol::RING) {
+        if (warn)
+            qWarning() << "Failed to send an offline message because a SIP account"
+                " was used";
+        return false;
+    }
+
+    return true;
+}
+
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
 
-    if (!selectedAccount) {
-        qDebug() << "No account available for this contactmethod!";
+    if (!canSendTexts(true))
         return false;
+
+    // This is too easy to cause accidentally. Better just fix it an hope for
+    // the best. The problem is that when no scheme is present, SIP used to be
+    // assumed. While this is no longer safe, changing the code is more risky
+    // than this band-aid.
+    if (uri().schemeType() != URI::SchemeType::RING) {
+        d_ptr->m_Uri.setSchemeType(URI::SchemeType::RING);
+
+        qWarning() << "An URI has a scheme type unsupported by its account, "
+            "a fix was applied" << uri();
     }
-   auto txtRecording = textRecording();
-   auto id = ConfigurationManager::instance().sendTextMessage(selectedAccount->id()
-                                                    ,uri().format(URI::Section::SCHEME|URI::Section::USER_INFO|URI::Section::HOSTNAME)
-                                                    ,payloads);
-   txtRecording->d_ptr->insertNewMessage(payloads, this, Media::Media::Direction::OUT, id);
-   return true;
+
+    const uint64_t id = ConfigurationManager::instance().sendTextMessage(
+        selectedAccount->id(),
+        uri().format(URI::Section::SCHEME|URI::Section::USER_INFO|URI::Section::HOSTNAME),
+        payloads
+    );
+
+    textRecording()->d_ptr->insertNewMessage(payloads, this, Media::Media::Direction::OUT, id);
+
+    return true;
 }
 
 /**
@@ -1096,14 +1150,26 @@ bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads
  */
 void ContactMethodPrivate::addActiveCall(Call* c)
 {
+    const int wasEmpty = m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
+
     m_UsageStats.d_ptr->m_lActiveCalls << c;
+
     changed();
+
+    if (wasEmpty != m_UsageStats.d_ptr->m_lActiveCalls.isEmpty())
+        canSendTextsChanged();
 }
 
 void ContactMethodPrivate::removeActiveCall(Call* c)
 {
+    const int wasEmpty = m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
+
     m_UsageStats.d_ptr->m_lActiveCalls.removeAll(c);
+
     changed();
+
+    if (wasEmpty != m_UsageStats.d_ptr->m_lActiveCalls.isEmpty())
+        canSendTextsChanged();
 }
 
 

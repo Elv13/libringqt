@@ -92,7 +92,7 @@ public:
    Q_PROPERTY(QString           primaryName      READ primaryName                                     )
    Q_PROPERTY(bool              isBookmarked     READ isBookmarked                                    )
    Q_PROPERTY(bool              isRecording      READ isRecording                                     )
-   Q_PROPERTY(bool              hasActiveCall    READ hasActiveCall                                   )
+   Q_PROPERTY(bool              hasActiveCall    READ hasActiveCall     NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(bool              hasActiveVideo   READ hasActiveVideo                                  )
    Q_PROPERTY(QVariant          icon             READ icon                                            )
    Q_PROPERTY(int               totalSpentTime   READ totalSpentTime                                  )
@@ -103,6 +103,7 @@ public:
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName                                        )
    Q_PROPERTY(Type              type             READ type                                            )
+   Q_PROPERTY(bool              canSendTexts     READ canSendTexts      NOTIFY canSendTextsChanged    )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
@@ -158,6 +159,7 @@ public:
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
 
+   bool canSendTexts(bool warn = false) const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;
@@ -263,6 +265,10 @@ Q_SIGNALS:
    void timelineMerged();
    /// When a new alternative TextRecording is added
    void alternativeTextRecordingAdded(Media::TextRecording* t);
+   /// When the capacity to send text messages changes.
+   void canSendTextsChanged(bool status);
+   /// When one or more call is in progress.
+   void hasActiveCallChanged(bool status);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

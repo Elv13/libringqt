@@ -95,7 +95,7 @@ bool AvailableAccountModel::filterAcceptsRow(int source_row, const QModelIndex& 
 }
 
 ///Return the current account
-Account* AvailableAccountModel::currentDefaultAccount(ContactMethod* method)
+Account* AvailableAccountModel::currentDefaultAccount(const ContactMethod* method)
 {
     // if no CM is give, we use the user chosen account, since no other parameters are available
     const auto idx = AvailableAccountModel::instance().selectionModel()->currentIndex();

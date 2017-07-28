@@ -47,7 +47,7 @@ public:
    QItemSelectionModel* selectionModel() const;
 
    //Getter
-   static Account* currentDefaultAccount(ContactMethod* method = nullptr);
+   static Account* currentDefaultAccount(const ContactMethod* method = nullptr);
    static Account* currentDefaultAccount(URI::SchemeType schemeType);
    static bool validAccountForScheme(Account* account, URI::SchemeType scheme);
 
