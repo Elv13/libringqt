@@ -911,7 +911,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
 }
 
 void
-PhoneDirectoryModelPrivate::slotRegisteredNameFound(const Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
+PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
 {
     if (status != NameDirectory::LookupStatus::SUCCESS) {
         // unsuccessfull lookup, so its useless
@@ -930,6 +930,12 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(const Account* account, Name
 
     if (wrap) {
         foreach (ContactMethod* cm, wrap->numbers) {
+            // Not true 100% of the time, but close enough. As of 2017, there
+            // is only 1 name service. //TODO support multiple name service,
+            // but only when there *is* multiple ones being used.
+            if (!cm->account())
+                cm->setAccount(account);
+
             if (cm->account() == account) {
                 cm->incrementAlternativeName(name, QDateTime::currentDateTime().toTime_t());
                 cm->d_ptr->setRegisteredName(name);
@@ -973,9 +979,9 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(const Account* account, Name
                     //TODO check if some deduplication can be performed
                     m_hDirectory[name]->numbers << cm;
                 }
-            } else {
-                qDebug() << "registered name: uri matches but not account" << name << address << account << cm->account();
             }
+            else
+                qDebug() << "registered name: uri matches but not account" << name << address << account << cm->account();
         }
     } else {
         // got a registered name for a CM which hasn't been created yet

@@ -106,7 +106,7 @@ private Q_SLOTS:
    void slotChanged();
    void slotLastUsedChanged(time_t t);
    void slotContactChanged(Person* newContact, Person* oldContact);
-   void slotRegisteredNameFound(const Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name);
+   void slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name);
    void slotContactMethodMerged(ContactMethod* other);
 
    //From DBus
