@@ -906,7 +906,9 @@ QVariant TextMessageNode::roleData(int role) const
          if (m_pMessage->direction == Media::Media::Direction::IN)
             return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod);
          else if (m_pContactMethod->account())
-            return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod->account());
+            return GlobalInstances::pixmapManipulator().decorationRole(
+                m_pContactMethod->account()->contactMethod()
+            );
          else {
                /* It's most likely an account that doesn't exist anymore
                * Use a fallback image in pixmapManipulator
