@@ -439,15 +439,28 @@ QVector<ContactMethod*> CategorizedBookmarkModelPrivate::bookmarkList() const
 
 void CategorizedBookmarkModel::addBookmark(ContactMethod* number)
 {
-   Q_UNUSED(number)
-   if (collections().size())
-      collections()[0]->editor<ContactMethod>()->addNew(number);
-   else
+   if (collections().isEmpty()) {
       qWarning() << "No bookmark backend is set";
+      Q_ASSERT(false);
+      return;
+   }
+
+   if (collections()[0]->editor<ContactMethod>()->contains(number))
+       return;
+
+   collections()[0]->editor<ContactMethod>()->addNew(number);
 }
 
 void CategorizedBookmarkModel::removeBookmark(ContactMethod* number)
 {
+   if (collections().isEmpty()) {
+      qWarning() << "No bookmark backend is set";
+      return;
+   }
+
+   if (!collections()[0]->editor<ContactMethod>()->contains(number))
+       return;
+
    collections()[0]->editor<ContactMethod>()->remove(number);
 }
 

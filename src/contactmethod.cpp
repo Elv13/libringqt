@@ -35,6 +35,7 @@
 #include "availableaccountmodel.h"
 #include "dbus/presencemanager.h"
 #include "numbercategorymodel.h"
+#include "categorizedbookmarkmodel.h"
 #include "private/numbercategorymodel_p.h"
 #include "numbercategory.h"
 #include "certificate.h"
@@ -322,6 +323,12 @@ void ContactMethod::setCategory(NumberCategory* cat)
 void ContactMethod::setBookmarked(bool bookmarked )
 {
    d_ptr->m_IsBookmark = bookmarked;
+
+   if (bookmarked)
+      CategorizedBookmarkModel::instance().addBookmark(this);
+   else
+      CategorizedBookmarkModel::instance().removeBookmark(this);
+
    changed();
    bookmarkedChanged(bookmarked);
 }

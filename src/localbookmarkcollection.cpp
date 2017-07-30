@@ -21,6 +21,7 @@
 //Qt
 #include <QtCore/QFile>
 #include <QtCore/QHash>
+#include <QtCore/QTimer>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonObject>
@@ -41,12 +42,12 @@ namespace Serializable {
    class BookmarkNode
    {
    public:
-      Account*       account  ;
-      ContactMethod* cm       ;
-      Person*        contact  ;
+      mutable Account* account  ;
+      ContactMethod*   cm       ;
+      Person*          contact  ;
 
       void read (const QJsonObject &json);
-      void write(QJsonObject       &json);
+      void write(QJsonObject       &json) const;
    };
 }
 
@@ -58,6 +59,7 @@ public:
    virtual bool save       ( const ContactMethod* item ) override;
    virtual bool remove     ( const ContactMethod* item ) override;
    virtual bool addNew     ( ContactMethod*       item ) override;
+   virtual bool contains   (const ContactMethod*  item ) const override;
    virtual bool addExisting( const ContactMethod* item ) override;
 
    //Attributes
@@ -82,7 +84,7 @@ constexpr const char LocalBookmarkCollectionPrivate::FILENAME[];
 LocalBookmarkCollection::LocalBookmarkCollection(CollectionMediator<ContactMethod>* mediator) :
    CollectionInterface(new LocalBookmarkEditor(mediator)), d_ptr(new LocalBookmarkCollectionPrivate())
 {
-   load();
+    QTimer::singleShot(0, [this]() {load();});
 }
 
 
@@ -126,13 +128,17 @@ bool LocalBookmarkEditor::save(const ContactMethod* number)
 {
    Q_UNUSED(number)
 
-   QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation)
-              + QLatin1Char('/')
-              + LocalBookmarkCollectionPrivate::FILENAME);
-   if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
+   static QString path = QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+        + QLatin1Char('/')
+        + LocalBookmarkCollectionPrivate::FILENAME;
+
+   QFile file(path);
+
+   if (file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
 
       QJsonArray a;
-      for (Serializable::BookmarkNode& g : m_Nodes) {
+
+      foreach (const Serializable::BookmarkNode& g, m_Nodes) {
          QJsonObject o;
          g.write(o);
          a.append(o);
@@ -157,8 +163,10 @@ bool LocalBookmarkEditor::remove(const ContactMethod* item)
 {
    Q_UNUSED(item)
 
-   if (m_lNumbers.indexOf(const_cast<ContactMethod*>(item)) != -1) {
-      m_lNumbers.removeAt(m_lNumbers.indexOf(const_cast<ContactMethod*>(item)));
+   int idx = -1;
+
+   if ((idx = m_lNumbers.indexOf(const_cast<ContactMethod*>(item))) != -1) {
+      m_lNumbers.removeAt(idx);
       mediator()->removeItem(item);
 
       for (int i =0;i<m_Nodes.size();i++) {
@@ -173,11 +181,15 @@ bool LocalBookmarkEditor::remove(const ContactMethod* item)
    return false;
 }
 
+bool LocalBookmarkEditor::contains(const ContactMethod* item) const
+{
+    return m_lNumbers.contains(const_cast<ContactMethod*>(item));
+}
+
 bool LocalBookmarkEditor::addNew( ContactMethod* number)
 {
-   if (!number->isBookmarked()) {
+   if (!contains(number)) {
       number->setTracked(m_Tracked);
-      number->setBookmarked(true);
       Serializable::BookmarkNode n;
 
       n.cm = number;
@@ -185,13 +197,16 @@ bool LocalBookmarkEditor::addNew( ContactMethod* number)
       n.contact = number->contact();
       m_Nodes << n;
 
+      addExisting(number);
+
+      number->setBookmarked(true);
+
       if (!save(number))
          qWarning() << "Unable to save bookmarks";
    }
    else
       qDebug() << number->uri() << "is already bookmarked";
 
-   addExisting(number);
    return save(number);
 }
 
@@ -277,7 +292,7 @@ void Serializable::BookmarkNode::read(const QJsonObject &json)
    cm      = uri.isEmpty()?nullptr:PhoneDirectoryModel::instance().getNumber     ( uri, contact, account);
 }
 
-void Serializable::BookmarkNode::write(QJsonObject& json)
+void Serializable::BookmarkNode::write(QJsonObject& json) const
 {
    if (!account)
       account = cm->account();

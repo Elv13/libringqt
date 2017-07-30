@@ -66,6 +66,7 @@ public:
    virtual bool batchSave(const QList<T*> contacts);
    virtual bool batchRemove(const QList<T*> contacts);
    virtual bool remove(const T* item);
+   virtual bool contains(const T* item) const;
 
    ///Edit 'item', the implementation may be a GUI or something else
    virtual bool edit       ( T*       item           );
@@ -75,9 +76,6 @@ public:
 
    ///Add an existing item to the collection
    virtual bool addExisting(const  T*       item     ) = 0;
-
-   ///Add a new phone number to an existing item
-   virtual bool addContactMethod( T*       item , ContactMethod* number );
 
 private:
    /**

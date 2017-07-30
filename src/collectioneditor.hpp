@@ -67,15 +67,14 @@ template <class T> bool CollectionEditor<T>::batchRemove(const QList<T*> contact
 }
 
 template <class T>
-bool CollectionEditor<T>::addContactMethod( T*       item , ContactMethod* number )
+bool CollectionEditor<T>::remove(const T* item)
 {
    Q_UNUSED(item)
-   Q_UNUSED(number)
    return false;
 }
 
 template <class T>
-bool CollectionEditor<T>::remove(const T* item)
+bool CollectionEditor<T>::contains(const T* item) const
 {
    Q_UNUSED(item)
    return false;
