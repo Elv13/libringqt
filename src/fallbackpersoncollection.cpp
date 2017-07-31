@@ -219,7 +219,7 @@ bool FallbackPersonCollection::load()
    auto l = [this]() {
       bool ok;
       Q_UNUSED(ok)
-      QList< Person* > ret =  VCardUtils::loadDir(QUrl(d_ptr->m_Path),ok,static_cast<FallbackPersonBackendEditor*>(editor<Person>())->m_hPaths);
+      const QList< Person* > ret =  VCardUtils::loadDir(QUrl(d_ptr->m_Path),ok,static_cast<FallbackPersonBackendEditor*>(editor<Person>())->m_hPaths);
       for(Person* p : ret) {
          p->setCollection(this);
          editor<Person>()->addExisting(p);

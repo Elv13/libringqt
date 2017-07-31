@@ -392,6 +392,10 @@ QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const
 {
     if (!d_ptr->m_pPhoneNumbersModel) {
         auto p = QSharedPointer<QAbstractItemModel>(new PersonCMModel(this));
+
+        // Delete all children will otherwise silently delete the object
+        p.data()->setParent(nullptr);
+
         d_ptr->m_pPhoneNumbersModel = p;
         return p;
     }
@@ -403,6 +407,10 @@ QSharedPointer<QAbstractItemModel> Person::addressesModel() const
 {
     if (!d_ptr->m_pAddressModel) {
         auto p = QSharedPointer<QAbstractItemModel>(new AddressModel(this));
+
+        // Delete all children will otherwise silently delete the object
+        p.data()->setParent(nullptr);
+
         d_ptr->m_pAddressModel = p;
         return p;
     }
