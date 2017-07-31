@@ -173,6 +173,8 @@ d_ptr(new RecordingModelPrivate(this))
         //TODO
         Q_UNUSED(e);
     });
+
+    d_ptr->initCategories();
 }
 
 Media::RecordingModel& Media::RecordingModel::instance()
