@@ -17,6 +17,8 @@
  ***************************************************************************/
 #include "recording.h"
 
+#include "recordingmodel.h"
+
 namespace Media {
 
 class RecordingPrivate {
@@ -38,6 +40,7 @@ RecordingPrivate::RecordingPrivate(Recording* r) : q_ptr(r),m_pCall(nullptr)
 
 Recording::Recording(const Recording::Type type) : ItemBase(nullptr), d_ptr(new RecordingPrivate(this))
 {
+   //FIXME setParent(&RecordingModel::instance());
    d_ptr->m_Type = type;
 }
 

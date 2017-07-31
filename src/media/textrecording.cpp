@@ -154,7 +154,8 @@ Serializable::Peers* SerializableEntityManager::fromJson(const QJsonObject& json
    return p;
 }
 
-Media::TextRecordingPrivate::TextRecordingPrivate(TextRecording* r) : q_ptr(r),m_pImModel(nullptr),m_pCurrentGroup(nullptr),m_UnreadCount(0)
+Media::TextRecordingPrivate::TextRecordingPrivate(TextRecording* r) : QObject(r),
+    q_ptr(r),m_pImModel(nullptr),m_pCurrentGroup(nullptr),m_UnreadCount(0)
 {
 }
 

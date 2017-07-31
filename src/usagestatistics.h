@@ -49,7 +49,7 @@ Q_SIGNALS:
     void changed();
 
 protected:
-    explicit UsageStatistics();
+    explicit UsageStatistics(QObject* parent);
     virtual ~UsageStatistics();
 
 private:

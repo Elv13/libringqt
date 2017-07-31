@@ -45,7 +45,7 @@ public:
    Media::TextRecording* m_pTextRecording;
    Certificate*       m_pCertificate;
    QString            m_RegisteredName   ;
-   UsageStatistics    m_UsageStats       ;
+   UsageStatistics*   m_pUsageStats {nullptr};
    QVector<Media::TextRecording*> m_lAltTR;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;

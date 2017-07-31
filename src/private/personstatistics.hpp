@@ -25,7 +25,8 @@ class PersonStatistics : public UsageStatistics
 {
     Q_OBJECT
 public:
-    explicit PersonStatistics(const Person* p) : m_pPerson(p) {}
+    explicit PersonStatistics(const Person* p) :
+        UsageStatistics(const_cast<Person*>(p)), m_pPerson(p) {}
 
     virtual int totalSeconds() const override {
         return sum<int>(&UsageStatistics::totalSeconds);

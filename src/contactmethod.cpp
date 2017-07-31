@@ -162,7 +162,7 @@ const ContactMethod* ContactMethod::BLANK()
 ContactMethodPrivate::ContactMethodPrivate(const URI& uri, NumberCategory* cat, ContactMethod::Type st, ContactMethod* q) :
    m_Uri(uri),m_pCategory(cat),m_Tracked(false),m_Present(false),
    m_Type(st),m_pPerson(nullptr),m_pAccount(nullptr),
-   m_IsBookmark(false),
+   m_IsBookmark(false), m_pUsageStats(new UsageStatistics(q)),
    m_hasType(false),m_pTextRecording(nullptr), m_pCertificate(nullptr), q_ptr(q)
 {}
 
@@ -243,12 +243,12 @@ Person* ContactMethod::contact() const
 ///Return when this number was last used
 time_t ContactMethod::lastUsed() const
 {
-   return d_ptr->m_UsageStats.lastUsed();
+   return d_ptr->m_pUsageStats->lastUsed();
 }
 
 UsageStatistics* ContactMethod::usageStatistics() const
 {
-   return &d_ptr->m_UsageStats;
+   return d_ptr->m_pUsageStats;
 }
 
 ///Set this number default account
@@ -259,7 +259,7 @@ void ContactMethod::setAccount(Account* account)
 
    //Add the statistics
    if (account && !d_ptr->m_pAccount && account->usageStatistics())
-       account->usageStatistics()->d_ptr->append(&d_ptr->m_UsageStats);
+       account->usageStatistics()->d_ptr->append(d_ptr->m_pUsageStats);
 
    d_ptr->m_pAccount = account;
 
@@ -362,7 +362,7 @@ bool ContactMethod::setType(ContactMethod::Type t)
 ///Update the last time used only if t is more recent than m_LastUsed
 void ContactMethod::setLastUsed(time_t t)
 {
-    if (d_ptr->m_UsageStats.d_ptr->setLastUsed(t))
+    if (d_ptr->m_pUsageStats->d_ptr->setLastUsed(t))
        emit lastUsedChanged(t);
 }
 
@@ -431,22 +431,22 @@ ContactMethod::Type ContactMethod::type() const
 ///Return the number of calls from this number
 int ContactMethod::callCount() const
 {
-   return d_ptr->m_UsageStats.d_ptr->m_lCalls.size();
+   return d_ptr->m_pUsageStats->d_ptr->m_lCalls.size();
 }
 
 uint ContactMethod::weekCount() const
 {
-   return d_ptr->m_UsageStats.lastWeekCount();
+   return d_ptr->m_pUsageStats->lastWeekCount();
 }
 
 uint ContactMethod::trimCount() const
 {
-   return d_ptr->m_UsageStats.lastTrimCount();
+   return d_ptr->m_pUsageStats->lastTrimCount();
 }
 
 bool ContactMethod::haveCalled() const
 {
-   return d_ptr->m_UsageStats.hasBeenCalled();
+   return d_ptr->m_pUsageStats->hasBeenCalled();
 }
 
 ///Best bet for this person real name
@@ -523,7 +523,7 @@ QString ContactMethod::getBestId() const
 /// Returns if this contact method is currently involved in a recording
 bool ContactMethod::isRecording() const
 {
-   for (auto c : qAsConst(d_ptr->m_UsageStats.d_ptr->m_lActiveCalls)) {
+   for (auto c : qAsConst(d_ptr->m_pUsageStats->d_ptr->m_lActiveCalls)) {
       //TODO if video recording is ever supported, extend the if
       if (c->isRecording(Media::Media::Type::AUDIO, Media::Media::Direction::OUT))
          return true;
@@ -534,13 +534,13 @@ bool ContactMethod::isRecording() const
 /// Returns if this contact method currently has ongoing calls
 bool ContactMethod::hasActiveCall() const
 {
-   return !d_ptr->m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
+   return !d_ptr->m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty();
 }
 
 /// Returns if this contact method currently has active video streams
 bool ContactMethod::hasActiveVideo() const
 {
-   for (auto c : qAsConst(d_ptr->m_UsageStats.d_ptr->m_lActiveCalls)) {
+   for (auto c : qAsConst(d_ptr->m_pUsageStats->d_ptr->m_lActiveCalls)) {
       if (c->videoRenderer())
          return true;
    }
@@ -597,7 +597,7 @@ QVariant ContactMethod::icon() const
 ///The number of seconds spent with the URI (from history)
 int ContactMethod::totalSpentTime() const
 {
-    return d_ptr->m_UsageStats.totalSeconds();
+    return d_ptr->m_pUsageStats->totalSeconds();
 }
 
 ///Return this number unique identifier (hash)
@@ -628,7 +628,7 @@ QByteArray ContactMethod::sha1() const
 ///Return all calls from this number
 const QList<Call*> ContactMethod::calls() const
 {
-   return d_ptr->m_UsageStats.d_ptr->m_lCalls;
+   return d_ptr->m_pUsageStats->d_ptr->m_lCalls;
 }
 
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const
@@ -640,8 +640,8 @@ QVariant ContactMethod::roleData(int role) const
 {
    QVariant cat;
 
-   auto lastCall = d_ptr->m_UsageStats.d_ptr->m_lCalls.isEmpty()
-      ? nullptr : d_ptr->m_UsageStats.d_ptr->m_lCalls.constLast();
+   auto lastCall = d_ptr->m_pUsageStats->d_ptr->m_lCalls.isEmpty()
+      ? nullptr : d_ptr->m_pUsageStats->d_ptr->m_lCalls.constLast();
 
    switch (role) {
       case static_cast<int>(Ring::Role::Name):
@@ -668,7 +668,7 @@ QVariant ContactMethod::roleData(int role) const
          break;
       case static_cast<int>(Ring::Role::LastUsed):
       case static_cast<int>(Call::Role::Date):
-         cat = d_ptr->m_UsageStats.lastUsed() <= 0 ? QVariant() : QDateTime::fromTime_t(d_ptr->m_UsageStats.lastUsed());
+         cat = d_ptr->m_pUsageStats->lastUsed() <= 0 ? QVariant() : QDateTime::fromTime_t(d_ptr->m_pUsageStats->lastUsed());
          break;
       case static_cast<int>(Ring::Role::Length):
       case static_cast<int>(Call::Role::Length):
@@ -677,10 +677,10 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Ring::Role::FormattedLastUsed):
       case static_cast<int>(Call::Role::FormattedDate):
       case static_cast<int>(Call::Role::FuzzyDate):
-         cat = HistoryTimeCategoryModel::timeToHistoryCategory(d_ptr->m_UsageStats.lastUsed());
+         cat = HistoryTimeCategoryModel::timeToHistoryCategory(d_ptr->m_pUsageStats->lastUsed());
          break;
       case static_cast<int>(Ring::Role::IndexedLastUsed):
-         return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(d_ptr->m_UsageStats.lastUsed())));
+         return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(d_ptr->m_pUsageStats->lastUsed())));
       case static_cast<int>(Call::Role::HasAVRecording):
          cat = cat = !lastCall ? QVariant() : lastCall->isAVRecording();
          break;
@@ -811,19 +811,19 @@ void ContactMethod::addCall(Call* call)
    if (!call) return;
 
    d_ptr->m_Type = ContactMethod::Type::USED;
-   d_ptr->m_UsageStats.d_ptr->m_lCalls << call;
+   d_ptr->m_pUsageStats->d_ptr->m_lCalls << call;
 
    // call setLastUsed first so that we emit lastUsedChanged()
    auto time = call->startTimeStamp();
    setLastUsed(time);
 
    //Update the contact method statistics
-   d_ptr->m_UsageStats.d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
+   d_ptr->m_pUsageStats->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
    if (d_ptr->m_pAccount)
       d_ptr->m_pAccount->usageStatistics()->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
 
    if (call->direction() == Call::Direction::OUTGOING) {
-      d_ptr->m_UsageStats.d_ptr->setHaveCalled();
+      d_ptr->m_pUsageStats->d_ptr->setHaveCalled();
       if (d_ptr->m_pAccount)
          d_ptr->m_pAccount->usageStatistics()->d_ptr->setHaveCalled();
    }
@@ -1157,25 +1157,25 @@ bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads
  */
 void ContactMethodPrivate::addActiveCall(Call* c)
 {
-    const int wasEmpty = m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
+    const int wasEmpty = m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty();
 
-    m_UsageStats.d_ptr->m_lActiveCalls << c;
+    m_pUsageStats->d_ptr->m_lActiveCalls << c;
 
     changed();
 
-    if (wasEmpty != m_UsageStats.d_ptr->m_lActiveCalls.isEmpty())
+    if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
         canSendTextsChanged();
 }
 
 void ContactMethodPrivate::removeActiveCall(Call* c)
 {
-    const int wasEmpty = m_UsageStats.d_ptr->m_lActiveCalls.isEmpty();
+    const int wasEmpty = m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty();
 
-    m_UsageStats.d_ptr->m_lActiveCalls.removeAll(c);
+    m_pUsageStats->d_ptr->m_lActiveCalls.removeAll(c);
 
     changed();
 
-    if (wasEmpty != m_UsageStats.d_ptr->m_lActiveCalls.isEmpty())
+    if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
         canSendTextsChanged();
 }
 
@@ -1216,7 +1216,7 @@ QVariant TemporaryContactMethod::icon() const
  *                                                                                  *
  ***********************************************************************************/
 
-UsageStatistics::UsageStatistics() : d_ptr(new UsageStatisticsPrivate)
+UsageStatistics::UsageStatistics(QObject* parent) : QObject(parent), d_ptr(new UsageStatisticsPrivate)
 {}
 
 UsageStatistics::~UsageStatistics()

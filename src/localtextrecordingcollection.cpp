@@ -20,6 +20,7 @@
 //Qt
 #include <QtCore/QDir>
 #include <QtCore/QFile>
+#include <QtCore/QTimer>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
@@ -68,7 +69,10 @@ private:
 LocalTextRecordingCollection::LocalTextRecordingCollection(CollectionMediator<Media::Recording>* mediator) :
    CollectionInterface(new LocalTextRecordingEditor(mediator))
 {
+   // TODO use a thread
+   //QTimer::singleShot(0, [this]() {
    load();
+   //});
 }
 
 LocalTextRecordingCollection::~LocalTextRecordingCollection()

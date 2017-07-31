@@ -215,7 +215,7 @@ PersonPrivate::~PersonPrivate()
 }
 
 ///Constructor
-Person::Person(CollectionInterface* parent): ItemBase(nullptr),
+Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance()),
    d_ptr(new PersonPrivate(this))
 {
    setCollection(parent ? parent : &TransitionalPersonBackend::instance());
@@ -225,7 +225,7 @@ Person::Person(CollectionInterface* parent): ItemBase(nullptr),
 }
 
 Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionInterface* parent)
- : ItemBase(nullptr), d_ptr(new PersonPrivate(this))
+ : ItemBase(&PersonModel::instance()), d_ptr(new PersonPrivate(this))
 {
    setCollection(parent ? parent : &TransitionalPersonBackend::instance());
    d_ptr->m_isPlaceHolder = false;
@@ -252,7 +252,7 @@ Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionI
  * multiple person with multiple collection is currently not supported (but
  * would be easy to enable if the need arise).
  */
-Person::Person(const Person& other) noexcept : ItemBase(nullptr),
+Person::Person(const Person& other) noexcept : ItemBase(&PersonModel::instance()),
 d_ptr(new PersonPrivate(this))
 {
    d_ptr->m_FirstName            = other.d_ptr->m_FirstName           ;
