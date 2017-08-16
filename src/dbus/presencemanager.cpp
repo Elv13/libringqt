@@ -26,8 +26,8 @@ PresenceManagerInterface& PresenceManager::instance()
     static auto interface = new PresenceManagerInterface();
 #else
     if (!dbus_metaTypeInit) registerCommTypes();
-    static auto interface = new PresenceManagerInterface("cx.ring.Ring",
-                                                        "/cx/ring/Ring/PresenceManager",
+    static auto interface = new PresenceManagerInterface(QStringLiteral("cx.ring.Ring"),
+                                                        QStringLiteral("/cx/ring/Ring/PresenceManager"),
                                                         QDBusConnection::sessionBus());
 
     if (!interface->connection().isConnected()) {
@@ -37,7 +37,7 @@ PresenceManagerInterface& PresenceManager::instance()
     }
     if (!interface->isValid()) {
         GlobalInstances::dBusErrorHandler().invalidInterfaceError(
-            "Error : dring is not available, make sure it is running"
+            QStringLiteral("Error : dring is not available, make sure it is running")
         );
     }
 #endif

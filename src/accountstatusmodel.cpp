@@ -80,7 +80,7 @@ time(QDateTime::currentDateTime()),type(_type)
 }
 
 AccountStatusModelPrivate::AccountStatusModelPrivate(Account* parent) : m_pAccount(parent),
-m_FallbackTime_t(QDateTime::currentDateTime().toTime_t())
+m_FallbackTime_t(QDateTime::currentDateTimeUtc().toTime_t())
 {
 }
 

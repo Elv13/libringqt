@@ -163,7 +163,7 @@ void Video::SourceModel::switchTo(const int idx)
          break;
       case ExtendedDeviceList::SCREEN:
          d_ptr->m_CurrentSelectionId = QString();
-         VideoManager::instance().switchInput(QString("%1%2:%3+%4,%5 %6x%7")
+         VideoManager::instance().switchInput(QStringLiteral("%1%2:%3+%4,%5 %6x%7")
                   .arg(DRing::Media::VideoProtocolPrefix::DISPLAY)
                   .arg(sep)
                   .arg(d_ptr->m_Display.index)
@@ -175,7 +175,7 @@ void Video::SourceModel::switchTo(const int idx)
       case ExtendedDeviceList::FILE:
          d_ptr->m_CurrentSelectionId = QString();
          VideoManager::instance().switchInput(
-            !d_ptr->m_CurrentFile.isEmpty() ? QString("%1%2%3")
+            !d_ptr->m_CurrentFile.isEmpty() ? QStringLiteral("%1%2%3")
                .arg(DRing::Media::VideoProtocolPrefix::FILE)
                .arg(sep)
                .arg(d_ptr->m_CurrentFile.toLocalFile())
@@ -184,7 +184,7 @@ void Video::SourceModel::switchTo(const int idx)
          break;
       default:
          d_ptr->m_CurrentSelectionId = Video::DeviceModel::instance().index(idx-ExtendedDeviceList::COUNT__,0).data(Qt::DisplayRole).toString();
-         VideoManager::instance().switchInput(QString("%1%2%3")
+         VideoManager::instance().switchInput(QStringLiteral("%1%2%3")
             .arg(DRing::Media::VideoProtocolPrefix::CAMERA)
             .arg(sep)
             .arg(d_ptr->m_CurrentSelectionId));
@@ -210,10 +210,10 @@ void Video::SourceModel::setUsedIndex(QString &deviceStr)
     }
     else if (deviceStr.indexOf(DRing::Media::VideoProtocolPrefix::CAMERA) == 0) {
         QString sep = DRing::Media::VideoProtocolPrefix::SEPARATOR;
-        auto fullPrefix = QString("%1%2")
+        auto fullPrefix = QStringLiteral("%1%2")
            .arg(DRing::Media::VideoProtocolPrefix::CAMERA)
            .arg(DRing::Media::VideoProtocolPrefix::SEPARATOR);
-        Video::Device* dev = Video::DeviceModel::instance().getDevice(deviceStr.replace(fullPrefix,""));
+        Video::Device* dev = Video::DeviceModel::instance().getDevice(deviceStr.replace(fullPrefix,QLatin1String("")));
         if (dev == nullptr) {
             // Device not found we dont know what camera is used
             idx = ExtendedDeviceList::NONE;

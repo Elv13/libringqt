@@ -249,17 +249,17 @@ void VCardUtils::addProperty(const QByteArray& prop, const QString& value)
 
 void VCardUtils::addEmail(const QString& type, const QString& email)
 {
-   addProperty(QString("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg("TYPE=").arg(type).toLatin1(), email);
+   addProperty(QStringLiteral("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg(QStringLiteral("TYPE=")).arg(type).toLatin1(), email);
 }
 
 void VCardUtils::addAddress(const Person::Address& addr)
 {
-   const QByteArray prop = QString("%1%2%3").arg(Property::ADDRESS)
+   const QByteArray prop = QStringLiteral("%1%2%3").arg(Property::ADDRESS)
          .arg(Delimiter::SEPARATOR_TOKEN)
          .arg(addr.type()).toLatin1();
 
    //First two fiels are left empty for now, they are for Postal box and Extended Address
-   QString value = QString("%1%2%3%4%5%6%7%8%9%10%11")
+   QString value = QStringLiteral("%1%2%3%4%5%6%7%8%9%10%11")
          .arg(Delimiter::SEPARATOR_TOKEN)
          .arg(Delimiter::SEPARATOR_TOKEN)
          .arg(addr.addressLine())

@@ -865,7 +865,7 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
 {
    //serializing here
    VCardUtils maker;
-   maker.startVCard("2.1");
+   maker.startVCard(QStringLiteral("2.1"));
    maker.addProperty(VCardUtils::Property::UID, uid());
    maker.addProperty(VCardUtils::Property::NAME, (secondName()
                                                    + VCardUtils::Delimiter::SEPARATOR_TOKEN
@@ -873,7 +873,7 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
    maker.addProperty(VCardUtils::Property::FORMATTED_NAME, formattedName());
    maker.addProperty(VCardUtils::Property::ORGANIZATION, organization());
 
-   maker.addEmail("PREF", preferredEmail());
+   maker.addEmail(QStringLiteral("PREF"), preferredEmail());
 
    foreach (ContactMethod* phone , phoneNumbers()) {
       QString uri = phone->uri();

@@ -70,8 +70,8 @@ public:
     virtual QVariant   callPhoto(const ContactMethod* n, const QSize& size, bool displayPresence = true) = 0;
     virtual QVariant   numberCategoryIcon(const QVariant& p, const QSize& size, bool displayPresence = false, bool isPresent = false) = 0;
     virtual QVariant   securityIssueIcon(const QModelIndex& index) = 0;
-    virtual QByteArray toByteArray(const QVariant& pxm, const QString& type = "PNG") = 0;
-    virtual QVariant   personPhoto(const QByteArray& data, const QString& type = "PNG") = 0;
+    virtual QByteArray toByteArray(const QVariant& pxm, const QString& type = QStringLiteral("PNG")) = 0;
+    virtual QVariant   personPhoto(const QByteArray& data, const QString& type = QStringLiteral("PNG")) = 0;
     virtual QVariant   collectionIcon(const CollectionInterface* interface, PixmapManipulatorI::CollectionIconHint hint = PixmapManipulatorI::CollectionIconHint::NONE) const = 0;
     virtual QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const = 0;
     virtual QVariant   historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const = 0;

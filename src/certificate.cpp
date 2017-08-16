@@ -158,9 +158,9 @@ Certificate::CheckValues CertificatePrivate::toBool(const QString& string)
 
 DetailsCache::DetailsCache(const MapStringString& details)
 {
-   m_ExpirationDate             = QDateTime::fromString( details[DRing::Certificate::DetailsNames::EXPIRATION_DATE ],"yyyy-mm-dd");
-   m_ActivationDate             = QDateTime::fromString( details[DRing::Certificate::DetailsNames::ACTIVATION_DATE ],"yyyy-mm-dd");
-   m_RequirePrivateKeyPassword  = details[DRing::Certificate::DetailsNames::REQUIRE_PRIVATE_KEY_PASSWORD] == "PASSED";
+   m_ExpirationDate             = QDateTime::fromString( details[DRing::Certificate::DetailsNames::EXPIRATION_DATE ],QStringLiteral("yyyy-mm-dd"));
+   m_ActivationDate             = QDateTime::fromString( details[DRing::Certificate::DetailsNames::ACTIVATION_DATE ],QStringLiteral("yyyy-mm-dd"));
+   m_RequirePrivateKeyPassword  = details[DRing::Certificate::DetailsNames::REQUIRE_PRIVATE_KEY_PASSWORD] == QLatin1String("PASSED");
    m_PublicSignature            = details[DRing::Certificate::DetailsNames::PUBLIC_SIGNATURE            ].toLatin1();
    m_VersionNumber              = details[DRing::Certificate::DetailsNames::VERSION_NUMBER              ].toInt();
    m_SerialNumber               = details[DRing::Certificate::DetailsNames::SERIAL_NUMBER               ].toLatin1();
@@ -174,7 +174,7 @@ DetailsCache::DetailsCache(const MapStringString& details)
    m_Sha1Fingerprint            = details[DRing::Certificate::DetailsNames::SHA1_FINGERPRINT            ].toLatin1();
    m_PublicKeyId                = details[DRing::Certificate::DetailsNames::PUBLIC_KEY_ID               ].toLatin1();
    m_IssuerDn                   = details[DRing::Certificate::DetailsNames::ISSUER_DN                   ].toLatin1();
-   m_NextExpectedUpdateDate     = QDateTime::fromString(details[DRing::Certificate::DetailsNames::NEXT_EXPECTED_UPDATE_DATE ],"yyyy-mm-dd");
+   m_NextExpectedUpdateDate     = QDateTime::fromString(details[DRing::Certificate::DetailsNames::NEXT_EXPECTED_UPDATE_DATE ],QStringLiteral("yyyy-mm-dd"));
    m_OutgoingServer             = details[DRing::Certificate::DetailsNames::OUTGOING_SERVER             ] ;
 }
 
@@ -853,14 +853,14 @@ bool Certificate::moveToDotCert() const
    QDir certDir(QDir::homePath()+".cert");
 
    if (!certDir.exists()) {
-      const bool mk = QDir(QDir::homePath()).mkdir(".cert");
+      const bool mk = QDir(QDir::homePath()).mkdir(QStringLiteral(".cert"));
       if (!mk)
          qWarning() << "Creating" << (QDir::homePath()+"/.cert") << "failed";
 
       ret &= mk;
    }
 
-   ret &= publicKey.rename(QString("/home/%1/.cert/%2/")
+   ret &= publicKey.rename(QStringLiteral("/home/%1/.cert/%2/")
       .arg( QDir::homePath     () )
       .arg( publicKey.fileName () )
    );
@@ -873,7 +873,7 @@ bool Certificate::moveToDotCert() const
          ret &= false;
       }
 
-      ret &= privateKey.rename(QString("/home/%1/.cert/%2/")
+      ret &= privateKey.rename(QStringLiteral("/home/%1/.cert/%2/")
          .arg( QDir::homePath      () )
          .arg( privateKey.fileName () )
       );

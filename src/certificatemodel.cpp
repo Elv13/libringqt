@@ -176,7 +176,7 @@ CertificateModelPrivate::CertificateModelPrivate(CertificateModel* parent) : QOb
 CertificateModel::CertificateModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<Certificate>(this),
  d_ptr(new CertificateModelPrivate(this))
 {
-   setObjectName("CertificateModel");
+   setObjectName(QStringLiteral("CertificateModel"));
    //TODO replace with something else
    m_pFallbackCollection = addCollection<FolderCertificateCollection,QString,FlagPack<FolderCertificateCollection::Options>, QString>(QString(),
       FolderCertificateCollection::Options::FALLBACK | FolderCertificateCollection::Options::READ_WRITE,
@@ -690,7 +690,7 @@ Certificate* CertificateModel::getCertificateFromId(const QString& id, Account* 
          CertificateNode* cat = d_ptr->m_hStrToCat.value(category);
 
          if (!cat) {
-            cat = d_ptr->createCategory(category, QString("%1 certificates").arg(a->alias()), QString());
+            cat = d_ptr->createCategory(category, QStringLiteral("%1 certificates").arg(a->alias()), QString());
          }
 
          d_ptr->addToTree(cert,cat);

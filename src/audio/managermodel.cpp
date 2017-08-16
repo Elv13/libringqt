@@ -62,15 +62,15 @@ d_ptr(new ManagerModelPrivate(this))
    foreach(const QString& m,managers) {
       if (m == ManagerModelPrivate::ManagerName::PULSEAUDIO) {
          d_ptr->m_lSupportedManagers << Manager::PULSE;
-         d_ptr->m_lDeviceList << "Pulse Audio";
+         d_ptr->m_lDeviceList << QStringLiteral("Pulse Audio");
       }
       else if (m == ManagerModelPrivate::ManagerName::ALSA) {
          d_ptr->m_lSupportedManagers << Manager::ALSA;
-         d_ptr->m_lDeviceList<< "ALSA";
+         d_ptr->m_lDeviceList<< QStringLiteral("ALSA");
       }
       else if (m == ManagerModelPrivate::ManagerName::JACK) {
          d_ptr->m_lSupportedManagers << Manager::JACK;
-         d_ptr->m_lDeviceList<< "Jack";
+         d_ptr->m_lDeviceList<< QStringLiteral("Jack");
       }
       else
          qDebug() << "Unsupported audio manager" << m;

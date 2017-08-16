@@ -244,20 +244,20 @@ bool LocalMacroCollection::isPresenceTracked() const
 
 void Serializable::MacroNode::read(const QJsonObject &json)
 {
-   macro = MacroModel::instance().newMacro(json["ID"].toString());
-   macro->setName        ( json[ "Name"   ].toString ());
-   macro->setSequence    ( json[ "Seq"    ].toString ());
-   macro->setCategory    ( json[ "Cat"    ].toString ());
-   macro->setDelay       ( json[ "Delay"  ].toInt    ());
-   macro->setDescription ( json[ "Desc"   ].toString ());
+   macro = MacroModel::instance().newMacro(json[QStringLiteral("ID")].toString());
+   macro->setName        ( json[ QStringLiteral("Name")   ].toString ());
+   macro->setSequence    ( json[ QStringLiteral("Seq")    ].toString ());
+   macro->setCategory    ( json[ QStringLiteral("Cat")    ].toString ());
+   macro->setDelay       ( json[ QStringLiteral("Delay")  ].toInt    ());
+   macro->setDescription ( json[ QStringLiteral("Desc")   ].toString ());
 }
 
 void Serializable::MacroNode::write(QJsonObject& json)
 {
-   json[ "Name"  ] = macro->name        ();
-   json[ "Seq"   ] = macro->sequence    ();
-   json[ "Cat"   ] = macro->category    ();
-   json[ "Delay" ] = macro->delay       ();
-   json[ "Desc"  ] = macro->description ();
-   json[ "ID"    ] = macro->id          ();
+   json[ QStringLiteral("Name")  ] = macro->name        ();
+   json[ QStringLiteral("Seq")   ] = macro->sequence    ();
+   json[ QStringLiteral("Cat")   ] = macro->category    ();
+   json[ QStringLiteral("Delay") ] = macro->delay       ();
+   json[ QStringLiteral("Desc")  ] = macro->description ();
+   json[ QStringLiteral("ID")    ] = macro->id          ();
 }

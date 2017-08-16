@@ -108,9 +108,9 @@ IMConversationManagerPrivate& IMConversationManagerPrivate::instance()
 
 bool ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString& payload, ContactMethod *contactMethod)
 {
-    const int total  = args[ "of"   ].toInt();
-    const int part   = args[ "part" ].toInt();
-    const QString id = args[ "id"   ];
+    const int total  = args[ QStringLiteral("of")   ].toInt();
+    const int part   = args[ QStringLiteral("part") ].toInt();
+    const QString id = args[ QStringLiteral("id")   ];
 
     auto c = m_hRequest[id];
     if (!c) {

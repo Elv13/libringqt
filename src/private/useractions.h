@@ -320,7 +320,7 @@ bool sendEmail(const Person* p)
 #elif defined Q_OS_DARWIN
    myProcess->start("open", { "mailto:"+p->preferredEmail() });
 #else
-   myProcess->start("xdg-email", { "mailto:"+p->preferredEmail() });
+   myProcess->start(QStringLiteral("xdg-email"), { "mailto:"+p->preferredEmail() });
 #endif
    return true;
 }

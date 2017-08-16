@@ -271,7 +271,7 @@ QHash<int,QByteArray> PeerTimelineModel::roleNames() const
 QVariant PeerTimelineModelPrivate::groupRoleData(PeerTimelineNode* group, int role)
 {
     if (role == Qt::DisplayRole && group->m_Type == PeerTimelineModel::NodeType::CALL_GROUP)
-        return QString("%1 (%2 incoming, %3 outgoing, %4 missed)")
+        return QStringLiteral("%1 (%2 incoming, %3 outgoing, %4 missed)")
             .arg(QDateTime::fromTime_t(group->m_StartTime).toString())
             .arg(group->m_lSummary[PeerTimelineNode::SumaryEntries::INCOMING])
             .arg(group->m_lSummary[PeerTimelineNode::SumaryEntries::OUTGOING])

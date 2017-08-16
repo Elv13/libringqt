@@ -215,7 +215,7 @@ Video::Device* Video::DeviceModel::activeDevice() const
          if (!deId.isEmpty())
             qWarning() << "Requested unknown device" << deId;
          if (!d_ptr->m_pDummyDevice)
-            d_ptr->m_pDummyDevice = new Video::Device("None");
+            d_ptr->m_pDummyDevice = new Video::Device(QStringLiteral("None"));
          return d_ptr->m_pDummyDevice;
       }
       d_ptr->m_pActiveDevice = dev;

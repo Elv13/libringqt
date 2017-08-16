@@ -28,8 +28,8 @@ VideoManagerInterface& VideoManager::instance()
     if (!dbus_metaTypeInit)
         registerCommTypes();
 
-    static auto interface = new VideoManagerInterface("cx.ring.Ring",
-                                                      "/cx/ring/Ring/VideoManager",
+    static auto interface = new VideoManagerInterface(QStringLiteral("cx.ring.Ring"),
+                                                      QStringLiteral("/cx/ring/Ring/VideoManager"),
                                                       QDBusConnection::sessionBus());
     if (!interface->connection().isConnected()) {
         GlobalInstances::dBusErrorHandler().connectionError(
@@ -38,7 +38,7 @@ VideoManagerInterface& VideoManager::instance()
     }
     if (!interface->isValid()) {
         GlobalInstances::dBusErrorHandler().invalidInterfaceError(
-            "Error : dring is not available, make sure it is running"
+            QStringLiteral("Error : dring is not available, make sure it is running")
         );
     }
 #endif

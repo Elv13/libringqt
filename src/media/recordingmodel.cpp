@@ -165,7 +165,7 @@ Media::RecordingModel::~RecordingModel()
 Media::RecordingModel::RecordingModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<Recording>(this),
 d_ptr(new RecordingModelPrivate(this))
 {
-    setObjectName("RecordingModel");
+    setObjectName(QStringLiteral("RecordingModel"));
 
     d_ptr->m_pTextRecordingCollection = addCollection<LocalTextRecordingCollection>();
 

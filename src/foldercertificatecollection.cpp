@@ -328,7 +328,7 @@ QList<CollectionInterface::Element> FolderCertificateCollectionPrivate::getCerti
 
    if (m_Flags & FolderCertificateCollection::Options::RECURSIVE) {
       for (const QString& d : dir.entryList(QDir::AllDirs)) {
-         if (d != QString('.') && d != "..") {
+         if (d != QString('.') && d != QLatin1String("..")) {
             CertificateModel::instance().addCollection<FolderCertificateCollection,QString,FlagPack<FolderCertificateCollection::Options>,QString,FolderCertificateCollection*>(
                m_Path+'/'+d              ,
                m_Flags                   ,

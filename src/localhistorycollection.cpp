@@ -88,28 +88,28 @@ void LocalHistoryEditor::saveCall(QTextStream& stream, const Call* call)
       Call::HistoryStateName::INCOMING : Call::HistoryStateName::OUTGOING;
 
    const Account* a = call->account();
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::CALLID          ).arg(call->historyId()                       );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_START ).arg(call->startTimeStamp()                  );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_STOP  ).arg(call->stopTimeStamp()                   );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::ACCOUNT_ID      ).arg(a?QString(a->id()):""                   );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::DISPLAY_NAME    ).arg(call->peerName()                        );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::PEER_NUMBER     ).arg(call->peerContactMethod()->uri().full() );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::DIRECTION       ).arg(direction                               );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::MISSED          ).arg(call->isMissed()                        );
-   stream << QString("%1=%2\n").arg(Call::HistoryMapFields::CONTACT_USED    ).arg(false                                   );//TODO
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::CALLID          ).arg(call->historyId()                       );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_START ).arg(call->startTimeStamp()                  );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_STOP  ).arg(call->stopTimeStamp()                   );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::ACCOUNT_ID      ).arg(a?QString(a->id()):QLatin1String("")                   );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::DISPLAY_NAME    ).arg(call->peerName()                        );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::PEER_NUMBER     ).arg(call->peerContactMethod()->uri().full() );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::DIRECTION       ).arg(direction                               );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::MISSED          ).arg(call->isMissed()                        );
+   stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::CONTACT_USED    ).arg(false                                   );//TODO
 
    //TODO handle more than one recording
    if (call->hasRecording(Media::Media::Type::AUDIO,Media::Media::Direction::IN)) {
-      stream << QString("%1=%2\n").arg(Call::HistoryMapFields::RECORDING_PATH  ).arg(((Media::AVRecording*)call->recordings(Media::Media::Type::AUDIO,Media::Media::Direction::IN)[0])->path().path());
+      stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::RECORDING_PATH  ).arg(((Media::AVRecording*)call->recordings(Media::Media::Type::AUDIO,Media::Media::Direction::IN)[0])->path().path());
    }
 
    if (call->peerContactMethod()->contact()) {
-      stream << QString("%1=%2\n").arg(Call::HistoryMapFields::CONTACT_UID  ).arg(
+      stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::CONTACT_UID  ).arg(
          QString(call->peerContactMethod()->contact()->uid())
       );
    }
    if (call->certificate())
-      stream << QString("%1=%2\n").arg(Call::HistoryMapFields::CERT_PATH).arg(call->certificate()->path());
+      stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::CERT_PATH).arg(call->certificate()->path());
    stream << "\n";
    stream.flush();
 }

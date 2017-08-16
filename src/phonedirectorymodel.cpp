@@ -62,7 +62,7 @@ m_CallWithAccount(false),m_pPopularModel(nullptr)
 PhoneDirectoryModel::PhoneDirectoryModel(QObject* parent) :
    QAbstractTableModel(parent?parent:QCoreApplication::instance()), d_ptr(new PhoneDirectoryModelPrivate(this))
 {
-   setObjectName("PhoneDirectoryModel");
+   setObjectName(QStringLiteral("PhoneDirectoryModel"));
    connect(&PresenceManager::instance(),SIGNAL(newBuddyNotification(QString,QString,bool,QString)),d_ptr.data(),
            SLOT(slotNewBuddySubscription(QString,QString,bool,QString)));
 }
@@ -149,7 +149,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
             case (int) Role::Object:
                return QVariant::fromValue(const_cast<ContactMethod*>(number));
             case Qt::ToolTipRole:
-                return number->isDuplicate() ? "Is duplicate" : QString();
+                return number->isDuplicate() ? QStringLiteral("Is duplicate") : QString();
             default:
                 return number->roleData(role);
          }
@@ -204,13 +204,13 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return number->alternativeNames().size();
                break;
             case Qt::ToolTipRole: {
-               QString out = "<table>";
+               QString out = QStringLiteral("<table>");
                QHashIterator<QString, QPair<int, time_t>> iter(number->alternativeNames());
                while (iter.hasNext()) {
                   iter.next();
-                  out += QString("<tr><td>%1</td><td>%2</td></tr>").arg(iter.value().first).arg(iter.key());
+                  out += QStringLiteral("<tr><td>%1</td><td>%2</td></tr>").arg(iter.value().first).arg(iter.key());
                }
-               out += "</table>";
+               out += QLatin1String("</table>");
                return out;
             }
          }
@@ -597,7 +597,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
     // Append the account hostname, this should always reach the same destination
     // as long as the server implementation isn't buggy.
-    const auto extendedUri = (hasAtSign || !account) ? uri : URI(QString("%1@%2")
+    const auto extendedUri = (hasAtSign || !account) ? uri : URI(QStringLiteral("%1@%2")
        .arg(strippedUri)
        .arg(account->hostname()));
 
@@ -735,7 +735,7 @@ ContactMethod* PhoneDirectoryModel::fromTemporary(const TemporaryContactMethod* 
 
 ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
 {
-   const QStringList fields = hash.split("///");
+   const QStringList fields = hash.split(QStringLiteral("///"));
    if (fields.size() == 3) {
       const QString uri = fields[0];
       const QByteArray acc = fields[1].toLatin1();
@@ -937,7 +937,7 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
                 cm->setAccount(account);
 
             if (cm->account() == account) {
-                cm->incrementAlternativeName(name, QDateTime::currentDateTime().toTime_t());
+                cm->incrementAlternativeName(name, QDateTime::currentDateTimeUtc().toTime_t());
                 cm->d_ptr->setRegisteredName(name);
 
                 // Add the CM to the directory using the registered name too.
@@ -1005,7 +1005,7 @@ void PhoneDirectoryModel::setCallWithAccount(bool value) {
 ///Popular number model related code
 
 MostPopularNumberModel::MostPopularNumberModel() : QAbstractListModel(&PhoneDirectoryModel::instance()) {
-   setObjectName("MostPopularNumberModel");
+   setObjectName(QStringLiteral("MostPopularNumberModel"));
 }
 
 QVariant MostPopularNumberModel::data( const QModelIndex& index, int role ) const

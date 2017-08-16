@@ -94,11 +94,11 @@ bool LocalTextRecordingEditor::save(const Media::Recording* recording)
    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
 
    //Make sure the directory exist
-   dir.mkdir("text/");
+   dir.mkdir(QStringLiteral("text/"));
 
    //Save each file
    for (QHash<QByteArray,QByteArray>::const_iterator i = ret.begin(); i != ret.end(); ++i) {
-      QFile file(QString("%1/text/%2.json").arg(dir.path()).arg(QString(i.key())));
+      QFile file(QStringLiteral("%1/text/%2.json").arg(dir.path()).arg(QString(i.key())));
 
       if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
          QTextStream streamFileOut(&file);
@@ -191,7 +191,7 @@ bool LocalTextRecordingCollection::load()
     if (dir.exists()) {
         // get .json files, sorted by time, latest first
         QStringList filters;
-        filters << "*.json";
+        filters << QStringLiteral("*.json");
         auto list = dir.entryInfoList(filters, QDir::Files | QDir::NoSymLinks | QDir::Readable, QDir::Time);
 
         for (int i = 0; i < list.size(); ++i) {

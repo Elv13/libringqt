@@ -265,14 +265,14 @@ QByteArray LocalRingtoneCollection::id() const
 void Serializable::RingtoneNode::read(const QJsonObject &json)
 {
    ringtone = new Ringtone();
-   ringtone->setPath(json["path"].toString());
-   ringtone->setName(json["name"].toString());
+   ringtone->setPath(json[QStringLiteral("path")].toString());
+   ringtone->setName(json[QStringLiteral("name")].toString());
 }
 
 void Serializable::RingtoneNode::write(QJsonObject& json)
 {
-   json["path"] = ringtone->path();
-   json["name"] = ringtone->name();
+   json[QStringLiteral("path")] = ringtone->path();
+   json[QStringLiteral("name")] = ringtone->name();
 }
 
 #include <localringtonecollection.moc>

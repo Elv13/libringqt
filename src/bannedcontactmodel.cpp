@@ -67,8 +67,8 @@ d_ptr(new BannedContactModelPrivate(this))
 
     if (a->protocol() == Account::Protocol::RING) {
         for (auto contact_info : account_contacts) {
-            if (contact_info["banned"] == "true") {
-                auto cm = PhoneDirectoryModel::instance().getNumber(contact_info["id"], a);
+            if (contact_info[QStringLiteral("banned")] == QLatin1String("true")) {
+                auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
                 add(cm);
             }
         }

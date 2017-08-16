@@ -49,7 +49,7 @@ m_pCurrentStatus(nullptr),m_pDefaultStatus(nullptr),m_UseCustomStatus(false),m_C
 PresenceStatusModel::PresenceStatusModel(QObject* parent) : QAbstractTableModel(parent?parent:QCoreApplication::instance()),
 d_ptr(new PresenceStatusModelPrivate())
 {
-   setObjectName("PresenceStatusModel");
+   setObjectName(QStringLiteral("PresenceStatusModel"));
 }
 
 PresenceStatusModel::~PresenceStatusModel()

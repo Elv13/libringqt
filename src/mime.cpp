@@ -129,7 +129,7 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
          .toUtf8()
       );
 
-      d->setData(RingMimes::PLAIN_TEXT, QString("%1\n%2\n%3\n")
+      d->setData(RingMimes::PLAIN_TEXT, QStringLiteral("%1\n%2\n%3\n")
       .arg( c->formattedName()                                    )
       .arg( c->peerContactMethod()->uri()                         )
       .arg( QDateTime::fromTime_t(c->startTimeStamp()).toString() )

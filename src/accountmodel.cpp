@@ -324,7 +324,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
 
    //TODO move this to AccountStatusModel
    if (!a || (a && a->lastSipRegistrationStatus() != status )) {
-      if (status != "OK") //Do not pollute the log
+      if (status != QLatin1String("OK")) //Do not pollute the log
          qDebug() << "Account" << account << "status changed to" << status;
    }
 
@@ -518,9 +518,9 @@ AccountModelPrivate::slotMigrationEnded(const QString& accountId, const QString&
     Account* a = q_ptr->getById(accountId.toLatin1());
 
     Account::MigrationEndedStatus status;
-    if(result == "SUCCESS")
+    if(result == QLatin1String("SUCCESS"))
         status = Account::MigrationEndedStatus::SUCCESS;
-    else if(result == "INVALID")
+    else if(result == QLatin1String("INVALID"))
         status = Account::MigrationEndedStatus::INVALID;
     else
         status = Account::MigrationEndedStatus::UNDEFINED_STATUS;
@@ -914,7 +914,7 @@ QString AccountModel::getSimilarAliasIndex(const QString& alias)
     do {
         found = false;
         foreach (Account* a, self.d_ptr->m_lAccounts) {
-            if (a->alias() == alias+QString(" (%1)").arg(count)) {
+            if (a->alias() == alias+QStringLiteral(" (%1)").arg(count)) {
                 count++;
                 found = false;
                 break;
@@ -922,7 +922,7 @@ QString AccountModel::getSimilarAliasIndex(const QString& alias)
         }
     } while(found);
     if (count)
-        return QString(" (%1)").arg(count);
+        return QStringLiteral(" (%1)").arg(count);
     return QString();
 }
 

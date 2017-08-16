@@ -31,8 +31,8 @@ InstanceManagerInterface& InstanceManager::instance()
 #else
     if (!dbus_metaTypeInit) registerCommTypes();
 
-    static auto interface = new InstanceManagerInterface("cx.ring.Ring",
-                                                "/cx/ring/Ring/Instance",
+    static auto interface = new InstanceManagerInterface(QStringLiteral("cx.ring.Ring"),
+                                                QStringLiteral("/cx/ring/Ring/Instance"),
                                                 QDBusConnection::sessionBus());
 
     if (!interface->connection().isConnected()) {
@@ -42,7 +42,7 @@ InstanceManagerInterface& InstanceManager::instance()
     }
     static bool registered = false;
     if (!registered) {
-        QDBusPendingReply<QString> reply = interface->Register(getpid(), "");
+        QDBusPendingReply<QString> reply = interface->Register(getpid(), QLatin1String(""));
         registered = true;
         reply.waitForFinished();
     }

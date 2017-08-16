@@ -124,7 +124,7 @@ Serializable::Peers* SerializableEntityManager::fromJson(const QJsonObject& json
 {
    //Check if the object is already loaded
    QStringList sha1List;
-   QJsonArray as = json["sha1s"].toArray();
+   QJsonArray as = json[QStringLiteral("sha1s")].toArray();
    for (int i = 0; i < as.size(); ++i) {
       sha1List.append(as[i].toString());
    }
@@ -612,48 +612,48 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
 
 void Serializable::Payload::read(const QJsonObject &json)
 {
-   payload  = json["payload" ].toString();
-   mimeType = json["mimeType"].toString();
+   payload  = json[QStringLiteral("payload") ].toString();
+   mimeType = json[QStringLiteral("mimeType")].toString();
 }
 
 void Serializable::Payload::write(QJsonObject& json) const
 {
-   json["payload" ] = payload ;
-   json["mimeType"] = mimeType;
+   json[QStringLiteral("payload") ] = payload ;
+   json[QStringLiteral("mimeType")] = mimeType;
 }
 
 void Serializable::Message::read (const QJsonObject &json)
 {
-   timestamp  = json["timestamp" ].toInt                (                           );
-   authorSha1 = json["authorSha1"].toString             (                           );
-   isRead     = json["isRead"    ].toBool               (                           );
-   direction  = static_cast<Media::Media::Direction>    ( json["direction"].toInt() );
-   type       = static_cast<Serializable::Message::Type>( json["type"     ].toInt() );
-   id         = json["id"        ].toVariant().value<uint64_t>(                     );
-   deliveryStatus = static_cast<Media::TextRecording::Status>(json["deliveryStatus"].toInt());
+   timestamp  = json[QStringLiteral("timestamp") ].toInt                (                           );
+   authorSha1 = json[QStringLiteral("authorSha1")].toString             (                           );
+   isRead     = json[QStringLiteral("isRead")    ].toBool               (                           );
+   direction  = static_cast<Media::Media::Direction>    ( json[QStringLiteral("direction")].toInt() );
+   type       = static_cast<Serializable::Message::Type>( json[QStringLiteral("type")     ].toInt() );
+   id         = json[QStringLiteral("id")        ].toVariant().value<uint64_t>(                     );
+   deliveryStatus = static_cast<Media::TextRecording::Status>(json[QStringLiteral("deliveryStatus")].toInt());
 
-   QJsonArray a = json["payloads"].toArray();
+   QJsonArray a = json[QStringLiteral("payloads")].toArray();
    for (int i = 0; i < a.size(); ++i) {
       QJsonObject o = a[i].toObject();
       Payload* p = new Payload();
       p->read(o);
       payloads << p;
 
-      if (p->mimeType == "text/plain") {
+      if (p->mimeType == QLatin1String("text/plain")) {
          m_PlainText = p->payload;
          m_HasText   = true;
       }
-      else if (p->mimeType == "text/html") {
+      else if (p->mimeType == QLatin1String("text/html")) {
          m_HTML    = p->payload;
          m_HasText = true;
       }
    }
 
    //Load older conversation from a time when only 1 mime/payload pair was supported
-   if (!json["payload"   ].toString().isEmpty()) {
+   if (!json[QStringLiteral("payload")   ].toString().isEmpty()) {
       Payload* p  = new Payload();
-      p->payload  = json["payload"  ].toString();
-      p->mimeType = json["mimeType" ].toString();
+      p->payload  = json[QStringLiteral("payload")  ].toString();
+      p->mimeType = json[QStringLiteral("mimeType") ].toString();
       payloads << p;
       m_PlainText = p->payload;
       m_HasText   = true;
@@ -662,13 +662,13 @@ void Serializable::Message::read (const QJsonObject &json)
 
 void Serializable::Message::write(QJsonObject &json) const
 {
-   json["timestamp"  ] = static_cast<int>(timestamp);
-   json["authorSha1" ] = authorSha1                 ;
-   json["direction"  ] = static_cast<int>(direction);
-   json["type"       ] = static_cast<int>(type)     ;
-   json["isRead"     ] = isRead                     ;
-   json["id"         ] = QString::number(id);
-   json["deliveryStatus"         ] = static_cast<int>(deliveryStatus);
+   json[QStringLiteral("timestamp")  ] = static_cast<int>(timestamp);
+   json[QStringLiteral("authorSha1") ] = authorSha1                 ;
+   json[QStringLiteral("direction")  ] = static_cast<int>(direction);
+   json[QStringLiteral("type")       ] = static_cast<int>(type)     ;
+   json[QStringLiteral("isRead")     ] = isRead                     ;
+   json[QStringLiteral("id")         ] = QString::number(id);
+   json[QStringLiteral("deliveryStatus")         ] = static_cast<int>(deliveryStatus);
 
    QJsonArray a;
    foreach (const Payload* p, payloads) {
@@ -676,7 +676,7 @@ void Serializable::Message::write(QJsonObject &json) const
       p->write(o);
       a.append(o);
    }
-   json["payloads"] = a;
+   json[QStringLiteral("payloads")] = a;
 }
 
 const QRegularExpression Serializable::Message::m_linkRegex = QRegularExpression(QStringLiteral("((?>(?>https|http|ftp|ring):|www\\.)(?>[^\\s,.);!>]|[,.);!>](?!\\s|$))+)"),
@@ -707,19 +707,19 @@ const QString& Serializable::Message::getFormattedHtml()
         if (p < m_PlainText.size())
             re.append(m_PlainText.mid(p, m_PlainText.size() - p).toHtmlEscaped());
 
-        m_FormattedHtml = QString("<body>%1</body>").arg(re);
+        m_FormattedHtml = QStringLiteral("<body>%1</body>").arg(re);
     }
     return m_FormattedHtml;
 }
 
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
 {
-   id            = json["id"           ].toInt   ();
-   nextGroupSha1 = json["nextGroupSha1"].toString();
-   nextGroupId   = json["nextGroupId"  ].toInt   ();
-   type          = static_cast<Message::Type>(json["type"].toInt());
+   id            = json[QStringLiteral("id")           ].toInt   ();
+   nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
+   nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
+   type          = static_cast<Message::Type>(json[QStringLiteral("type")].toInt());
 
-   QJsonArray a = json["messages"].toArray();
+   QJsonArray a = json[QStringLiteral("messages")].toArray();
    for (int i = 0; i < a.size(); ++i) {
       QJsonObject o = a[i].toObject();
       Message* message = new Message();
@@ -732,10 +732,10 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
 
 void Serializable::Group::write(QJsonObject &json) const
 {
-   json["id"            ] = id                    ;
-   json["nextGroupSha1" ] = nextGroupSha1         ;
-   json["nextGroupId"   ] = nextGroupId           ;
-   json["type"          ] = static_cast<int>(type);
+   json[QStringLiteral("id")            ] = id                    ;
+   json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1         ;
+   json[QStringLiteral("nextGroupId")   ] = nextGroupId           ;
+   json[QStringLiteral("type")          ] = static_cast<int>(type);
 
    QJsonArray a;
    for (const Message* m : messages) {
@@ -743,15 +743,15 @@ void Serializable::Group::write(QJsonObject &json) const
       m->write(o);
       a.append(o);
    }
-   json["messages"] = a;
+   json[QStringLiteral("messages")] = a;
 }
 
 void Serializable::Peer::read (const QJsonObject &json)
 {
-   accountId = json["accountId"].toString();
-   uri       = json["uri"      ].toString();
-   personUID = json["personUID"].toString();
-   sha1      = json["sha1"     ].toString();
+   accountId = json[QStringLiteral("accountId")].toString();
+   uri       = json[QStringLiteral("uri")      ].toString();
+   personUID = json[QStringLiteral("personUID")].toString();
+   sha1      = json[QStringLiteral("sha1")     ].toString();
 
    Account* a     = AccountModel::instance().getById(accountId.toLatin1());
    Person* person = personUID.isEmpty() ?
@@ -762,21 +762,21 @@ void Serializable::Peer::read (const QJsonObject &json)
 
 void Serializable::Peer::write(QJsonObject &json) const
 {
-   json["accountId"] = accountId ;
-   json["uri"      ] = uri       ;
-   json["personUID"] = personUID ;
-   json["sha1"     ] = sha1      ;
+   json[QStringLiteral("accountId")] = accountId ;
+   json[QStringLiteral("uri")      ] = uri       ;
+   json[QStringLiteral("personUID")] = personUID ;
+   json[QStringLiteral("sha1")     ] = sha1      ;
 }
 
 void Serializable::Peers::read (const QJsonObject &json)
 {
 
-   QJsonArray as = json["sha1s"].toArray();
+   QJsonArray as = json[QStringLiteral("sha1s")].toArray();
    for (int i = 0; i < as.size(); ++i) {
       sha1s.append(as[i].toString());
    }
 
-   QJsonArray a2 = json["peers"].toArray();
+   QJsonArray a2 = json[QStringLiteral("peers")].toArray();
    for (int i = 0; i < a2.size(); ++i) {
       QJsonObject o = a2[i].toObject();
 
@@ -784,7 +784,7 @@ void Serializable::Peers::read (const QJsonObject &json)
       // anyway, like when some data is deleted, but not some other and the
       // file is resaved. Tracking the problem source is not worth it as the
       // data will be worthless.
-      if (o["uri"].toString().isEmpty()) {
+      if (o[QStringLiteral("uri")].toString().isEmpty()) {
           qWarning() << "Corrupted chat history entry: Missing URI";
           continue;
       }
@@ -795,7 +795,7 @@ void Serializable::Peers::read (const QJsonObject &json)
       peers.append(peer);
    }
 
-   QJsonArray a = json["groups"].toArray();
+   QJsonArray a = json[QStringLiteral("groups")].toArray();
    for (int i = 0; i < a.size(); ++i) {
       QJsonObject o = a[i].toObject();
       Group* group = new Group();
@@ -810,7 +810,7 @@ void Serializable::Peers::write(QJsonObject &json) const
    for (const QString& sha1 : sha1s) {
       a2.append(sha1);
    }
-   json["sha1s"] = a2;
+   json[QStringLiteral("sha1s")] = a2;
 
    QJsonArray a;
    for (const Group* g : groups) {
@@ -818,7 +818,7 @@ void Serializable::Peers::write(QJsonObject &json) const
       g->write(o);
       a.append(o);
    }
-   json["groups"] = a;
+   json[QStringLiteral("groups")] = a;
 
    QJsonArray a3;
    for (const Peer* p : peers) {
@@ -826,7 +826,7 @@ void Serializable::Peers::write(QJsonObject &json) const
       p->write(o);
       a3.append(o);
    }
-   json["peers"] = a3;
+   json[QStringLiteral("peers")] = a3;
 }
 
 

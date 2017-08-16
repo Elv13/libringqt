@@ -283,9 +283,9 @@ bool LocalBookmarkCollection::isPresenceTracked() const
 
 void Serializable::BookmarkNode::read(const QJsonObject &json)
 {
-   const QString&    uri       = json[ "uri"       ].toString()           ;
-   const QByteArray& accountId = json[ "accountId" ].toString().toLatin1();
-   const QByteArray& contactId = json[ "contactId" ].toString().toLatin1();
+   const QString&    uri       = json[ QStringLiteral("uri")       ].toString()           ;
+   const QByteArray& accountId = json[ QStringLiteral("accountId") ].toString().toLatin1();
+   const QByteArray& contactId = json[ QStringLiteral("contactId") ].toString().toLatin1();
 
    account = accountId.isEmpty()?nullptr:AccountModel::instance ().getById       ( accountId            );
    contact = contactId.isEmpty()?nullptr:PersonModel::instance  ().getPersonByUid( contactId            );
@@ -297,7 +297,7 @@ void Serializable::BookmarkNode::write(QJsonObject& json) const
    if (!account)
       account = cm->account();
 
-   json[ "uri"       ] = cm->uri()                      ;
-   json[ "accountId" ] = account?account->id():QString();
-   json[ "contactId" ] = contact?contact->uid ():QString();
+   json[ QStringLiteral("uri")       ] = cm->uri()                      ;
+   json[ QStringLiteral("accountId") ] = account?account->id():QString();
+   json[ QStringLiteral("contactId") ] = contact?contact->uid ():QString();
 }

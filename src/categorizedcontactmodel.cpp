@@ -257,7 +257,7 @@ m_lCategoryCounter(),m_Role(Qt::DisplayRole),m_SortAlphabetical(true),m_Unreacha
 //
 CategorizedContactModel::CategorizedContactModel(int role) : QAbstractItemModel(QCoreApplication::instance()),d_ptr(new CategorizedContactModelPrivate(this))
 {
-   setObjectName("CategorizedContactModel");
+   setObjectName(QStringLiteral("CategorizedContactModel"));
    d_ptr->m_Role    = role;
    d_ptr->m_lCategoryCounter.reserve(32);
    d_ptr->m_lMimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER;

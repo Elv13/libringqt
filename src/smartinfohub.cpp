@@ -69,7 +69,7 @@ void SmartInfoHubPrivate::slotSmartInfo(const MapStringString& map)
 
 bool SmartInfoHub::isConference() const
 {
-    return (d_ptr->m_information["type"] == "conference");
+    return (d_ptr->m_information[QStringLiteral("type")] == QLatin1String("conference"));
 }
 
 

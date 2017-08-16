@@ -169,7 +169,7 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
 
    if (a->protocol() == Account::Protocol::RING) {
       for (auto contact_info : account_contacts) {
-         auto cm = PhoneDirectoryModel::instance().getNumber(contact_info["id"], a);
+         auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
          a->d_ptr->m_NumbersFromDaemon << cm;
       }
    }
@@ -183,7 +183,7 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
        tracked_buddy->setPresent(tracked_buddy_present);
    }
 
-    const QString currentUri = QString("%1@%2").arg(a->username()).arg(a->d_ptr->m_HostName);
+    const QString currentUri = QStringLiteral("%1@%2").arg(a->username()).arg(a->d_ptr->m_HostName);
 
     a->d_ptr->m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, a);
     a->d_ptr->m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
@@ -199,7 +199,7 @@ Account* Account::buildNewAccountFromAlias(Account::Protocol proto, const QStrin
    Account* a = new Account();
    a->setProtocol(proto);
    a->d_ptr->m_hAccountDetails.clear();
-   a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = "false";
+   a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
    a->d_ptr->m_pAccountNumber = const_cast<ContactMethod*>(ContactMethod::BLANK());
    MapStringString tmp;
    switch (proto) {
@@ -445,14 +445,14 @@ QString Account::stateColorName() const
 {
    switch(registrationState()) {
       case RegistrationState::READY:
-         return "darkGreen";
+         return QStringLiteral("darkGreen");
       case RegistrationState::UNREGISTERED:
-         return "black";
+         return QStringLiteral("black");
       case RegistrationState::TRYING:
       case RegistrationState::INITIALIZING:
-         return "orange";
+         return QStringLiteral("orange");
       case RegistrationState::ERROR:
-         return "red";
+         return QStringLiteral("red");
       case RegistrationState::COUNT__:
          break;
    };
@@ -764,7 +764,7 @@ QString Account::password() const
       case Account::Protocol::COUNT__:
          break;
    };
-   return "";
+   return QLatin1String("");
 }
 
 ///Return the account security fallback
@@ -989,7 +989,7 @@ ContactMethod* Account::contactMethod() const
 DtmfType Account::DTMFType() const
 {
    QString type = d_ptr->accountDetail(DRing::Account::ConfProperties::DTMF_TYPE);
-   return (type == "overrtp" || type.isEmpty())? DtmfType::OverRtp:DtmfType::OverSip;
+   return (type == QLatin1String("overrtp") || type.isEmpty())? DtmfType::OverRtp:DtmfType::OverSip;
 }
 
 bool Account::presenceStatus() const
@@ -2471,7 +2471,7 @@ void AccountPrivate::save()
       }
 
       //Clear the password
-      q_ptr->setArchivePassword("");
+      q_ptr->setArchivePassword(QLatin1String(""));
 
       const QString currentId = configurationManager.addAccount(details);
 
@@ -2564,7 +2564,7 @@ void AccountPrivate::reload()
       changeState(Account::EditState::READY);
 
       //TODO port this to the URI class helpers, this doesn't cover all corner cases
-      const QString currentUri = QString("%1@%2").arg(q_ptr->username()).arg(m_HostName);
+      const QString currentUri = QStringLiteral("%1@%2").arg(q_ptr->username()).arg(m_HostName);
 
       if (!m_pAccountNumber || (m_pAccountNumber && m_pAccountNumber->uri() != currentUri)) {
          if (m_pAccountNumber) {

@@ -28,8 +28,8 @@ CallManagerInterface & CallManager::instance(){
 #else
     if (!dbus_metaTypeInit) registerCommTypes();
 
-    static auto interface = new CallManagerInterface( "cx.ring.Ring",
-                                                    "/cx/ring/Ring/CallManager",
+    static auto interface = new CallManagerInterface( QStringLiteral("cx.ring.Ring"),
+                                                    QStringLiteral("/cx/ring/Ring/CallManager"),
                                                     QDBusConnection::sessionBus());
 
     if(!interface->connection().isConnected()) {
@@ -38,7 +38,7 @@ CallManagerInterface & CallManager::instance(){
         );
     } if (!interface->isValid()) {
         GlobalInstances::dBusErrorHandler().invalidInterfaceError(
-            "Error : dring is not available, make sure it is running"
+            QStringLiteral("Error : dring is not available, make sure it is running")
         );
     }
 #endif

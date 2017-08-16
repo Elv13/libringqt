@@ -112,7 +112,7 @@ NumberTreeBackend::~NumberTreeBackend()
 CategorizedBookmarkModel::CategorizedBookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
 d_ptr(new CategorizedBookmarkModelPrivate(this))
 {
-   setObjectName("CategorizedBookmarkModel");
+   setObjectName(QStringLiteral("CategorizedBookmarkModel"));
    reloadCategories();
    d_ptr->m_lMimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER;
 
@@ -179,7 +179,7 @@ void CategorizedBookmarkModel::reloadCategories()
    if (d_ptr->displayFrequentlyUsed()) {
                                                       //: Most popular contacts
       NumberTreeBackend* item = new NumberTreeBackend(tr("Most popular"));
-      d_ptr->m_hCategories["mp"] = item;
+      d_ptr->m_hCategories[QStringLiteral("mp")] = item;
       item->m_Index = d_ptr->m_lCategoryCounter.size();
       item->m_MostPopular = true;
       beginInsertRows(QModelIndex(), d_ptr->m_lCategoryCounter.size(),d_ptr->m_lCategoryCounter.size());
@@ -355,7 +355,7 @@ QModelIndex CategorizedBookmarkModel::parent( const QModelIndex& idx) const
    const NumberTreeBackend* modelItem = static_cast<NumberTreeBackend*>(idx.internalPointer());
 
    if (!modelItem)
-      return index(d_ptr->m_hCategories["mp"]->m_Index,0);
+      return index(d_ptr->m_hCategories[QStringLiteral("mp")]->m_Index,0);
 
    switch(modelItem->m_Type) {
       case NumberTreeBackend::Type::BOOKMARK:

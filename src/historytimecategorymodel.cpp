@@ -39,11 +39,11 @@ d_ptr(new HistoryTimeCategoryModelPrivate)
 {
    d_ptr->m_lCategories << tr("Today")                                 ;//0
    d_ptr->m_lCategories << tr("Yesterday")                             ;//1
-   d_ptr->m_lCategories << QDate::currentDate().addDays(-2).toString("dddd");//2
-   d_ptr->m_lCategories << QDate::currentDate().addDays(-3).toString("dddd");//3
-   d_ptr->m_lCategories << QDate::currentDate().addDays(-4).toString("dddd");//4
-   d_ptr->m_lCategories << QDate::currentDate().addDays(-5).toString("dddd");//5
-   d_ptr->m_lCategories << QDate::currentDate().addDays(-6).toString("dddd");//6
+   d_ptr->m_lCategories << QDate::currentDate().addDays(-2).toString(QStringLiteral("dddd"));//2
+   d_ptr->m_lCategories << QDate::currentDate().addDays(-3).toString(QStringLiteral("dddd"));//3
+   d_ptr->m_lCategories << QDate::currentDate().addDays(-4).toString(QStringLiteral("dddd"));//4
+   d_ptr->m_lCategories << QDate::currentDate().addDays(-5).toString(QStringLiteral("dddd"));//5
+   d_ptr->m_lCategories << QDate::currentDate().addDays(-6).toString(QStringLiteral("dddd"));//6
    d_ptr->m_lCategories << tr("A week ago")                            ;//7
    d_ptr->m_lCategories << tr("Two weeks ago")                         ;//8
    d_ptr->m_lCategories << tr("Three weeks ago")                       ;//9

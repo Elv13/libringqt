@@ -58,8 +58,8 @@ Macro::~Macro()
 
 void Macro::execute() {
    d_ptr->m_Escaped = d_ptr->m_Sequence;
-   while (d_ptr->m_Escaped.indexOf("\\n") != -1) {
-      d_ptr->m_Escaped = d_ptr->m_Escaped.replace("\\n","\n");
+   while (d_ptr->m_Escaped.indexOf(QLatin1String("\\n")) != -1) {
+      d_ptr->m_Escaped = d_ptr->m_Escaped.replace(QLatin1String("\\n"),QLatin1String("\n"));
    }
    d_ptr->nextStep();
 }

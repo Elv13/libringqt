@@ -81,7 +81,7 @@ bool Video::Channel::setActiveResolution(int idx)
 
 bool Video::Channel::setActiveResolution(Video::Resolution* res) {
    if ((!res) || d_ptr->m_lValidResolutions.indexOf(res) == -1 || res->name().isEmpty()) {
-      qWarning() << "Invalid active resolution" << (res?res->name():"NULL");
+      qWarning() << "Invalid active resolution" << (res?res->name():QStringLiteral("NULL"));
       return false;
    }
 

@@ -202,7 +202,7 @@ QString LocalProfileEditor::path(const Profile* p) const
 {
     const QDir profilesDir = (QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/profiles/";
     profilesDir.mkpath(profilesDir.path());
-    return QString("%1/%2.vcf")
+    return QStringLiteral("%1/%2.vcf")
         .arg(profilesDir.absolutePath())
         .arg(QString(p->person()->uid()));
 }

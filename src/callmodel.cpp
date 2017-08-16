@@ -151,7 +151,7 @@ CallModel::CallModel() : QAbstractItemModel(QCoreApplication::instance()),d_ptr(
 {
    //Register with the daemon
    InstanceManager::instance();
-   setObjectName("CallModel");
+   setObjectName(QStringLiteral("CallModel"));
    #ifdef ENABLE_VIDEO
    VideoRendererManager::instance();
    #endif
@@ -1012,7 +1012,7 @@ QStringList CallModel::mimeTypes() const
 {
    static QStringList mimes;
    if (!mimes.size()) {
-      mimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER << RingMimes::CALLID << "text/html";
+      mimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER << RingMimes::CALLID << QStringLiteral("text/html");
    }
    return mimes;
 }

@@ -102,7 +102,7 @@ PersonModelPrivate::PersonModelPrivate(PersonModel* parent) : QObject(parent), q
 PersonModel::PersonModel(QObject* par) : QAbstractItemModel(par?par:QCoreApplication::instance()), CollectionManagerInterface<Person>(this),
 d_ptr(new PersonModelPrivate(this))
 {
-   setObjectName("PersonModel");
+   setObjectName(QStringLiteral("PersonModel"));
 }
 
 ///Destructor

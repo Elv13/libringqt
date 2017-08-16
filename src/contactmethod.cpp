@@ -718,7 +718,7 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Role::IsReachable):
           return isReachable();
       case static_cast<int>(Role::Filter):
-          return QString("%1//%2//%3//%4//%5//%6")
+          return QStringLiteral("%1//%2//%3//%4//%5//%6")
             .arg(bestName())
             .arg(primaryName())
             .arg(uri())
@@ -859,7 +859,7 @@ QString ContactMethod::toHash() const
          break;
    }
 
-   return QString("%1///%2///%3")
+   return QStringLiteral("%1///%2///%3")
       .arg(
          uristr
       )

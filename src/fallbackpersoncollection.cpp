@@ -88,7 +88,7 @@ FallbackPersonCollectionPrivate::FallbackPersonCollectionPrivate(FallbackPersonC
    if (m_Name.size())
       m_Name[0] = m_Name[0].toUpper();
    else
-      m_Name = "vCard";
+      m_Name = QLatin1String("vCard");
 }
 
 FallbackPersonCollection::FallbackPersonCollection(CollectionMediator<Person>* mediator, const QString& path, bool async, FallbackPersonCollection* parent) :
@@ -277,7 +277,7 @@ void FallbackPersonCollectionPrivate::loadAsync()
 {
    QDir d(m_Path);
    for (const QString& dir : d.entryList(QDir::AllDirs)) {
-      if (dir != QString('.') && dir != "..") {
+      if (dir != QString('.') && dir != QLatin1String("..")) {
          CollectionInterface* col = PersonModel::instance().addCollection<FallbackPersonCollection,QString,FallbackPersonCollection*>(m_Path+'/'+dir,q_ptr);
          if (col->isEnabled()) {
             col->load();

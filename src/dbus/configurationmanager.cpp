@@ -27,8 +27,8 @@ ConfigurationManagerInterface& ConfigurationManager::instance()
     static auto interface = new ConfigurationManagerInterface();
 #else
     if (!dbus_metaTypeInit) registerCommTypes();
-    static auto interface = new ConfigurationManagerInterface("cx.ring.Ring",
-                                                            "/cx/ring/Ring/ConfigurationManager",
+    static auto interface = new ConfigurationManagerInterface(QStringLiteral("cx.ring.Ring"),
+                                                            QStringLiteral("/cx/ring/Ring/ConfigurationManager"),
                                                             QDBusConnection::sessionBus());
     if(!interface->connection().isConnected()) {
         GlobalInstances::dBusErrorHandler().connectionError(
@@ -37,7 +37,7 @@ ConfigurationManagerInterface& ConfigurationManager::instance()
     }
     if (!interface->isValid()) {
         GlobalInstances::dBusErrorHandler().invalidInterfaceError(
-            "Error : dring is not available, make sure it is running"
+            QStringLiteral("Error : dring is not available, make sure it is running")
         );
     }
 #endif

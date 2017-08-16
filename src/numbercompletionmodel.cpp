@@ -142,7 +142,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
 
 NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
 {
-   setObjectName("NumberCompletionModel");
+   setObjectName(QStringLiteral("NumberCompletionModel"));
 }
 
 NumberCompletionModel::~NumberCompletionModel()
@@ -204,7 +204,7 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
             case Qt::DisplayRole:
                return n->primaryName();
             case Qt::ToolTipRole:
-               return QString("<table><tr><td>%1</td></tr><tr><td>%2</td></tr></table>")
+               return QStringLiteral("<table><tr><td>%1</td></tr><tr><td>%2</td></tr></table>")
                   .arg(n->primaryName())
                   .arg(n->category() ? n->category()->name() : QString());
             case NumberCompletionModel::Role::ALTERNATE_ACCOUNT:
@@ -459,7 +459,7 @@ QSet<Account*> NumberCompletionModelPrivate::getRange(const QMap<QString,NumberW
     if (prefix.isEmpty() || map.isEmpty())
         return {};
 
-    static NumberWrapper fake("");
+    static NumberWrapper fake(QLatin1String(""));
     fake.key = prefix;
 
     auto start = std::lower_bound(map.constBegin(), map.constEnd(), &fake,

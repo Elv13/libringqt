@@ -135,7 +135,7 @@ Video::Renderer* VideoRendererManager::previewRenderer()
 #ifdef ENABLE_LIBWRAP
       r = new Video::DirectRenderer(PREVIEW_RENDERER_ID, res->size());
 #else //ENABLE_LIBWRAP
-      r = new Video::ShmRenderer(PREVIEW_RENDERER_ID,"",res->size());
+      r = new Video::ShmRenderer(PREVIEW_RENDERER_ID,QLatin1String(""),res->size());
 #endif
 
       QThread* t = new QThread(this);

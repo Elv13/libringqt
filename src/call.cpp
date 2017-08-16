@@ -916,9 +916,9 @@ QString Call::length() const
       nsec = curTime - d_ptr->m_pStartTimeStamp;
    }
    if (nsec/3600)
-      return QString("%1:%2:%3 ").arg((nsec%(3600*24))/3600).arg(((nsec%(3600*24))%3600)/60,2,10,QChar('0')).arg(((nsec%(3600*24))%3600)%60,2,10,QChar('0'));
+      return QStringLiteral("%1:%2:%3 ").arg((nsec%(3600*24))/3600).arg(((nsec%(3600*24))%3600)/60,2,10,QChar('0')).arg(((nsec%(3600*24))%3600)%60,2,10,QChar('0'));
    else
-      return QString("%1:%2 ").arg(nsec/60,2,10,QChar('0')).arg(nsec%60,2,10,QChar('0'));
+      return QStringLiteral("%1:%2 ").arg(nsec/60,2,10,QChar('0')).arg(nsec%60,2,10,QChar('0'));
 }
 
 ///Is this call part of history
@@ -1571,7 +1571,7 @@ void CallPrivate::error()
       //Well, in this case we have no choice, it still doesn't belong here
       q_ptr->videoRenderer()->stopRendering();
    }
-   throw QString("There was an error handling your call, please restart Ring. If you encounter this problem often, \
+   throw QStringLiteral("There was an error handling your call, please restart Ring. If you encounter this problem often, \
    please open Ring in a terminal and send the last 100 lines before this message in a bug report at \
    https://tuleap.ring.cx");
 }
@@ -1719,7 +1719,7 @@ void CallPrivate::sendProfile()
     int total = vCard.size()/1000 + (vCard.size()%1000?1:0);
     while (vCard.size()) {
         QMap<QString, QString> chunk;
-        chunk[QString("%1; id=%2,part=%3,of=%4")
+        chunk[QStringLiteral("%1; id=%2,part=%3,of=%4")
                .arg( RingMimes::PROFILE_VCF     )
                .arg( key                        )
                .arg( QString::number( i+1   ) )
@@ -1802,7 +1802,7 @@ void CallPrivate::call()
         m_Account = AvailableAccountModel::currentDefaultAccount(peerCM);
         if (!m_Account) {
             qDebug() << "Trying to call "
-                     << (m_pTransferNumber ? static_cast<QString>(m_pTransferNumber->uri()) : "ERROR")
+                     << (m_pTransferNumber ? static_cast<QString>(m_pTransferNumber->uri()) : QStringLiteral("ERROR"))
                      << " with no account registered . callId : " << q_ptr  << "ConfId:" << q_ptr;
             throw tr("No account registered!");
         }
@@ -1852,7 +1852,7 @@ void CallPrivate::call()
     if (m_DringId.isEmpty()) {
         changeCurrentState(Call::State::FAILURE);
         qWarning() << "Creating the call to " << peerCM->uri() << " failed";
-        m_DringId = "FAILED";
+        m_DringId = QLatin1String("FAILED");
         return;
     }
     setObjectName("Call:"+m_DringId);

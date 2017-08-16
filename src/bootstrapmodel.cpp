@@ -173,7 +173,7 @@ QVector<BootstrapModelPrivate::Lines*> BootstrapModelPrivate::loadDefaultBootstr
     /* get the bootstrap directory */
     QString bootstrapDirPath = QStandardPaths::locate(
         QStandardPaths::DataLocation,
-        "bootstrap",
+        QStringLiteral("bootstrap"),
         QStandardPaths::LocateDirectory
     );
     QDir bootstrapDir = QDir(bootstrapDirPath);
@@ -198,7 +198,7 @@ QVector<BootstrapModelPrivate::Lines*> BootstrapModelPrivate::loadDefaultBootstr
         while (dirIter.hasNext()) {
             dirIter.next();
             auto secBootstrapFileInfo = QFileInfo(dirIter.filePath());
-            if (secBootstrapFileInfo.isFile() && secBootstrapFileInfo.suffix() == "json")
+            if (secBootstrapFileInfo.isFile() && secBootstrapFileInfo.suffix() == QLatin1String("json"))
             {
                 bootstrapFiles << secBootstrapFileInfo;
             }
@@ -219,8 +219,8 @@ QVector<BootstrapModelPrivate::Lines*> BootstrapModelPrivate::loadDefaultBootstr
                 foreach(const auto jsonValue, jsonArray)
                 {
                     auto hostObject = jsonValue.toObject();
-                    auto hostValue = hostObject.value("host");
-                    auto portValue = hostObject.value("port");
+                    auto hostValue = hostObject.value(QStringLiteral("host"));
+                    auto portValue = hostObject.value(QStringLiteral("port"));
 
                     if (hostValue.isUndefined() == false &&
                         hostValue.isString() &&
@@ -387,7 +387,7 @@ QVariant BootstrapModel::headerData( int section, Qt::Orientation ori, int role)
 bool BootstrapModel::isCustom() const
 {
    for (const BootstrapModelPrivate::Lines* line : d_ptr->m_lines) {
-      if (line->hostname.size() && line->hostname != "bootstrap.ring.cx")
+      if (line->hostname.size() && line->hostname != QLatin1String("bootstrap.ring.cx"))
          return true;
    }
 
@@ -415,7 +415,7 @@ void BootstrapModelPrivate::reset()
    {
        /* If we can't load anything from file, default to bootstrap.ring.cx */
        BootstrapModelPrivate::Lines* l = new BootstrapModelPrivate::Lines();
-       l->hostname = "bootstrap.ring.cx";
+       l->hostname = QLatin1String("bootstrap.ring.cx");
        l->port = -1;
 
        q_ptr->beginInsertRows(QModelIndex(), m_lines.size(), m_lines.size());

@@ -507,7 +507,7 @@ QSortFilterProxyModel* CodecModel::videoCodecs() const
       d_ptr->m_pVideoProxy = new QSortFilterProxyModel(const_cast<CodecModel*>(this));
       d_ptr->m_pVideoProxy->setSourceModel(const_cast<CodecModel*>(this));
       d_ptr->m_pVideoProxy->setFilterRole(CodecModel::Role::TYPE);
-      d_ptr->m_pVideoProxy->setFilterFixedString("VIDEO");
+      d_ptr->m_pVideoProxy->setFilterFixedString(QStringLiteral("VIDEO"));
    }
    return d_ptr->m_pVideoProxy;
 }
@@ -519,7 +519,7 @@ QSortFilterProxyModel* CodecModel::audioCodecs() const
       d_ptr->m_pAudioProxy = new QSortFilterProxyModel(const_cast<CodecModel*>(this));
       d_ptr->m_pAudioProxy->setSourceModel(const_cast<CodecModel*>(this));
       d_ptr->m_pAudioProxy->setFilterRole(CodecModel::Role::TYPE);
-      d_ptr->m_pAudioProxy->setFilterFixedString("AUDIO");
+      d_ptr->m_pAudioProxy->setFilterFixedString(QStringLiteral("AUDIO"));
    }
    return d_ptr->m_pAudioProxy;
 }
@@ -606,7 +606,7 @@ QMimeData* CodecModel::mimeData(const QModelIndexList& indexes) const
       if (index.isValid()) {
          qDebug() << "setting mime data for row: " << index.row();
 
-         const QByteArray mime = (index.data(CodecModel::Role::TYPE).toString() == "AUDIO")
+         const QByteArray mime = (index.data(CodecModel::Role::TYPE).toString() == QLatin1String("AUDIO"))
             ? RingMimes::AUDIO_CODEC
             : RingMimes::VIDEO_CODEC;
 
