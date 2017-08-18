@@ -712,6 +712,12 @@ const QString& Serializable::Message::getFormattedHtml()
     return m_FormattedHtml;
 }
 
+Serializable::Group::~Group()
+{
+    foreach(auto m, messages)
+        delete m;
+}
+
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
 {
    id            = json[QStringLiteral("id")           ].toInt   ();
@@ -766,6 +772,15 @@ void Serializable::Peer::write(QJsonObject &json) const
    json[QStringLiteral("uri")      ] = uri       ;
    json[QStringLiteral("personUID")] = personUID ;
    json[QStringLiteral("sha1")     ] = sha1      ;
+}
+
+Serializable::Peers::~Peers()
+{
+    foreach(auto g, groups)
+        delete g;
+
+    foreach(auto p, peers)
+        delete p;
 }
 
 void Serializable::Peers::read (const QJsonObject &json)
@@ -1074,6 +1089,7 @@ void InstantMessagingModel::clear()
         for (Serializable::Group *group : peers->groups) {
             group->messages.clear();
         }
+        delete peers;
     }
     m_pRecording->d_ptr->m_lAssociatedPeers.clear();
 

@@ -121,6 +121,7 @@ public:
 
 class Group {
 public:
+   ~Group();
 
    ///The group ID (necessary to untangle the graph
    int id;
@@ -141,6 +142,7 @@ public:
 class Peers {
    friend class ::SerializableEntityManager;
 public:
+   ~Peers();
 
    ///The sha1(s) of each participants. If there is onlt one, it should match the filename
    QList<QString> sha1s;

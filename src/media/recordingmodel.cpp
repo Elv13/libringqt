@@ -121,6 +121,9 @@ RecordingNode::~RecordingNode()
 {
     foreach(RecordingNode* c, m_lChildren)
         delete c;
+
+    if (m_pRec)
+        delete m_pRec;
 }
 
 Media::RecordingModelPrivate::RecordingModelPrivate(RecordingModel* parent) : q_ptr(parent),m_pText(nullptr),
@@ -131,6 +134,9 @@ m_pAudioVideo(nullptr)
 
 Media::RecordingModelPrivate::~RecordingModelPrivate()
 {
+    m_hMapping.clear();
+    m_lCategories.clear();
+
     if (m_pTextRecordingCollection)
         delete m_pTextRecordingCollection;
 
