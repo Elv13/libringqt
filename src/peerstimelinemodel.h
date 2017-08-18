@@ -71,6 +71,7 @@ public:
 
     // Singleton
     static PeersTimelineModel& instance();
+    virtual ~PeersTimelineModel();
 
     // Model re-implementation
     virtual bool        setData ( const QModelIndex& index, const QVariant &value, int role ) override;
@@ -87,7 +88,6 @@ public:
 
 private:
     explicit PeersTimelineModel();
-    virtual ~PeersTimelineModel();
 
     PeersTimelineModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(PeersTimelineModel)
