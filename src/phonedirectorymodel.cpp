@@ -851,8 +851,16 @@ void PhoneDirectoryModelPrivate::slotContactMethodMerged(ContactMethod* other)
     // "person-lite" this still counts as most code paths care about both. Not
     // this, so lets ignore the merged persons.
     auto cm = qobject_cast<ContactMethod*>(sender());
-    if (other != cm)
-        emit q_ptr->contactMethodMerged(cm, other);
+
+    if (other == cm)
+        return;
+
+    Q_ASSERT(cm->isDuplicate() ^ other->isDuplicate());
+
+    emit q_ptr->contactMethodMerged(
+        cm->isDuplicate() ? cm    : other,
+        cm->isDuplicate() ? other : cm
+    );
 }
 
 void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
