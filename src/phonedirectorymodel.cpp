@@ -75,6 +75,12 @@ PhoneDirectoryModel::~PhoneDirectoryModel()
    d_ptr->m_lSortedNames.clear();
    while (vals.size()) {
       NumberWrapper* w = vals[0];
+      for (int i = 0; i < w->numbers.size(); i++) {
+         if (w->numbers[i]->dir_d_ptr) {
+            delete w->numbers[i]->dir_d_ptr;
+            w->numbers[i]->dir_d_ptr = nullptr;
+         }
+      }
       vals.removeAt(0);
       delete w;
    }
@@ -86,6 +92,12 @@ PhoneDirectoryModel::~PhoneDirectoryModel()
    while (vals.size()) {
       NumberWrapper* w = vals[0];
       vals.removeAt(0);
+      for (int i = 0; i < w->numbers.size(); i++) {
+         if (w->numbers[i]->dir_d_ptr) {
+            delete w->numbers[i]->dir_d_ptr;
+            w->numbers[i]->dir_d_ptr = nullptr;
+         }
+      }
       delete w;
    }
 }
