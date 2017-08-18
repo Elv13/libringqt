@@ -33,6 +33,7 @@ class LIB_EXPORT PendingContactRequestModel : public QAbstractTableModel
    Q_OBJECT
 
    friend class Account;
+   friend class AccountModel;
    friend class AccountPrivate;
    friend class AccountModelPrivate;
 public:
@@ -56,7 +57,7 @@ public:
    ContactRequest* findContactRequestFrom(const ContactMethod* cm) const;
 
 private:
-   explicit PendingContactRequestModel(Account* a);
+   explicit PendingContactRequestModel(QObject* parent = nullptr);
    virtual ~PendingContactRequestModel();
 
    PendingContactRequestModelPrivate* d_ptr;
@@ -68,3 +69,4 @@ Q_SIGNALS:
    void requestAdded(ContactRequest* r);
 };
 
+Q_DECLARE_METATYPE(PendingContactRequestModel*)

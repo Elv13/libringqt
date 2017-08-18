@@ -26,16 +26,16 @@
 #include <account.h>
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
+#include "personmodel.h"
 #include "contactmethod.h"
 #include "uri.h"
 
 PendingContactRequestModelPrivate::PendingContactRequestModelPrivate(PendingContactRequestModel* p) : q_ptr(p)
 {}
 
-PendingContactRequestModel::PendingContactRequestModel(Account* a) : QAbstractTableModel(a),
+PendingContactRequestModel::PendingContactRequestModel(QObject* parent) : QAbstractTableModel(parent),
 d_ptr(new PendingContactRequestModelPrivate(this))
 {
-   d_ptr->m_pAccount = a;
 }
 
 PendingContactRequestModel::~PendingContactRequestModel()
@@ -46,7 +46,9 @@ PendingContactRequestModel::~PendingContactRequestModel()
 QVariant PendingContactRequestModel::data( const QModelIndex& index, int role ) const
 {
    if (!index.isValid())
-      return QVariant();
+      return {};
+
+   const auto cr =d_ptr->m_lRequests[index.row()];
 
    switch(index.column()) {
       case Columns::PEER_ID:
@@ -75,7 +77,10 @@ QVariant PendingContactRequestModel::data( const QModelIndex& index, int role ) 
          break;
    }
 
-   return QVariant::fromValue(d_ptr->m_lRequests[index.row()]->roleData(role));
+   if (cr->peer())
+       return cr->peer()->roleData(role);
+
+   return {};
 }
 
 int PendingContactRequestModel::rowCount( const QModelIndex& parent ) const
@@ -104,7 +109,8 @@ bool PendingContactRequestModel::setData( const QModelIndex& index, const QVaria
 
 QHash<int,QByteArray> PendingContactRequestModel::roleNames() const
 {
-   return {};
+   static QHash<int, QByteArray> roles = PersonModel::instance().roleNames();
+   return roles;
 }
 
 void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
