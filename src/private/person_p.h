@@ -35,7 +35,7 @@ class PersonPrivate final : public QObject
    friend class ContactMethod;
 public:
    explicit PersonPrivate(Person* contact);
-   ~PersonPrivate();
+   virtual ~PersonPrivate();
    QString                  m_FirstName           ;
    QString                  m_SecondName          ;
    QString                  m_NickName            ;

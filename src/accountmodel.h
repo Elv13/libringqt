@@ -51,6 +51,8 @@ public:
    Q_PROPERTY(Account*       selectedAccount            READ selectedAccount                                  )
    Q_PROPERTY(Account*       userChosenAccount          READ userChosenAccount      WRITE setUserChosenAccount)
 
+   Q_PROPERTY(QAbstractItemModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT       )
+
    friend class AccountPrivate;
 
    /// @enum Global saving state to be used when using a single saving mechanism for all accounts at once
@@ -86,6 +88,7 @@ public:
    QItemSelectionModel* selectionModel              (                                      ) const;
    Account*             userChosenAccount           (                                      ) const;
    QItemSelectionModel* userSelectionModel          (                                      ) const;
+   QAbstractItemModel*  incomingContactRequestModel (                                      ) const;
 
    //Abstract model accessors
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;

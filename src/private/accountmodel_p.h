@@ -28,6 +28,7 @@
 #include "matrixutils.h"
 class AccountModel;
 class ProtocolModel;
+class PendingContactRequestModel;
 class QItemSelectionModel;
 
 class AccountModelPrivate final : public QObject
@@ -59,6 +60,7 @@ public:
    QList<Account*>                   m_lSipAccounts       ;
    QList<Account*>                   m_lRingAccounts      ;
    Matrix1D<Account::Protocol, bool> m_lSupportedProtocols;
+   PendingContactRequestModel*       m_pPendingIncomingRequests {nullptr};
 
    //Future account cache
    static QHash<QByteArray,AccountPlaceHolder*> m_hsPlaceHolder;

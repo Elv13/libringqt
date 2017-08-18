@@ -50,7 +50,7 @@ public:
 
    PersonItemNode(Person* p, const NodeType type);
    PersonItemNode(ContactMethod* cm, const NodeType type);
-   std::unique_ptr<Person> m_pPerson;
+   Person* m_pPerson;
    ContactMethod* m_pContactMethod {nullptr};
    int m_Index;
    std::vector<std::unique_ptr<PersonItemNode>> m_lChildren;
@@ -286,7 +286,7 @@ bool PersonModel::addItemCallback(const Person* c)
    const auto cms = c->phoneNumbers();
    for (auto& m : qAsConst(cms)) {
       inode.m_lChildren.emplace_back(new PersonItemNode {m, PersonItemNode::NodeType::NUMBER});
-      auto& child = *inode.m_lChildren.back().get();
+      auto& child = *inode.m_lChildren.back();
       child.m_Index = inode.m_lChildren.size() - 1;
       child.m_pParent = &inode; //TODO support adding new contact methods on the fly
    }
@@ -312,7 +312,7 @@ bool PersonModel::addItemCallback(const Person* c)
 bool PersonModel::removeItemCallback(const Person* item)
 {
    for (unsigned int nodeIdx = 0; nodeIdx < d_ptr->m_lPersons.size(); ++nodeIdx) {
-      auto person = d_ptr->m_lPersons[nodeIdx]->m_pPerson.get();
+      auto person = d_ptr->m_lPersons[nodeIdx]->m_pPerson;
       if (person == item) {
 
           const auto cms = person->phoneNumbers();

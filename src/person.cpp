@@ -291,7 +291,8 @@ Person::~Person()
    //Unregister itself from the D-Pointer list
    d_ptr->m_lParents.removeAll(this);
 
-   if (!d_ptr->m_lParents.size()) {
+   if (d_ptr->m_lParents.isEmpty()) {
+      d_ptr->setParent(nullptr);
       delete d_ptr;
    }
 }

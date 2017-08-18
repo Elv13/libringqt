@@ -35,6 +35,7 @@
 #include <account_const.h>
 
 //Ring library
+#include "private/account_p.h"
 #include "account.h"
 #include "mime.h"
 #include "profilemodel.h"
@@ -258,6 +259,18 @@ QItemSelectionModel* AccountModel::userSelectionModel() const
    return d_ptr->m_pUserSelectionModel;
 }
 
+QAbstractItemModel* AccountModel::incomingContactRequestModel() const
+{
+    if (!d_ptr->m_pPendingIncomingRequests) {
+        d_ptr->m_pPendingIncomingRequests = new PendingContactRequestModel(
+            const_cast<AccountModel*>(this)
+        );
+        d_ptr->m_pPendingIncomingRequests->setObjectName("incomingContactRequestModel");
+    }
+
+    return d_ptr->m_pPendingIncomingRequests;
+}
+
 /**
  * returns the select account
  */
@@ -339,7 +352,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
       const QStringList accountIds = configurationManager.getAccountList();
       for (int i = 0; i < accountIds.size(); ++i) {
          if ((!q_ptr->getById(accountIds[i].toLatin1())) && m_lDeletedAccounts.indexOf(accountIds[i]) == -1) {
-            Account* acc = Account::buildExistingAccountFromId(accountIds[i].toLatin1());
+            Account* acc = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
             qDebug() << "building missing account" << accountIds[i];
             insertAccount(acc,i);
             connect(acc, &Account::changed                , this, &AccountModelPrivate::slotAccountChanged                );
@@ -477,6 +490,10 @@ void AccountModelPrivate::slotIncomingContactRequest(const QString& accountId, c
    ContactRequest* r = new ContactRequest(a, ringID, time);
    a->pendingContactRequestModel()->d_ptr->addRequest(r);
 
+   /* Also keep a global list of incoming requests */
+   q_ptr->incomingContactRequestModel();
+   m_pPendingIncomingRequests->d_ptr->addRequest(r);
+
    auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
    r->setPeer(VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload));
 }
@@ -566,7 +583,7 @@ void AccountModel::update()
    const QStringList accountIds = configurationManager.getAccountList();
    for (int i = 0; i < accountIds.size(); ++i) {
       if (d_ptr->m_lDeletedAccounts.indexOf(accountIds[i]) == -1) {
-         Account* a = Account::buildExistingAccountFromId(accountIds[i].toLatin1());
+         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
          d_ptr->insertAccount(a,i);
          emit dataChanged(index(i,0),index(size()-1,0));
          connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
@@ -598,7 +615,7 @@ void AccountModel::updateAccounts()
    for (int i = 0; i < accountIds.size(); ++i) {
       Account* acc = getById(accountIds[i].toLatin1());
       if (!acc) {
-         Account* a = Account::buildExistingAccountFromId(accountIds[i].toLatin1());
+         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
          d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
          connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
          //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
@@ -1052,7 +1069,7 @@ void AccountModelPrivate::removeAccount(Account* account)
 
 Account* AccountModel::add(const QString& alias, const Account::Protocol proto)
 {
-   Account* a = Account::buildNewAccountFromAlias(proto,alias);
+   Account* a = AccountPrivate::buildNewAccountFromAlias(proto,alias);
    connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
    d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
    connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));

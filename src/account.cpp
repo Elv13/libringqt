@@ -131,7 +131,7 @@ Account::Account():ItemBase(&AccountModel::instance()),d_ptr(new AccountPrivate(
 }
 
 ///Build an account from it'id
-Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
+Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId)
 {
 //    qDebug() << "Building an account from id: " << _accountId;
    Account* a = new Account();
@@ -155,6 +155,8 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
 
          auto contactRequest = new ContactRequest(a, ringID, timeReceived, payload);
          a->pendingContactRequestModel()->d_ptr->addRequest(contactRequest);
+         AccountModel::instance().incomingContactRequestModel();
+         AccountModel::instance().d_ptr->m_pPendingIncomingRequests->d_ptr->addRequest(contactRequest);
       }
    }
 
@@ -192,7 +194,7 @@ Account* Account::buildExistingAccountFromId(const QByteArray& _accountId)
 } //buildExistingAccountFromId
 
 ///Build an account from it's name / alias
-Account* Account::buildNewAccountFromAlias(Account::Protocol proto, const QString& alias)
+Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const QString& alias)
 {
    qDebug() << "Building an account from alias: " << alias;
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
@@ -1737,6 +1739,7 @@ void Account::setLocalPort(unsigned short detail)
             d_ptr->setAccountProperty(DRing::Account::ConfProperties::TLS::LISTENER_PORT, QString::number(detail));
          else
             d_ptr->setAccountProperty(DRing::Account::ConfProperties::LOCAL_PORT, QString::number(detail));
+         break;
       case Account::Protocol::RING:
          d_ptr->setAccountProperty(DRing::Account::ConfProperties::TLS::LISTENER_PORT, QString::number(detail));
          break;

@@ -41,9 +41,9 @@ typedef void (AccountPrivate::*account_function)();
 
 class AccountPrivate final : public QObject
 {
-public:
    Q_OBJECT
    Q_DECLARE_PUBLIC(Account)
+public:
 
    class RegistrationEnabled {
       public:
@@ -69,6 +69,10 @@ public:
    unsigned short             m_UseDefaultPort           ;
    bool                       m_RemoteEnabledState       ;
    uint                       m_InternalId               ;
+
+   //Factory
+   static Account* buildExistingAccountFromId(const QByteArray& _accountId);
+   static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
 
    //Setters
    void setAccountProperties(const QHash<QString,QString>& m          );

@@ -174,6 +174,8 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(QString turnServerPassword                READ turnServerPassword             WRITE setTurnServerPassword           )
    Q_PROPERTY(QString turnServerRealm                   READ turnServerRealm                WRITE setTurnServerRealm              )
 
+   Q_PROPERTY(PendingContactRequestModel* pendingContactRequestModel READ pendingContactRequestModel CONSTANT                     )
+
    Q_PROPERTY(ContactMethods   contactsFromDaemon       READ getContacts                                                          )
 
    public:
@@ -344,10 +346,6 @@ class LIB_EXPORT Account : public ItemBase {
           INVALID = 2,
       };
       Q_ENUMS(MigrationEndedStatus)
-
-      //Factory
-      static Account* buildExistingAccountFromId(const QByteArray& _accountId);
-      static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
 
       /**
        *Perform an action
