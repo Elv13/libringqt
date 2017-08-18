@@ -59,6 +59,8 @@ public:
 
 class Message {
 public:
+   ~Message();
+
    enum class Type {
       CHAT    , /*!< Normal message between the peer                                           */
       STATUS  , /*!< "Room status" message, such as new participants or participants that left */
@@ -184,7 +186,7 @@ public:
    InstantMessagingModel*      m_pImModel           ;
    QVector<::TextMessageNode*> m_lNodes             ;
    Serializable::Group*        m_pCurrentGroup      ;
-   QList<Serializable::Peers*> m_lAssociatedPeers   ;
+   QList<QSharedPointer<Serializable::Peers>> m_lAssociatedPeers;
    QHash<QString,bool>         m_hMimeTypes         ;
    int                         m_UnreadCount        ;
    QStringList                 m_lMimeTypes         ;
@@ -219,12 +221,12 @@ private:
 class SerializableEntityManager
 {
 public:
-   static Serializable::Peers* peer(const ContactMethod* cm);
-   static Serializable::Peers* peers(QList<const ContactMethod*> cms);
-   static Serializable::Peers* fromSha1(const QByteArray& sha1);
-   static Serializable::Peers* fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
+   static QSharedPointer<Serializable::Peers> peer(const ContactMethod* cm);
+   static QSharedPointer<Serializable::Peers> peers(QList<const ContactMethod*> cms);
+   static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
+   static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
 private:
-   static QHash<QByteArray,Serializable::Peers*> m_hPeers;
+   static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
 };
 
 /**

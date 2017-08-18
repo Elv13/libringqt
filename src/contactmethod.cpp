@@ -188,6 +188,7 @@ ContactMethod::~ContactMethod()
    }
 
    d_ptr->m_lParents.removeAll(this);
+
    if (!d_ptr->m_lParents.size())
       delete d_ptr;
 }

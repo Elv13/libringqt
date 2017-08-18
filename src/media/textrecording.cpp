@@ -46,10 +46,9 @@
 //Std
 #include <ctime>
 
-QHash<QByteArray, Serializable::Peers*> SerializableEntityManager::m_hPeers;
+QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;
 
-void addPeer(Serializable::Peers* p,  const ContactMethod* cm);
-void addPeer(Serializable::Peers* p,  const ContactMethod* cm)
+static void addPeer(const QSharedPointer<Serializable::Peers>& p,  const ContactMethod* cm)
 {
    Serializable::Peer* peer = new Serializable::Peer();
    peer->sha1      = cm->sha1();
@@ -59,16 +58,16 @@ void addPeer(Serializable::Peers* p,  const ContactMethod* cm)
    p->peers << peer;
 }
 
-Serializable::Peers* SerializableEntityManager::peer(const ContactMethod* cm)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(const ContactMethod* cm)
 {
    const QByteArray sha1 = cm->sha1();
-   Serializable::Peers* p = m_hPeers[sha1];
+   QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
 
    if (!p) {
-      p = new Serializable::Peers();
+      p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
       p->sha1s << sha1;
 
-      addPeer(p,cm);
+      addPeer(p, cm);
 
       m_hPeers[sha1] = p;
    }
@@ -93,7 +92,7 @@ QByteArray mashSha1s(QList<QString> sha1s)
    return hash.result().toHex();
 }
 
-Serializable::Peers* SerializableEntityManager::peers(QList<const ContactMethod*> cms)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(QList<const ContactMethod*> cms)
 {
    QList<QString> sha1s;
 
@@ -104,10 +103,10 @@ Serializable::Peers* SerializableEntityManager::peers(QList<const ContactMethod*
 
    const QByteArray sha1 = ::mashSha1s(sha1s);
 
-   Serializable::Peers* p = m_hPeers[sha1];
+   QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
 
    if (!p) {
-      p = new Serializable::Peers();
+      p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
       p->sha1s = sha1s;
       m_hPeers[sha1] = p;
    }
@@ -115,12 +114,12 @@ Serializable::Peers* SerializableEntityManager::peers(QList<const ContactMethod*
    return p;
 }
 
-Serializable::Peers* SerializableEntityManager::fromSha1(const QByteArray& sha1)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::fromSha1(const QByteArray& sha1)
 {
    return m_hPeers[sha1];
 }
 
-Serializable::Peers* SerializableEntityManager::fromJson(const QJsonObject& json, const ContactMethod* cm)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, const ContactMethod* cm)
 {
    //Check if the object is already loaded
    QStringList sha1List;
@@ -130,7 +129,7 @@ Serializable::Peers* SerializableEntityManager::fromJson(const QJsonObject& json
    }
 
    if (sha1List.isEmpty())
-      return nullptr;
+      return {};
 
    QByteArray sha1 = sha1List[0].toLatin1();
 
@@ -142,7 +141,7 @@ Serializable::Peers* SerializableEntityManager::fromJson(const QJsonObject& json
       return m_hPeers[sha1];
 
    //Load from json
-   Serializable::Peers* p = new Serializable::Peers();
+   QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
    p->read(json);
    m_hPeers[sha1] = p;
 
@@ -165,6 +164,7 @@ Media::TextRecording::TextRecording() : Recording(Recording::Type::TEXT), d_ptr(
 
 Media::TextRecording::~TextRecording()
 {
+   d_ptr->clear();
    delete d_ptr;
 }
 
@@ -262,8 +262,8 @@ QVector<ContactMethod*> Media::TextRecording::peers() const
 {
     QVector<ContactMethod*> cms;
 
-    for (const Serializable::Peers* peers : d_ptr->m_lAssociatedPeers) {
-        for (const Serializable::Peer* peer : peers->peers) {
+    for (const auto peers : qAsConst(d_ptr->m_lAssociatedPeers)) {
+        for (const Serializable::Peer* peer : qAsConst(peers->peers)) {
             cms << peer->m_pContactMethod;
         }
     }
@@ -358,7 +358,7 @@ int Media::TextRecording::count() const { return size(); }
 QHash<QByteArray,QByteArray> Media::TextRecordingPrivate::toJsons() const
 {
    QHash<QByteArray,QByteArray> ret;
-   for (Serializable::Peers* p : m_lAssociatedPeers) {
+   for (const auto p : qAsConst(m_lAssociatedPeers)) {
 //       if (p->hasChanged) {
          p->hasChanged = false;
 
@@ -382,10 +382,8 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
     ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
 
     //Load the history data
-    for (const QJsonObject& obj : items) {
-        Serializable::Peers* p = SerializableEntityManager::fromJson(obj,cm);
-        t->d_ptr->m_lAssociatedPeers << p;
-    }
+    for (const QJsonObject& obj : qAsConst(items))
+        t->d_ptr->m_lAssociatedPeers << SerializableEntityManager::fromJson(obj,cm);
 
     //Create the model
     bool statusChanged = false; // if a msg status changed during parsing, we need to re-save the model
@@ -393,7 +391,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
     //Reconstruct the conversation
     //TODO do it right, right now it flatten the graph
-    for (const Serializable::Peers* p : t->d_ptr->m_lAssociatedPeers) {
+    for (auto p : qAsConst(t->d_ptr->m_lAssociatedPeers)) {
         //Seems old version didn't store that
         if (p->peers.isEmpty())
             continue;
@@ -412,7 +410,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                         n->m_pMessage->authorSha1 = cm->sha1();
 
                         if (p->peers.isEmpty())
-                            addPeer(const_cast<Serializable::Peers*>(p), cm);
+                            addPeer(p, cm);
                     } else {
                         if (p->m_hSha1.contains(n->m_pMessage->authorSha1)) {
                             n->m_pMessage->contactMethod = p->m_hSha1[n->m_pMessage->authorSha1];
@@ -620,6 +618,12 @@ void Serializable::Payload::write(QJsonObject& json) const
 {
    json[QStringLiteral("payload") ] = payload ;
    json[QStringLiteral("mimeType")] = mimeType;
+}
+
+Serializable::Message::~Message()
+{
+    foreach(auto p, payloads)
+        delete p;
 }
 
 void Serializable::Message::read (const QJsonObject &json)
@@ -1076,24 +1080,12 @@ void InstantMessagingModel::clear()
 {
     beginResetModel();
 
-    for ( TextMessageNode *node : m_pRecording->d_ptr->m_lNodes) {
-        for (Serializable::Payload *payload : node->m_pMessage->payloads) {
-            delete payload;
-        }
-        delete node->m_pMessage;
+    for ( TextMessageNode *node : m_pRecording->d_ptr->m_lNodes)
         delete node;
-    }
+
     m_pRecording->d_ptr->m_lNodes.clear();
 
-    for (Serializable::Peers *peers : m_pRecording->d_ptr->m_lAssociatedPeers) {
-        for (Serializable::Group *group : peers->groups) {
-            group->messages.clear();
-        }
-        delete peers;
-    }
     m_pRecording->d_ptr->m_lAssociatedPeers.clear();
-
-    //TODO: holly memory leaks batman! what else do we need to delete?
 
     m_pRecording->d_ptr->m_pCurrentGroup = nullptr;
     m_pRecording->d_ptr->m_hMimeTypes.clear();
