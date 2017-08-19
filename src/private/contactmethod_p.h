@@ -22,30 +22,32 @@
 
 class PeerTimelineModel;
 
-class ContactMethodPrivate {
+class ContactMethodPrivate final {
 public:
    ContactMethodPrivate(const URI& number, NumberCategory* cat, ContactMethod::Type st,
                         ContactMethod* q);
-   NumberCategory*    m_pCategory        ;
-   bool               m_Present          ;
-   QString            m_PresentMessage   ;
-   bool               m_Tracked          ;
-   Person*            m_pPerson          ;
-   Account*           m_pAccount         ;
-   QString            m_MostCommonName   ;
-   QHash<QString,QPair<int,time_t>> m_hNames;
-   bool               m_hasType          ;
-   bool               m_IsBookmark       ;
-   QString            m_Uid              ;
-   mutable QString    m_PrimaryName_cache;
-   URI                m_Uri              ;
-   QByteArray         m_Sha1             ;
-   ContactMethod::Type  m_Type           ;
-   QList<URI>         m_lOtherURIs       ;
-   Media::TextRecording* m_pTextRecording;
-   Certificate*       m_pCertificate;
-   QString            m_RegisteredName   ;
-   UsageStatistics*   m_pUsageStats {nullptr};
+   ~ContactMethodPrivate();
+
+   NumberCategory*    m_pCategory         {nullptr};
+   bool               m_Present           { false };
+   QString            m_PresentMessage             ;
+   bool               m_Tracked           { false };
+   Person*            m_pPerson           {nullptr};
+   Account*           m_pAccount          {nullptr};
+   QString            m_MostCommonName             ;
+   QHash<QString,QPair<int,time_t>> m_hNames       ;
+   bool               m_hasType           { false };
+   bool               m_IsBookmark        { false };
+   QString            m_Uid                        ;
+   mutable QString    m_PrimaryName_cache          ;
+   URI                m_Uri                        ;
+   QByteArray         m_Sha1                       ;
+   ContactMethod::Type  m_Type                     ;
+   QList<URI>         m_lOtherURIs                 ;
+   Media::TextRecording* m_pTextRecording {nullptr};
+   Certificate*       m_pCertificate      {nullptr};
+   QString            m_RegisteredName             ;
+   UsageStatistics*   m_pUsageStats       {nullptr};
    QVector<Media::TextRecording*> m_lAltTR;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;

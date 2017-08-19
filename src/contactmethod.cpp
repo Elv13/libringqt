@@ -160,11 +160,14 @@ const ContactMethod* ContactMethod::BLANK()
 }
 
 ContactMethodPrivate::ContactMethodPrivate(const URI& uri, NumberCategory* cat, ContactMethod::Type st, ContactMethod* q) :
-   m_Uri(uri),m_pCategory(cat),m_Tracked(false),m_Present(false),
-   m_Type(st),m_pPerson(nullptr),m_pAccount(nullptr),
-   m_IsBookmark(false), m_pUsageStats(new UsageStatistics(q)),
-   m_hasType(false),m_pTextRecording(nullptr), m_pCertificate(nullptr), q_ptr(q)
+   m_Uri(uri),m_pCategory(cat), m_Type(st),m_pAccount(nullptr),
+   m_pUsageStats(new UsageStatistics(q)), q_ptr(q)
 {}
+
+ContactMethodPrivate::~ContactMethodPrivate()
+{
+    delete m_pUsageStats;
+}
 
 ///Constructor
 ContactMethod::ContactMethod(const URI& number, NumberCategory* cat, Type st) : ItemBase(&PhoneDirectoryModel::instance()),
@@ -1217,7 +1220,7 @@ QVariant TemporaryContactMethod::icon() const
  *                                                                                  *
  ***********************************************************************************/
 
-UsageStatistics::UsageStatistics(QObject* parent) : QObject(parent), d_ptr(new UsageStatisticsPrivate)
+UsageStatistics::UsageStatistics(QObject* parent) : QObject(nullptr), d_ptr(new UsageStatisticsPrivate)
 {}
 
 UsageStatistics::~UsageStatistics()
