@@ -150,6 +150,9 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractListModel(QCoreApplication::
 
 PeersTimelineModel::~PeersTimelineModel()
 {
+    foreach(auto entry, d_ptr->m_hMapping)
+        delete entry;
+
     delete d_ptr;
 }
 

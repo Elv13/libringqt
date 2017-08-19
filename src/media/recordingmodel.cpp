@@ -121,9 +121,6 @@ RecordingNode::~RecordingNode()
 {
     foreach(RecordingNode* c, m_lChildren)
         delete c;
-
-    if (m_pRec)
-        delete m_pRec;
 }
 
 Media::RecordingModelPrivate::RecordingModelPrivate(RecordingModel* parent) : q_ptr(parent),m_pText(nullptr),
@@ -384,6 +381,7 @@ bool Media::RecordingModel::addItemCallback(const Recording* item)
 
     //Insert the item]
     const int idx = parent->m_lChildren.size();
+    const_cast<Recording*>(item)->setParent(this);
     beginInsertRows(index(parent->m_Index,0), idx, idx);
 
     RecordingNode* n = new RecordingNode       ( RecordingNode::Type::SESSION );
@@ -482,6 +480,7 @@ int  Media::RecordingModel::unreadCount() const
 Media::TextRecording* Media::RecordingModel::createTextRecording(const ContactMethod* cm)
 {
     TextRecording* r = d_ptr->m_pTextRecordingCollection->createFor(cm);
+    r->setParent(this);
 
     return r;
 }

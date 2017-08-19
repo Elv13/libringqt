@@ -61,6 +61,7 @@ public:
    QList<Account*>                   m_lRingAccounts      ;
    Matrix1D<Account::Protocol, bool> m_lSupportedProtocols;
    PendingContactRequestModel*       m_pPendingIncomingRequests {nullptr};
+   QMutex                            m_pSingleton         ;
 
    //Future account cache
    static QHash<QByteArray,AccountPlaceHolder*> m_hsPlaceHolder;

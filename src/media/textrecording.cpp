@@ -164,8 +164,15 @@ Media::TextRecording::TextRecording() : Recording(Recording::Type::TEXT), d_ptr(
 
 Media::TextRecording::~TextRecording()
 {
-   d_ptr->clear();
-   delete d_ptr;
+    d_ptr->clear();
+
+    if (d_ptr->m_pUnreadTextMessagesModel)
+        delete d_ptr->m_pUnreadTextMessagesModel;
+
+    if (d_ptr->m_pImModel)
+        delete d_ptr->m_pImModel;
+
+    delete d_ptr;
 }
 
 /**
@@ -314,10 +321,11 @@ QAbstractItemModel* Media::TextRecording::instantTextMessagingModel() const
 /**
  * Proxy model to get the unread text messages, as well as their number (rowCount)
  */
-class UnreadProxyModel : public QSortFilterProxyModel
+class UnreadProxyModel final : public QSortFilterProxyModel
 {
 public:
     explicit UnreadProxyModel(QObject* parent) : QSortFilterProxyModel(parent){}
+    virtual ~UnreadProxyModel() {}
     virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override
     {
         const QModelIndex srcIdx = sourceModel()->index(source_row, filterKeyColumn(), source_parent);

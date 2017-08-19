@@ -54,7 +54,8 @@ public:
    QWeakPointer<PeerTimelineModel>  m_TimelineModel;
 
    //Parents
-   QList<ContactMethod*> m_lParents;
+   QSet<ContactMethod*> m_lParents;
+   ContactMethod* m_pOriginal {nullptr};
 
    //Emit proxies
    void callAdded(Call* call);

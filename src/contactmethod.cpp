@@ -161,7 +161,7 @@ const ContactMethod* ContactMethod::BLANK()
 
 ContactMethodPrivate::ContactMethodPrivate(const URI& uri, NumberCategory* cat, ContactMethod::Type st, ContactMethod* q) :
    m_Uri(uri),m_pCategory(cat), m_Type(st),m_pAccount(nullptr),
-   m_pUsageStats(new UsageStatistics(q)), q_ptr(q)
+   m_pUsageStats(new UsageStatistics(q)), m_pOriginal(q), q_ptr(q)
 {}
 
 ContactMethodPrivate::~ContactMethodPrivate()
@@ -190,9 +190,9 @@ ContactMethod::~ContactMethod()
       delete d_ptr->m_TimelineModel.data();
    }
 
-   d_ptr->m_lParents.removeAll(this);
+   d_ptr->m_lParents.remove(this);
 
-   if (!d_ptr->m_lParents.size())
+   if (d_ptr->m_lParents.isEmpty())
       delete d_ptr;
 }
 
@@ -569,7 +569,7 @@ QString ContactMethod::bestId() const
  */
 bool ContactMethod::isDuplicate() const
 {
-   return d_ptr->m_lParents.constFirst() != this;
+   return d_ptr->m_pOriginal != this;
 }
 
 ///Is this number bookmarked
@@ -920,12 +920,17 @@ void ContactMethod::contactRebased(Person* other)
  */
 bool ContactMethod::merge(ContactMethod* other)
 {
-
    if ((!other) || other == this || other->d_ptr == d_ptr)
       return false;
 
    //This is invalid, those are different numbers
    if (account() && other->account() && account() != other->account())
+      return false;
+
+   if (d_ptr->m_Type == ContactMethod::Type::TEMPORARY)
+      return false;
+
+   if (other->d_ptr->m_Type == ContactMethod::Type::TEMPORARY)
       return false;
 
    //TODO Check if the merge is valid
@@ -973,8 +978,8 @@ bool ContactMethod::merge(ContactMethod* other)
    if (oldName != primaryName())
       d_ptr->primaryNameChanged(primaryName());
 
-   currentD->m_lParents.removeAll(this);
-   if (!currentD->m_lParents.size())
+   currentD->m_lParents.remove(this);
+   if (currentD->m_lParents.isEmpty())
       delete currentD;
 
    return true;
@@ -1221,7 +1226,9 @@ QVariant TemporaryContactMethod::icon() const
  ***********************************************************************************/
 
 UsageStatistics::UsageStatistics(QObject* parent) : QObject(nullptr), d_ptr(new UsageStatisticsPrivate)
-{}
+{
+    Q_UNUSED(parent); //Done manually
+}
 
 UsageStatistics::~UsageStatistics()
 {}
