@@ -56,9 +56,10 @@ public:
    void setName(const QString&  name   );
    void setKey (const int       key    );
 
+   virtual ~NumberCategory();
+
 private:
    NumberCategory(CollectionMediator<ContactMethod>* mediator, const QString& name);
-   virtual ~NumberCategory();
 
    const QScopedPointer<NumberCategoryPrivate> d_ptr;
    Q_DECLARE_PRIVATE(NumberCategory)

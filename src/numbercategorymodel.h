@@ -62,9 +62,9 @@ public:
    NumberCategory*        getCategory(const QString& type       );
    static NumberCategory* other      (                          );
 
+   virtual ~NumberCategoryModel();
 private:
    explicit NumberCategoryModel(QObject* parent = nullptr);
-   ~NumberCategoryModel();
 
    NumberCategoryModelPrivate* d_ptr;
 

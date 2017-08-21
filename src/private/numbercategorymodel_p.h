@@ -17,10 +17,10 @@
  ***************************************************************************/
 #pragma once
 
-class NumberCategoryModelPrivate
+class NumberCategoryModelPrivate final
 {
 public:
-   struct InternalTypeRepresentation {
+   struct InternalTypeRepresentation final {
       NumberCategory* category;
       int             index   ;
       bool            enabled ;
