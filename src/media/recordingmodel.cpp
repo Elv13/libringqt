@@ -134,9 +134,6 @@ Media::RecordingModelPrivate::~RecordingModelPrivate()
     m_hMapping.clear();
     m_lCategories.clear();
 
-    if (m_pTextRecordingCollection)
-        delete m_pTextRecordingCollection;
-
     if (m_pText)
         delete m_pText;
 

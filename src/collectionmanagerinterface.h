@@ -119,6 +119,8 @@ public:
     * Please note that each collection need to take a CollectionMediator as first
     * argument.
     *
+    * The ownership of the collection is transferred to the manager.
+    *
     * @return The newly created collection
     */
    template <class T2, typename ...Ts>

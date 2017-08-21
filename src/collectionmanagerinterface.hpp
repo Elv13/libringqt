@@ -116,6 +116,9 @@ m_InsertionMutex(QMutex::Recursive)
 template<class T>
 CollectionManagerInterface<T>::~CollectionManagerInterface()
 {
+   foreach(auto col, d_ptr->m_lCollections)
+       delete col;
+
    delete d_ptr;
 }
 
