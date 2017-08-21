@@ -294,30 +294,7 @@ QDebug LIB_EXPORT operator<<(QDebug dbg, const Call::Action& c)
 }
 
 CallPrivate::CallPrivate(Call* parent) : QObject(parent),q_ptr(parent),
-m_pStopTimeStamp(0),m_pTimer(nullptr),m_Account(nullptr),
-m_PeerName(),m_pPeerContactMethod(nullptr),m_HistoryConst(HistoryTimeCategoryModel::HistoryConst::Never),
-m_pStartTimeStamp(0),
-m_pDialNumber(new TemporaryContactMethod()),
-m_History(false),m_Missed(false),m_Direction(Call::Direction::OUTGOING),m_Type(Call::Type::CALL),
-m_pUserActionModel(nullptr), m_CurrentState(Call::State::ERROR),m_pCertificate(nullptr),m_mMedias({{
-   /*                                            IN                                                            OUT                           */
-   /* AUDIO */ {{ new QList<Media::Media*>() /*Created lifecycle == progress*/, new QList<Media::Media*>() /*Created lifecycle == progress*/}},
-   /* VIDEO */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
-   /* TEXT  */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
-   /* FILE  */ {{ new QList<Media::Media*>() /*Not implemented              */, new QList<Media::Media*>() /*Not implemented              */}},
-}}), m_mRecordings({{
-   /*                           IN                            OUT                */
-   /* AUDIO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-   /* VIDEO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-   /* TEXT  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-   /* FILE  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-}}), m_mIsRecording({{
-   /*              IN     OUT   */
-   /* AUDIO */ {{ false, false }},
-   /* VIDEO */ {{ false, false }},
-   /* TEXT  */ {{ false, false }},
-   /* FILE  */ {{ false, false }},
-}}), m_pTransferNumber(nullptr)
+    m_pDialNumber(new TemporaryContactMethod())
 {
 }
 
@@ -685,27 +662,27 @@ Call::State CallPrivate::startStateFromDaemonCallState(const QString& daemonCall
 CallPrivate::DaemonState CallPrivate::toDaemonCallState(const QString& stateName)
 {
    //TODO use a hash for this as it grow larger
-   if(stateName == CallPrivate::StateChange::HUNG_UP        )
+   if(stateName == DRing::Call::StateEvent::HUNGUP          )
       return CallPrivate::DaemonState::HUNG_UP ;
-   if(stateName == CallPrivate::StateChange::CONNECTING     )
+   if(stateName == DRing::Call::StateEvent::CONNECTING     )
        return CallPrivate::DaemonState::CONNECTING ;
-   if(stateName == CallPrivate::StateChange::RINGING        )
+   if(stateName == DRing::Call::StateEvent::RINGING        )
       return CallPrivate::DaemonState::RINGING ;
-   if(stateName == CallPrivate::StateChange::INCOMING       )
+   if(stateName == DRing::Call::StateEvent::INCOMING       )
       return CallPrivate::DaemonState::RINGING ;
-   if(stateName == CallPrivate::StateChange::CURRENT        )
+   if(stateName == DRing::Call::StateEvent::CURRENT        )
       return CallPrivate::DaemonState::CURRENT ;
-   if(stateName == CallPrivate::StateChange::UNHOLD_CURRENT )
+   if(stateName == DRing::Call::StateEvent::UNHOLD         )
       return CallPrivate::DaemonState::CURRENT ;
-   if(stateName == CallPrivate::StateChange::HOLD           )
+   if(stateName == DRing::Call::StateEvent::HOLD           )
       return CallPrivate::DaemonState::HOLD    ;
-   if(stateName == CallPrivate::StateChange::BUSY           )
+   if(stateName == DRing::Call::StateEvent::BUSY           )
       return CallPrivate::DaemonState::BUSY    ;
-   if(stateName == CallPrivate::StateChange::FAILURE        )
+   if(stateName == DRing::Call::StateEvent::FAILURE        )
       return CallPrivate::DaemonState::FAILURE ;
-   if(stateName == CallPrivate::StateChange::INACTIVE       )
+   if(stateName == DRing::Call::StateEvent::INACTIVE       )
       return CallPrivate::DaemonState::INACTIVE ;
-   if(stateName == CallPrivate::StateChange::OVER           )
+   if(stateName == DRing::Call::StateEvent::OVER           )
       return CallPrivate::DaemonState::OVER ;
 
    qDebug() << "stateChanged signal received with unknown state: " << stateName;

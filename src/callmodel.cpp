@@ -1187,17 +1187,17 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
       //Ring account handle "busy" differently from other types
       if (call->account()
        && call->account()->protocol() == Account::Protocol::RING
-       && sn == CallPrivate::StateChange::HUNG_UP
+       && sn == DRing::Call::StateEvent::HUNGUP
        && code == ECONNREFUSED
       )
-         sn = CallPrivate::StateChange::BUSY;
+         sn = DRing::Call::StateEvent::BUSY;
 
       qDebug() << "Call found" << call << call->state();
       const Call::LifeCycleState oldLifeCycleState = call->lifeCycleState();
       const Call::State          oldState          = call->state();
       call->d_ptr->stateChanged(sn);
       //Remove call when they end normally, keep errors and failure one
-      if ((sn == CallPrivate::StateChange::HUNG_UP)
+      if ((sn == DRing::Call::StateEvent::HUNGUP)
          || ((oldState == Call::State::OVER) && (call->state() == Call::State::OVER))
          || (oldLifeCycleState != Call::LifeCycleState::FINISHED && call->state() == Call::State::OVER)) {
          removeCall(call);

@@ -23,16 +23,11 @@
 
 //Qt
 #include <QtCore/QObject>
+class QTimer;
 
 // Ring
 #include "call.h"
 #include "private/matrixutils.h"
-
-//Qt
-class QTimer;
-
-
-//Ring
 class Account;
 class ContactMethod;
 class UserActionModel;
@@ -43,209 +38,213 @@ class CallPrivate;
 typedef  void (CallPrivate::*function)();
 
 namespace Media {
-   class Media;
-   class Recording;
+    class Media;
+    class Recording;
 }
 
 class CallPrivate final : public QObject
 {
-   Q_OBJECT
+    Q_OBJECT
+
 public:
-     friend class Call;
+    friend class Call;
 
-   ///@class ConferenceStateChange Possible values from "conferencechanged" signal
-   class ConferenceStateChange {
-   public:
-      constexpr static const char* HOLD           = "HOLD"           ;
-      constexpr static const char* ACTIVE         = "ACTIVE_ATTACHED";
-      constexpr static const char* DETACHED       = "ACTIVE_DETACHED";
-   };
+    ///@class ConferenceStateChange Possible values from "conferencechanged" signal
+    class ConferenceStateChange {
+    public:
+        constexpr static const char* HOLD           = "HOLD"           ;
+        constexpr static const char* ACTIVE         = "ACTIVE_ATTACHED";
+        constexpr static const char* DETACHED       = "ACTIVE_DETACHED";
+    };
 
-   class StateChange {
-   public:
-      constexpr static const char* HUNG_UP        = "HUNGUP" ;
-      constexpr static const char* CONNECTING     = "CONNECTING";
-      constexpr static const char* RINGING        = "RINGING";
-      constexpr static const char* INCOMING       = "INCOMING";
-      constexpr static const char* CURRENT        = "CURRENT";
-      constexpr static const char* HOLD           = "HOLD"   ;
-      constexpr static const char* BUSY           = "BUSY"   ;
-      constexpr static const char* FAILURE        = "FAILURE";
-      constexpr static const char* UNHOLD_CURRENT = "UNHOLD" ;
-      constexpr static const char* INACTIVE       = "INACTIVE";
-      constexpr static const char* OVER           = "OVER";
-   };
+    ///"getConferenceDetails()" fields
+    class ConfDetailsMapFields {
+    public:
+        constexpr static const char* CONF_STATE        = "CONF_STATE"     ;
+        constexpr static const char* CONFID            = "CONFID"         ;
+    };
 
-   ///"getConferenceDetails()" fields
-   class ConfDetailsMapFields {
-   public:
-      constexpr static const char* CONF_STATE        = "CONF_STATE"     ;
-      constexpr static const char* CONFID            = "CONFID"         ;
-   };
+    ///If the call is incoming or outgoing
+    class CallDirection {
+    public:
+        constexpr static const char* INCOMING = "0";
+        constexpr static const char* OUTGOING = "1";
+    };
 
-   ///If the call is incoming or outgoing
-   class CallDirection {
-   public:
-      constexpr static const char* INCOMING = "0";
-      constexpr static const char* OUTGOING = "1";
-   };
-
-   /** @enum DaemonState
-   * This enum have all the states a call can take for the daemon.
-   */
-   enum class DaemonState : unsigned int
-   {
-      RINGING = 0, /*!< Ringing outgoing or incoming call         */
-      CONNECTING,  /*!< Call connection progressing               */
-      CURRENT,     /*!< Call to which the user can speak and hear */
-      BUSY,        /*!< Call is busy                              */
-      HOLD,        /*!< Call is on hold                           */
-      HUNG_UP,     /*!< Call is over                              */
-      FAILURE,     /*!< Call has failed                           */
-      OVER,        /*!< Call is over                              */
-      INACTIVE,    /*!< The call exist, but is not ready          */
-      COUNT__,
-   };
-
-   explicit CallPrivate(Call* parent);
-   virtual ~CallPrivate();
-
-   //Attributes
-   Account*                  m_Account           ;
-   QString                   m_DringId           ;
-   ContactMethod*            m_pPeerContactMethod;
-   QString                   m_PeerName          ;
-   time_t                    m_pStartTimeStamp   ;
-   time_t                    m_pStopTimeStamp    ;
-   Call::State               m_CurrentState      ;
-   QTimer*                   m_pTimer            ;
-   UserActionModel*          m_pUserActionModel  ;
-   bool                      m_History           ;
-   bool                      m_Missed            ;
-   Call::Direction           m_Direction         ;
-   Call::Type                m_Type              ;
-   Certificate*              m_pCertificate      ;
-   FlagPack<Call::HoldFlags> m_fHoldFlags        ;
-   Call*                     m_pParentCall {nullptr};
-   QDateTime*                m_pDateTime {nullptr};
-   QDate*                    m_pDateOnly {nullptr};
-   QString                   m_FormattedDate     ;
-
-   //Cache
-   HistoryTimeCategoryModel::HistoryConst m_HistoryConst;
-
-   //State machine
-   /**
-    *  actionPerformedStateMap[orig_state][action]
-    *  Map of the states to go to when the action action is
-    *  performed on a call in state orig_state.
-   **/
-   static const TypedStateMachine< TypedStateMachine< Call::State , Call::Action > , Call::State > actionPerformedStateMap;
-
-   /**
-    *  actionPerformedFunctionMap[orig_state][action]
-    *  Map of the functions to call when the action action is
-    *  performed on a call in state orig_state.
-   **/
-   static const TypedStateMachine< TypedStateMachine< function , Call::Action > , Call::State > actionPerformedFunctionMap;
-
-   /**
-    *  stateChangedStateMap[orig_state][daemon_new_state]
-    *  Map of the states to go to when the daemon sends the signal
-    *  callStateChanged with arg daemon_new_state
-    *  on a call in state orig_state.
-   **/
-   static const TypedStateMachine< TypedStateMachine< Call::State , DaemonState > , Call::State > stateChangedStateMap;
-
-   /**
-    *  stateChangedFunctionMap[orig_state][daemon_new_state]
-    *  Map of the functions to call when the daemon sends the signal
-    *  callStateChanged with arg daemon_new_state
-    *  on a call in state orig_state.
-   **/
-   static const TypedStateMachine< TypedStateMachine< function , DaemonState > , Call::State > stateChangedFunctionMap;
-
-   /**
-    * metaStateTransitionValidationMap help validate if a state transition violate the lifecycle logic.
-    * it should technically never happen, but this is an easy additional safety to implement
-    * and prevent human (developer) errors.
+    /** @enum DaemonState
+    * This enum have all the states a call can take for the daemon.
     */
-   static const TypedStateMachine< TypedStateMachine< bool , Call::LifeCycleState > , Call::State > metaStateTransitionValidationMap;
+    enum class DaemonState : unsigned int
+    {
+        RINGING = 0, /*!< Ringing outgoing or incoming call         */
+        CONNECTING,  /*!< Call connection progressing               */
+        CURRENT,     /*!< Call to which the user can speak and hear */
+        BUSY,        /*!< Call is busy                              */
+        HOLD,        /*!< Call is on hold                           */
+        HUNG_UP,     /*!< Call is over                              */
+        FAILURE,     /*!< Call has failed                           */
+        OVER,        /*!< Call is over                              */
+        INACTIVE,    /*!< The call exist, but is not ready          */
+        COUNT__,
+    };
 
-   /**
-    * Convert the call state into its meta state (life cycle state). The meta state is a flat,
-    * forward only progression from creating to archiving of a call.
-    */
-   static const TypedStateMachine< Call::LifeCycleState , Call::State > metaStateMap;
+    explicit CallPrivate(Call* parent);
+    virtual ~CallPrivate();
 
-   Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Media*>* > m_mMedias;
+    //Attributes
+    QString                   m_DringId;
+    QString                   m_PeerName;
+    FlagPack<Call::HoldFlags> m_fHoldFlags;
+    QString                   m_FormattedDate;
+    Call::State               m_CurrentState       {Call::State::ERROR       };
+    Call::Direction           m_Direction          {Call::Direction::OUTGOING};
+    Call::Type                m_Type               {Call::Type::CALL         };
+    time_t                    m_pStartTimeStamp    {            0            };
+    time_t                    m_pStopTimeStamp     {            0            };
+    bool                      m_History            {          false          };
+    bool                      m_Missed             {          false          };
+    Account*                  m_Account            {          nullptr        };
+    ContactMethod*            m_pPeerContactMethod {          nullptr        };
+    QTimer*                   m_pTimer             {          nullptr        };
+    UserActionModel*          m_pUserActionModel   {          nullptr        };
+    Certificate*              m_pCertificate       {          nullptr        };
+    Call*                     m_pParentCall        {          nullptr        };
+    QDateTime*                m_pDateTime          {          nullptr        };
+    QDate*                    m_pDateOnly          {          nullptr        };
 
-   Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Recording*>* > m_mRecordings;
+    //Cache
+    HistoryTimeCategoryModel::HistoryConst m_HistoryConst {HistoryTimeCategoryModel::HistoryConst::Never};
 
-   Matrix2D<Media::Media::Type, Media::Media::Direction, bool > m_mIsRecording;
+    //State machine
+    /**
+        *  actionPerformedStateMap[orig_state][action]
+        *  Map of the states to go to when the action action is
+        *  performed on a call in state orig_state.
+    **/
+    static const TypedStateMachine< TypedStateMachine< Call::State , Call::Action > , Call::State > actionPerformedStateMap;
 
-   static const Matrix1D<Call::LifeCycleState,function> m_mLifeCycleStateChanges;
+    /**
+        *  actionPerformedFunctionMap[orig_state][action]
+        *  Map of the functions to call when the action action is
+        *  performed on a call in state orig_state.
+    **/
+    static const TypedStateMachine< TypedStateMachine< function , Call::Action > , Call::State > actionPerformedFunctionMap;
 
-   static Call* buildHistoryCall  (const QMap<QString,QString>& hc);
+    /**
+        *  stateChangedStateMap[orig_state][daemon_new_state]
+        *  Map of the states to go to when the daemon sends the signal
+        *  callStateChanged with arg daemon_new_state
+        *  on a call in state orig_state.
+    **/
+    static const TypedStateMachine< TypedStateMachine< Call::State , DaemonState > , Call::State > stateChangedStateMap;
 
-   static DaemonState toDaemonCallState   (const QString& stateName);
-   static Call::State       confStatetoCallState(const QString& stateName);
-   Call::State stateChanged(const QString & newState);
-   void performAction(Call::State previousState, Call::Action action);
-   void performActionCallback(Call::State previousState, Call::Action action);
+    /**
+        *  stateChangedFunctionMap[orig_state][daemon_new_state]
+        *  Map of the functions to call when the daemon sends the signal
+        *  callStateChanged with arg daemon_new_state
+        *  on a call in state orig_state.
+    **/
+    static const TypedStateMachine< TypedStateMachine< function , DaemonState > , Call::State > stateChangedFunctionMap;
 
-   //Automate functions
-   // See actionPerformedFunctionMap and stateChangedFunctionMap
-   // to know when it is called.
-   void nothing           () __attribute__ ((const));
-   void error             () __attribute__ ((noreturn));
-   void failure           ();
-   void accept            ();
-   void refuse            ();
-   void acceptTransf      ();
-   void acceptHold        ();
-   void hangUp            ();
-   void cancel            ();
-   void hold              ();
-   void call              ();
-   void transfer          ();
-   void unhold            ();
-   void toggleAudioRecord ();
-   void toggleVideoRecord ();
-   void start             ();
-   void startStop         ();
-   void stop              ();
-   void startWeird        ();
-   void warning           ();
-   void remove            ();
-   void abort             ();
-   void sendProfile       ();
+    /**
+        * metaStateTransitionValidationMap help validate if a state transition violate the lifecycle logic.
+        * it should technically never happen, but this is an easy additional safety to implement
+        * and prevent human (developer) errors.
+        */
+    static const TypedStateMachine< TypedStateMachine< bool , Call::LifeCycleState > , Call::State > metaStateTransitionValidationMap;
 
-   //LifeCycleState change callback
-   void initMedia();
-   void terminateMedia();
+    /**
+        * Convert the call state into its meta state (life cycle state). The meta state is a flat,
+        * forward only progression from creating to archiving of a call.
+        */
+    static const TypedStateMachine< Call::LifeCycleState , Call::State > metaStateMap;
 
-   //Helpers
-   void changeCurrentState(Call::State newState);
-   void setStartTimeStamp(time_t stamp);
-   void setStartTimeStamp(); // this version set stamp to current time
-   void initTimer();
-   void registerRenderer(Video::Renderer* renderer);
-   void removeRenderer(Video::Renderer* renderer);
-   void setRecordingPath(const QString& path);
-   static MapStringString getCallDetailsCommon(const QString& callId);
-   void peerHoldChanged(bool onPeerHold);
-   template<typename T>
-   T* mediaFactory(Media::Media::Direction dir);
-   void updateOutgoingMedia(const MapStringString& details);
+    Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Media*>* > m_mMedias {{{
+        /*                                            IN                                                            OUT                           */
+        /* AUDIO */ {{ new QList<Media::Media*>() /*Created lifecycle == progress*/, new QList<Media::Media*>() /*Created lifecycle == progress*/}},
+        /* VIDEO */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
+        /* TEXT  */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
+        /* FILE  */ {{ new QList<Media::Media*>() /*Not implemented              */, new QList<Media::Media*>() /*Not implemented              */}},
+    }}};
 
-   //Static getters
-   static Call::State        startStateFromDaemonCallState ( const QString& daemonCallState, const QString& daemonCallType );
+    Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Recording*>* > m_mRecordings {{{
+        /*                           IN                            OUT                */
+        /* AUDIO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* VIDEO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* TEXT  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* FILE  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+    }}};
 
-   //Constructor
-   static Call* buildDialingCall  (const QString & peerName, Account* account = nullptr, Call* parent = nullptr );
-   static Call* buildIncomingCall (const QString& callId                                );
-   static Call* buildExistingCall (const QString& callId                                );
+    Matrix2D<Media::Media::Type, Media::Media::Direction, bool > m_mIsRecording {{{
+        /*              IN     OUT   */
+        /* AUDIO */ {{ false, false }},
+        /* VIDEO */ {{ false, false }},
+        /* TEXT  */ {{ false, false }},
+        /* FILE  */ {{ false, false }},
+    }}};
+
+    static const Matrix1D<Call::LifeCycleState,function> m_mLifeCycleStateChanges;
+
+    static Call* buildHistoryCall  (const QMap<QString,QString>& hc);
+
+    static DaemonState toDaemonCallState   (const QString& stateName);
+    static Call::State       confStatetoCallState(const QString& stateName);
+    Call::State stateChanged(const QString & newState);
+    void performAction(Call::State previousState, Call::Action action);
+    void performActionCallback(Call::State previousState, Call::Action action);
+
+    //Automate functions
+    // See actionPerformedFunctionMap and stateChangedFunctionMap
+    // to know when it is called.
+    void nothing           () __attribute__ ((const));
+    void error             () __attribute__ ((noreturn));
+    void failure           ();
+    void accept            ();
+    void refuse            ();
+    void acceptTransf      ();
+    void acceptHold        ();
+    void hangUp            ();
+    void cancel            ();
+    void hold              ();
+    void call              ();
+    void transfer          ();
+    void unhold            ();
+    void toggleAudioRecord ();
+    void toggleVideoRecord ();
+    void start             ();
+    void startStop         ();
+    void stop              ();
+    void startWeird        ();
+    void warning           ();
+    void remove            ();
+    void abort             ();
+    void sendProfile       ();
+
+    //LifeCycleState change callback
+    void initMedia();
+    void terminateMedia();
+
+    //Helpers
+    void changeCurrentState(Call::State newState);
+    void setStartTimeStamp(time_t stamp);
+    void setStartTimeStamp(); // this version set stamp to current time
+    void initTimer();
+    void registerRenderer(Video::Renderer* renderer);
+    void removeRenderer(Video::Renderer* renderer);
+    void setRecordingPath(const QString& path);
+    static MapStringString getCallDetailsCommon(const QString& callId);
+    void peerHoldChanged(bool onPeerHold);
+    template<typename T>
+    T* mediaFactory(Media::Media::Direction dir);
+    void updateOutgoingMedia(const MapStringString& details);
+
+    //Static getters
+    static Call::State        startStateFromDaemonCallState ( const QString& daemonCallState, const QString& daemonCallType );
+
+    //Constructor
+    static Call* buildDialingCall  (const QString & peerName, Account* account = nullptr, Call* parent = nullptr );
+    static Call* buildIncomingCall (const QString& callId                                );
+    static Call* buildExistingCall (const QString& callId                                );
 
 private:
     Call* q_ptr;
@@ -258,12 +257,12 @@ private:
 
     // Used as contact until m_pPeerContactMethod is created
     // Owner is PhoneDirectoryModel instance
-    TemporaryContactMethod* m_pDialNumber;
+    TemporaryContactMethod* m_pDialNumber {nullptr};
 
     // Owner is PhoneDirectoryModel instance
-    TemporaryContactMethod* m_pTransferNumber;
+    TemporaryContactMethod* m_pTransferNumber {nullptr};
 
 private Q_SLOTS:
-   void updated();
-   void videoStopped();
+    void updated();
+    void videoStopped();
 };
