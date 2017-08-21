@@ -333,7 +333,7 @@ public:
    template<typename T>
    T* firstMedia(Media::Media::Direction direction) const;
    const QList<Media::Recording*> recordings  (Media::Media::Type type, Media::Media::Direction direction) const;
-   const QList<Media::Media*> media       (Media::Media::Type type, Media::Media::Direction direction) const;
+   const QList<Media::Media*>& media       (Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     hasMedia    (Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     hasRecording(Media::Media::Type type, Media::Media::Direction direction) const;
    bool                     isRecording (Media::Media::Type type, Media::Media::Direction direction) const;

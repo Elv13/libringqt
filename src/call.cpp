@@ -1026,7 +1026,7 @@ void CallPrivate::removeRenderer(Video::Renderer* renderer)
    return;
 }
 
-const QList<Media::Media*> Call::media(Media::Media::Type type, Media::Media::Direction direction) const
+const QList<Media::Media*>& Call::media(Media::Media::Type type, Media::Media::Direction direction) const
 {
    return *(d_ptr->m_mMedias[type][direction]);
 }
@@ -1478,7 +1478,7 @@ void CallPrivate::terminateMedia()
    //Delete remaining media
    for (const auto t : EnumIterator<Media::Media::Type>() ) {
       for (const auto d : EnumIterator<Media::Media::Direction>() ) {
-         const auto media = q_ptr->media(t,d);
+         const QList<Media::Media*>& media = *m_mMedias[t][d];
          for (auto m : qAsConst(media)) {
             m << Media::Media::Action::TERMINATE;
             m_mMedias[t][d]->removeAll(m);
