@@ -68,7 +68,6 @@ Person::Address::Address() : d_ptr(new AddressPrivate())
 
 Person::Address::~Address()
 {
-   //delete d_ptr; //FIXME ASAN doesn't like for some reasons, but also report a leak
 }
 
 QString Person::Address::addressLine() const

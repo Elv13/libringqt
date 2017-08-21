@@ -105,7 +105,7 @@ public:
          void setType       (const QString& value);
 
       private:
-         AddressPrivate* d_ptr;
+         QSharedPointer<AddressPrivate> d_ptr;
    };
 
    typedef QVector<ContactMethod*> ContactMethods;
