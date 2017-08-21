@@ -248,6 +248,7 @@ BootstrapModel::BootstrapModel(Account* a) : QAbstractTableModel(a), d_ptr(new B
 
 BootstrapModel::~BootstrapModel()
 {
+   d_ptr->clearLines();
    delete d_ptr;
 }
 
