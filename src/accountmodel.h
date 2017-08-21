@@ -65,6 +65,7 @@ public:
 
    //Singleton
    static AccountModel& instance();
+   virtual  ~AccountModel();
 
    //Getters
    Q_INVOKABLE Account* getById                     ( const QByteArray& id, bool ph = false) const;
@@ -125,7 +126,6 @@ public:
 private:
    //Constructors & Destructors
    explicit AccountModel ();
-   virtual  ~AccountModel();
 
    //Helpers
    void add(Account* acc);
