@@ -1082,7 +1082,7 @@ QAbstractListModel* PhoneDirectoryModel::mostPopularNumberModel() const
 bool
 PhoneDirectoryModel::hasUnreadMessage() const
 {
-    return std::any_of(d_ptr->m_lNumbers.begin(), d_ptr->m_lNumbers.end(),
+    return std::any_of(d_ptr->m_lNumbers.constBegin(), d_ptr->m_lNumbers.constEnd(),
     [](ContactMethod* cm){
         return cm->textRecording()->unreadInstantTextMessagingModel()->rowCount() > 0;
     });
