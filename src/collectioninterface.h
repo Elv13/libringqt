@@ -299,7 +299,7 @@ protected:
 
 private:
    CollectionInterfacePrivateT* d_ptr ;
-   CollectionInterfacePrivate * d_ptr2;
+   CollectionInterfacePrivate * d_ptr2 {nullptr};
    void init();
 };
 

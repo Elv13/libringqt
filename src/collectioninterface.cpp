@@ -74,6 +74,7 @@ CollectionInterfacePrivate::CollectionInterfacePrivate(): m_pEnabledExtensions(n
 
 void CollectionInterface::init()
 {
+   Q_ASSERT(!d_ptr2);
    d_ptr2 = new CollectionInterfacePrivate();
 }
 
