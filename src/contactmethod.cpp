@@ -1231,7 +1231,9 @@ UsageStatistics::UsageStatistics(QObject* parent) : QObject(nullptr), d_ptr(new 
 }
 
 UsageStatistics::~UsageStatistics()
-{}
+{
+    delete d_ptr;
+}
 
 int UsageStatistics::totalSeconds() const
 {
