@@ -44,13 +44,15 @@
 #include "mime.h"
 #include "profile.h"
 
-struct Node final
+struct ProfileNode final
 {
-    explicit Node(): type(Node::Type::PROFILE), parent(nullptr),m_Index(0) {}
+    explicit ProfileNode(): m_pProfile(nullptr) {}
 
-    virtual ~Node() {
+    virtual ~ProfileNode() {
         QObject::disconnect(m_ChangedConn);
-        foreach( Node* n, children)
+        if (m_pProfile && type == Type::PROFILE)
+            delete m_pProfile;
+        foreach(auto n, children)
             delete n;
     }
 
@@ -59,16 +61,18 @@ struct Node final
         ACCOUNT,
     };
 
-    QVector<Node*>  children;
-    Node*           parent;
-    Type            type {Node::Type::ACCOUNT};
+    using Nodes = QVector<ProfileNode*>;
+
+    Nodes        children      {                                  };
+    ProfileNode* parent        {              nullptr             };
+    Type         type          {    ProfileNode::Type::ACCOUNT    };
+    int          m_Index       {                 0                };
+    uint         m_ParentIndex { std::numeric_limits<uint>::max() };
     union {
         Profile*  m_pProfile;
         Account*  m_pAccount;
     };
 
-    int             m_Index;
-    uint            m_ParentIndex {std::numeric_limits<uint>::max()}; //INT_MAX
     QMetaObject::Connection m_ChangedConn;
 };
 
@@ -77,7 +81,7 @@ class ProfileModelPrivate final : public QObject
     Q_OBJECT
 public:
     ProfileModelPrivate(ProfileModel* parent);
-    QVector<Node*> m_lProfiles;
+    QVector<ProfileNode*> m_lProfiles;
     QStringList m_lMimes;
     QItemSelectionModel* m_pSelectionModel {nullptr};
     QItemSelectionModel* m_pSortedProxySelectionModel {nullptr};
@@ -89,9 +93,9 @@ public:
     inline bool addProfile(Person* person, const QString& name, CollectionInterface* col);
 
     void  slotAccountAdded(Account* acc);
-    Node* profileNodeById(const QByteArray& id);
-    Node* profileNodeForAccount(const Account* a);
-    Node* nodeForAccount(const Account* a);
+    ProfileNode* profileNodeById(const QByteArray& id);
+    ProfileNode* profileNodeForAccount(const Account* a);
+    ProfileNode* nodeForAccount(const Account* a);
 
     //Constants
     constexpr static const int c_OrderRole = 9999;
@@ -122,8 +126,8 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     }
     const bool changed = currentProfile->addAccount(acc);
 
-    Node* account_pro = new Node;
-    account_pro->type    = Node::Type::ACCOUNT;
+    auto account_pro = new ProfileNode;
+    account_pro->type    = ProfileNode::Type::ACCOUNT;
     account_pro->parent  = currentNode;
     account_pro->m_pAccount = acc;
     account_pro->m_Index = currentNode->children.size();
@@ -152,7 +156,7 @@ QList<Account*> ProfileModel::getAccountsForProfile(const QString& id)
     return result;
 }
 
-Node* ProfileModelPrivate::profileNodeById(const QByteArray& id)
+ProfileNode* ProfileModelPrivate::profileNodeById(const QByteArray& id)
 {
     foreach(auto p, m_lProfiles) {
         if(p->m_pProfile->person()->uid() == id)
@@ -238,7 +242,7 @@ void ProfileModelPrivate::slotLayoutchanged()
 void ProfileModelPrivate::regenParentIndexes()
 {
     foreach(auto proNode, m_lProfiles) {
-        foreach(Node* a, proNode->children) {
+        foreach(auto a, proNode->children) {
             a->m_ParentIndex = a->m_pAccount->index().row();
         }
         const QModelIndex par = q_ptr->index(proNode->m_Index,0,QModelIndex());
@@ -267,7 +271,7 @@ void ProfileModelPrivate::slotAccountRemoved(Account* a)
     regenParentIndexes();
 }
 
-Node* ProfileModelPrivate::nodeForAccount(const Account* a)
+ProfileNode* ProfileModelPrivate::nodeForAccount(const Account* a)
 {
     for (auto pro : m_lProfiles) {
         for (auto accNode : pro->children) {
@@ -279,7 +283,7 @@ Node* ProfileModelPrivate::nodeForAccount(const Account* a)
     return nullptr;
 }
 
-Node* ProfileModelPrivate::profileNodeForAccount(const Account* a)
+ProfileNode* ProfileModelPrivate::profileNodeForAccount(const Account* a)
 {
     for (auto pro : m_lProfiles) {
         for (auto accNode : pro->children) {
@@ -314,7 +318,7 @@ QModelIndex ProfileModel::mapToSource(const QModelIndex& idx) const
     if (!idx.isValid() || !idx.parent().isValid() || idx.model() != this)
         return QModelIndex();
 
-    Node* profile = static_cast<Node*>(idx.parent().internalPointer());
+    ProfileNode* profile = static_cast<ProfileNode*>(idx.parent().internalPointer());
     return profile->children[idx.row()]->m_pAccount->index();
 }
 
@@ -338,12 +342,12 @@ QVariant ProfileModel::data(const QModelIndex& index, int role ) const
     if (!index.isValid())
         return QVariant();
 
-    auto currentNode = static_cast<Node*>(index.internalPointer());
+    auto currentNode = static_cast<ProfileNode*>(index.internalPointer());
 
     switch (currentNode->type) {
-        case Node::Type::PROFILE:
+        case ProfileNode::Type::PROFILE:
             return currentNode->m_pProfile->person()->roleData(role);
-        case Node::Type::ACCOUNT:
+        case ProfileNode::Type::ACCOUNT:
             switch(role) {
                 case ProfileModelPrivate::c_OrderRole:
                     return currentNode->m_ParentIndex;
@@ -358,7 +362,7 @@ QVariant ProfileModel::data(const QModelIndex& index, int role ) const
 int ProfileModel::rowCount(const QModelIndex& parent ) const
 {
     if (parent.isValid()) {
-       auto proNode = static_cast<Node*>(parent.internalPointer());
+       auto proNode = static_cast<ProfileNode*>(parent.internalPointer());
        return proNode->children.size();
     }
     return d_ptr->m_lProfiles.size();
@@ -372,14 +376,14 @@ int ProfileModel::columnCount(const QModelIndex& parent ) const
 
 QModelIndex ProfileModel::parent(const QModelIndex& idx ) const
 {
-    Node* current = static_cast<Node*>(idx.internalPointer());
+    ProfileNode* current = static_cast<ProfileNode*>(idx.internalPointer());
 
     if (!current)
         return QModelIndex();
     switch (current->type) {
-        case Node::Type::PROFILE:
+        case ProfileNode::Type::PROFILE:
             return QModelIndex();
-        case Node::Type::ACCOUNT:
+        case ProfileNode::Type::ACCOUNT:
             return index(current->parent->m_Index, 0, QModelIndex());
     }
     return QModelIndex();
@@ -387,7 +391,7 @@ QModelIndex ProfileModel::parent(const QModelIndex& idx ) const
 
 QModelIndex ProfileModel::index( int row, int column, const QModelIndex& parent ) const
 {
-    Node* current = static_cast<Node*>(parent.internalPointer());
+    ProfileNode* current = static_cast<ProfileNode*>(parent.internalPointer());
     if(parent.isValid() && current && !column && row >= 0 && row < current->children.size()) {
         return createIndex(row, 0, current->children[row]);
     }
@@ -402,7 +406,7 @@ Qt::ItemFlags ProfileModel::flags(const QModelIndex& index ) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    Node* current = static_cast<Node*>(index.internalPointer());
+    ProfileNode* current = static_cast<ProfileNode*>(index.internalPointer());
 
     if (current && current->parent)
         return QAbstractItemModel::flags(index)
@@ -430,7 +434,7 @@ QMimeData* ProfileModel::mimeData(const QModelIndexList &indexes) const
 
     //FIXME: this won't work for multiple indexes
     for (const QModelIndex& index : indexes) {
-        Node* current = static_cast<Node*>(index.internalPointer());
+        ProfileNode* current = static_cast<ProfileNode*>(index.internalPointer());
 
         if (!index.isValid() || !current) {
             qWarning() << "invalid index to create mimeData, ignoring";
@@ -438,10 +442,10 @@ QMimeData* ProfileModel::mimeData(const QModelIndexList &indexes) const
         }
 
         switch (current->type) {
-            case Node::Type::PROFILE:
+            case ProfileNode::Type::PROFILE:
                 mMimeData->setData(RingMimes::PROFILE , current->m_pProfile->person()->uid());
                 break;
-            case Node::Type::ACCOUNT:
+            case ProfileNode::Type::ACCOUNT:
                 mMimeData->setData(RingMimes::ACCOUNT , current->m_pAccount->id());
                 break;
             default:
@@ -530,18 +534,18 @@ bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
       qDebug() << "Dropping account";
 
       const QByteArray accountId = data->data(RingMimes::ACCOUNT);
-      Node* newProfile = nullptr;
+      ProfileNode* newProfile = nullptr;
       int destIdx = 0, indexOfAccountToMove = -1; // Where to insert in account list of profile
 
       // Dropped on a profile index, append it at the end
       if(profileIdx.isValid()) {
          qDebug() << "Dropping on profile title";
-         newProfile = static_cast<Node*>(profileIdx.internalPointer());
+         newProfile = static_cast<ProfileNode*>(profileIdx.internalPointer());
          destIdx = 0;
       }
       // Dropped on an account
       else if (profileIdx.isValid()) {
-         newProfile = static_cast<Node*>(profileIdx.internalPointer());
+         newProfile = static_cast<ProfileNode*>(profileIdx.internalPointer());
          destIdx = row;
       }
 
@@ -556,7 +560,7 @@ bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
       if (!acc)
          return false;
 
-      Node* accountProfile = d_ptr->profileNodeForAccount(acc);
+      ProfileNode* accountProfile = d_ptr->profileNodeForAccount(acc);
       foreach (auto accNode, accountProfile->children) {
          if(accNode->m_pAccount->id() == accountId) {
             indexOfAccountToMove = accNode->m_Index;
@@ -573,7 +577,7 @@ bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
          return false;
       }
 
-      Node* accountToMove = accountProfile->children.at(indexOfAccountToMove);
+      ProfileNode* accountToMove = accountProfile->children.at(indexOfAccountToMove);
       qDebug() << "Moving:" << accountToMove->m_pAccount->alias();
       accountProfile->children.remove(indexOfAccountToMove);
       accountToMove->parent = newProfile;
@@ -620,7 +624,7 @@ bool ProfileModel::setData(const QModelIndex& index, const QVariant &value, int 
    if (!index.isValid())
       return false;
 
-   Node* current = static_cast<Node*>(index.internalPointer());
+   ProfileNode* current = static_cast<ProfileNode*>(index.internalPointer());
 
    if (current->parent) {
       return AccountModel::instance().setData(mapToSource(index),value,role);
@@ -643,8 +647,8 @@ void ProfileModel::collectionAddedCallback(CollectionInterface* backend)
 
 bool ProfileModel::addItemCallback(const Profile* pro)
 {
-    auto proNode     = new Node           ;
-    proNode->type    = Node::Type::PROFILE;
+    auto proNode     = new ProfileNode           ;
+    proNode->type    = ProfileNode::Type::PROFILE;
     proNode->m_pProfile = const_cast<Profile*>(pro);
     proNode->m_Index = d_ptr->m_lProfiles.size();
 
@@ -710,9 +714,9 @@ bool ProfileModel::remove(const QModelIndex& idx)
         return false;
     }
 
-    Node* n = static_cast<Node*>(realIdx.internalPointer());
+    ProfileNode* n = static_cast<ProfileNode*>(realIdx.internalPointer());
 
-    if (n->type != Node::Type::PROFILE) {
+    if (n->type != ProfileNode::Type::PROFILE) {
         qDebug() << "Failed to remove profile: It is not a profile"
                     << (int)n->type << n->m_pProfile->person()
                     << realIdx.data(Qt::DisplayRole);
@@ -788,11 +792,11 @@ Profile* ProfileModel::getProfile(const QModelIndex& idx) const
     if ((!idx.isValid()) || (idx.model() != this))
         return nullptr;
 
-    const auto current = static_cast<Node*>(idx.internalPointer());
+    const auto current = static_cast<ProfileNode*>(idx.internalPointer());
     switch (current->type) {
-        case Node::Type::PROFILE:
+        case ProfileNode::Type::PROFILE:
             return current->m_pProfile;
-        case Node::Type::ACCOUNT:
+        case ProfileNode::Type::ACCOUNT:
             return current->parent->m_pProfile;
         default:
             qWarning() << "Unknown node type to create mimedata";
