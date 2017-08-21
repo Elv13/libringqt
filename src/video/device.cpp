@@ -73,6 +73,15 @@ d_ptr(new VideoDevicePrivate(this))
 ///Destructor
 Video::Device::~Device()
 {
+   foreach (auto c, d_ptr->m_lChannels) {
+      foreach (auto res, c->d_ptr->m_lValidResolutions) {
+         foreach (auto rate, res->d_ptr->m_lValidRates)
+            delete rate;
+         delete res;
+      }
+      delete c;
+   }
+
 //    delete d_ptr;
 }
 
