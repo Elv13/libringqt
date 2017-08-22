@@ -209,7 +209,7 @@ void CategorizedBookmarkModel::reloadCategories()
          bookmark->setBookmarked(true);
          bm->m_pParent = item;
          bm->m_Index = item->m_lChildren.size();
-         bm->m_Conn = connect(bookmark, &ContactMethod::changed, [this,bm]() {
+         bm->m_Conn = connect(bookmark, &ContactMethod::changed, bookmark, [this,bm]() {
             d_ptr->slotIndexChanged(index(bm->m_Index,0,index(bm->m_pParent->m_Index,0)));
          });
 
@@ -220,7 +220,7 @@ void CategorizedBookmarkModel::reloadCategories()
          if (!d_ptr->m_Tracked[bookmark]) {
             const QString displayName = bm->m_pNumber->roleData(Qt::DisplayRole).toString();
 
-            QMetaObject::Connection conn = connect(bookmark, &ContactMethod::primaryNameChanged, [this,displayName,bm]() {
+            QMetaObject::Connection conn = connect(bookmark, &ContactMethod::primaryNameChanged, bookmark, [this,displayName,bm]() {
                //If a contact arrive later, reload
                if (displayName != bm->m_pNumber->roleData(Qt::DisplayRole)) {
                   reloadCategories();

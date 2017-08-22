@@ -28,7 +28,7 @@ CMCallsModel::CMCallsModel(const ContactMethod* parent) :
 {
     Q_ASSERT(parent);
     Q_ASSERT(m_pCM);
-    m_cCallBack = connect(parent, &ContactMethod::callAdded, [this]() {
+    m_cCallBack = connect(parent, &ContactMethod::callAdded, this, [this]() {
         beginInsertRows({}, m_pCM->calls().size()-1, m_pCM->calls().size()-1);
         endInsertRows();
     });

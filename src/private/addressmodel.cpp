@@ -29,8 +29,8 @@ AddressModel::AddressModel(const Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), m_pPerson(const_cast<Person*>(parent))
 {
     // Row inserted/deleted can be implemented later
-    connect(parent, &Person::phoneNumbersChanged, [this](){beginResetModel();});
-    connect(parent, &Person::phoneNumbersAboutToChange, [this](){endResetModel();});
+    connect(parent, &Person::phoneNumbersChanged, this, [this](){beginResetModel();});
+    connect(parent, &Person::phoneNumbersAboutToChange, this, [this](){endResetModel();});
 }
 
 AddressModel::~AddressModel()

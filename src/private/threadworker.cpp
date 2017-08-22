@@ -33,7 +33,7 @@ ThreadWorker::ThreadWorker(std::function<void()> f) : QObject(nullptr)
 
    moveToThread(t);
 
-   QObject::connect(t, &QThread::started, [this,f]() {
+   QObject::connect(t, &QThread::started, this, [this,f]() {
 
       f();
 

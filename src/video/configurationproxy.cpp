@@ -248,7 +248,7 @@ QItemSelectionModel& Video::ConfigurationProxy::deviceSelectionModel()
       ConfigurationProxyPrivate::updateDeviceSelection();
 
       //Can happen if a device is removed
-      QObject::connect(&Video::DeviceModel::instance(), &Video::DeviceModel::currentIndexChanged,[](int idx) {
+      QObject::connect(&Video::DeviceModel::instance(), &Video::DeviceModel::currentIndexChanged, &Video::DeviceModel::instance(), [](int idx) {
          ConfigurationProxyPrivate::m_spDeviceSelectionModel->setCurrentIndex(deviceModel().index(idx,0), QItemSelectionModel::ClearAndSelect );
       });
 

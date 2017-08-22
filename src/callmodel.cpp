@@ -472,16 +472,16 @@ Call* CallModelPrivate::addCall2(Call* call, Call* parentCall)
       connect(call,&Call::stateChanged,this,&CallModelPrivate::slotStateChanged);
       connect(call,&Call::dialNumberChanged,this,&CallModelPrivate::slotDialNumberChanged);
       connect(call,SIGNAL(dtmfPlayed(QString)),this,SLOT(slotDTMFPlayed(QString)));
-      connect(call,&Call::videoStarted,[this,call](Video::Renderer* r) {
+      connect(call,&Call::videoStarted, this, [this,call](Video::Renderer* r) {
          emit q_ptr->rendererAdded(call, r);
       });
-      connect(call,&Call::videoStopped,[this,call](Video::Renderer* r) {
+      connect(call,&Call::videoStopped, this, [this,call](Video::Renderer* r) {
          emit q_ptr->rendererRemoved(call, r);
       });
-      connect(call,&Call::mediaAdded, [this,call](Media::Media* media) {
+      connect(call,&Call::mediaAdded, this, [this,call](Media::Media* media) {
          emit q_ptr->mediaAdded(call,media);
       });
-      connect(call,&Call::mediaStateChanged, [this,call](Media::Media* media, const Media::Media::State s, const Media::Media::State m) {
+      connect(call,&Call::mediaStateChanged, this, [this,call](Media::Media* media, const Media::Media::State s, const Media::Media::State m) {
          emit q_ptr->mediaStateChanged(call,media,s,m);
       });
 
@@ -773,10 +773,10 @@ Call* CallModelPrivate::addConference(const QString& confID)
       emit q_ptr->dataChanged(idx, idx);
       emit q_ptr->layoutChanged();
       connect(newConf, &Call::changed, this, &CallModelPrivate::slotCallChanged);
-      connect(newConf,&Call::videoStarted,[this,newConf](Video::Renderer* r) {
+      connect(newConf,&Call::videoStarted, this, [this,newConf](Video::Renderer* r) {
          emit q_ptr->rendererAdded(newConf, r);
       });
-      connect(newConf,&Call::videoStopped,[this,newConf](Video::Renderer* r) {
+      connect(newConf,&Call::videoStopped, this, [this,newConf](Video::Renderer* r) {
          emit q_ptr->rendererRemoved(newConf, r);
       });
    }

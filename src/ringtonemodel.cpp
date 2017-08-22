@@ -76,7 +76,7 @@ RingtoneModel::RingtoneModel(QObject* parent)
 {
    d_ptr->m_pCollection = addCollection<LocalRingtoneCollection>();
    QObject::connect(AccountModel::instance().selectionModel(),
-                 &QItemSelectionModel::currentChanged,
+                 &QItemSelectionModel::currentChanged, this,
                  [=](const QModelIndex &current, const QModelIndex &previous) {
                      Q_UNUSED(current)
                     if (d_ptr->m_isPlaying && previous.isValid()) {
@@ -200,7 +200,7 @@ QItemSelectionModel* RingtoneModel::selectionModel(Account* a) const
       d_ptr->m_hSelectionModels[a] = new QItemSelectionModel(const_cast<RingtoneModel*>(this));
       d_ptr->m_hSelectionModels[a]->setCurrentIndex(index(d_ptr->currentIndex(a),0), QItemSelectionModel::ClearAndSelect);
 
-      connect(d_ptr->m_hSelectionModels[a],&QItemSelectionModel::currentChanged, [a,this](const QModelIndex& idx) {
+      connect(d_ptr->m_hSelectionModels[a],&QItemSelectionModel::currentChanged, this, [a,this](const QModelIndex& idx) {
          if (idx.isValid()) {
             a->setRingtonePath(d_ptr->m_lRingtone[idx.row()]->path());
          }

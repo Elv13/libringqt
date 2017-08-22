@@ -468,7 +468,7 @@ QItemSelectionModel* ProfileModel::selectionModel() const
     if (!d_ptr->m_pSelectionModel) {
         d_ptr->m_pSelectionModel = new QItemSelectionModel(const_cast<ProfileModel*>(this));
 
-        connect(d_ptr->m_pSelectionModel, &QItemSelectionModel::currentChanged, [this](const QModelIndex& i) {
+        connect(d_ptr->m_pSelectionModel, &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& i) {
             const auto accIdx = mapToSource(i);
             AccountModel::instance().selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
         });
@@ -482,7 +482,7 @@ QItemSelectionModel* ProfileModel::sortedProxySelectionModel() const
     if (!d_ptr->m_pSortedProxySelectionModel) {
         d_ptr->m_pSortedProxySelectionModel = new QItemSelectionModel(static_cast<QSortFilterProxyModel*>(sortedProxyModel()));
 
-        connect(d_ptr->m_pSortedProxySelectionModel, &QItemSelectionModel::currentChanged, [this](const QModelIndex& i) {
+        connect(d_ptr->m_pSortedProxySelectionModel, &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& i) {
             const auto accIdx = mapToSource(
                 static_cast<QSortFilterProxyModel*>(sortedProxyModel())->mapToSource(i)
             );
@@ -658,7 +658,7 @@ bool ProfileModel::addItemCallback(const Profile* pro)
 
     selectionModel()->setCurrentIndex(index(proNode->m_Index, 0), QItemSelectionModel::ClearAndSelect);
 
-    proNode->m_ChangedConn = connect(pro->person(), &Person::changed, [this, proNode]() {
+    proNode->m_ChangedConn = connect(pro->person(), &Person::changed, this, [this, proNode]() {
         if (proNode->m_pProfile->person()->isActive()) {
             const QModelIndex idx = index(proNode->m_Index, 0);
             emit dataChanged(idx, idx);

@@ -161,7 +161,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
    }
 
    // Connects the account to the signal of the model.
-   connect(a->pendingContactRequestModel() , &PendingContactRequestModel::requestAccepted, [a] (ContactRequest* r) {
+   connect(a->pendingContactRequestModel() , &PendingContactRequestModel::requestAccepted, a, [a] (ContactRequest* r) {
       emit a->contactRequestAccepted(r);
    });
 
@@ -478,7 +478,7 @@ CredentialModel* Account::credentialModel() const
 {
    if (!d_ptr->m_pCredentials) {
       d_ptr->m_pCredentials = new CredentialModel(const_cast<Account*>(this));
-      connect(d_ptr->m_pCredentials, &CredentialModel::primaryCredentialChanged,[this]() {
+      connect(d_ptr->m_pCredentials, &CredentialModel::primaryCredentialChanged, this, [this]() {
          Account* a = const_cast<Account*>(this);
          emit a->changed(a);
       });
@@ -1668,7 +1668,7 @@ void Account::setTlsCaListCertificate(Certificate* cert)
       disconnect(d_ptr->m_cTlsCaCert);
 
    if (cert) {
-      d_ptr->m_cTlsCaCert = connect(cert, &Certificate::changed,[this]() {
+      d_ptr->m_cTlsCaCert = connect(cert, &Certificate::changed, this, [this]() {
          d_ptr->regenSecurityValidation();
       });
    }

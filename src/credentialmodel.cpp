@@ -349,7 +349,7 @@ QModelIndex CredentialModel::addCredentials(Credential::Type type)
    node->m_Index = par->m_lChildren.size();
    par->m_lChildren.append(node);
 
-   connect(node->m_pCredential, &Credential::changed,[this, node, par, type]() {
+   connect(node->m_pCredential, &Credential::changed, node->m_pCredential, [this, node, par, type]() {
       const QModelIndex parIdx = index(par->m_Index,0);
       const QModelIndex idx    = index(node->m_Index,0,parIdx);
       emit dataChanged(idx, idx);

@@ -39,13 +39,13 @@ Video::Renderer* Video::PreviewManager::previewRenderer()
 
 Video::PreviewManager::PreviewManager() : QObject(&VideoRendererManager::instance())
 {
-   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStateChanged, [this](bool startStop) {
+   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStateChanged, this, [this](bool startStop) {
       emit previewStateChanged(startStop);
    });
-   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStarted     , [this](Video::Renderer* renderer) {
+   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStarted     , this, [this](Video::Renderer* renderer) {
       emit previewStarted(renderer);
    });
-   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStopped     , [this](Video::Renderer* renderer) {
+   connect(&VideoRendererManager::instance(), &VideoRendererManager::previewStopped     , this, [this](Video::Renderer* renderer) {
       emit previewStopped(renderer);
    });
 }

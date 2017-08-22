@@ -393,7 +393,7 @@ bool Media::RecordingModel::addItemCallback(const Recording* item)
     if (item->type() == Recording::Type::TEXT) {
         const TextRecording* r = static_cast<const TextRecording*>(item);
         connect(r, &TextRecording::unreadCountChange, d_ptr, &RecordingModelPrivate::updateUnreadCount);
-        connect(r, &TextRecording::messageInserted  , [n, this, parent](
+        connect(r, &TextRecording::messageInserted, this, [n, this, parent](
             const QMap<QString,QString>&, ContactMethod* cm, Media::Media::Direction d
         ){
             const auto par = index(parent->m_Index, 0);

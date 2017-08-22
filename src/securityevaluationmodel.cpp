@@ -554,7 +554,7 @@ CombinaisonProxyModel::CombinaisonProxyModel(QAbstractItemModel* publicCert,
    for (int i = 0; i < m_lSources.size(); i++) {
       const QAbstractItemModel* m = m_lSources[i];
       if (m) {
-         connect(m, &QAbstractItemModel::dataChanged, [this,i](const QModelIndex& tl, const QModelIndex& br) {
+         connect(m, &QAbstractItemModel::dataChanged, this, [this,i](const QModelIndex& tl, const QModelIndex& br) {
 
             int offset =0;
             for (int j = 0; j < i;j++)

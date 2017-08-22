@@ -1023,12 +1023,12 @@ void AccountModelPrivate::insertAccount(Account* a, int idx)
    m_lAccounts.insert(idx,a);
    q_ptr->endInsertRows();
 
-   connect(a,&Account::editStateChanged, [a,this](const Account::EditState state, const Account::EditState previous) {
+   connect(a,&Account::editStateChanged, a, [a,this](const Account::EditState state, const Account::EditState previous) {
       emit q_ptr->accountEditStateChanged(a, state, previous);
    });
 
    // Connect the signal when a contact was added by an account
-   connect(a, &Account::contactRequestAccepted, [a, this](const ContactRequest* r){
+   connect(a, &Account::contactRequestAccepted, a, [a, this](const ContactRequest* r){
       emit q_ptr->accountContactAdded(a, r);
    });
 

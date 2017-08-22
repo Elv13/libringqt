@@ -271,7 +271,7 @@ void CategorizedHistoryModelPrivate::add(Call* call)
    item->m_pCall = call;
    item->m_pParent = tl;
 
-   connect(call, &Call::changed, [this, item]() {
+   connect(call, &Call::changed, call, [this, item]() {
       const QModelIndex idx = q_ptr->createIndex(item->m_Index, 0, item);
       emit q_ptr->dataChanged(idx, idx);
    });
@@ -361,7 +361,7 @@ void CategorizedHistoryModelPrivate::reloadCategories()
          item->m_pCall = call;
          item->m_Index = category->m_lChildren.size();
 
-         connect(call, &Call::changed, [this, item]() {
+         connect(call, &Call::changed, call, [this, item]() {
             const QModelIndex idx = q_ptr->createIndex(item->m_Index, 0, item);
             emit q_ptr->dataChanged(idx, idx);
          });

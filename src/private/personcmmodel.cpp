@@ -29,8 +29,8 @@ PersonCMModel::PersonCMModel(const Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), m_pPerson(const_cast<Person*>(parent))
 {
     // Row inserted/deleted can be implemented later
-    m_cBeginCB = connect(parent, &Person::phoneNumbersAboutToChange, [this](){beginResetModel();});
-    m_cEndCB   = connect(parent, &Person::phoneNumbersChanged      , [this](){endResetModel  ();});
+    m_cBeginCB = connect(parent, &Person::phoneNumbersAboutToChange, this, [this](){beginResetModel();});
+    m_cEndCB   = connect(parent, &Person::phoneNumbersChanged      , this, [this](){endResetModel  ();});
 }
 
 PersonCMModel::~PersonCMModel()
