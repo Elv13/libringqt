@@ -330,6 +330,7 @@ QList< Person* > VCardUtils::loadDir (const QUrl& path, bool& ok, QHash<const Pe
    return ret;
 }
 
+//TODO use QStringRef
 bool VCardUtils::mapToPerson(Person* p, const QByteArray& all, QList<Account*>* accounts)
 {
    QByteArray previousKey,previousValue;
@@ -339,8 +340,12 @@ bool VCardUtils::mapToPerson(Person* p, const QByteArray& all, QList<Account*>* 
       //Ignore empty lines
       if (property.size()) {
          //Some properties are over multiple lines
-         if (property[0] == ' ' && previousKey.size()) {
-            previousValue += property.right(property.size()-1);
+         if (property[0] == ' ' && previousKey.size() > 1) {
+            // To avoid a deep copy as QByteArray::right() produces, use a the
+            // data directly.
+            previousValue.append(
+                QByteArray::fromRawData(property.data()+1, property.size()-1)
+            );
          }
          else {
             if (previousKey.size())
