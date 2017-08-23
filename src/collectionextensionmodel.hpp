@@ -17,10 +17,11 @@
  ***************************************************************************/
 
 
-class CollectionExtensionModelSpecific
+class CollectionExtensionModelSpecific final
 {
 public:
    static QList<CollectionExtensionInterface*>& entries();
+   static QList<std::function<void()>>& queuedEntries();
 };
 
 template<class T>
@@ -31,7 +32,9 @@ int CollectionExtensionModel::registerExtension()
    static int typeId = CollectionExtensionModelSpecific::entries().size();
 
    if (!typeInit) {
-      CollectionExtensionModelSpecific::entries() << new T(&CollectionExtensionModel::instance());
+      CollectionExtensionModelSpecific::queuedEntries() << []() {
+          CollectionExtensionModelSpecific::entries() << new T(nullptr);
+      };
    }
 
    return typeId;

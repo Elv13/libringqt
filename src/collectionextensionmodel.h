@@ -19,6 +19,8 @@
 
 #include <QtCore/QAbstractListModel>
 
+#include <functional>
+
 #include <typedefs.h>
 
 class CollectionExtensionInterface;
@@ -68,6 +70,7 @@ public:
 
 
 private:
+   explicit CollectionExtensionModel();
    virtual ~CollectionExtensionModel();
 
    CollectionExtensionModelPrivate* d_ptr;

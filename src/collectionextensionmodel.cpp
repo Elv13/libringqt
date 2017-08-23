@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -23,6 +23,14 @@ class CollectionExtensionModelPrivate
 {
 };
 
+CollectionExtensionModel::CollectionExtensionModel()
+{
+    for (const auto& ini : qAsConst(CollectionExtensionModelSpecific::queuedEntries()))
+        ini();
+
+    CollectionExtensionModelSpecific::queuedEntries().clear();
+}
+
 CollectionExtensionModel::~CollectionExtensionModel()
 {
    delete d_ptr;
@@ -33,6 +41,18 @@ QList<CollectionExtensionInterface*>& CollectionExtensionModelSpecific::entries(
    static QList<CollectionExtensionInterface*> m_slEntries;
 
    return m_slEntries;
+}
+
+/** Will insert elements into the entries() once the model has been created.
+/*
+ * This avoids a static QObject initialization and those are now banned by the
+ * tests.
+ */
+QList<std::function<void()>>& CollectionExtensionModelSpecific::queuedEntries()
+{
+   static QList<std::function<void()>> m_slQueuedEntries;
+
+   return m_slQueuedEntries;
 }
 
 CollectionExtensionModel& CollectionExtensionModel::instance()
