@@ -158,7 +158,7 @@ Media::TextRecordingPrivate::TextRecordingPrivate(TextRecording* r) : QObject(r)
 {
 }
 
-Media::TextRecording::TextRecording() : Recording(Recording::Type::TEXT), d_ptr(new TextRecordingPrivate(this))
+Media::TextRecording::TextRecording(const Recording::Status status) : Recording(Recording::Type::TEXT, status), d_ptr(new TextRecordingPrivate(this))
 {
 }
 
@@ -383,7 +383,10 @@ QHash<QByteArray,QByteArray> Media::TextRecordingPrivate::toJsons() const
 
 Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, const ContactMethod* cm, CollectionInterface* backend)
 {
-    TextRecording* t = new TextRecording();
+
+    // If it's loaded from a JSON file, assume it's consumed until proven otherwise
+    auto t = new TextRecording(Recording::Status::CONSUMED);
+
     if (backend)
         t->setCollection(backend);
 
@@ -395,7 +398,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
     //Create the model
     bool statusChanged = false; // if a msg status changed during parsing, we need to re-save the model
-    t->instantMessagingModel();
+    t->instantMessagingModel(); //FIXME use lazy loading
 
     //Reconstruct the conversation
     //TODO do it right, right now it flatten the graph

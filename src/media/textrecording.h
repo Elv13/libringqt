@@ -91,7 +91,7 @@ public:
     Q_ENUMS(Status)
 
    //Constructor
-   explicit TextRecording();
+   explicit TextRecording(const Recording::Status status);
    virtual ~TextRecording();
    static TextRecording* fromJson(const QList<QJsonObject>& items, const ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
 

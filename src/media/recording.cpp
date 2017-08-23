@@ -25,23 +25,26 @@ class RecordingPrivate {
 public:
    RecordingPrivate(Recording* r);
 
-   //Attributes
-   Recording::Type        m_Type    ;
-   Call*                  m_pCall   ;
+   // Attributes
+   Recording::Type        m_Type   { Recording::Type::TEXT  };
+   Recording::Status      m_Status { Recording::Status::NEW };
+   Call*                  m_pCall  {         nullptr        };
 
 private:
    Recording* q_ptr;
 };
 
-RecordingPrivate::RecordingPrivate(Recording* r) : q_ptr(r),m_pCall(nullptr)
+RecordingPrivate::RecordingPrivate(Recording* r) : q_ptr(r)
 {
 
 }
 
-Recording::Recording(const Recording::Type type) : ItemBase(nullptr), d_ptr(new RecordingPrivate(this))
+Recording::Recording(const Recording::Type type, const Recording::Status status) : ItemBase(nullptr),
+d_ptr(new RecordingPrivate(this))
 {
    //FIXME setParent(&RecordingModel::instance());
    d_ptr->m_Type = type;
+   d_ptr->m_Status = status;
 }
 
 Recording::~Recording()

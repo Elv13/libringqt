@@ -336,7 +336,7 @@ Media::TextRecording* LocalTextRecordingCollection::createFor(const ContactMetho
    Media::TextRecording* r = fetchFor(cm);
 
    if (!r) {
-      r = new Media::TextRecording();
+      r = new Media::TextRecording(Media::Recording::Status::NEW);
       r->setCollection(this);
       cm->d_ptr->setTextRecording(r);
    }

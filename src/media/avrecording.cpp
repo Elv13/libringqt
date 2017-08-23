@@ -105,7 +105,8 @@ Media::AVRecordingPrivate::AVRecordingPrivate(AVRecording* r) : q_ptr(r)
 
 }
 
-Media::AVRecording::AVRecording() : Recording(Recording::Type::AUDIO_VIDEO), d_ptr(new AVRecordingPrivate(this))
+Media::AVRecording::AVRecording(const Recording::Status status) :
+    Recording(Recording::Type::AUDIO_VIDEO, status), d_ptr(new AVRecordingPrivate(this))
 {
 }
 

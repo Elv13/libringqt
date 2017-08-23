@@ -45,7 +45,7 @@ public:
    Q_PROPERTY( bool    isPlaying            READ isPlaying            NOTIFY playingStatusChanged       )
 
    //Constructor
-   explicit AVRecording();
+   explicit AVRecording(const Recording::Status status);
    virtual ~AVRecording();
 
    //Getter

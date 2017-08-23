@@ -49,8 +49,29 @@ public:
    };
    Q_ENUMS(Type)
 
+   /** If the user has consumed (read, listened, watched, downloaded) the recording
+    *
+    * Warning: Do not break the integer values, they are serialized.
+    */
+   enum class Status {
+       NEW        = 0, /*!< Unconsumed and recording comes from this session       */
+       UNCONSUMED = 1, /*!< The recording hasn't been used by the user yet         */
+       UPDATED    = 2, /*!< It was CONSUMED, but new sub-entries were added/edited */
+       CONSUMED   = 3, /*!< The user has seen/listened/downloaded the recording    */
+       DISCARDED  = 4, /*!< The recording shall not be saved anymore               */
+       COUNT__,
+   };
+
+   /// Actions to perform on the recording.
+   enum class Action {
+       CONSUME   , /*!< Mark as read/watched/listened/downloaded */
+       DISCARD   , /*!< Remove from the recording register       */
+       UNCONSUME , /*!< Mark as unread/unwatched/unheard         */
+       COUNT__
+   };
+
    //Constructor
-   explicit Recording(const Recording::Type type);
+   explicit Recording(const Recording::Type type, const Recording::Status status);
    virtual ~Recording();
 
    //Getter
