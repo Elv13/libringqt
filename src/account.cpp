@@ -971,14 +971,22 @@ QString Account::lastSipRegistrationStatus() const
 ///Return the account type
 Account::Protocol Account::protocol() const
 {
-   const QString str = d_ptr->accountDetail(DRing::Account::ConfProperties::TYPE);
+   // Changing an account protocol is not supported
+   if (d_ptr->m_Protocol == Account::Protocol::COUNT__) {
+      const QString str = d_ptr->accountDetail(DRing::Account::ConfProperties::TYPE);
 
-   if (str.isEmpty() || str == DRing::Account::ProtocolNames::SIP)
-      return Account::Protocol::SIP;
-   else if (str == DRing::Account::ProtocolNames::RING)
-      return Account::Protocol::RING;
-   qDebug() << "Warning: unhandled protocol name" << str << ", defaulting to SIP";
-   return Account::Protocol::SIP;
+      if (str.isEmpty() || str == DRing::Account::ProtocolNames::SIP)
+         d_ptr->m_Protocol = Account::Protocol::SIP;
+      else if (str == DRing::Account::ProtocolNames::RING)
+         d_ptr->m_Protocol = Account::Protocol::RING;
+      else {
+          qWarning() << "Warning: unhandled protocol name" << str << ", defaulting to SIP";
+
+          d_ptr->m_Protocol = Account::Protocol::SIP;
+      }
+   }
+
+   return d_ptr->m_Protocol;
 }
 
 ///Return the contact method associated with this account

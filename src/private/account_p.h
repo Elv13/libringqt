@@ -121,8 +121,9 @@ public:
    QMetaObject::Connection      m_cTlsCert                 ;
    QMetaObject::Connection      m_cTlsCaCert               ;
    Profile*                     m_pProfile {nullptr}       ;
-   PendingContactRequestModel*    m_pPendingContactRequestModel;
+   PendingContactRequestModel*  m_pPendingContactRequestModel;
    Account::ContactMethods      m_NumbersFromDaemon        ;
+   Account::Protocol            m_Protocol {Account::Protocol::COUNT__};
    BannedContactModel* m_pBannedContactModel {nullptr};
 
    QHash<int, Account::RoleStatus> m_hRoleStatus;
