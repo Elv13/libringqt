@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -49,5 +49,6 @@ int CollectionExtensionModel::getExtensionId()
 template<class T>
 T* CollectionExtensionModel::getExtension()
 {
+   CollectionExtensionModel::instance();
    return (T*)CollectionExtensionModelSpecific::entries()[registerExtension<T>()];
 }
