@@ -59,6 +59,7 @@ public:
        UPDATED    = 2, /*!< It was CONSUMED, but new sub-entries were added/edited */
        CONSUMED   = 3, /*!< The user has seen/listened/downloaded the recording    */
        DISCARDED  = 4, /*!< The recording shall not be saved anymore               */
+       ERROR      = 5, /*!< Something went wrong and the status is undetermined    */
        COUNT__,
    };
 
@@ -77,11 +78,25 @@ public:
    //Getter
    Recording::Type type() const;
    Call* call() const;
+   Status status() const;
 
    virtual QVariant roleData(int role) const;
 
    //Setter
    void setCall(Call* call);
+
+   // Mutator
+   bool performAction(const Recording::Action action);
+
+   //Operator
+   Recording* operator<<(Recording::Action& action);
+
+protected:
+   virtual void consume  ();
+   virtual void unconsume();
+   virtual void discard  ();
+   virtual void error    ();
+   void nothing();
 
 private:
    RecordingPrivate* d_ptr;
