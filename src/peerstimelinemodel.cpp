@@ -484,7 +484,7 @@ bool RecentCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) con
     return (!n->m_pCM->isDuplicate()) && (!n->m_pCM->isSelf()) && (
            (!n->m_pCM->contact())
         || (!n->m_pCM->contact()->lastUsedContactMethod()) // that would be a bug
-        || n->m_pCM->contact()->lastUsedContactMethod() == n->m_pCM
+        || (*n->m_pCM->contact()->lastUsedContactMethod()) == (*n->m_pCM)
     );
 }
 
