@@ -179,18 +179,18 @@ Media::TextRecording::~TextRecording()
  * Updates the message status and potentially the message id, if a new status is set.
  * Returns true if the Message object was modified, false otherwise.
  */
-bool Media::TextRecordingPrivate::updateMessageStatus(Serializable::Message* m, TextRecording::Status newSatus)
+bool Media::TextRecordingPrivate::updateMessageStatus(Serializable::Message* m, TextRecording::MessageStatus newSatus)
 {
     bool modified = false;
 
-    if (static_cast<int>(newSatus) >= static_cast<int>(TextRecording::Status::COUNT__)) {
+    if (static_cast<int>(newSatus) >= static_cast<int>(TextRecording::MessageStatus::COUNT__)) {
         qWarning() << "Unknown message status with code: " << static_cast<int>(newSatus);
-        newSatus = TextRecording::Status::UNKNOWN;
+        newSatus = TextRecording::MessageStatus::UNKNOWN;
     } else {
         //READ status is not used yet it'll be the final state when it is
-        if (newSatus == TextRecording::Status::READ
-                || newSatus == TextRecording::Status::SENT
-                || newSatus == TextRecording::Status::FAILURE) {
+        if (newSatus == TextRecording::MessageStatus::READ
+                || newSatus == TextRecording::MessageStatus::SENT
+                || newSatus == TextRecording::MessageStatus::FAILURE) {
             m_hPendingMessages.remove(m->id);
             if (m->id != 0) {
                 m->id = 0;
@@ -209,7 +209,7 @@ bool Media::TextRecordingPrivate::updateMessageStatus(Serializable::Message* m, 
 void Media::TextRecordingPrivate::accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status)
 {
     if (auto node = m_hPendingMessages.value(id, nullptr)) {
-        if (updateMessageStatus(node->m_pMessage, static_cast<TextRecording::Status>(status))) {
+        if (updateMessageStatus(node->m_pMessage, static_cast<TextRecording::MessageStatus>(status))) {
             //You're looking at why local file storage is a "bad" idea
             q_ptr->save();
 
@@ -442,7 +442,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                 if (m->id) {
                     int status = configurationManager.getMessageStatus(m->id);
                     t->d_ptr->m_hPendingMessages[m->id] = n;
-                    if (t->d_ptr->updateMessageStatus(m, static_cast<TextRecording::Status>(status)))
+                    if (t->d_ptr->updateMessageStatus(m, static_cast<TextRecording::MessageStatus>(status)))
                         statusChanged = true;
                 }
             }
@@ -645,7 +645,7 @@ void Serializable::Message::read (const QJsonObject &json)
    direction  = static_cast<Media::Media::Direction>    ( json[QStringLiteral("direction")].toInt() );
    type       = static_cast<Serializable::Message::Type>( json[QStringLiteral("type")     ].toInt() );
    id         = json[QStringLiteral("id")        ].toVariant().value<uint64_t>(                     );
-   deliveryStatus = static_cast<Media::TextRecording::Status>(json[QStringLiteral("deliveryStatus")].toInt());
+   deliveryStatus = static_cast<Media::TextRecording::MessageStatus>(json[QStringLiteral("deliveryStatus")].toInt());
 
    QJsonArray a = json[QStringLiteral("payloads")].toArray();
    for (int i = 0; i < a.size(); ++i) {

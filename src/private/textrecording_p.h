@@ -84,7 +84,7 @@ public:
    ///The token of the message
    uint64_t                id        ;
    ///Delivery Status
-   Media::TextRecording::Status deliveryStatus;
+   Media::TextRecording::MessageStatus deliveryStatus;
    ///The message parent group
    Group*                  group     ;
 
@@ -200,7 +200,7 @@ public:
    void initGroup(Serializable::Message::Type t, ContactMethod* cm = nullptr);
    QHash<QByteArray,QByteArray> toJsons() const;
    void accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status);
-   bool updateMessageStatus(Serializable::Message* m, TextRecording::Status status);
+   bool updateMessageStatus(Serializable::Message* m, TextRecording::MessageStatus status);
 
    void clear();
 

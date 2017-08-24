@@ -80,7 +80,7 @@ public:
 
     ///Possible messages states
     ///Order is important and reflected on order in Daemon
-    enum class Status : unsigned int{
+    enum class MessageStatus : unsigned int{
         UNKNOWN = 0,
         SENDING,
         SENT,
@@ -123,4 +123,4 @@ private:
 }
 
 Q_DECLARE_METATYPE(Media::TextRecording*)
-Q_DECLARE_METATYPE(Media::TextRecording::Status)
+Q_DECLARE_METATYPE(Media::TextRecording::MessageStatus)
