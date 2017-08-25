@@ -400,7 +400,7 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
 
    if (!hasAtSign) {
       const QString extendedUri = strippedUri+'@'+account->hostname();
-      NumberWrapper* wrap = m_hDirectory[extendedUri];
+      NumberWrapper* wrap = m_hDirectory.value(extendedUri);
 
       //Let make sure none is created in the future for nothing
       if (!wrap) {
@@ -564,7 +564,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, 
 ///Return/create a number when no information is available
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& type)
 {
-   NumberWrapper* wrap = d_ptr->m_hDirectory[uri];
+   NumberWrapper* wrap = d_ptr->m_hDirectory.value(uri);
    if (wrap) {
       ContactMethod* nb = wrap->numbers[0];
       if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
@@ -670,7 +670,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    ensureValidity(strippedUri, account);
 
    //See if the number is already loaded using 3 common URI equivalent variants
-   NumberWrapper* wrap  = d_ptr->m_hDirectory[strippedUri];
+   NumberWrapper* wrap  = d_ptr->m_hDirectory.value(strippedUri);
    NumberWrapper* wrap2 = nullptr;
    NumberWrapper* wrap3 = nullptr;
 
@@ -713,8 +713,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    //results. It cannot be merged with wrap2 as this check only work if the
    //candidate has an account.
    if (hasAtSign && account && strippedUri.hostname() == account->hostname()) {
-     wrap3 = d_ptr->m_hDirectory[strippedUri.userinfo()];
-     if (wrap3) {
+     if (wrap3 = d_ptr->m_hDirectory.value(strippedUri.userinfo())) {
          foreach(ContactMethod* number, wrap3->numbers) {
             if (number->account() == account) {
                if (contact && ((!number->contact()) || (contact->uid() == number->contact()->uid())))
@@ -834,7 +833,7 @@ ContactMethod* PhoneDirectoryModel::getExistingNumberIf(const URI& uri, const st
    const URI strippedUri(uri);
 
    //See if the number is already loaded
-   const NumberWrapper* w = d_ptr->m_hDirectory[strippedUri];
+   const NumberWrapper* w = d_ptr->m_hDirectory.value(strippedUri);
 
    if (!w)
       return nullptr;
