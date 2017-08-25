@@ -131,6 +131,7 @@ public Q_SLOTS:
     void slotClear(PeerTimelineNode* root = nullptr);
     void slotContactChanged(Person* newContact, Person* oldContact);
     void slotTextRecordingAdded(Media::TextRecording* r);
+    void slotRebased(ContactMethod* other);
     void slotPhoneNumberChanged();
 };
 
@@ -192,6 +193,9 @@ void PeerTimelineModelPrivate::init()
 
         connect(m_pCM, &ContactMethod::contactChanged,
             this, &PeerTimelineModelPrivate::slotContactChanged);
+
+        connect(m_pCM, &ContactMethod::rebased,
+            this, &PeerTimelineModelPrivate::slotRebased);
 
         connect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
             this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
@@ -619,6 +623,9 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
     connect(cm, &ContactMethod::contactChanged,
         d_ptr, &PeerTimelineModelPrivate::slotContactChanged);
 
+    connect(cm, &ContactMethod::rebased,
+        d_ptr, &PeerTimelineModelPrivate::slotRebased);
+
     connect(cm, &ContactMethod::alternativeTextRecordingAdded,
         d_ptr, &PeerTimelineModelPrivate::slotTextRecordingAdded);
 
@@ -715,6 +722,9 @@ void PeerTimelineModelPrivate::disconnectOldCms()
 
             disconnect(cm, &ContactMethod::alternativeTextRecordingAdded,
                 this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
+
+            disconnect(cm, &ContactMethod::rebased,
+                this, &PeerTimelineModelPrivate::slotRebased);
         }
     }
     else {
@@ -726,6 +736,9 @@ void PeerTimelineModelPrivate::disconnectOldCms()
 
         disconnect(m_pCM, &ContactMethod::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
+
+        disconnect(m_pCM, &ContactMethod::rebased,
+            this, &PeerTimelineModelPrivate::slotRebased);
 
         disconnect(m_pCM, &ContactMethod::contactChanged,
             this, &PeerTimelineModelPrivate::slotContactChanged);
@@ -755,6 +768,14 @@ slotContactChanged(Person* newContact, Person* oldContact)
     init();
 }
 
+/// Reload everything if the new and old CM base is incompatible.
+void PeerTimelineModelPrivate::slotRebased(ContactMethod* other)
+{
+    if (other == sender())
+        return;
+
+    slotReload();
+}
 
 void PeerTimelineModelPrivate::
 slotTextRecordingAdded(Media::TextRecording* r)
