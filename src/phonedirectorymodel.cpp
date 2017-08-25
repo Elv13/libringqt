@@ -663,24 +663,21 @@ void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, A
 ///Create a number when a more information is available duplicated ones
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
-   //Remove extra data such as "<sip:" from the main URI
-   const URI strippedUri(uri); //FIXME useless copy
-
    //One cause of duplicate is when something like ring:foo happen on SIP accounts.
-   ensureValidity(strippedUri, account);
+   ensureValidity(uri, account);
 
    //See if the number is already loaded using 3 common URI equivalent variants
-   NumberWrapper* wrap  = d_ptr->m_hDirectory.value(strippedUri);
+   NumberWrapper* wrap  = d_ptr->m_hDirectory.value(uri);
    NumberWrapper* wrap2 = nullptr;
    NumberWrapper* wrap3 = nullptr;
 
    //Check if the URI is complete or short
-   const bool hasAtSign = strippedUri.hasHostname();
+   const bool hasAtSign = uri.hasHostname();
 
     // Append the account hostname, this should always reach the same destination
     // as long as the server implementation isn't buggy.
     const auto extendedUri = (hasAtSign || !account) ? uri : URI(QStringLiteral("%1@%2")
-       .arg(strippedUri)
+       .arg(uri)
        .arg(account->hostname()));
 
    //Try to see if there is a better candidate with a suffix (LAN only)
@@ -695,7 +692,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    }
 
    //Check
-   ContactMethod* confirmedCandidate = d_ptr->fillDetails(wrap,strippedUri,account,contact,type);
+   ContactMethod* confirmedCandidate = d_ptr->fillDetails(wrap,uri,account,contact,type);
 
    //URIs can be represented in multiple way, check if a more verbose version
    //already exist
@@ -704,7 +701,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    //Try to use a ContactMethod with a contact when possible, work only after the
    //contact are loaded
    if (confirmedCandidate && confirmedCandidate->contact())
-      confirmedCandidate2 = d_ptr->fillDetails(wrap2,strippedUri,account,contact,type);
+      confirmedCandidate2 = d_ptr->fillDetails(wrap2,uri,account,contact,type);
 
    ContactMethod* confirmedCandidate3 = nullptr;
 
@@ -712,8 +709,8 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    //This have to be done after the parent if as the above give "better"
    //results. It cannot be merged with wrap2 as this check only work if the
    //candidate has an account.
-   if (hasAtSign && account && strippedUri.hostname() == account->hostname()) {
-     if (wrap3 = d_ptr->m_hDirectory.value(strippedUri.userinfo())) {
+   if (hasAtSign && account && uri.hostname() == account->hostname()) {
+     if (wrap3 = d_ptr->m_hDirectory.value(uri.userinfo())) {
          foreach(ContactMethod* number, wrap3->numbers) {
             if (number->account() == account) {
                if (contact && ((!number->contact()) || (contact->uid() == number->contact()->uid())))
@@ -761,7 +758,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    }
 
    //Create the number
-   ContactMethod* number = new ContactMethod(strippedUri,NumberCategoryModel::instance().getCategory(type));
+   ContactMethod* number = new ContactMethod(uri,NumberCategoryModel::instance().getCategory(type));
    number->dir_d_ptr = new ContactMethodDirectoryPrivate;
 
    number->setAccount(account);
@@ -776,9 +773,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
 
    if (!wrap) {
-      wrap = new NumberWrapper(strippedUri);
-      d_ptr->m_hDirectory    [strippedUri] = wrap;
-      d_ptr->m_hSortedNumbers[strippedUri] = wrap;
+      wrap = new NumberWrapper(uri);
+      d_ptr->m_hDirectory    [uri] = wrap;
+      d_ptr->m_hSortedNumbers[uri] = wrap;
 
       //Also add its alternative URI, it should be safe to do
       d_ptr->registerAlternateNames(number, account, uri, extendedUri);
@@ -829,11 +826,8 @@ ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
  **/
 ContactMethod* PhoneDirectoryModel::getExistingNumberIf(const URI& uri, const std::function<bool(const ContactMethod*)>& pred) const
 {
-   // Prevent the most obvious duplicates
-   const URI strippedUri(uri);
-
    //See if the number is already loaded
-   const NumberWrapper* w = d_ptr->m_hDirectory.value(strippedUri);
+   const NumberWrapper* w = d_ptr->m_hDirectory.value(uri);
 
    if (!w)
       return nullptr;
