@@ -604,16 +604,72 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    return number;
 }
 
+/** An URI can take many forms and it's impossible to predict how and when each
+ * variation will be used. Any change in the daemon can cause new ones to
+ * be created.
+ *
+ * To mitigate the consequences of this, register a couple aliases in the
+ * directory.
+ *
+ */
+void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, Account* account,  const URI& uri, const URI& extendedUri)
+{
+    // The hostname can be empty for IP2IP accounts
+    if (!account)
+        return;
+
+    const auto userInfo = uri.userinfo();
+    const auto hostname = account->hostname();
+
+    if (userInfo.isEmpty())
+        return;
+
+    NumberWrapper* wrap = m_hDirectory.value(extendedUri);
+
+    // Also add its alternative URI, it should be safe to do
+    if (hostname.isEmpty()) {
+
+        // Also check if it hasn't been created by setAccount
+        if ((!wrap) && (!m_hDirectory.value(extendedUri))) {
+            wrap = new NumberWrapper(extendedUri);
+            m_hDirectory    [extendedUri] = wrap;
+            m_hSortedNumbers[extendedUri] = wrap;
+        }
+
+        if (wrap)
+            wrap->numbers << number;
+        else
+            qWarning() << "PhoneDirectoryModel: code path should not be reached, wrap is nullptr";
+
+        // The part below can't be true, no need to process it
+        return;
+    }
+
+    Q_ASSERT(number->account() == account);
+
+    // Add the minimal URI too. This is useful in case getNumber() is called
+    // with the userInfo and no account.
+    auto wrap3 = m_hDirectory.value(userInfo);
+
+    if (!wrap3) {
+        wrap3 = new NumberWrapper(userInfo);
+        m_hDirectory    [userInfo] = wrap3;
+        m_hSortedNumbers[userInfo] = wrap3;
+    }
+
+    wrap3->numbers << number;
+}
+
 ///Create a number when a more information is available duplicated ones
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
    //Remove extra data such as "<sip:" from the main URI
-   const URI strippedUri(uri);
+   const URI strippedUri(uri); //FIXME useless copy
 
    //One cause of duplicate is when something like ring:foo happen on SIP accounts.
    ensureValidity(strippedUri, account);
 
-   //See if the number is already loaded
+   //See if the number is already loaded using 3 common URI equivalent variants
    NumberWrapper* wrap  = d_ptr->m_hDirectory[strippedUri];
    NumberWrapper* wrap2 = nullptr;
    NumberWrapper* wrap3 = nullptr;
@@ -719,28 +775,16 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
    connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged );
    connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
+
    if (!wrap) {
       wrap = new NumberWrapper(strippedUri);
       d_ptr->m_hDirectory    [strippedUri] = wrap;
       d_ptr->m_hSortedNumbers[strippedUri] = wrap;
 
       //Also add its alternative URI, it should be safe to do
-      if ( !hasAtSign && account && !account->hostname().isEmpty() ) {
-
-         //Also check if it hasn't been created by setAccount
-         if ((!wrap2) && (!d_ptr->m_hDirectory[extendedUri])) {
-            wrap2 = new NumberWrapper(extendedUri);
-            d_ptr->m_hDirectory    [extendedUri] = wrap2;
-            d_ptr->m_hSortedNumbers[extendedUri] = wrap2;
-         }
-
-         if (wrap2)
-            wrap2->numbers << number;
-         else
-            qWarning() << "PhoneDirectoryModel: code path should not be reached, wrap2 is nullptr";
-      }
-
+      d_ptr->registerAlternateNames(number, account, uri, extendedUri);
    }
+
    wrap->numbers << number;
 
    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());

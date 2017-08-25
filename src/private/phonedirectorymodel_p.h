@@ -86,6 +86,7 @@ public:
    void indexNumber(ContactMethod* number, const QStringList& names   );
    void setAccount (ContactMethod* number,       Account*     account );
    ContactMethod* fillDetails(NumberWrapper* wrap, const URI& strippedUri, Account* account, Person* contact, const QString& type);
+   void registerAlternateNames(ContactMethod* number, Account* account, const URI& uri, const URI& extendedUri);
 
    //Attributes
    QVector<ContactMethod*>         m_lNumbers         ;
