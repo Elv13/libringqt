@@ -445,13 +445,27 @@ ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, cons
 
 
         //Check if the contact is compatible
-        const bool hasCompatiblePerson = (contact && (
+        bool hasCompatiblePerson = (contact && (
             (!number->contact())
         || (
                 (number->contact()->uid() == contact->uid())
             && number->contact() != contact
         )
         )) || !contact;
+
+        // Corner case: If the number is part of an account and it has been
+        // moved from a profile to another *AND* `contact` is a placeholder,
+        // assume nobody don't care and they are fine if the historical profile
+        // is ignored.
+        if ((!hasCompatiblePerson)
+          && account == number->account()
+          && number->isSelf()
+          && contact
+          && contact->isPlaceHolder()
+          && account->contactMethod()->contact()) {
+            contact = account->contactMethod()->contact();
+            hasCompatiblePerson = true;
+        }
 
         if (!hasCompatiblePerson)
             continue;
