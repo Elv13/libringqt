@@ -564,8 +564,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, 
 ///Return/create a number when no information is available
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& type)
 {
-   NumberWrapper* wrap = d_ptr->m_hDirectory.value(uri);
-   if (wrap) {
+   if (const auto wrap = d_ptr->m_hDirectory.value(uri)) {
       ContactMethod* nb = wrap->numbers[0];
       if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
          nb->setCategory(NumberCategoryModel::instance().getCategory(type));
@@ -590,11 +589,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
 
    const QString hn = number->uri().hostname();
 
-   if (!wrap) {
-      wrap = new NumberWrapper(uri);
-      d_ptr->m_hDirectory[uri] = wrap;
-      d_ptr->m_hSortedNumbers[uri] = wrap;
-   }
+   auto wrap = new NumberWrapper(uri);
+   d_ptr->m_hDirectory[uri] = wrap;
+   d_ptr->m_hSortedNumbers[uri] = wrap;
    wrap->numbers << number;
 
    // perform a username lookup for new CM with RingID
@@ -710,7 +707,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    //results. It cannot be merged with wrap2 as this check only work if the
    //candidate has an account.
    if (hasAtSign && account && uri.hostname() == account->hostname()) {
-     if (wrap3 = d_ptr->m_hDirectory.value(uri.userinfo())) {
+     if ((wrap3 = d_ptr->m_hDirectory.value(uri.userinfo()))) {
          foreach(ContactMethod* number, wrap3->numbers) {
             if (number->account() == account) {
                if (contact && ((!number->contact()) || (contact->uid() == number->contact()->uid())))
