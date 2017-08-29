@@ -213,8 +213,10 @@ void Media::TextRecordingPrivate::accountMessageStatusChanged(const uint64_t id,
             //You're looking at why local file storage is a "bad" idea
             q_ptr->save();
 
-            auto msg_index = m_pImModel->index(node->m_row, 0);
-            m_pImModel->dataChanged(msg_index, msg_index);
+            if (m_pImModel) {
+                auto msg_index = m_pImModel->index(node->m_row, 0);
+                m_pImModel->dataChanged(msg_index, msg_index);
+            }
         }
     }
 }
@@ -433,9 +435,14 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                     }
                 }
                 n->m_pContactMethod   = m->contactMethod;
-                t->d_ptr->m_pImModel->addRowBegin();
+
+                if (t->d_ptr->m_pImModel)
+                    t->d_ptr->m_pImModel->addRowBegin();
+
                 t->d_ptr->m_lNodes << n;
-                t->d_ptr->m_pImModel->addRowEnd();
+
+                if (t->d_ptr->m_pImModel)
+                    t->d_ptr->m_pImModel->addRowEnd();
 
                 if (lastUsed < n->m_pMessage->timestamp)
                     lastUsed = n->m_pMessage->timestamp;
@@ -513,10 +520,15 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
     ::TextMessageNode* n  = new ::TextMessageNode  ();
     n->m_pMessage         = m                        ;
     n->m_pContactMethod   = call->peerContactMethod();
-    n->m_row              = m_pImModel->rowCount   ();
-    m_pImModel->addRowBegin();
+    n->m_row              = m_lNodes.size          ();
+
+    if (m_pImModel)
+        m_pImModel->addRowBegin();
+
     m_lNodes << n;
-    m_pImModel->addRowEnd();
+
+    if (m_pImModel)
+        m_pImModel->addRowEnd();
 
     n->m_pContactMethod->setLastUsed(currentTime);
 
@@ -596,10 +608,15 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
    ::TextMessageNode* n  = new ::TextMessageNode()       ;
    n->m_pMessage         = m                             ;
    n->m_pContactMethod   = const_cast<ContactMethod*>(cm);
-   n->m_row              = m_pImModel->rowCount();
-   m_pImModel->addRowBegin();
+   n->m_row              = m_lNodes.size();
+
+   if (m_pImModel)
+      m_pImModel->addRowBegin();
+
    m_lNodes << n;
-   m_pImModel->addRowEnd();
+
+   if (m_pImModel)
+      m_pImModel->addRowEnd();
 
    if (m->id > 0)
        m_hPendingMessages[id] = n;
@@ -1079,7 +1096,8 @@ void InstantMessagingModel::addRowEnd()
 
 void Media::TextRecordingPrivate::clear()
 {
-    m_pImModel->clear();
+    if (m_pImModel)
+        m_pImModel->clear();
 
     if (m_UnreadCount != 0) {
         m_UnreadCount = 0;
