@@ -791,35 +791,32 @@ IF(NOT "${ENABLE_STATIC}" MATCHES "true")
         DESTINATION ${SANE_LIBRARY_PATH}/cmake/LibRingClient
         COMPONENT Devel
     )
-ENDIF()
 
+    INSTALL( FILES ${libringclient_video_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/video
+    COMPONENT Devel
+    )
 
-INSTALL( FILES ${libringclient_video_LIB_HDRS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/video
-  COMPONENT Devel
-)
+    INSTALL( FILES ${libringclient_audio_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/audio
+    COMPONENT Devel
+    )
 
-INSTALL( FILES ${libringclient_audio_LIB_HDRS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/audio
-  COMPONENT Devel
-)
+    INSTALL( FILES ${libringclient_media_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/media
+    COMPONENT Devel
+    )
 
-INSTALL( FILES ${libringclient_media_LIB_HDRS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/media
-  COMPONENT Devel
-)
+    INSTALL( FILES ${libringclient_extensions_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/extensions
+    COMPONENT Devel
+    )
 
-INSTALL( FILES ${libringclient_extensions_LIB_HDRS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/extensions
-  COMPONENT Devel
-)
+    INSTALL( FILES ${libringclient_interface_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/interfaces
+    COMPONENT Devel
+    )
 
-INSTALL( FILES ${libringclient_interface_LIB_HDRS}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/interfaces
-  COMPONENT Devel
-)
-
-IF(NOT "${ENABLE_STATIC}" MATCHES "true")
     INSTALL( TARGETS ringclient
         ARCHIVE DESTINATION ${SANE_LIBRARY_PATH}
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
@@ -857,7 +854,9 @@ IF( Qt5LinguistTools_FOUND )
 
    ADD_CUSTOM_TARGET(translations ALL DEPENDS ${QM_FILES})
 
-   INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringclient/translations")
+   IF(NOT "${ENABLE_STATIC}" MATCHES "true")
+      INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringclient/translations")
+   ENDIF()
 ENDIF()
 
 # uninstall target
