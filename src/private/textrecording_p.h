@@ -139,6 +139,7 @@ public:
     QAbstractItemModel*         m_pTextMessagesModel {nullptr};
     QAbstractItemModel*         m_pUnreadTextMessagesModel {nullptr};
     QHash<uint64_t, TextMessageNode*> m_hPendingMessages;
+    time_t                      m_LastUsed {0};
 
     //WARNING the order is in sync with both the daemon and the json files
     Matrix1D<MimeMessage::State, int> m_mMessageCounter = {{

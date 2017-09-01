@@ -104,9 +104,10 @@ LocalTextRecordingEditor::~LocalTextRecordingEditor()
             cms.append(path);
         }
 
-        o[ "paths"  ] = cms;
-        o[ "count"  ] = r->count();
-        o[ "unread" ] = r->unreadCount();
+        o[ "paths"    ] = cms;
+        o[ "count"    ] = r->count();
+        o[ "unread"   ] = r->unreadCount();
+        o[ "lastUsed" ] = (int)r->lastUsed();
 
         a.append(o);
     }

@@ -462,6 +462,11 @@ QHash<QByteArray,QByteArray> Media::TextRecordingPrivate::toJsons() const
    return ret;
 }
 
+time_t Media::TextRecording::lastUsed() const
+{
+    return d_ptr->m_LastUsed;
+}
+
 Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, const ContactMethod* cm, CollectionInterface* backend)
 {
 
@@ -528,6 +533,8 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
                 if (lastUsed < n->m_pMessage->timestamp())
                     lastUsed = n->m_pMessage->timestamp();
+
+                t->d_ptr->m_LastUsed = std::max(t->d_ptr->m_LastUsed, m->timestamp());
 
                 //FIXME for now the message status from older sessions is ignored, 99% of time it makes no
                 // sense.
@@ -612,6 +619,8 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
     if (n->m_pContactMethod->lastUsed() < m->timestamp())
         n->m_pContactMethod->setLastUsed(m->timestamp());
 
+    m_LastUsed = std::max(m_LastUsed, m->timestamp());
+
     // Save the conversation
     q_ptr->save();
 
@@ -685,6 +694,8 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
 
     if (cm->lastUsed() < m->timestamp())
         cm->setLastUsed(m->timestamp());
+
+    m_LastUsed = std::max(m_LastUsed, m->timestamp());
 
     emit q_ptr->messageInserted(message, const_cast<ContactMethod*>(cm), direction);
     if (m->status() != MimeMessage::State::READ) { //FIXME

@@ -105,6 +105,7 @@ public:
    int                 sentCount                (                         ) const;
    int                 receivedCount            (                         ) const;
    int                 unknownCount             (                         ) const;
+   time_t              lastUsed                 (                         ) const;
    QVector<ContactMethod*> peers                (                         ) const;
 
    //Helper
