@@ -39,7 +39,6 @@ class ContactMethodDirectoryPrivate;
 class TemporaryContactMethod;
 class NumberCategory;
 class TemporaryContactMethodPrivate;
-class InstantMessagingModel;
 class Certificate;
 class UsageStatistics;
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -17,46 +17,34 @@
  ***************************************************************************/
 #pragma once
 
-#include <media/media.h>
-#include <typedefs.h>
+// Qt
+#include <QtCore/QAbstractListModel>
 
-class MediaTextPrivate;
-class Call;
-class CallPrivate;
-class IMConversationManagerPrivate;
-
+// Ring
 namespace Media {
-
-class TextRecording;
-
-class LIB_EXPORT Text : public Media::Media
-{
-   Q_OBJECT
-   friend class ::CallPrivate;
-   friend class ::IMConversationManagerPrivate;
-public:
-
-   virtual Media::Type type() override;
-
-   //Getter
-   TextRecording* recording   (                         ) const;
-   bool           hasMimeType ( const QString& mimeType ) const;
-   QStringList    mimeTypes   (                         ) const;
-
-   //Mutator
-   void send(const QMap<QString,QString>& message, const bool isMixed = false);
-
-private:
-   Text(Call* parent, const Media::Direction direction);
-   virtual ~Text();
-
-   MediaTextPrivate* d_ptr;
-
-Q_SIGNALS:
-   void messageSent    (const QMap<QString,QString>& m);
-   void messageReceived(const QMap<QString,QString>& m);
-   void mimeTypesChanged();
-};
-
+    class TextRecording;
 }
 
+///Model for the Instant Messaging (IM) features
+class TextRecordingModel final : public QAbstractListModel
+{
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+    Q_OBJECT
+    #pragma GCC diagnostic pop
+
+public:
+    //Constructor
+    explicit TextRecordingModel(Media::TextRecording*);
+    virtual ~TextRecordingModel();
+
+    //Abstract model function
+    virtual QVariant      data     ( const QModelIndex& index, int role = Qt::DisplayRole     ) const override;
+    virtual int           rowCount ( const QModelIndex& parent = QModelIndex()                ) const override;
+    virtual Qt::ItemFlags flags    ( const QModelIndex& index                                 ) const override;
+    virtual bool  setData  ( const QModelIndex& index, const QVariant &value, int role)       override;
+    virtual QHash<int,QByteArray> roleNames() const override;
+
+    //Attributes
+    Media::TextRecording* m_pRecording;
+};

@@ -41,7 +41,6 @@ class MimeMessage
     friend class Serializable::Group; // existing object factory
     friend class Media::TextRecordingPrivate; // new object factory
     friend class Media::TextRecording; //::setAllRead perform action
-    friend class InstantMessagingModel; //::setData perform action
 
 public:
 

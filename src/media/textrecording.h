@@ -30,8 +30,8 @@ class IMConversationManagerPrivate;
 class LocalTextRecordingEditor;
 class ContactMethod;
 class PeerTimelineModel;
-class InstantMessagingModel;
 class PeerTimelineModelPrivate;
+class MimeMessage;
 
 namespace Media {
 
@@ -42,8 +42,6 @@ class LIB_EXPORT TextRecording : public Recording
 {
    Q_OBJECT
 
-   //InstantMessagingModel is a view on top of TextRecording data
-   friend class ::InstantMessagingModel;
    friend class ::IMConversationManagerPrivate;
    friend class ::LocalTextRecordingEditor;
    friend class Text;
@@ -112,6 +110,7 @@ public:
    int                 size                     (                         ) const;
    bool                hasMimeType              ( const QString& mimeType ) const;
    QStringList         mimeTypes                (                         ) const;
+   MimeMessage*        messageAt                ( int row                 ) const;
    QVariant            roleData                 ( int row, int role       ) const;
    virtual QVariant    roleData                 ( int role                ) const override;
    QStringList         paths                    (                         ) const;
@@ -125,11 +124,16 @@ public:
 
    //Helper
    void setAllRead();
+   void setAsRead(MimeMessage* m) const;
+   void setAsUnread(MimeMessage* m) const;
 
 Q_SIGNALS:
+   void aboutToInsertMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
    void messageInserted(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
    void unreadCountChange(int count);
    void messageStateChanged();
+   void aboutToClear();
+   void cleared();
 
 private:
    TextRecordingPrivate* d_ptr;

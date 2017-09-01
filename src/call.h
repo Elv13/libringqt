@@ -32,7 +32,6 @@ class QTimer;
 #include "media/media.h"
 #include "itemdataroles.h"
 class Account               ;
-class InstantMessagingModel ;
 class UserActionModel       ;
 class ContactMethod         ;
 class TemporaryContactMethod;

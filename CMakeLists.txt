@@ -327,6 +327,7 @@ SET( libringclient_LIB_SRCS
   src/itembase.cpp
   src/private/vcardutils.cpp
   src/private/textrecordingcache.cpp
+  src/private/textrecordingmodel.cpp
   src/private/videorenderermanager.cpp
   src/video/previewmanager.cpp
   src/private/sortproxies.cpp

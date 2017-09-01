@@ -40,6 +40,7 @@
 #include "itemdataroles.h"
 #include "mime.h"
 #include "dbus/configurationmanager.h"
+#include "private/textrecordingmodel.h"
 
 //Std
 #include <ctime>
@@ -75,6 +76,17 @@ bool Media::TextRecordingPrivate::performMessageAction(MimeMessage* m, MimeMessa
         m_mMessageCounter.setAt(st         , m_mMessageCounter[ st          ]-1);
         m_mMessageCounter.setAt(m->status(), m_mMessageCounter[ m->status() ]+1);
         emit q_ptr->messageStateChanged();
+
+        if (m->status() == MimeMessage::State::UNREAD) {
+            emit q_ptr->unreadCountChange(1);
+            //emit n->m_pContactMethod->unreadTextMessageCountChanged(); //FIXME
+            //emit n->m_pContactMethod->changed();
+        }
+        else if (m->status() == MimeMessage::State::READ && st == MimeMessage::State::UNREAD) {
+            emit q_ptr->unreadCountChange(-1);
+            //emit n->m_pContactMethod->unreadTextMessageCountChanged(); //FIXME
+            //emit n->m_pContactMethod->changed();
+        }
 
         //TODO async save
         q_ptr->save();
@@ -165,10 +177,20 @@ QStringList Media::TextRecording::mimeTypes() const
 QAbstractItemModel* Media::TextRecording::instantMessagingModel() const
 {
     if (!d_ptr->m_pImModel) {
-        d_ptr->m_pImModel = new InstantMessagingModel(const_cast<TextRecording*>(this));
+        d_ptr->m_pImModel = new TextRecordingModel(const_cast<TextRecording*>(this));
     }
 
     return d_ptr->m_pImModel;
+}
+
+void Media::TextRecording::setAsRead(MimeMessage* m) const
+{
+    d_ptr->performMessageAction(m, MimeMessage::Actions::READ );
+}
+
+void Media::TextRecording::setAsUnread(MimeMessage* m) const
+{
+    d_ptr->performMessageAction(m, MimeMessage::Actions::UNREAD );
 }
 
 ///Set all messages as read and then save the recording
@@ -374,7 +396,6 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
     //Create the model
     bool statusChanged = false; // if a msg status changed during parsing, we need to re-save the model
-    t->instantMessagingModel(); //FIXME use lazy loading
 
     //Reconstruct the conversation
     //TODO do it right, right now it flatten the graph
@@ -413,15 +434,9 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                 // Keep track of the number of entries (per state)
                 t->d_ptr->m_mMessageCounter.setAt(m->status(), t->d_ptr->m_mMessageCounter[m->status()]+1);
 
-                n->m_pContactMethod   = n->m_pCM; //FIXME deadcode
-
-                if (t->d_ptr->m_pImModel)
-                    t->d_ptr->m_pImModel->addRowBegin();
+                n->m_pContactMethod = n->m_pCM; //FIXME deadcode
 
                 t->d_ptr->m_lNodes << n;
-
-                if (t->d_ptr->m_pImModel)
-                    t->d_ptr->m_pImModel->addRowEnd();
 
                 if (lastUsed < n->m_pMessage->timestamp())
                     lastUsed = n->m_pMessage->timestamp();
@@ -516,9 +531,6 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
 
     m_pCurrentGroup->messages << m;
 
-    // Forces the lazy loading to happen
-    q_ptr->instantMessagingModel();
-
     // Insert the message
     ::TextMessageNode* n  = new ::TextMessageNode(q_ptr);
     n->m_pMessage         = m;
@@ -529,13 +541,11 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
 
     m_mMessageCounter.setAt(m->status(), m_mMessageCounter[m->status()]+1);
 
-    if (m_pImModel)
-        m_pImModel->addRowBegin();
+    emit q_ptr->aboutToInsertMessage(
+        {{RingMimes::SNAPSHOT, path}}, n->m_pContactMethod, m->direction()
+    );
 
     m_lNodes << n;
-
-    if (m_pImModel)
-        m_pImModel->addRowEnd();
 
     if (n->m_pContactMethod->lastUsed() < m->timestamp())
         n->m_pContactMethod->setLastUsed(m->timestamp());
@@ -584,9 +594,6 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
 
     m_pCurrentGroup->messages << m;
 
-    //Make sure the model exist
-    q_ptr->instantMessagingModel();
-
     //Update the reconstructed conversation
     auto n               = new ::TextMessageNode(q_ptr);
     n->m_pMessage        = m;
@@ -597,13 +604,9 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
 
     m_mMessageCounter.setAt(m->status(), m_mMessageCounter[m->status()]+1);
 
-    if (m_pImModel)
-        m_pImModel->addRowBegin();
+    emit q_ptr->aboutToInsertMessage(message, const_cast<ContactMethod*>(cm), direction);
 
     m_lNodes << n;
-
-    if (m_pImModel)
-        m_pImModel->addRowEnd();
 
     //FIXME the states need to be set, maybe assume SENDING when the id > 0
     if (m->id() > 0 && m->status() == MimeMessage::State::SENDING)
@@ -631,41 +634,12 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
     emit messageAdded(n);
 }
 
-///Constructor
-InstantMessagingModel::InstantMessagingModel(Media::TextRecording* recording) : QAbstractListModel(recording),m_pRecording(recording)
+MimeMessage* Media::TextRecording::messageAt(int row) const
 {
-}
+    if (row >= d_ptr->m_lNodes.size() || row < 0)
+        return nullptr;
 
-InstantMessagingModel::~InstantMessagingModel()
-{
-//    delete d_ptr;
-}
-
-QHash<int,QByteArray> InstantMessagingModel::roleNames() const
-{
-    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-    static bool initRoles = false;
-    if (!initRoles) {
-        initRoles = true;
-
-        QHash<int, QByteArray>::const_iterator i;
-        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
-            roles[i.key()] = i.value();
-
-        roles.insert((int)Media::TextRecording::Role::Direction           , "direction"           );
-        roles.insert((int)Media::TextRecording::Role::AuthorDisplayname   , "authorDisplayname"   );
-        roles.insert((int)Media::TextRecording::Role::AuthorUri           , "authorUri"           );
-        roles.insert((int)Media::TextRecording::Role::AuthorPresenceStatus, "authorPresenceStatus");
-        roles.insert((int)Media::TextRecording::Role::Timestamp           , "timestamp"           );
-        roles.insert((int)Media::TextRecording::Role::IsRead              , "isRead"              );
-        roles.insert((int)Media::TextRecording::Role::FormattedDate       , "formattedDate"       );
-        roles.insert((int)Media::TextRecording::Role::IsStatus            , "isStatus"            );
-        roles.insert((int)Media::TextRecording::Role::DeliveryStatus      , "deliveryStatus"      );
-        roles.insert((int)Media::TextRecording::Role::FormattedHtml       , "formattedHtml"       );
-        roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
-        roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
-    }
-    return roles;
+    return d_ptr->m_lNodes[row]->m_pMessage;
 }
 
 QVariant Media::TextRecording::roleData(int role) const
@@ -779,89 +753,9 @@ QVariant Media::TextRecording::roleData(int row, int role) const
     return d_ptr->m_lNodes[row]->roleData(role);
 }
 
-///Get data from the model
-QVariant InstantMessagingModel::data( const QModelIndex& idx, int role) const
-{
-    if ((!idx.isValid()) || idx.column())
-        return {};
-
-    return m_pRecording->roleData(idx.row(), role);
-}
-
-///Number of row
-int InstantMessagingModel::rowCount(const QModelIndex& parentIdx) const
-{
-    if (!parentIdx.isValid())
-        return m_pRecording->d_ptr->m_lNodes.size();
-    return 0;
-}
-
-///Model flags
-Qt::ItemFlags InstantMessagingModel::flags(const QModelIndex& idx) const
-{
-    Q_UNUSED(idx)
-    return Qt::ItemIsEnabled;
-}
-
-///Set model data
-bool InstantMessagingModel::setData(const QModelIndex& idx, const QVariant &value, int role)
-{
-    if (idx.column() || !idx.isValid())
-        return false;
-
-    bool changed = false;
-
-    ::TextMessageNode* n = m_pRecording->d_ptr->m_lNodes[idx.row()];
-    switch (role) {
-        case (int)Media::TextRecording::Role::IsRead               :
-            //TODO delegate that logic to MimeMessage::
-            if ((value.toBool() && n->m_pMessage->status() != MimeMessage::State::READ)
-              || ((!value.toBool()) && n->m_pMessage->status() != MimeMessage::State::UNREAD)
-            ) {
-
-                m_pRecording->d_ptr->performMessageAction(
-                    n->m_pMessage,
-                    value.toBool() ?
-                        MimeMessage::Actions::READ :
-                        MimeMessage::Actions::UNREAD
-                );
-
-                if (n->m_pMessage->hasText()) {
-                    int val = value.toBool() ? -1 : +1;
-                    m_pRecording->d_ptr->m_UnreadCount += val;
-                    emit m_pRecording->unreadCountChange(val);
-                    emit n->m_pContactMethod->unreadTextMessageCountChanged();
-                    emit n->m_pContactMethod->changed();
-                }
-                emit dataChanged(idx,idx);
-                changed = true;
-            }
-            break;
-        default:
-            return false;
-    }
-
-    //Save the conversation
-    if (changed)
-        m_pRecording->save();
-    return true;
-}
-
-void InstantMessagingModel::addRowBegin()
-{
-    const int rc = rowCount();
-    beginInsertRows(QModelIndex(),rc,rc);
-}
-
-void InstantMessagingModel::addRowEnd()
-{
-    endInsertRows();
-}
-
 void Media::TextRecordingPrivate::clear()
 {
-    if (m_pImModel)
-        m_pImModel->beginReset();
+    emit q_ptr->aboutToClear();
 
     for ( TextMessageNode *node : m_lNodes)
         delete node;
@@ -874,23 +768,12 @@ void Media::TextRecordingPrivate::clear()
     m_hMimeTypes.clear();
     m_lMimeTypes.clear();
 
-    if (m_pImModel)
-        m_pImModel->endReset();
+    emit q_ptr->cleared();
 
     if (m_UnreadCount != 0) {
         m_UnreadCount = 0;
         emit q_ptr->unreadCountChange(0);
     }
-}
-
-void InstantMessagingModel::beginReset()
-{
-    beginResetModel();
-}
-
-void InstantMessagingModel::endReset()
-{
-    endResetModel();
 }
 
 // kate: space-indent on; indent-width 4; replace-tabs on;

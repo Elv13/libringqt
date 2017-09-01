@@ -52,7 +52,7 @@ public:
     explicit TextRecordingPrivate(TextRecording* r);
 
     //Attributes
-    InstantMessagingModel*      m_pImModel           ;
+    QAbstractItemModel*         m_pImModel           ;
     QVector<::TextMessageNode*> m_lNodes             ;
     Serializable::Group*        m_pCurrentGroup      ;
     QList<QSharedPointer<Serializable::Peers>> m_lAssociatedPeers;
@@ -117,36 +117,4 @@ struct TextMessageNode
 
     QVariant roleData(int role) const;
    QVariant snapshotRoleData(int role) const;
-};
-
-///Model for the Instant Messaging (IM) features
-class InstantMessagingModel final : public QAbstractListModel
-{
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   Q_OBJECT
-   #pragma GCC diagnostic pop
-
-public:
-
-   //Constructor
-   explicit InstantMessagingModel(Media::TextRecording*);
-   virtual ~InstantMessagingModel();
-
-   //Abstract model function
-   virtual QVariant      data     ( const QModelIndex& index, int role = Qt::DisplayRole     ) const override;
-   virtual int           rowCount ( const QModelIndex& parent = QModelIndex()                ) const override;
-   virtual Qt::ItemFlags flags    ( const QModelIndex& index                                 ) const override;
-   virtual bool  setData  ( const QModelIndex& index, const QVariant &value, int role)       override;
-   virtual QHash<int,QByteArray> roleNames() const override;
-
-    void beginReset();
-    void endReset();
-
-   //Attributes
-   Media::TextRecording* m_pRecording;
-
-   //Helper
-   void addRowBegin();
-   void addRowEnd();
 };
