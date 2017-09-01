@@ -562,6 +562,35 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
     return t;
 }
 
+Media::TextRecording* Media::TextRecording::fromPath(const QString& path, const Metadata& metadata, CollectionInterface* backend)
+{
+    QString content;
+
+    QFile file(path);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Could not open text recording json file";
+        return nullptr;
+    }
+
+    content = QString::fromUtf8(file.readAll());
+
+    if (content.isEmpty()) {
+        qWarning() << "Text recording file is empty";
+        return nullptr;
+    }
+
+    QJsonParseError err;
+    QJsonDocument loadDoc = QJsonDocument::fromJson(content.toUtf8(), &err);
+
+    if (err.error != QJsonParseError::ParseError::NoError) {
+        qWarning() << "Error Decoding Text Message History Json" << err.errorString();
+        return nullptr;
+    }
+
+    return fromJson({loadDoc.object()}, nullptr, backend);
+}
+
 void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* cm)
 {
     //Create new groups when:

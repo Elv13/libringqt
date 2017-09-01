@@ -83,10 +83,25 @@ public:
       Id                   ,
    };
 
+   /** Loading a full text recording takes a lot of memory that's unlikely to
+    * ever be used. To keep this to a minimum,  the full text recording should
+    * be lazy-loaded and freed once inactive. This structure holds the minimum
+    * metadata that should be kept even when the TextRecording isn't loaded.
+    *
+    * Its attributes are accessed through the TextRecording object even when
+    * unloaded.
+    */
+   struct Metadata {
+      uint   messageCount {0};
+      uint   unreadCount  {0};
+      time_t lastUsed     {0};
+   };
+
    //Constructor
    explicit TextRecording(const Recording::Status status);
    virtual ~TextRecording();
    static TextRecording* fromJson(const QList<QJsonObject>& items, const ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
+   static TextRecording* fromPath(const QString& path, const Metadata& metadata, CollectionInterface* backend = nullptr);
 
    //Getter
    QAbstractItemModel* instantMessagingModel    (                         ) const;
