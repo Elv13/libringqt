@@ -236,6 +236,7 @@ SET( libringclient_LIB_SRCS
   src/media/recording.cpp
   src/media/avrecording.cpp
   src/media/textrecording.cpp
+  src/media/mimemessage.cpp
 
   #Models
   src/bootstrapmodel.cpp

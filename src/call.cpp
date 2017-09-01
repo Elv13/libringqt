@@ -2313,7 +2313,7 @@ QVariant Call::roleData(int role) const
          return GlobalInstances::pixmapManipulator().securityLevelIcon(account()->securityEvaluationModel()->securityLevel());
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):
          if (peerContactMethod() && peerContactMethod()->textRecording())
-            return peerContactMethod()->textRecording()->unreadInstantTextMessagingModel()->rowCount();
+            return peerContactMethod()->textRecording()->unreadCount();
          else
             return 0;
          break;

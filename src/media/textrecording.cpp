@@ -24,7 +24,6 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/QDateTime>
 #include <QtCore/QCryptographicHash>
-#include <QtCore/QUrl>
 
 //Daemon
 #include <account_const.h>
@@ -50,107 +49,107 @@ QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::
 
 static void addPeer(const QSharedPointer<Serializable::Peers>& p,  const ContactMethod* cm)
 {
-   Serializable::Peer* peer = new Serializable::Peer();
-   peer->sha1      = cm->sha1();
-   peer->uri       = cm->uri();
-   peer->accountId = cm->account() ? cm->account()->id () : QString();
-   peer->personUID = cm->contact() ? cm->contact()->uid() : QString();
-   p->peers << peer;
+    Serializable::Peer* peer = new Serializable::Peer();
+    peer->sha1      = cm->sha1();
+    peer->uri       = cm->uri();
+    peer->accountId = cm->account() ? cm->account()->id () : QString();
+    peer->personUID = cm->contact() ? cm->contact()->uid() : QString();
+    p->peers << peer;
 }
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(const ContactMethod* cm)
 {
-   const QByteArray sha1 = cm->sha1();
-   QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
+    const QByteArray sha1 = cm->sha1();
+    QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
 
-   if (!p) {
-      p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
-      p->sha1s << sha1;
+    if (!p) {
+        p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
+        p->sha1s << sha1;
 
-      addPeer(p, cm);
+        addPeer(p, cm);
 
-      m_hPeers[sha1] = p;
-   }
+        m_hPeers[sha1] = p;
+    }
 
-   return p;
+    return p;
 }
 
 QByteArray mashSha1s(QList<QString> sha1s);
 QByteArray mashSha1s(QList<QString> sha1s)
 {
-   QCryptographicHash hash(QCryptographicHash::Sha1);
+    QCryptographicHash hash(QCryptographicHash::Sha1);
 
-   QByteArray ps;
+    QByteArray ps;
 
-   for (const QString& sha1 : sha1s) {
-      ps += sha1.toLatin1();
-   }
+    for (const QString& sha1 : sha1s) {
+        ps += sha1.toLatin1();
+    }
 
-   hash.addData(ps);
+    hash.addData(ps);
 
-   //Create a reproducible key for this file
-   return hash.result().toHex();
+    //Create a reproducible key for this file
+    return hash.result().toHex();
 }
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(QList<const ContactMethod*> cms)
 {
-   QList<QString> sha1s;
+    QList<QString> sha1s;
 
-   for(const ContactMethod* cm : cms) {
-      const QByteArray sha1 = cm->sha1();
-      sha1s << sha1;
-   }
+    for(const ContactMethod* cm : cms) {
+        const QByteArray sha1 = cm->sha1();
+        sha1s << sha1;
+    }
 
-   const QByteArray sha1 = ::mashSha1s(sha1s);
+    const QByteArray sha1 = ::mashSha1s(sha1s);
 
-   QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
+    QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
 
-   if (!p) {
-      p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
-      p->sha1s = sha1s;
-      m_hPeers[sha1] = p;
-   }
+    if (!p) {
+        p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
+        p->sha1s = sha1s;
+        m_hPeers[sha1] = p;
+    }
 
-   return p;
+    return p;
 }
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::fromSha1(const QByteArray& sha1)
 {
-   return m_hPeers[sha1];
+    return m_hPeers[sha1];
 }
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, const ContactMethod* cm)
 {
-   //Check if the object is already loaded
-   QStringList sha1List;
-   QJsonArray as = json[QStringLiteral("sha1s")].toArray();
-   for (int i = 0; i < as.size(); ++i) {
-      sha1List.append(as[i].toString());
-   }
+    //Check if the object is already loaded
+    QStringList sha1List;
+    QJsonArray as = json[QStringLiteral("sha1s")].toArray();
+    for (int i = 0; i < as.size(); ++i) {
+        sha1List.append(as[i].toString());
+    }
 
-   if (sha1List.isEmpty())
-      return {};
+    if (sha1List.isEmpty())
+        return {};
 
-   QByteArray sha1 = sha1List[0].toLatin1();
+    QByteArray sha1 = sha1List[0].toLatin1();
 
-   if (sha1List.size() > 1) {
-      sha1 = mashSha1s(sha1List);
-   }
+    if (sha1List.size() > 1) {
+        sha1 = mashSha1s(sha1List);
+    }
 
-   if (m_hPeers[sha1])
-      return m_hPeers[sha1];
+    if (m_hPeers[sha1])
+        return m_hPeers[sha1];
 
-   //Load from json
-   QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
-   p->read(json);
-   m_hPeers[sha1] = p;
+    //Load from json
+    QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
+    p->read(json);
+    m_hPeers[sha1] = p;
 
-   //TODO Remove in 2016
-   //Some older versions of the file don't store necessary values, fix that
-   if (cm && p->peers.isEmpty())
-      addPeer(p,cm);
+    //TODO Remove in 2016
+    //Some older versions of the file don't store necessary values, fix that
+    if (cm && p->peers.isEmpty())
+        addPeer(p,cm);
 
-   return p;
+    return p;
 }
 
 Media::TextRecordingPrivate::TextRecordingPrivate(TextRecording* r) : QObject(r),
@@ -175,41 +174,80 @@ Media::TextRecording::~TextRecording()
     delete d_ptr;
 }
 
+/// Keep track of the number of messages in each states
+bool Media::TextRecordingPrivate::performMessageAction(MimeMessage* m, MimeMessage::Actions a)
+{
+    const auto st = m->status();
+
+    if (m->performAction(a)) {
+        m_mMessageCounter.setAt(st         , m_mMessageCounter[ st          ]-1);
+        m_mMessageCounter.setAt(m->status(), m_mMessageCounter[ m->status() ]+1);
+        emit q_ptr->messageStateChanged();
+
+        //TODO async save
+        q_ptr->save();
+
+        return true;
+    }
+
+    return false;
+}
+
+/// Keep track of the number of messages in each states
+bool Media::TextRecordingPrivate::performMessageAction(MimeMessage* m, DRing::Account::MessageStates a)
+{
+    const auto st = m->status();
+
+    const bool ret = m->performAction(a);
+
+    if (st != m->status()) {
+        m_mMessageCounter.setAt(st         , m_mMessageCounter[ st          ]-1);
+        m_mMessageCounter.setAt(m->status(), m_mMessageCounter[ m->status() ]+1);
+        emit q_ptr->messageStateChanged();
+    }
+
+    return ret;
+}
+
 /**
  * Updates the message status and potentially the message id, if a new status is set.
  * Returns true if the Message object was modified, false otherwise.
  */
-bool Media::TextRecordingPrivate::updateMessageStatus(Serializable::Message* m, TextRecording::MessageStatus newSatus)
+bool Media::TextRecordingPrivate::updateMessageStatus(MimeMessage* m, DRing::Account::MessageStates newSatus)
 {
     bool modified = false;
 
-    if (static_cast<int>(newSatus) >= static_cast<int>(TextRecording::MessageStatus::COUNT__)) {
+    if (static_cast<int>(newSatus) >= static_cast<int>(MimeMessage::State::COUNT__)) {
         qWarning() << "Unknown message status with code: " << static_cast<int>(newSatus);
-        newSatus = TextRecording::MessageStatus::UNKNOWN;
-    } else {
+        newSatus = DRing::Account::MessageStates::UNKNOWN;
+    }
+    else {
         //READ status is not used yet it'll be the final state when it is
-        if (newSatus == TextRecording::MessageStatus::READ
-                || newSatus == TextRecording::MessageStatus::SENT
-                || newSatus == TextRecording::MessageStatus::FAILURE) {
-            m_hPendingMessages.remove(m->id);
-            if (m->id != 0) {
-                m->id = 0;
+        if (newSatus == DRing::Account::MessageStates::READ
+                || newSatus == DRing::Account::MessageStates::SENT
+                || newSatus == DRing::Account::MessageStates::FAILURE) {
+            m_hPendingMessages.remove(m->id());
+            if (m->id() != 0) {
+                //m->id = 0; TODO figure out why this was put there
                 modified = true;
             }
         }
     }
 
-    if (m->deliveryStatus != newSatus) {
-        m->deliveryStatus = newSatus;
+    // The int comparison is safe because both enum class share the same first
+    // few elements.
+    if ((int)m->status() != (int)newSatus) {
+        performMessageAction(m, newSatus);
         modified = true;
     }
+
     return modified;
 }
 
 void Media::TextRecordingPrivate::accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status)
 {
     if (auto node = m_hPendingMessages.value(id, nullptr)) {
-        if (updateMessageStatus(node->m_pMessage, static_cast<TextRecording::MessageStatus>(status))) {
+        if (updateMessageStatus(node->m_pMessage, status)) {
             //You're looking at why local file storage is a "bad" idea
             q_ptr->save();
 
@@ -223,22 +261,22 @@ void Media::TextRecordingPrivate::accountMessageStatusChanged(const uint64_t id,
 
 bool Media::TextRecording::hasMimeType(const QString& mimeType) const
 {
-   return d_ptr->m_hMimeTypes.contains(mimeType);
+    return d_ptr->m_hMimeTypes.contains(mimeType);
 }
 
 QStringList Media::TextRecording::mimeTypes() const
 {
-   return d_ptr->m_lMimeTypes;
+    return d_ptr->m_lMimeTypes;
 }
 
 ///Get the instant messaging model associated with this recording
 QAbstractItemModel* Media::TextRecording::instantMessagingModel() const
 {
-   if (!d_ptr->m_pImModel) {
-      d_ptr->m_pImModel = new InstantMessagingModel(const_cast<TextRecording*>(this));
-   }
+    if (!d_ptr->m_pImModel) {
+        d_ptr->m_pImModel = new InstantMessagingModel(const_cast<TextRecording*>(this));
+    }
 
-   return d_ptr->m_pImModel;
+    return d_ptr->m_pImModel;
 }
 
 ///Set all messages as read and then save the recording
@@ -246,8 +284,13 @@ void Media::TextRecording::setAllRead()
 {
     bool changed = false;
     for(int row = 0; row < d_ptr->m_lNodes.size(); ++row) {
-        if (!d_ptr->m_lNodes[row]->m_pMessage->isRead) {
-            d_ptr->m_lNodes[row]->m_pMessage->isRead = true;
+        if (d_ptr->m_lNodes[row]->m_pMessage->status() != MimeMessage::State::READ) {
+
+            d_ptr->performMessageAction(
+                d_ptr->m_lNodes[row]->m_pMessage,
+                MimeMessage::Actions::READ
+            );
+
             if (d_ptr->m_pImModel) {
                 auto idx = d_ptr->m_pImModel->index(row, 0);
                 emit d_ptr->m_pImModel->dataChanged(idx,idx);
@@ -265,6 +308,17 @@ void Media::TextRecording::setAllRead()
         emit d_ptr->m_lNodes[0]->m_pContactMethod->changed();
         save();
     }
+}
+
+QStringList Media::TextRecording::paths() const
+{
+    QStringList ret;
+
+    for (const auto p : qAsConst(d_ptr->m_lAssociatedPeers)) {
+        ret << p->sha1s[0].toLatin1()+QStringLiteral(".json");
+    }
+
+    return ret;
 }
 
 QVector<ContactMethod*> Media::TextRecording::peers() const
@@ -296,13 +350,13 @@ QVector<ContactMethod*> Media::TextRecording::peers() const
 class TextProxyModel : public QSortFilterProxyModel
 {
 public:
-   explicit TextProxyModel(QObject* parent) : QSortFilterProxyModel(parent){}
-   virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override
-   {
-      const QModelIndex srcIdx = sourceModel()->index(source_row, filterKeyColumn(), source_parent);
+    explicit TextProxyModel(QObject* parent) : QSortFilterProxyModel(parent){}
+    virtual bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override
+    {
+        const QModelIndex srcIdx = sourceModel()->index(source_row, filterKeyColumn(), source_parent);
 
-      return srcIdx.data((int)Media::TextRecording::Role::HasText).toBool();
-   }
+        return srcIdx.data((int)Media::TextRecording::Role::HasText).toBool();
+    }
 };
 
 /**
@@ -311,13 +365,13 @@ public:
  */
 QAbstractItemModel* Media::TextRecording::instantTextMessagingModel() const
 {
-   if (!d_ptr->m_pTextMessagesModel) {
-      auto p = new TextProxyModel(const_cast<TextRecording*>(this));
-      p->setSourceModel(instantMessagingModel());
-      d_ptr->m_pTextMessagesModel = p;
-   }
+    if (!d_ptr->m_pTextMessagesModel) {
+        auto p = new TextProxyModel(const_cast<TextRecording*>(this));
+        p->setSourceModel(instantMessagingModel());
+        d_ptr->m_pTextMessagesModel = p;
+    }
 
-   return d_ptr->m_pTextMessagesModel;
+    return d_ptr->m_pTextMessagesModel;
 }
 
 /**
@@ -343,9 +397,9 @@ public:
 QAbstractItemModel* Media::TextRecording::unreadInstantTextMessagingModel() const
 {
     if (!d_ptr->m_pUnreadTextMessagesModel) {
-       auto p = new UnreadProxyModel(instantTextMessagingModel());
-       p->setSourceModel(instantTextMessagingModel());
-       d_ptr->m_pUnreadTextMessagesModel = p;
+        auto p = new UnreadProxyModel(instantTextMessagingModel());
+        p->setSourceModel(instantTextMessagingModel());
+        d_ptr->m_pUnreadTextMessagesModel = p;
     }
 
     return d_ptr->m_pUnreadTextMessagesModel;
@@ -355,6 +409,33 @@ QAbstractItemModel* Media::TextRecording::unreadInstantTextMessagingModel() cons
 bool Media::TextRecording::isEmpty() const
 {
    return !size();
+}
+
+
+int Media::TextRecording::unreadCount() const
+{
+    return d_ptr->m_mMessageCounter[MimeMessage::State::UNREAD];
+}
+
+int Media::TextRecording::sendingCount() const
+{
+    return d_ptr->m_mMessageCounter[MimeMessage::State::SENDING];
+}
+
+int Media::TextRecording::sentCount() const
+{
+    return d_ptr->m_mMessageCounter[MimeMessage::State::SENT];
+}
+
+int Media::TextRecording::receivedCount() const
+{
+    return d_ptr->m_mMessageCounter[MimeMessage::State::READ]
+        + d_ptr->m_mMessageCounter[MimeMessage::State::UNREAD];
+}
+
+int Media::TextRecording::unknownCount() const
+{
+    return d_ptr->m_mMessageCounter[MimeMessage::State::UNKNOWN];
 }
 
 int Media::TextRecording::size() const
@@ -367,18 +448,16 @@ int Media::TextRecording::count() const { return size(); }
 
 QHash<QByteArray,QByteArray> Media::TextRecordingPrivate::toJsons() const
 {
-   QHash<QByteArray,QByteArray> ret;
-   for (const auto p : qAsConst(m_lAssociatedPeers)) {
-//       if (p->hasChanged) {
-         p->hasChanged = false;
+    QHash<QByteArray,QByteArray> ret;
+    for (const auto p : qAsConst(m_lAssociatedPeers)) {
+        p->hasChanged = false;
 
-         QJsonObject output;
-         p->write(output);
+        QJsonObject output;
+        p->write(output);
 
-         QJsonDocument doc(output);
-         ret[p->sha1s[0].toLatin1()] = doc.toJson();
-//       }
-   }
+        QJsonDocument doc(output);
+        ret[p->sha1s[0].toLatin1()] = doc.toJson();
+    }
 
    return ret;
 }
@@ -391,8 +470,6 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
     if (backend)
         t->setCollection(backend);
-
-    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
 
     //Load the history data
     for (const QJsonObject& obj : qAsConst(items))
@@ -413,28 +490,33 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
         // get the latest timestamp to set last used
         time_t lastUsed = 0;
-        for (const Serializable::Group* g : p->groups) {
-            for (Serializable::Message* m : g->messages) {
-                ::TextMessageNode* n  = new ::TextMessageNode();
-                n->m_pMessage         = m                      ;
-                if (!n->m_pMessage->contactMethod) {
+        for (auto g : qAsConst(p->groups)) {
+            for (auto m : qAsConst(g->messages)) {
+                auto n  = new ::TextMessageNode(t);
+                n->m_pGroup    = g;
+                n->m_pMessage  = m;
+                if (!n->m_pCM) {
                     if (cm) {
-                        n->m_pMessage->contactMethod = const_cast<ContactMethod*>(cm); //TODO remove in 2016
-                        n->m_pMessage->authorSha1 = cm->sha1();
+                        n->m_pCM = const_cast<ContactMethod*>(cm); //TODO remove in 2016
+                        n->m_AuthorSha1 = cm->sha1();
 
                         if (p->peers.isEmpty())
                             addPeer(p, cm);
                     } else {
-                        if (p->m_hSha1.contains(n->m_pMessage->authorSha1)) {
-                            n->m_pMessage->contactMethod = p->m_hSha1[n->m_pMessage->authorSha1];
+                        if (p->m_hSha1.contains(n->m_AuthorSha1)) {
+                            n->m_pCM = p->m_hSha1[n->m_AuthorSha1];
                         } else {
                             // message was outgoing and author sha1 was set to that of the sending account
-                            n->m_pMessage->contactMethod = peerCM;
-                            n->m_pMessage->authorSha1 = peerCM->sha1();
+                            n->m_pCM = peerCM;
+                            n->m_AuthorSha1 = peerCM->sha1();
                         }
                     }
                 }
-                n->m_pContactMethod   = m->contactMethod;
+
+                // Keep track of the number of entries (per state)
+                t->d_ptr->m_mMessageCounter.setAt(m->status(), t->d_ptr->m_mMessageCounter[m->status()]+1);
+
+                n->m_pContactMethod   = n->m_pCM; //FIXME deadcode
 
                 if (t->d_ptr->m_pImModel)
                     t->d_ptr->m_pImModel->addRowBegin();
@@ -444,16 +526,24 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                 if (t->d_ptr->m_pImModel)
                     t->d_ptr->m_pImModel->addRowEnd();
 
-                if (lastUsed < n->m_pMessage->timestamp)
-                    lastUsed = n->m_pMessage->timestamp;
-                if (m->id) {
-                    int status = configurationManager.getMessageStatus(m->id);
-                    t->d_ptr->m_hPendingMessages[m->id] = n;
-                    if (t->d_ptr->updateMessageStatus(m, static_cast<TextRecording::MessageStatus>(status)))
-                        statusChanged = true;
-                }
+                if (lastUsed < n->m_pMessage->timestamp())
+                    lastUsed = n->m_pMessage->timestamp();
+
+                //FIXME for now the message status from older sessions is ignored, 99% of time it makes no
+                // sense.
+
+                //static auto& configurationManager = ConfigurationManager::instance();
+
+                //if (m->id()) {
+                    //int status = configurationManager.getMessageStatus(m->id());
+                    //t->d_ptr->m_hPendingMessages[m->id()] = n;
+                    //if (t->d_ptr->updateMessageStatus(m, static_cast<DRing::Account::MessageStates>(status)))
+                    //    statusChanged = true;
+                //}
             }
         }
+
+        emit t->messageStateChanged();
 
         if (statusChanged)
             t->save();
@@ -465,7 +555,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
     return t;
 }
 
-void Media::TextRecordingPrivate::initGroup(Serializable::Message::Type t, ContactMethod* cm)
+void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* cm)
 {
     //Create new groups when:
     // * None was found on the disk
@@ -473,7 +563,7 @@ void Media::TextRecordingPrivate::initGroup(Serializable::Message::Type t, Conta
     // * [TODO] Once a timeout is reached
 
     if ((!m_pCurrentGroup) || (m_pCurrentGroup->messages.size()
-      && m_pCurrentGroup->messages.constLast()->type != t)) {
+      && m_pCurrentGroup->messages.constLast()->type() != t)) {
         m_pCurrentGroup = new Serializable::Group();
         m_pCurrentGroup->type = t;
 
@@ -490,37 +580,26 @@ void Media::TextRecordingPrivate::initGroup(Serializable::Message::Type t, Conta
 
 void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& path)
 {
-    initGroup(Serializable::Message::Type::SNAPSHOT);
+    initGroup(MimeMessage::Type::SNAPSHOT);
 
-    auto m = new Serializable::Message();
-
-    time_t currentTime;
-    ::time(&currentTime);
+    auto m = MimeMessage::buildFromSnapshot(path);
 
     // Save the snapshot metadata
-    m->timestamp     = currentTime                          ;
-    m->m_HasSnapshot = true                                 ;
-    m->direction     = Media::Direction::IN                 ;
-    m->type          = Serializable::Message::Type::SNAPSHOT;
-    m->authorSha1    = call->peerContactMethod()->sha1()    ;
-    m->id            = currentTime^qrand()                  ;
-    m->group         = m_pCurrentGroup                      ;
 
     m_pCurrentGroup->messages << m;
-
-    auto p = new Serializable::Payload();
-    p->mimeType = RingMimes::SNAPSHOT   ;
-    p->payload  = path;
-    m->payloads << p;
 
     // Forces the lazy loading to happen
     q_ptr->instantMessagingModel();
 
     // Insert the message
-    ::TextMessageNode* n  = new ::TextMessageNode  ();
-    n->m_pMessage         = m                        ;
+    ::TextMessageNode* n  = new ::TextMessageNode(q_ptr);
+    n->m_pMessage         = m;
     n->m_pContactMethod   = call->peerContactMethod();
-    n->m_row              = m_lNodes.size          ();
+    n->m_row              = m_lNodes.size();
+    n->m_pGroup           = m_pCurrentGroup;
+    n->m_AuthorSha1       = call->peerContactMethod()->sha1();
+
+    m_mMessageCounter.setAt(m->status(), m_mMessageCounter[m->status()]+1);
 
     if (m_pImModel)
         m_pImModel->addRowBegin();
@@ -530,350 +609,230 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
     if (m_pImModel)
         m_pImModel->addRowEnd();
 
-    n->m_pContactMethod->setLastUsed(currentTime);
+    if (n->m_pContactMethod->lastUsed() < m->timestamp())
+        n->m_pContactMethod->setLastUsed(m->timestamp());
 
     // Save the conversation
     q_ptr->save();
 
     emit q_ptr->messageInserted(
-        {{p->mimeType, path}}, n->m_pContactMethod, m->direction
+        {{RingMimes::SNAPSHOT, path}}, n->m_pContactMethod, m->direction()
     );
+
+    emit q_ptr->messageStateChanged();
 
     emit messageAdded(n);
 }
 
 void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id)
 {
-   initGroup(Serializable::Message::Type::CHAT, cm);
+    initGroup(MimeMessage::Type::CHAT, cm);
 
-   //Create the message
-   time_t currentTime;
-   ::time(&currentTime);
-   Serializable::Message* m = new Serializable::Message();
+    auto m = MimeMessage::buildNew(message, direction, id);
 
-   m->timestamp = currentTime                      ;
-   m->direction = direction                        ;
-   m->type      = Serializable::Message::Type::CHAT;
-   m->authorSha1= cm->sha1()                       ;
-   m->id        = id;
-   m->group     = m_pCurrentGroup;
+    // Some messages may contain profile or ring-specific metadata, those are
+    // not text messages and don't belong here.
+    if (!m)
+        return;
 
-   if (direction == Media::Media::Direction::OUT)
-      m->isRead = true; // assume outgoing messages are read, since we're sending them
+    for (auto i = message.constBegin(); i != message.constEnd(); i++) {
+        const int currentSize = m_hMimeTypes.size();
 
-   static const int profileSize = QString(RingMimes::PROFILE_VCF).size();
+        //This one is currently useless
+        if (i.value() == QLatin1String("application/resource-lists+xml"))
+            continue;
 
-   QMapIterator<QString, QString> iter(message);
-   while (iter.hasNext()) {
-      iter.next();
-      if (iter.key().left(profileSize) == RingMimes::PROFILE_VCF) {
-         delete m;
-         return;
-      }
+        // Make the clients life easier and tell the payload type
+        const int hasArgs = i.key().indexOf(';');
+        const QString strippedMimeType = hasArgs != -1 ? i.key().left(hasArgs) : i.key();
 
-      if (iter.value() != QLatin1String("application/resource-lists+xml")) { //This one is useless
-         const QString mimeType = iter.key();
+        m_hMimeTypes[strippedMimeType] = true;
 
-         Serializable::Payload* p = new Serializable::Payload();
-         p->mimeType = mimeType    ;
-         p->payload  = iter.value();
-         m->payloads << p;
-
-         if (p->mimeType == QLatin1String("text/plain")) {
-            m->m_PlainText = p->payload;
-            m->m_HasText   = true;
-         }
-         else if (p->mimeType == QLatin1String("text/html")) {
-            m->m_HTML    = p->payload;
-            m->m_HasText = true;
-         }
-
-         // Make the clients life easier and tell the payload type
-         const int hasArgs = mimeType.indexOf(';');
-         const QString strippedMimeType = hasArgs != -1 ? mimeType.left(hasArgs) : mimeType;
-         const int currentSize = m_hMimeTypes.size();
-
-         m_hMimeTypes[strippedMimeType] = true;
-
-         if (currentSize != m_hMimeTypes.size())
+        if (currentSize != m_hMimeTypes.size())
             m_lMimeTypes << strippedMimeType;
-      }
-   }
-   m_pCurrentGroup->messages << m;
-
-   //Make sure the model exist
-   q_ptr->instantMessagingModel();
-
-   //Update the reconstructed conversation
-   ::TextMessageNode* n  = new ::TextMessageNode()       ;
-   n->m_pMessage         = m                             ;
-   n->m_pContactMethod   = const_cast<ContactMethod*>(cm);
-   n->m_row              = m_lNodes.size();
-
-   if (m_pImModel)
-      m_pImModel->addRowBegin();
-
-   m_lNodes << n;
-
-   if (m_pImModel)
-      m_pImModel->addRowEnd();
-
-   if (m->id > 0)
-       m_hPendingMessages[id] = n;
-
-   //Save the conversation
-   q_ptr->save();
-
-   cm->setLastUsed(currentTime);
-   emit q_ptr->messageInserted(message, const_cast<ContactMethod*>(cm), direction);
-   if (!m->isRead) {
-      m_UnreadCount += 1;
-      emit q_ptr->unreadCountChange(1);
-      emit cm->unreadTextMessageCountChanged();
-      emit cm->changed();
-   }
-
-   emit messageAdded(n);
-}
-
-void Serializable::Payload::read(const QJsonObject &json)
-{
-   payload  = json[QStringLiteral("payload") ].toString();
-   mimeType = json[QStringLiteral("mimeType")].toString();
-}
-
-void Serializable::Payload::write(QJsonObject& json) const
-{
-   json[QStringLiteral("payload") ] = payload ;
-   json[QStringLiteral("mimeType")] = mimeType;
-}
-
-Serializable::Message::~Message()
-{
-    foreach(auto p, payloads)
-        delete p;
-}
-
-void Serializable::Message::read (const QJsonObject &json)
-{
-   timestamp  = json[QStringLiteral("timestamp") ].toInt                (                           );
-   authorSha1 = json[QStringLiteral("authorSha1")].toString             (                           );
-   isRead     = json[QStringLiteral("isRead")    ].toBool               (                           );
-   direction  = static_cast<Media::Media::Direction>    ( json[QStringLiteral("direction")].toInt() );
-   type       = static_cast<Serializable::Message::Type>( json[QStringLiteral("type")     ].toInt() );
-   id         = json[QStringLiteral("id")        ].toVariant().value<uint64_t>(                     );
-   deliveryStatus = static_cast<Media::TextRecording::MessageStatus>(json[QStringLiteral("deliveryStatus")].toInt());
-
-   QJsonArray a = json[QStringLiteral("payloads")].toArray();
-   for (int i = 0; i < a.size(); ++i) {
-      QJsonObject o = a[i].toObject();
-      Payload* p = new Payload();
-      p->read(o);
-      payloads << p;
-
-      if (p->mimeType == QLatin1String("text/plain")) {
-         m_PlainText = p->payload;
-         m_HasText   = true;
-      }
-      else if (p->mimeType == QLatin1String("text/html")) {
-         m_HTML    = p->payload;
-         m_HasText = true;
-      }
-   }
-
-   //Load older conversation from a time when only 1 mime/payload pair was supported
-   if (!json[QStringLiteral("payload")   ].toString().isEmpty()) {
-      Payload* p  = new Payload();
-      p->payload  = json[QStringLiteral("payload")  ].toString();
-      p->mimeType = json[QStringLiteral("mimeType") ].toString();
-      payloads << p;
-      m_PlainText = p->payload;
-      m_HasText   = true;
-   }
-}
-
-void Serializable::Message::write(QJsonObject &json) const
-{
-   json[QStringLiteral("timestamp")  ] = static_cast<int>(timestamp);
-   json[QStringLiteral("authorSha1") ] = authorSha1                 ;
-   json[QStringLiteral("direction")  ] = static_cast<int>(direction);
-   json[QStringLiteral("type")       ] = static_cast<int>(type)     ;
-   json[QStringLiteral("isRead")     ] = isRead                     ;
-   json[QStringLiteral("id")         ] = QString::number(id);
-   json[QStringLiteral("deliveryStatus")         ] = static_cast<int>(deliveryStatus);
-
-   QJsonArray a;
-   foreach (const Payload* p, payloads) {
-      QJsonObject o;
-      p->write(o);
-      a.append(o);
-   }
-   json[QStringLiteral("payloads")] = a;
-}
-
-const QRegularExpression Serializable::Message::m_linkRegex = QRegularExpression(QStringLiteral("((?>(?>https|http|ftp|ring):|www\\.)(?>[^\\s,.);!>]|[,.);!>](?!\\s|$))+)"),
-                                                                                 QRegularExpression::CaseInsensitiveOption);
-
-const QString& Serializable::Message::getFormattedHtml()
-{
-    if (m_FormattedHtml.isEmpty())
-    {
-        QString re;
-        auto p = 0;
-        auto it = m_linkRegex.globalMatch(m_PlainText);
-        while (it.hasNext()) {
-            QRegularExpressionMatch match = it.next();
-            auto start = match.capturedStart();
-
-            auto url = QUrl::fromUserInput(match.capturedRef().toString());
-
-            if (start > p)
-                re.append(m_PlainText.mid(p, start - p).toHtmlEscaped().replace(QLatin1Char('\n'),
-                                                                                QStringLiteral("<br/>")));
-            re.append(QStringLiteral("<a href=\"%1\">%2</a>")
-                      .arg(QString::fromLatin1(url.toEncoded()).toHtmlEscaped(),
-                           match.capturedRef().toString().toHtmlEscaped()));
-            m_LinkList.append(url);
-            p = match.capturedEnd();
-        }
-        if (p < m_PlainText.size())
-            re.append(m_PlainText.mid(p, m_PlainText.size() - p).toHtmlEscaped());
-
-        m_FormattedHtml = QStringLiteral("<body>%1</body>").arg(re);
     }
-    return m_FormattedHtml;
+
+    m_pCurrentGroup->messages << m;
+
+    //Make sure the model exist
+    q_ptr->instantMessagingModel();
+
+    //Update the reconstructed conversation
+    auto n               = new ::TextMessageNode(q_ptr);
+    n->m_pMessage        = m;
+    n->m_pContactMethod  = const_cast<ContactMethod*>(cm);
+    n->m_row             = m_lNodes.size();
+    n->m_pGroup          = m_pCurrentGroup;
+    n->m_AuthorSha1      = cm->sha1();
+
+    m_mMessageCounter.setAt(m->status(), m_mMessageCounter[m->status()]+1);
+
+    if (m_pImModel)
+        m_pImModel->addRowBegin();
+
+    m_lNodes << n;
+
+    if (m_pImModel)
+        m_pImModel->addRowEnd();
+
+    //FIXME the states need to be set, maybe assume SENDING when the id > 0
+    if (m->id() > 0 && m->status() == MimeMessage::State::SENDING)
+        m_hPendingMessages[id] = n;
+
+    //Save the conversation
+    q_ptr->save();
+
+
+    if (cm->lastUsed() < m->timestamp())
+        cm->setLastUsed(m->timestamp());
+
+    emit q_ptr->messageInserted(message, const_cast<ContactMethod*>(cm), direction);
+    if (m->status() != MimeMessage::State::READ) { //FIXME
+        m_UnreadCount += 1;
+        emit q_ptr->unreadCountChange(1);
+        emit cm->unreadTextMessageCountChanged();
+        emit cm->changed();
+    }
+
+    emit q_ptr->messageStateChanged();
+
+    emit messageAdded(n);
 }
 
 Serializable::Group::~Group()
 {
-    foreach(auto m, messages)
+    for (auto m : qAsConst(messages))
         delete m;
 }
 
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
 {
-   id            = json[QStringLiteral("id")           ].toInt   ();
-   nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
-   nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
-   type          = static_cast<Message::Type>(json[QStringLiteral("type")].toInt());
+    Q_UNUSED(sha1s)
+    id            = json[QStringLiteral("id")           ].toInt   ();
+    nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
+    nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
+    type          = static_cast<MimeMessage::Type>(json[QStringLiteral("type")].toInt());
 
-   QJsonArray a = json[QStringLiteral("messages")].toArray();
-   for (int i = 0; i < a.size(); ++i) {
-      QJsonObject o = a[i].toObject();
-      Message* message = new Message();
-      message->contactMethod = sha1s[message->authorSha1];
-      message->group = this;
-      message->read(o);
-      messages.append(message);
-   }
+    QJsonArray a = json[QStringLiteral("messages")].toArray();
+    for (int i = 0; i < a.size(); ++i) {
+        QJsonObject o = a[i].toObject();
+        auto message = MimeMessage::buildExisting(o);
+
+        messages.append(message);
+    }
 }
 
 void Serializable::Group::write(QJsonObject &json) const
 {
-   json[QStringLiteral("id")            ] = id                    ;
-   json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1         ;
-   json[QStringLiteral("nextGroupId")   ] = nextGroupId           ;
-   json[QStringLiteral("type")          ] = static_cast<int>(type);
+    json[QStringLiteral("id")            ] = id                    ;
+    json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1         ;
+    json[QStringLiteral("nextGroupId")   ] = nextGroupId           ;
+    json[QStringLiteral("type")          ] = static_cast<int>(type);
 
-   QJsonArray a;
-   for (const Message* m : messages) {
-      QJsonObject o;
-      m->write(o);
-      a.append(o);
-   }
-   json[QStringLiteral("messages")] = a;
+    QJsonArray a;
+    for (const MimeMessage* m : messages) {
+        QJsonObject o;
+        m->write(o);
+        a.append(o);
+    }
+    json[QStringLiteral("messages")] = a;
 }
 
 void Serializable::Peer::read (const QJsonObject &json)
 {
-   accountId = json[QStringLiteral("accountId")].toString();
-   uri       = json[QStringLiteral("uri")      ].toString();
-   personUID = json[QStringLiteral("personUID")].toString();
-   sha1      = json[QStringLiteral("sha1")     ].toString();
+    accountId = json[QStringLiteral("accountId")].toString();
+    uri       = json[QStringLiteral("uri")      ].toString();
+    personUID = json[QStringLiteral("personUID")].toString();
+    sha1      = json[QStringLiteral("sha1")     ].toString();
 
-   Account* a     = AccountModel::instance().getById(accountId.toLatin1());
-   Person* person = personUID.isEmpty() ?
-      nullptr : PersonModel::instance().getPersonByUid(personUID.toLatin1());
+    Account* a     = AccountModel::instance().getById(accountId.toLatin1());
+    Person* person = personUID.isEmpty() ?
+        nullptr : PersonModel::instance().getPersonByUid(personUID.toLatin1());
 
-   m_pContactMethod = PhoneDirectoryModel::instance().getNumber(uri,person,a);
+    m_pContactMethod = PhoneDirectoryModel::instance().getNumber(uri,person,a);
 }
 
 void Serializable::Peer::write(QJsonObject &json) const
 {
-   json[QStringLiteral("accountId")] = accountId ;
-   json[QStringLiteral("uri")      ] = uri       ;
-   json[QStringLiteral("personUID")] = personUID ;
-   json[QStringLiteral("sha1")     ] = sha1      ;
+    json[QStringLiteral("accountId")] = accountId ;
+    json[QStringLiteral("uri")      ] = uri       ;
+    json[QStringLiteral("personUID")] = personUID ;
+    json[QStringLiteral("sha1")     ] = sha1      ;
 }
 
 Serializable::Peers::~Peers()
 {
-    foreach(auto g, groups)
+    for (auto g : qAsConst(groups))
         delete g;
 
-    foreach(auto p, peers)
+    for (auto p : qAsConst(peers))
         delete p;
 }
 
 void Serializable::Peers::read (const QJsonObject &json)
 {
+    QJsonArray as = json[QStringLiteral("sha1s")].toArray();
+    for (int i = 0; i < as.size(); ++i) {
+        sha1s.append(as[i].toString());
+    }
 
-   QJsonArray as = json[QStringLiteral("sha1s")].toArray();
-   for (int i = 0; i < as.size(); ++i) {
-      sha1s.append(as[i].toString());
-   }
+    QJsonArray a2 = json[QStringLiteral("peers")].toArray();
+    for (int i = 0; i < a2.size(); ++i) {
+        QJsonObject o = a2[i].toObject();
 
-   QJsonArray a2 = json[QStringLiteral("peers")].toArray();
-   for (int i = 0; i < a2.size(); ++i) {
-      QJsonObject o = a2[i].toObject();
+        // It should never happen, but there is some corner case where it might
+        // anyway, like when some data is deleted, but not some other and the
+        // file is resaved. Tracking the problem source is not worth it as the
+        // data will be worthless.
+        if (o[QStringLiteral("uri")].toString().isEmpty()) {
+            qWarning() << "Corrupted chat history entry: Missing URI";
+            continue;
+        }
 
-      // It should never happen, but there is some corner case where it might
-      // anyway, like when some data is deleted, but not some other and the
-      // file is resaved. Tracking the problem source is not worth it as the
-      // data will be worthless.
-      if (o[QStringLiteral("uri")].toString().isEmpty()) {
-          qWarning() << "Corrupted chat history entry: Missing URI";
-          continue;
-      }
+        Peer* peer = new Peer();
+        peer->read(o);
+        m_hSha1[peer->sha1] = peer->m_pContactMethod;
+        peers.append(peer);
+    }
 
-      Peer* peer = new Peer();
-      peer->read(o);
-      m_hSha1[peer->sha1] = peer->m_pContactMethod;
-      peers.append(peer);
-   }
+    QJsonArray a = json[QStringLiteral("groups")].toArray();
+    for (int i = 0; i < a.size(); ++i) {
+        QJsonObject o = a[i].toObject();
+        Group* group = new Group();
+        group->read(o,m_hSha1);
+        groups.append(group);
+    }
+}
 
-   QJsonArray a = json[QStringLiteral("groups")].toArray();
-   for (int i = 0; i < a.size(); ++i) {
-      QJsonObject o = a[i].toObject();
-      Group* group = new Group();
-      group->read(o,m_hSha1);
-      groups.append(group);
-   }
+QJsonArray Serializable::Peers::toSha1Array() const
+{
+    QJsonArray a2;
+    for (const QString& sha1 : qAsConst(sha1s)) {
+        a2.append(sha1);
+    }
+
+    return a2;
 }
 
 void Serializable::Peers::write(QJsonObject &json) const
 {
-   QJsonArray a2;
-   for (const QString& sha1 : sha1s) {
-      a2.append(sha1);
-   }
-   json[QStringLiteral("sha1s")] = a2;
+    json[QStringLiteral("sha1s")] = toSha1Array();
 
-   QJsonArray a;
-   for (const Group* g : groups) {
-      QJsonObject o;
-      g->write(o);
-      a.append(o);
-   }
-   json[QStringLiteral("groups")] = a;
+    QJsonArray a;
+    for (const Group* g : groups) {
+        QJsonObject o;
+        g->write(o);
+        a.append(o);
+    }
+    json[QStringLiteral("groups")] = a;
 
-   QJsonArray a3;
-   for (const Peer* p : peers) {
-      QJsonObject o;
-      p->write(o);
-      a3.append(o);
-   }
-   json[QStringLiteral("peers")] = a3;
+    QJsonArray a3;
+    for (const Peer* p : peers) {
+        QJsonObject o;
+        p->write(o);
+        a3.append(o);
+    }
+    json[QStringLiteral("peers")] = a3;
 }
 
 
@@ -889,54 +848,54 @@ InstantMessagingModel::~InstantMessagingModel()
 
 QHash<int,QByteArray> InstantMessagingModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   static bool initRoles = false;
-   if (!initRoles) {
-      initRoles = true;
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+    if (!initRoles) {
+        initRoles = true;
 
-      QHash<int, QByteArray>::const_iterator i;
-      for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
-         roles[i.key()] = i.value();
+        QHash<int, QByteArray>::const_iterator i;
+        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+            roles[i.key()] = i.value();
 
-      roles.insert((int)Media::TextRecording::Role::Direction           , "direction"           );
-      roles.insert((int)Media::TextRecording::Role::AuthorDisplayname   , "authorDisplayname"   );
-      roles.insert((int)Media::TextRecording::Role::AuthorUri           , "authorUri"           );
-      roles.insert((int)Media::TextRecording::Role::AuthorPresenceStatus, "authorPresenceStatus");
-      roles.insert((int)Media::TextRecording::Role::Timestamp           , "timestamp"           );
-      roles.insert((int)Media::TextRecording::Role::IsRead              , "isRead"              );
-      roles.insert((int)Media::TextRecording::Role::FormattedDate       , "formattedDate"       );
-      roles.insert((int)Media::TextRecording::Role::IsStatus            , "isStatus"            );
-      roles.insert((int)Media::TextRecording::Role::DeliveryStatus      , "deliveryStatus"      );
-      roles.insert((int)Media::TextRecording::Role::FormattedHtml       , "formattedHtml"       );
-      roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
-      roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
-   }
-   return roles;
+        roles.insert((int)Media::TextRecording::Role::Direction           , "direction"           );
+        roles.insert((int)Media::TextRecording::Role::AuthorDisplayname   , "authorDisplayname"   );
+        roles.insert((int)Media::TextRecording::Role::AuthorUri           , "authorUri"           );
+        roles.insert((int)Media::TextRecording::Role::AuthorPresenceStatus, "authorPresenceStatus");
+        roles.insert((int)Media::TextRecording::Role::Timestamp           , "timestamp"           );
+        roles.insert((int)Media::TextRecording::Role::IsRead              , "isRead"              );
+        roles.insert((int)Media::TextRecording::Role::FormattedDate       , "formattedDate"       );
+        roles.insert((int)Media::TextRecording::Role::IsStatus            , "isStatus"            );
+        roles.insert((int)Media::TextRecording::Role::DeliveryStatus      , "deliveryStatus"      );
+        roles.insert((int)Media::TextRecording::Role::FormattedHtml       , "formattedHtml"       );
+        roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
+        roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
+    }
+    return roles;
 }
 
 QVariant Media::TextRecording::roleData(int role) const
 {
-   switch(role) {
-      case Qt::DisplayRole:
-         return peers().size() ? peers().constFirst()->primaryName() : roleData(-1, Qt::DisplayRole);
-      case (int) Ring::Role::Length:
-         return QString::number(size()) + tr(" elements");
-      case (int) Ring::Role::FormattedLastUsed:
-         return d_ptr->m_lNodes.isEmpty() ? tr("N/A") :
-            QDateTime::fromTime_t(d_ptr->m_lNodes.last()->m_pMessage->timestamp).toString();
-   }
+    switch(role) {
+        case Qt::DisplayRole:
+            return peers().size() ? peers().constFirst()->primaryName() : roleData(-1, Qt::DisplayRole);
+        case (int) Ring::Role::Length:
+            return QString::number(size()) + tr(" elements");
+        case (int) Ring::Role::FormattedLastUsed:
+            return d_ptr->m_lNodes.isEmpty() ? tr("N/A") :
+                QDateTime::fromTime_t(d_ptr->m_lNodes.last()->m_pMessage->timestamp()).toString();
+    }
 
-   return {};
+    return {};
 }
 
 
 QVariant TextMessageNode::snapshotRoleData(int role) const
 {
-    Q_ASSERT(!m_pMessage->payloads.isEmpty());
+    Q_ASSERT(!m_pMessage->payloads().isEmpty());
 
     switch(role) {
         case Qt::DisplayRole:
-            return m_pMessage->payloads.first()->payload;
+            return m_pMessage->payloads().first()->payload;
     }
 
     return {};
@@ -944,109 +903,109 @@ QVariant TextMessageNode::snapshotRoleData(int role) const
 
 QVariant TextMessageNode::roleData(int role) const
 {
-   if (m_pMessage->type == Serializable::Message::Type::SNAPSHOT)
-       return snapshotRoleData(role);
+    if (m_pMessage->type() == MimeMessage::Type::SNAPSHOT)
+        return snapshotRoleData(role);
 
-   switch (role) {
-      case Qt::DisplayRole:
-         return QVariant(m_pMessage->m_PlainText);
-      case Qt::DecorationRole         :
-         if (m_pMessage->direction == Media::Media::Direction::IN)
-            return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod);
-         else if (m_pContactMethod->account())
-            return GlobalInstances::pixmapManipulator().decorationRole(
-                m_pContactMethod->account()->contactMethod()
-            );
-         else {
-               /* It's most likely an account that doesn't exist anymore
-               * Use a fallback image in pixmapManipulator
-               */
-               return GlobalInstances::pixmapManipulator().decorationRole((ContactMethod*)nullptr);
-         }
-         break;
-      case (int)Media::TextRecording::Role::Direction            :
-         return QVariant::fromValue(m_pMessage->direction);
-      case (int)Media::TextRecording::Role::AuthorDisplayname    :
-      case (int)Ring::Role::Name                                 :
-         if (m_pMessage->direction == Media::Media::Direction::IN)
-            return m_pContactMethod->roleData(static_cast<int>(Ring::Role::Name));
-         else
-            return QObject::tr("Me");
-      case (int)Media::TextRecording::Role::AuthorUri            :
-      case (int)Ring::Role::Number                               :
-         return m_pContactMethod->uri();
-      case (int)Media::TextRecording::Role::AuthorPresenceStatus :
-         // Always consider "self" as present
-         if (m_pMessage->direction == Media::Media::Direction::OUT)
-            return true;
-         else
-            return m_pContactMethod->contact() ?
-               m_pContactMethod->contact()->isPresent() : m_pContactMethod->isPresent();
-      case (int)Media::TextRecording::Role::Timestamp            :
-         return (uint)m_pMessage->timestamp;
-      case (int)Media::TextRecording::Role::IsRead               :
-         return (int)m_pMessage->isRead;
-      case (int)Media::TextRecording::Role::FormattedDate        :
-         return QDateTime::fromTime_t(m_pMessage->timestamp).toString();
-      case (int)Media::TextRecording::Role::IsStatus             :
-         return m_pMessage->type == Serializable::Message::Type::STATUS;
-      case (int)Media::TextRecording::Role::HTML                 :
-         return QVariant(m_pMessage->m_HTML);
-      case (int)Media::TextRecording::Role::HasText              :
-         return m_pMessage->m_HasText;
-      case (int)Media::TextRecording::Role::ContactMethod        :
-         return QVariant::fromValue(m_pContactMethod);
-      case (int)Media::TextRecording::Role::DeliveryStatus       :
-         return QVariant::fromValue(m_pMessage->deliveryStatus);
-      case (int)Media::TextRecording::Role::FormattedHtml        :
-         return QVariant::fromValue(m_pMessage->getFormattedHtml());
-      case (int)Media::TextRecording::Role::LinkList             :
-         return QVariant::fromValue(m_pMessage->m_LinkList);
-      case (int)Media::TextRecording::Role::Id                   :
-         return QVariant::fromValue(m_pMessage->id);
-      default:
-         break;
-   }
+    switch (role) {
+        case Qt::DisplayRole:
+            return QVariant(m_pMessage->plainText());
+        case Qt::DecorationRole         :
+            if (m_pMessage->direction() == Media::Media::Direction::IN)
+                return GlobalInstances::pixmapManipulator().decorationRole(m_pContactMethod);
+            else if (m_pContactMethod->account())
+                return GlobalInstances::pixmapManipulator().decorationRole(
+                    m_pContactMethod->account()->contactMethod()
+                );
+            else {
+                /* It's most likely an account that doesn't exist anymore
+                * Use a fallback image in pixmapManipulator
+                */
+                return GlobalInstances::pixmapManipulator().decorationRole((ContactMethod*)nullptr);
+            }
+            break;
+        case (int)Media::TextRecording::Role::Direction            :
+            return QVariant::fromValue(m_pMessage->direction());
+        case (int)Media::TextRecording::Role::AuthorDisplayname    :
+        case (int)Ring::Role::Name                                 :
+            if (m_pMessage->direction() == Media::Media::Direction::IN)
+                return m_pContactMethod->roleData(static_cast<int>(Ring::Role::Name));
+            else
+                return QObject::tr("Me");
+        case (int)Media::TextRecording::Role::AuthorUri            :
+        case (int)Ring::Role::Number                               :
+            return m_pContactMethod->uri();
+        case (int)Media::TextRecording::Role::AuthorPresenceStatus :
+            // Always consider "self" as present
+            if (m_pMessage->direction() == Media::Media::Direction::OUT)
+                return true;
+            else
+                return m_pContactMethod->contact() ?
+                m_pContactMethod->contact()->isPresent() : m_pContactMethod->isPresent();
+        case (int)Media::TextRecording::Role::Timestamp            :
+            return (uint)m_pMessage->timestamp();
+        case (int)Media::TextRecording::Role::IsRead               :
+            return m_pMessage->status() != MimeMessage::State::UNREAD;
+        case (int)Media::TextRecording::Role::FormattedDate        :
+            return QDateTime::fromTime_t(m_pMessage->timestamp()).toString();
+        case (int)Media::TextRecording::Role::IsStatus             :
+            return m_pMessage->type() == MimeMessage::Type::STATUS;
+        case (int)Media::TextRecording::Role::HTML                 :
+            return QVariant(m_pMessage->html());
+        case (int)Media::TextRecording::Role::HasText              :
+            return m_pMessage->hasText();
+        case (int)Media::TextRecording::Role::ContactMethod        :
+            return QVariant::fromValue(m_pContactMethod);
+        case (int)Media::TextRecording::Role::DeliveryStatus       :
+            return QVariant::fromValue(m_pMessage->status());
+        case (int)Media::TextRecording::Role::FormattedHtml        :
+            return QVariant::fromValue(m_pMessage->getFormattedHtml());
+        case (int)Media::TextRecording::Role::LinkList             :
+            return QVariant::fromValue(m_pMessage->linkList());
+        case (int)Media::TextRecording::Role::Id                   :
+            return QVariant::fromValue(m_pMessage->id());
+        default:
+            break;
+    }
 
-   return {};
+    return {};
 }
 
 QVariant Media::TextRecording::roleData(int row, int role) const
 {
-   if (row < -d_ptr->m_lNodes.size() || row >= d_ptr->m_lNodes.size())
-      return {};
+    if (row < -d_ptr->m_lNodes.size() || row >= d_ptr->m_lNodes.size())
+        return {};
 
-   // Allow reverse lookup too as the last messages are the most relevant
-   if (row < 0)
-      row = d_ptr->m_lNodes.size()+row;
+    // Allow reverse lookup too as the last messages are the most relevant
+    if (row < 0)
+        row = d_ptr->m_lNodes.size()+row;
 
-   Q_ASSERT(row < d_ptr->m_lNodes.size());
+    Q_ASSERT(row < d_ptr->m_lNodes.size());
 
-   return d_ptr->m_lNodes[row]->roleData(role);
+    return d_ptr->m_lNodes[row]->roleData(role);
 }
 
 ///Get data from the model
 QVariant InstantMessagingModel::data( const QModelIndex& idx, int role) const
 {
-   if ((!idx.isValid()) || idx.column())
-      return {};
+    if ((!idx.isValid()) || idx.column())
+        return {};
 
-   return m_pRecording->roleData(idx.row(), role);
+    return m_pRecording->roleData(idx.row(), role);
 }
 
 ///Number of row
 int InstantMessagingModel::rowCount(const QModelIndex& parentIdx) const
 {
-   if (!parentIdx.isValid())
-      return m_pRecording->d_ptr->m_lNodes.size();
-   return 0;
+    if (!parentIdx.isValid())
+        return m_pRecording->d_ptr->m_lNodes.size();
+    return 0;
 }
 
 ///Model flags
 Qt::ItemFlags InstantMessagingModel::flags(const QModelIndex& idx) const
 {
-   Q_UNUSED(idx)
-   return Qt::ItemIsEnabled;
+    Q_UNUSED(idx)
+    return Qt::ItemIsEnabled;
 }
 
 ///Set model data
@@ -1060,9 +1019,19 @@ bool InstantMessagingModel::setData(const QModelIndex& idx, const QVariant &valu
     ::TextMessageNode* n = m_pRecording->d_ptr->m_lNodes[idx.row()];
     switch (role) {
         case (int)Media::TextRecording::Role::IsRead               :
-            if (n->m_pMessage->isRead != value.toBool()) {
-                n->m_pMessage->isRead = value.toBool();
-                if (n->m_pMessage->m_HasText) {
+            //TODO delegate that logic to MimeMessage::
+            if ((value.toBool() && n->m_pMessage->status() != MimeMessage::State::READ)
+              || ((!value.toBool()) && n->m_pMessage->status() != MimeMessage::State::UNREAD)
+            ) {
+
+                m_pRecording->d_ptr->performMessageAction(
+                    n->m_pMessage,
+                    value.toBool() ?
+                        MimeMessage::Actions::READ :
+                        MimeMessage::Actions::UNREAD
+                );
+
+                if (n->m_pMessage->hasText()) {
                     int val = value.toBool() ? -1 : +1;
                     m_pRecording->d_ptr->m_UnreadCount += val;
                     emit m_pRecording->unreadCountChange(val);
@@ -1085,13 +1054,13 @@ bool InstantMessagingModel::setData(const QModelIndex& idx, const QVariant &valu
 
 void InstantMessagingModel::addRowBegin()
 {
-   const int rc = rowCount();
-   beginInsertRows(QModelIndex(),rc,rc);
+    const int rc = rowCount();
+    beginInsertRows(QModelIndex(),rc,rc);
 }
 
 void InstantMessagingModel::addRowEnd()
 {
-   endInsertRows();
+    endInsertRows();
 }
 
 void Media::TextRecordingPrivate::clear()

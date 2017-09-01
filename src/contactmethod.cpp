@@ -733,7 +733,7 @@ QVariant ContactMethod::roleData(int role) const
          return QVariant::fromValue(Call::LifeCycleState::FINISHED);
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):
          if (auto rec = textRecording())
-            cat = rec->unreadInstantTextMessagingModel()->rowCount();
+            cat = rec->unreadCount();
          else
             cat = 0;
          break;

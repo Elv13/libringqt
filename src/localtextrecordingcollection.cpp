@@ -24,6 +24,7 @@
 #include <QtCore/QStandardPaths>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
 
 //Ring
 #include <globalinstances.h>
@@ -50,66 +51,113 @@
 class LocalTextRecordingEditor final : public CollectionEditor<Media::Recording>
 {
 public:
-   LocalTextRecordingEditor(CollectionMediator<Media::Recording>* m) : CollectionEditor<Media::Recording>(m) {}
-   virtual bool save       ( const Media::Recording* item ) override;
-   virtual bool remove     ( const Media::Recording* item ) override;
-   virtual bool edit       ( Media::Recording*       item ) override;
-   virtual bool addNew     ( Media::Recording*       item ) override;
-   virtual bool addExisting( const Media::Recording* item ) override;
-   QString fetch(const QByteArray& sha1);
+    LocalTextRecordingEditor(CollectionMediator<Media::Recording>* m) : CollectionEditor<Media::Recording>(m) {}
+    virtual ~LocalTextRecordingEditor();
 
-   void clearAll();
+    virtual bool save       ( const Media::Recording* item ) override;
+    virtual bool remove     ( const Media::Recording* item ) override;
+    virtual bool edit       ( Media::Recording*       item ) override;
+    virtual bool addNew     ( Media::Recording*       item ) override;
+    virtual bool addExisting( const Media::Recording* item ) override;
+    QString fetch(const QByteArray& sha1);
+
+    void clearAll();
+    void loadStat();
 
 private:
-   virtual QVector<Media::Recording*> items() const override;
-   //Attributes
-   QVector<Media::Recording*> m_lNumbers;
+    virtual QVector<Media::Recording*> items() const override;
+    //Attributes
+    QVector<Media::Recording*> m_lNumbers;
 };
 
 LocalTextRecordingCollection::LocalTextRecordingCollection(CollectionMediator<Media::Recording>* mediator) :
    CollectionInterface(new LocalTextRecordingEditor(mediator))
 {
-   // TODO use a thread
-   //QTimer::singleShot(0, [this]() {
-   load();
-   //});
+    // TODO use a thread
+    //QTimer::singleShot(0, [this]() {
+    load();
+    //});
+}
+
+LocalTextRecordingEditor::~LocalTextRecordingEditor()
+{
+    // Save some metadata to speedup the startup process.
+    const QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    const QString path = QStringLiteral("%1/textrecordings.json").arg(dir.path());
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
+        qWarning() << "Could note save the text recording summary to" << path;
+        return;
+    }
+
+    QJsonArray a;
+
+    const auto itms = items();
+
+    for (const auto recording : qAsConst(itms)) {
+        const auto r = static_cast<const Media::TextRecording*>(recording);
+        QJsonObject o;
+        QJsonArray cms;
+        const auto paths = r->paths();
+        for (const auto& path : qAsConst(paths)) {
+            //
+            cms.append(path);
+        }
+
+        o[ "paths"  ] = cms;
+        o[ "count"  ] = r->count();
+        o[ "unread" ] = r->unreadCount();
+
+        a.append(o);
+    }
+
+    // Wrap everything into an object for futureproofness
+    QJsonObject o;
+    o["entries"] = a;
+
+    QJsonDocument doc(a);
+
+    QTextStream streamFileOut(&file);
+    streamFileOut.setCodec("UTF-8");
+    streamFileOut << doc.toJson();
+    streamFileOut.flush();
+    file.close();
 }
 
 LocalTextRecordingCollection::~LocalTextRecordingCollection()
 {
-
 }
 
 LocalTextRecordingCollection& LocalTextRecordingCollection::instance()
 {
-   static auto instance = Media::RecordingModel::instance().addCollection<LocalTextRecordingCollection>();
-   return *instance;
+    static auto instance = Media::RecordingModel::instance().addCollection<LocalTextRecordingCollection>();
+    return *instance;
 }
 
 bool LocalTextRecordingEditor::save(const Media::Recording* recording)
 {
-   Q_UNUSED(recording)
-   QHash<QByteArray,QByteArray> ret = static_cast<const Media::TextRecording*>(recording)->d_ptr->toJsons();
+    Q_UNUSED(recording)
+    QHash<QByteArray,QByteArray> ret = static_cast<const Media::TextRecording*>(recording)->d_ptr->toJsons();
 
-   QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    static QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
 
-   //Make sure the directory exist
-   dir.mkdir(QStringLiteral("text/"));
+    //Make sure the directory exist
+    dir.mkdir(QStringLiteral("text/"));
 
-   //Save each file
-   for (QHash<QByteArray,QByteArray>::const_iterator i = ret.begin(); i != ret.end(); ++i) {
-      QFile file(QStringLiteral("%1/text/%2.json").arg(dir.path()).arg(QString(i.key())));
+    //Save each file
+    for (QHash<QByteArray,QByteArray>::const_iterator i = ret.begin(); i != ret.end(); ++i) {
+        QFile file(QStringLiteral("%1/text/%2.json").arg(dir.path()).arg(QString(i.key())));
 
-      if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
-         QTextStream streamFileOut(&file);
-         streamFileOut.setCodec("UTF-8");
-         streamFileOut << i.value();
-         streamFileOut.flush();
-         file.close();
-      }
-   }
+        if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
+            QTextStream streamFileOut(&file);
+            streamFileOut.setCodec("UTF-8");
+            streamFileOut << i.value();
+            streamFileOut.flush();
+            file.close();
+        }
+    }
 
-   return true;
+    return true;
 }
 
 void LocalTextRecordingEditor::clearAll()
@@ -121,67 +169,79 @@ void LocalTextRecordingEditor::clearAll()
     }
 }
 
+/** Reading *ALL* recordings during the initial event loop cause would freeze
+ * the application for many seconds on slower drives. However knowing the number
+ * of unread messages from previous sessions is necessary to display the UI.
+ *
+ * This collection therefor keep track of that in a small cache. It allows the
+ * full recordings to be lazy-loaded.
+ */
+void LocalTextRecordingEditor::loadStat()
+{
+    //
+}
+
 bool LocalTextRecordingEditor::remove(const Media::Recording* item)
 {
-   Q_UNUSED(item)
-   //TODO
-   return false;
+    Q_UNUSED(item)
+    //TODO
+    return false;
 }
 
 bool LocalTextRecordingEditor::edit( Media::Recording* item)
 {
-   Q_UNUSED(item)
-   return false;
+    Q_UNUSED(item)
+    return false;
 }
 
 bool LocalTextRecordingEditor::addNew( Media::Recording* item)
 {
-   Q_UNUSED(item)
-   addExisting(item);
-   return save(item);
+    Q_UNUSED(item)
+    addExisting(item);
+    return save(item);
 }
 
 bool LocalTextRecordingEditor::addExisting(const Media::Recording* item)
 {
-   m_lNumbers << const_cast<Media::Recording*>(item);
-   mediator()->addItem(item);
-   return false;
+    m_lNumbers << const_cast<Media::Recording*>(item);
+    mediator()->addItem(item);
+    return false;
 }
 
 QString LocalTextRecordingEditor::fetch(const QByteArray& sha1)
 {
-   QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/" + sha1 + ".json");
+    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/" + sha1 + ".json");
 
-   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      return QByteArray();
-   }
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QByteArray();
+    }
 
-   return QString::fromUtf8(file.readAll());
+    return QString::fromUtf8(file.readAll());
 }
 
 QVector<Media::Recording*> LocalTextRecordingEditor::items() const
 {
-   return m_lNumbers;
+    return m_lNumbers;
 }
 
 QString LocalTextRecordingCollection::name () const
 {
-   return QObject::tr("Local text recordings");
+    return QObject::tr("Local text recordings");
 }
 
 QString LocalTextRecordingCollection::category () const
 {
-   return QObject::tr("Recording");
+    return QObject::tr("Recording");
 }
 
 QVariant LocalTextRecordingCollection::icon() const
 {
-   return GlobalInstances::pixmapManipulator().collectionIcon(this,Interfaces::PixmapManipulatorI::CollectionIconHint::RECORDING);
+    return GlobalInstances::pixmapManipulator().collectionIcon(this,Interfaces::PixmapManipulatorI::CollectionIconHint::RECORDING);
 }
 
 bool LocalTextRecordingCollection::isEnabled() const
 {
-   return true;
+    return true;
 }
 
 bool LocalTextRecordingCollection::load()
@@ -241,21 +301,21 @@ bool LocalTextRecordingCollection::load()
 
 bool LocalTextRecordingCollection::reload()
 {
-   return false;
+    return false;
 }
 
 FlagPack<CollectionInterface::SupportedFeatures> LocalTextRecordingCollection::supportedFeatures() const
 {
-   return
-      CollectionInterface::SupportedFeatures::NONE      |
-      CollectionInterface::SupportedFeatures::LOAD      |
-      CollectionInterface::SupportedFeatures::ADD       |
-      CollectionInterface::SupportedFeatures::SAVE      |
-      CollectionInterface::SupportedFeatures::MANAGEABLE|
-      CollectionInterface::SupportedFeatures::SAVE_ALL  |
-      CollectionInterface::SupportedFeatures::LISTABLE  |
-      CollectionInterface::SupportedFeatures::REMOVE    |
-      CollectionInterface::SupportedFeatures::CLEAR     ;
+    return
+        CollectionInterface::SupportedFeatures::NONE      |
+        CollectionInterface::SupportedFeatures::LOAD      |
+        CollectionInterface::SupportedFeatures::ADD       |
+        CollectionInterface::SupportedFeatures::SAVE      |
+        CollectionInterface::SupportedFeatures::MANAGEABLE|
+        CollectionInterface::SupportedFeatures::SAVE_ALL  |
+        CollectionInterface::SupportedFeatures::LISTABLE  |
+        CollectionInterface::SupportedFeatures::REMOVE    |
+        CollectionInterface::SupportedFeatures::CLEAR     ;
 }
 
 bool LocalTextRecordingCollection::clear()
@@ -271,75 +331,75 @@ bool LocalTextRecordingCollection::clear()
 
 QByteArray LocalTextRecordingCollection::id() const
 {
-   return "localtextrecording";
+    return "localtextrecording";
 }
 
 bool LocalTextRecordingCollection::listId(std::function<void(const QList<Element>)> callback) const
 {
-   QList<Element> list;
+    QList<Element> list;
 
-   QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/");
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/");
 
-   if (!dir.exists())
-      return false;
+    if (!dir.exists())
+        return false;
 
-   for (const QString& str : dir.entryList({"*.json"}) ) {
-      list << str.toLatin1();
-   }
+    for (const QString& str : dir.entryList({"*.json"}) ) {
+        list << str.toLatin1();
+    }
 
-   callback(list);
-   return true;
+    callback(list);
+    return true;
 }
 
 QList<CollectionInterface::Element> LocalTextRecordingCollection::listId() const
 {
-   return {};
+    return {};
 }
 
 bool LocalTextRecordingCollection::fetch(const Element& e)
 {
-   Q_UNUSED(e);
-   return false;
+    Q_UNUSED(e);
+    return false;
 }
 
 bool LocalTextRecordingCollection::fetch( const QList<CollectionInterface::Element>& elements)
 {
-   Q_UNUSED(elements)
-   return false;
+    Q_UNUSED(elements)
+    return false;
 }
 
 Media::TextRecording* LocalTextRecordingCollection::fetchFor(const ContactMethod* cm)
 {
-   const QByteArray& sha1 = cm->sha1();
-   const QString content = static_cast<LocalTextRecordingEditor*>(editor<Media::Recording>())->fetch(sha1);
+    const QByteArray& sha1 = cm->sha1();
+    const QString content = static_cast<LocalTextRecordingEditor*>(editor<Media::Recording>())->fetch(sha1);
 
-   if (content.isEmpty())
-      return nullptr;
+    if (content.isEmpty())
+        return nullptr;
 
-   QJsonParseError err;
-   QJsonDocument loadDoc = QJsonDocument::fromJson(content.toUtf8(), &err);
+    QJsonParseError err;
+    QJsonDocument loadDoc = QJsonDocument::fromJson(content.toUtf8(), &err);
 
-   if (err.error != QJsonParseError::ParseError::NoError) {
-       qWarning() << "Error Decoding Text Message History Json" << err.errorString();
-       return nullptr;
-   }
+    if (err.error != QJsonParseError::ParseError::NoError) {
+        qWarning() << "Error Decoding Text Message History Json" << err.errorString();
+        return nullptr;
+    }
 
-   Media::TextRecording* r = Media::TextRecording::fromJson({loadDoc.object()}, cm, this);
+    Media::TextRecording* r = Media::TextRecording::fromJson({loadDoc.object()}, cm, this);
 
-   editor<Media::Recording>()->addExisting(r);
+    editor<Media::Recording>()->addExisting(r);
 
-   return r;
+    return r;
 }
 
 Media::TextRecording* LocalTextRecordingCollection::createFor(const ContactMethod* cm)
 {
-   Media::TextRecording* r = fetchFor(cm);
+    Media::TextRecording* r = fetchFor(cm);
 
-   if (!r) {
-      r = new Media::TextRecording(Media::Recording::Status::NEW);
-      r->setCollection(this);
-      cm->d_ptr->setTextRecording(r);
-   }
+    if (!r) {
+        r = new Media::TextRecording(Media::Recording::Status::NEW);
+        r->setCollection(this);
+        cm->d_ptr->setTextRecording(r);
+    }
 
-   return r;
+    return r;
 }

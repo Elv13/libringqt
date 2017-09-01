@@ -19,8 +19,6 @@
 
 //Qt
 #include <QtCore/QAbstractListModel>
-#include <QtCore/QRegExp>
-#include <QtCore/QRegularExpression>
 
 //Daemon
 #include <account_const.h>
@@ -28,6 +26,8 @@
 //Ring
 #include "media/media.h"
 #include "media/textrecording.h"
+#include "matrixutils.h"
+#include "media/mimemessage.h"
 
 class SerializableEntityManager;
 struct TextMessageNode;
@@ -47,62 +47,6 @@ namespace Media {
 namespace Serializable {
 
 class Group;
-
-class Payload {
-public:
-   QString payload;
-   QString mimeType;
-
-   void read (const QJsonObject &json);
-   void write(QJsonObject       &json) const;
-};
-
-class Message {
-public:
-   ~Message();
-
-   enum class Type {
-      CHAT    , /*!< Normal message between the peer                                           */
-      STATUS  , /*!< "Room status" message, such as new participants or participants that left */
-      SNAPSHOT, /*!< An image or clip extracted from the video                                 */
-   };
-
-   ///The time associated with this message
-   time_t                  timestamp ;
-   ///A group of alternate payloads (mimetype as key)
-   QList<Payload*>         payloads  ;
-   ///The author display name
-   QString                 authorSha1;
-   ///The direction
-   Media::Media::Direction direction ;
-   ///The message Type
-   Type                    type      ;
-   ///If the message have been read
-   bool                    isRead    ;
-   ///The contact method (incoming messages only)
-   ContactMethod* contactMethod      ;
-   ///The token of the message
-   uint64_t                id        ;
-   ///Delivery Status
-   Media::TextRecording::MessageStatus deliveryStatus;
-   ///The message parent group
-   Group*                  group     ;
-
-   static const QRegularExpression m_linkRegex;
-
-   //Cache the most common payload to avoid lookup
-   QString m_PlainText;
-   QString m_HTML;
-   QString m_FormattedHtml;
-   QList<QUrl> m_LinkList;
-   bool    m_HasText     {false};
-   bool    m_HasSnapshot {false};
-   bool    m_HasUri      {false};
-
-   void read (const QJsonObject &json);
-   void write(QJsonObject       &json) const;
-   const QString& getFormattedHtml();
-};
 
 class Peer {
 public:
@@ -128,11 +72,11 @@ public:
    ///The group ID (necessary to untangle the graph
    int id;
    ///All messages from this chunk
-   QList<Message*> messages;
+   QList<MimeMessage*> messages;
    ///If the conversion add new participants, a new file will be created
    QString nextGroupSha1;
    ///The group type
-   Message::Type type {Message::Type::CHAT};
+   MimeMessage::Type type {MimeMessage::Type::CHAT};
    ///This is the group identifier in the file described by `nextGroupSha1`
    int nextGroupId;
    ///The account used for this conversation
@@ -162,6 +106,8 @@ public:
    void read (const QJsonObject &json);
    void write(QJsonObject       &json) const;
 
+   QJsonArray toSha1Array() const;
+
 private:
    Peers() : hasChanged(false) {}
 };
@@ -180,35 +126,49 @@ class TextRecordingPrivate : public QObject
 {
     Q_OBJECT
 public:
-   explicit TextRecordingPrivate(TextRecording* r);
+    explicit TextRecordingPrivate(TextRecording* r);
 
-   //Attributes
-   InstantMessagingModel*      m_pImModel           ;
-   QVector<::TextMessageNode*> m_lNodes             ;
-   Serializable::Group*        m_pCurrentGroup      ;
-   QList<QSharedPointer<Serializable::Peers>> m_lAssociatedPeers;
-   QHash<QString,bool>         m_hMimeTypes         ;
-   int                         m_UnreadCount        ;
-   QStringList                 m_lMimeTypes         ;
-   QAbstractItemModel*         m_pTextMessagesModel {nullptr};
-   QAbstractItemModel*         m_pUnreadTextMessagesModel {nullptr};
-   QHash<uint64_t, TextMessageNode*> m_hPendingMessages;
+    //Attributes
+    InstantMessagingModel*      m_pImModel           ;
+    QVector<::TextMessageNode*> m_lNodes             ;
+    Serializable::Group*        m_pCurrentGroup      ;
+    QList<QSharedPointer<Serializable::Peers>> m_lAssociatedPeers;
+    QHash<QString,bool>         m_hMimeTypes         ;
+    int                         m_UnreadCount        ;
+    QStringList                 m_lMimeTypes         ;
+    QAbstractItemModel*         m_pTextMessagesModel {nullptr};
+    QAbstractItemModel*         m_pUnreadTextMessagesModel {nullptr};
+    QHash<uint64_t, TextMessageNode*> m_hPendingMessages;
 
-   //Helper
-   void insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id = 0);
-   void insertNewSnapshot(Call* call, const QString& path);
-   void initGroup(Serializable::Message::Type t, ContactMethod* cm = nullptr);
-   QHash<QByteArray,QByteArray> toJsons() const;
-   void accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status);
-   bool updateMessageStatus(Serializable::Message* m, TextRecording::MessageStatus status);
+    //WARNING the order is in sync with both the daemon and the json files
+    Matrix1D<MimeMessage::State, int> m_mMessageCounter = {{
+        {MimeMessage::State::UNKNOWN  , 0},
+        {MimeMessage::State::SENDING  , 0},
+        {MimeMessage::State::SENT     , 0},
+        {MimeMessage::State::READ     , 0},
+        {MimeMessage::State::FAILURE  , 0},
+        {MimeMessage::State::UNREAD   , 0},
+        {MimeMessage::State::DISCARDED, 0},
+        {MimeMessage::State::ERROR    , 0},
+    }};
 
-   void clear();
+    //Helper
+    void insertNewMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction, uint64_t id = 0);
+    void insertNewSnapshot(Call* call, const QString& path);
+    void initGroup(MimeMessage::Type t, ContactMethod* cm = nullptr);
+    QHash<QByteArray,QByteArray> toJsons() const;
+    void accountMessageStatusChanged(const uint64_t id, DRing::Account::MessageStates status);
+    bool updateMessageStatus(MimeMessage* m, DRing::Account::MessageStates status);
+    bool performMessageAction(MimeMessage* m, MimeMessage::Actions a);
+    bool performMessageAction(MimeMessage* m, DRing::Account::MessageStates a);
+
+    void clear();
 
 Q_SIGNALS:
-   void messageAdded(::TextMessageNode* m);
+    void messageAdded(::TextMessageNode* m);
 
 private:
-   TextRecording* q_ptr;
+    TextRecording* q_ptr;
 };
 
 } //Media::
@@ -221,12 +181,12 @@ private:
 class SerializableEntityManager
 {
 public:
-   static QSharedPointer<Serializable::Peers> peer(const ContactMethod* cm);
-   static QSharedPointer<Serializable::Peers> peers(QList<const ContactMethod*> cms);
-   static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
-   static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
+    static QSharedPointer<Serializable::Peers> peer(const ContactMethod* cm);
+    static QSharedPointer<Serializable::Peers> peers(QList<const ContactMethod*> cms);
+    static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
+    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
 private:
-   static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
+    static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
 };
 
 /**
@@ -236,12 +196,18 @@ private:
  */
 struct TextMessageNode
 {
-   Serializable::Message* m_pMessage      {nullptr};
-   ContactMethod*         m_pContactMethod{nullptr};
-   TextMessageNode*       m_pNext         {nullptr};
-   int                    m_row           {  -1   };
+    explicit TextMessageNode(Media::TextRecording* rec) : m_pRecording(rec) {}
 
-   QVariant roleData(int role) const;
+    MimeMessage*          m_pMessage      {nullptr};
+    ContactMethod*        m_pContactMethod{nullptr}; //TODO remove
+    ContactMethod*        m_pCM           {nullptr};
+    TextMessageNode*      m_pNext         {nullptr};
+    Serializable::Group*  m_pGroup        {nullptr};
+    Media::TextRecording* m_pRecording    {nullptr};
+    int                   m_row           {  -1   };
+    QByteArray            m_AuthorSha1    {       };
+
+    QVariant roleData(int role) const;
    QVariant snapshotRoleData(int role) const;
 };
 

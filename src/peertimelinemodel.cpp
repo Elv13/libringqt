@@ -399,11 +399,32 @@ QModelIndex PeerTimelineModel::index(int row, int column, const QModelIndex& par
 ///Set model data
 bool PeerTimelineModel::setData(const QModelIndex& idx, const QVariant &value, int role)
 {
-    Q_UNUSED(idx)
-    Q_UNUSED(value)
-    Q_UNUSED(role)
+    if (!idx.isValid())
+        return false;
 
-    //TODO support isRead and some other
+    auto n = static_cast<PeerTimelineNode*>(idx.internalPointer());
+
+    switch(role) {
+        case (int)Media::TextRecording::Role::IsRead: {
+            if (n->m_Type != PeerTimelineModel::NodeType::TEXT_MESSAGE)
+                return false;
+
+            if (!n->m_pMessage)
+                return false;
+
+            const bool ret = n->m_pMessage->m_pRecording->d_ptr->performMessageAction(
+                n->m_pMessage->m_pMessage,
+                value.toBool() ?
+                    MimeMessage::Actions::READ :
+                    MimeMessage::Actions::UNREAD
+            );
+
+            if (ret)
+                emit dataChanged(idx, idx);
+
+            return ret;
+        }
+    }
 
     return false;
 }
@@ -482,7 +503,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
 
 PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
 {
-    const auto g = message->m_pMessage->group;
+    const auto g = message->m_pGroup;
     Q_ASSERT(g);
 
     if (m_pCurrentTextGroup && g == m_pCurrentTextGroup->m_pGroup) {
@@ -493,10 +514,10 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
         return m_hTextGroups[g];
     }
     else {
-        auto cat = getCategory(message->m_pMessage->timestamp);
+        auto cat = getCategory(message->m_pMessage->timestamp());
 
         // Snapshot have their own look and feel
-        const auto type = g->type == Serializable::Message::Type::SNAPSHOT ?
+        const auto type = g->type == MimeMessage::Type::SNAPSHOT ?
             PeerTimelineModel::NodeType::SNAPSHOT_GROUP :
             PeerTimelineModel::NodeType::SECTION_DELIMITER;
 
@@ -507,7 +528,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
         ret->m_pParent = cat;
 
         // Take the oldest message (for consistency)
-        ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp;
+        ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp();
 
         Q_ASSERT(g->messages.isEmpty() == false);
 
@@ -524,12 +545,12 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
 
 void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 {
-    const auto messageType = message->m_pMessage->type == Serializable::Message::Type::SNAPSHOT ?
+    const auto messageType = message->m_pMessage->type() == MimeMessage::Type::SNAPSHOT ?
         PeerTimelineModel::NodeType::SNAPSHOT :
         PeerTimelineModel::NodeType::TEXT_MESSAGE;
 
     // Do not show empty messages
-    if (message->m_pMessage->m_PlainText.isEmpty() && messageType != PeerTimelineModel::NodeType::SNAPSHOT)
+    if (message->m_pMessage->plainText().isEmpty() && messageType != PeerTimelineModel::NodeType::SNAPSHOT)
         return;
 
     auto group = getGroup(message);
@@ -538,7 +559,7 @@ void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 
     auto ret         = new PeerTimelineNode;
     ret->m_pMessage  = message;
-    ret->m_StartTime = message->m_pMessage->timestamp;
+    ret->m_StartTime = message->m_pMessage->timestamp();
     ret->m_pParent   = group;
     ret->m_Type      = messageType;
 

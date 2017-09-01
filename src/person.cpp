@@ -726,7 +726,7 @@ QVariant Person::roleData(int role) const
             int unread = 0;
             for (int i = 0; i < d_ptr->m_Numbers.size(); ++i) {
                if (auto rec = d_ptr->m_Numbers.at(i)->textRecording())
-                  unread += rec->unreadInstantTextMessagingModel()->rowCount();
+                  unread += rec->unreadCount();
             }
             return unread;
          }

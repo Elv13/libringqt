@@ -57,8 +57,13 @@ public:
     Q_PROPERTY(QAbstractItemModel* instantMessagingModel           READ instantMessagingModel           CONSTANT)
     Q_PROPERTY(QAbstractItemModel* instantTextMessagingModel       READ instantTextMessagingModel       CONSTANT)
     Q_PROPERTY(QAbstractItemModel* unreadInstantTextMessagingModel READ unreadInstantTextMessagingModel CONSTANT)
-    Q_PROPERTY(bool                isEmpty                         READ isEmpty           NOTIFY messageInserted)
-    Q_PROPERTY(int                 size                            READ size              NOTIFY messageInserted)
+    Q_PROPERTY(bool                isEmpty                         READ isEmpty       NOTIFY messageInserted    )
+    Q_PROPERTY(int                 size                            READ size          NOTIFY messageInserted    )
+    Q_PROPERTY(int                 unreadCount                     READ unreadCount   NOTIFY messageStateChanged)
+    Q_PROPERTY(int                 sendingCount                    READ sendingCount  NOTIFY messageStateChanged)
+    Q_PROPERTY(int                 sentCount                       READ sentCount     NOTIFY messageStateChanged)
+    Q_PROPERTY(int                 receivedCount                   READ receivedCount NOTIFY messageStateChanged)
+    Q_PROPERTY(int                 unknownCount                    READ unknownCount  NOTIFY messageStateChanged)
 
    enum class Role {
       Direction            = static_cast<int>(Ring::Role::UserRole) + 1,
@@ -78,18 +83,6 @@ public:
       Id                   ,
    };
 
-    ///Possible messages states
-    ///Order is important and reflected on order in Daemon
-    enum class MessageStatus : unsigned int{
-        UNKNOWN = 0,
-        SENDING,
-        SENT,
-        READ,
-        FAILURE,
-        COUNT__,
-    };
-    Q_ENUMS(Status)
-
    //Constructor
    explicit TextRecording(const Recording::Status status);
    virtual ~TextRecording();
@@ -106,6 +99,12 @@ public:
    QStringList         mimeTypes                (                         ) const;
    QVariant            roleData                 ( int row, int role       ) const;
    virtual QVariant    roleData                 ( int role                ) const override;
+   QStringList         paths                    (                         ) const;
+   int                 unreadCount              (                         ) const;
+   int                 sendingCount             (                         ) const;
+   int                 sentCount                (                         ) const;
+   int                 receivedCount            (                         ) const;
+   int                 unknownCount             (                         ) const;
    QVector<ContactMethod*> peers                (                         ) const;
 
    //Helper
@@ -114,6 +113,7 @@ public:
 Q_SIGNALS:
    void messageInserted(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
    void unreadCountChange(int count);
+   void messageStateChanged();
 
 private:
    TextRecordingPrivate* d_ptr;
@@ -123,4 +123,3 @@ private:
 }
 
 Q_DECLARE_METATYPE(Media::TextRecording*)
-Q_DECLARE_METATYPE(Media::TextRecording::MessageStatus)
