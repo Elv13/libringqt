@@ -28,8 +28,8 @@
 #include "media/textrecording.h"
 #include "matrixutils.h"
 #include "media/mimemessage.h"
+#include "textrecordingcache.h"
 
-class SerializableEntityManager;
 struct TextMessageNode;
 class InstantMessagingModel;
 class ContactMethod;
@@ -37,83 +37,6 @@ class ContactMethod;
 namespace Media {
    class TextRecording;
 }
-
-//BEGIN Those classes are serializable to JSon
-/**
- * Those classes map 1:1 to the json stored on the disk. References are then
- * extracted, the conversation reconstructed and placed into a TextMessageNode
- * vector.
- */
-namespace Serializable {
-
-class Group;
-
-class Peer {
-public:
-   QString accountId;
-   ///The peer URI
-   QString uri;
-   ///The peer contact UID
-   QString personUID;
-   ///The ContactMethod hash
-   QString sha1;
-
-   ContactMethod* m_pContactMethod;
-
-   void read (const QJsonObject &json);
-   void write(QJsonObject       &json) const;
-};
-
-
-class Group {
-public:
-   ~Group();
-
-   ///The group ID (necessary to untangle the graph
-   int id;
-   ///All messages from this chunk
-   QList<MimeMessage*> messages;
-   ///If the conversion add new participants, a new file will be created
-   QString nextGroupSha1;
-   ///The group type
-   MimeMessage::Type type {MimeMessage::Type::CHAT};
-   ///This is the group identifier in the file described by `nextGroupSha1`
-   int nextGroupId;
-   ///The account used for this conversation
-
-   void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s);
-   void write(QJsonObject       &json) const;
-};
-
-class Peers {
-   friend class ::SerializableEntityManager;
-public:
-   ~Peers();
-
-   ///The sha1(s) of each participants. If there is onlt one, it should match the filename
-   QList<QString> sha1s;
-   ///Every message groups associated with this ContactMethod (or ContactMethodGroup)
-   QList<Group*> groups;
-   ///Information about every (non self) peer involved in this group
-   QList<Peer*> peers;
-
-   ///This attribute store if the file has changed
-   bool hasChanged;
-
-   ///Keep a cache of the peers sha1
-   QHash<QString,ContactMethod*> m_hSha1;
-
-   void read (const QJsonObject &json);
-   void write(QJsonObject       &json) const;
-
-   QJsonArray toSha1Array() const;
-
-private:
-   Peers() : hasChanged(false) {}
-};
-
-}
-//END Those classes are serializable to JSon
 
 namespace Media {
 
@@ -173,22 +96,6 @@ private:
 };
 
 } //Media::
-
-
-/**
- * This class ensure that only one Serializable::Peer structure exist for each
- * peer [group].
- */
-class SerializableEntityManager
-{
-public:
-    static QSharedPointer<Serializable::Peers> peer(const ContactMethod* cm);
-    static QSharedPointer<Serializable::Peers> peers(QList<const ContactMethod*> cms);
-    static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
-    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
-private:
-    static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
-};
 
 /**
  * This is the structure used internally to create the text conversation
