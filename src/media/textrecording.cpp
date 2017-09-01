@@ -861,7 +861,21 @@ void InstantMessagingModel::addRowEnd()
 void Media::TextRecordingPrivate::clear()
 {
     if (m_pImModel)
-        m_pImModel->clear();
+        m_pImModel->beginReset();
+
+    for ( TextMessageNode *node : m_lNodes)
+        delete node;
+
+    m_lNodes.clear();
+
+    m_lAssociatedPeers.clear();
+
+    m_pCurrentGroup = nullptr;
+    m_hMimeTypes.clear();
+    m_lMimeTypes.clear();
+
+    if (m_pImModel)
+        m_pImModel->endReset();
 
     if (m_UnreadCount != 0) {
         m_UnreadCount = 0;
@@ -869,21 +883,13 @@ void Media::TextRecordingPrivate::clear()
     }
 }
 
-void InstantMessagingModel::clear()
+void InstantMessagingModel::beginReset()
 {
     beginResetModel();
+}
 
-    for ( TextMessageNode *node : m_pRecording->d_ptr->m_lNodes)
-        delete node;
-
-    m_pRecording->d_ptr->m_lNodes.clear();
-
-    m_pRecording->d_ptr->m_lAssociatedPeers.clear();
-
-    m_pRecording->d_ptr->m_pCurrentGroup = nullptr;
-    m_pRecording->d_ptr->m_hMimeTypes.clear();
-    m_pRecording->d_ptr->m_lMimeTypes.clear();
-
+void InstantMessagingModel::endReset()
+{
     endResetModel();
 }
 

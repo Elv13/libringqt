@@ -140,7 +140,8 @@ public:
    virtual bool  setData  ( const QModelIndex& index, const QVariant &value, int role)       override;
    virtual QHash<int,QByteArray> roleNames() const override;
 
-   void clear();
+    void beginReset();
+    void endReset();
 
    //Attributes
    Media::TextRecording* m_pRecording;
