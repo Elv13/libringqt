@@ -163,6 +163,7 @@ const Matrix2D< UAM::Action, Call::State, bool > UserActionModelPrivate::availab
  { UAMA::CALL_CONTACT      , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::EDIT_CONTACT      , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::REMOVE_HISTORY    , {{co, { false, false , false, false, false, false, true , true , false, false, true , false, false, false, false, false, false }}}},
+ { UAMA::MARK_AS_CONSUMED  , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
 };
 #undef CS
 
@@ -195,6 +196,7 @@ const Matrix2D< UAMA, Account::RegistrationState, bool > UserActionModelPrivate:
    { UAMA::CALL_CONTACT      , {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::EDIT_CONTACT      , {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::REMOVE_HISTORY    , {{ true ,    true ,     false,        true ,  true   }}},
+   { UAMA::MARK_AS_CONSUMED  , {{ true ,    true ,     false,        true ,  true   }}},
 };
 
 /**
@@ -225,6 +227,7 @@ const Matrix2D< UAMA, UserActionModelPrivate::SelectionState, bool > UserActionM
    { UAMA::CALL_CONTACT      , {{ false,  true ,  false }}},
    { UAMA::EDIT_CONTACT      , {{ false,  true ,  false }}},
    { UAMA::REMOVE_HISTORY    , {{ false,  true ,  true  }}},
+   { UAMA::MARK_AS_CONSUMED  , {{ false,  true ,  true  }}},
 };
 
 /**
@@ -254,6 +257,7 @@ const Matrix1D< UAMA, bool > UserActionModelPrivate::heterogenous_call_options =
    { UAMA::CALL_CONTACT      , false },
    { UAMA::EDIT_CONTACT      , false },
    { UAMA::REMOVE_HISTORY    , false },
+   { UAMA::MARK_AS_CONSUMED  , false },
 };
 
 /**
@@ -285,6 +289,7 @@ const Matrix2D< UAMA, Account::Protocol, bool > UserActionModelPrivate::availabl
    { UAMA::CALL_CONTACT      , {{ true,  true  }}},
    { UAMA::EDIT_CONTACT      , {{ true,  true  }}},
    { UAMA::REMOVE_HISTORY    , {{ true,  true  }}},
+   { UAMA::MARK_AS_CONSUMED  , {{ true,  true  }}},
 };
 
 /**
@@ -319,6 +324,7 @@ const Matrix2D< UAMA, UserActionModelPrivate::SelectionState, UserActionModel::A
    { UAMA::CALL_CONTACT      , {{ ST UNISTATE,  ST UNISTATE     ,  ST UNISTATE  }}},
    { UAMA::EDIT_CONTACT      , {{ ST UNISTATE,  ST UNISTATE     ,  ST UNISTATE  }}},
    { UAMA::REMOVE_HISTORY    , {{ ST UNISTATE,  ST UNISTATE     ,  ST UNISTATE  }}},
+   { UAMA::MARK_AS_CONSUMED  , {{ ST UNISTATE,  ST UNISTATE     ,  ST UNISTATE  }}},
 };
 #undef ST
 
@@ -364,6 +370,7 @@ const Matrix1D< UAMA, FlagPack<UAM::Context>> UserActionModelPrivate::actionCont
    { UAMA::CALL_CONTACT      , UAM::Context::CONTACT     },
    { UAMA::EDIT_CONTACT      , UAM::Context::CONTACT     },
    { UAMA::REMOVE_HISTORY    , UAM::Context::MANAGEMENT  },
+   { UAMA::MARK_AS_CONSUMED  , UAM::Context::MANAGEMENT  },
 };
 
 const Matrix1D< UAMA, FlagPack<UAM::Asset>> UserActionModelPrivate::availableByAsset = {
@@ -388,6 +395,7 @@ const Matrix1D< UAMA, FlagPack<UAM::Asset>> UserActionModelPrivate::availableByA
    { UAMA::CALL_CONTACT      , UAM::Asset::PERSON         },
    { UAMA::EDIT_CONTACT      , UAM::Asset::PERSON         },
    { UAMA::REMOVE_HISTORY    , UAM::Asset::CALL           },
+   { UAMA::MARK_AS_CONSUMED  , UAM::Asset::CONTACT_METHOD },
 };
 
 /**
@@ -416,6 +424,7 @@ const Matrix2D< UAMA, Ring::ObjectType , bool  > UserActionModelPrivate::availab
    { UAMA::CALL_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false     }}},
    { UAMA::EDIT_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false     }}},
    { UAMA::REMOVE_HISTORY    , {{ true ,    true ,     true ,  false,    true ,        false     }}},
+   { UAMA::MARK_AS_CONSUMED  , {{ true ,    true ,     true ,  true ,    true ,        false     }}},
 };
 
 #define P_CB [](const Person* p) -> bool
@@ -458,6 +467,12 @@ const Matrix1D< UAM::Action, bool(*)(const Person*)> UserActionModelPrivate::per
          CollectionInterface::SupportedFeatures::EDIT;
    }},
    { UAMA::REMOVE_HISTORY    , P_CB { return p->hasBeenCalled();               }},
+   { UAMA::MARK_AS_CONSUMED  , P_CB {
+      return p->hasRecording(
+        Media::Media::Type::TEXT,
+        Media::Media::Direction::OUT
+      );
+   }},
 };
 #undef P_C
 
@@ -506,6 +521,9 @@ const Matrix1D< UAM::Action, bool(*)(const ContactMethod*)> UserActionModelPriva
    { UAMA::CALL_CONTACT      , CM_CB { return (!cm) || cm->isReachable();     }},
    { UAMA::EDIT_CONTACT      , CM_CB { return cm && cm->contact();            }},
    { UAMA::REMOVE_HISTORY    , CM_CB { return cm && cm->callCount();          }},
+   { UAMA::MARK_AS_CONSUMED  , CM_CB { return cm && cm->textRecording()
+       ->unreadCount();
+   }},
 };
 #undef CM_CB
 
@@ -535,6 +553,7 @@ m_pCall(nullptr), m_pActiveModel(nullptr), m_fContext(c)
       { UAMA::CALL_CONTACT      , QObject::tr("Call again"             )},
       { UAMA::EDIT_CONTACT      , QObject::tr("Edit contact details"   )},
       { UAMA::REMOVE_HISTORY    , QObject::tr("Remove from history"    )},
+      { UAMA::MARK_AS_CONSUMED  , QObject::tr("Mark as read"           )},
    };
 
    m_CurrentActionsState = {
@@ -559,6 +578,7 @@ m_pCall(nullptr), m_pActiveModel(nullptr), m_fContext(c)
       { UAMA::CALL_CONTACT      , Qt::Unchecked},
       { UAMA::EDIT_CONTACT      , Qt::Unchecked},
       { UAMA::REMOVE_HISTORY    , Qt::Unchecked},
+      { UAMA::MARK_AS_CONSUMED  , Qt::Unchecked},
    };
 }
 
@@ -742,6 +762,7 @@ void UserActionModelPrivate::updateCheckMask(int& ret, UserActionModel::Action a
       case UserActionModel::Action::CALL_CONTACT      :
       case UserActionModel::Action::EDIT_CONTACT      :
       case UserActionModel::Action::REMOVE_HISTORY    :
+      case UserActionModel::Action::MARK_AS_CONSUMED  :
       case UserActionModel::Action::COUNT__:
          break;
    };
@@ -810,6 +831,7 @@ void UserActionModelPrivate::updateCheckMask(int& ret, UserActionModel::Action a
       case UserActionModel::Action::CALL_CONTACT      :
       case UserActionModel::Action::EDIT_CONTACT      :
       case UserActionModel::Action::REMOVE_HISTORY    :
+      case UserActionModel::Action::MARK_AS_CONSUMED  :
          break;
    }
    #pragma GCC diagnostic pop
@@ -1150,6 +1172,9 @@ bool UserActionModel::execute(const UserActionModel::Action action) const
             break;
          case UserActionModel::Action::REMOVE_HISTORY    :
             UserActions::removeFromHistory(c);
+            break;
+         case UserActionModel::Action::MARK_AS_CONSUMED  :
+            UserActions::consume(cm);
             break;
          case UserActionModel::Action::COUNT__:
             break;

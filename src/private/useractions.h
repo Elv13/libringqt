@@ -26,6 +26,7 @@
 #include <categorizedbookmarkmodel.h>
 #include <categorizedhistorymodel.h>
 #include <personmodel.h>
+#include <media/textrecording.h>
 #include <interfaces/actionextenderi.h>
 #include <interfaces/itemmodelstateserializeri.h>
 #include <mime.h>
@@ -62,6 +63,7 @@ bool removeFromHistory( Call* c                );
 bool editPerson       ( Person* p              );
 bool addToPerson      ( ContactMethod* cm      );
 bool addToPerson      ( Person* p              );
+bool consume          ( ContactMethod* cm      );
 
 bool addPerson(ContactMethod* cm, CollectionInterface* col = nullptr);
 
@@ -464,6 +466,17 @@ bool addToPerson(Person* p)
    p->addPhoneNumber(cm);
 
    return p->save();
+}
+
+bool consume(ContactMethod* cm)
+{
+    if (!cm)
+        return false;
+
+    if (auto r = cm->textRecording())
+        r->performAction(Media::Recording::Action::CONSUME);
+
+    return true;
 }
 
 } //namespace UserActions

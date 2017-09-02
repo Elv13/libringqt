@@ -127,6 +127,10 @@ public:
    void setAsRead(MimeMessage* m) const;
    void setAsUnread(MimeMessage* m) const;
 
+protected:
+    virtual void discard() override;
+    virtual void consume() override;
+
 Q_SIGNALS:
    void aboutToInsertMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
    void messageInserted(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);

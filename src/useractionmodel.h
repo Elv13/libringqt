@@ -101,6 +101,7 @@ public:
 
       //History
       REMOVE_HISTORY    , /*!< Remove this asset from the history                     */
+      MARK_AS_CONSUMED  , /*!< Every recordings associated are marked as consumed     */
 
       //Multi selection
 

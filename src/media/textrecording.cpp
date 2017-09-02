@@ -776,4 +776,15 @@ void Media::TextRecordingPrivate::clear()
     }
 }
 
+void Media::TextRecording::discard()
+{
+    d_ptr->clear();
+    //FIXME delete all paths();
+}
+
+void Media::TextRecording::consume()
+{
+    setAllRead();
+}
+
 // kate: space-indent on; indent-width 4; replace-tabs on;
