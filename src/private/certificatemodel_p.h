@@ -60,7 +60,7 @@ public:
    QMutex                           m_CertInsertion     ;
    int                              m_GroupCounter      ;
    QHash<const Account*,CertificateNode*> m_hAccToCat   ;
-   QHash<const QString&,CertificateNode*> m_hStrToCat   ;
+   QHash<QString,CertificateNode*> m_hStrToCat   ;
    QHash<const Certificate*,CertificateNode*> m_hNodes  ;
    static const Matrix1D<Certificate::Status, const char*> m_StatusMap;
    mutable QHash<const Account*,QAbstractItemModel*> m_hAccAllow;

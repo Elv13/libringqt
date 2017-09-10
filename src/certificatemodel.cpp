@@ -240,6 +240,8 @@ CertificateNode* CertificateModelPrivate::createCategory(const QString& name, co
    QMutexLocker l(&m_CertLoader);
    const int idx = m_lTopLevelNodes.size();
 
+   Q_ASSERT(!name.isEmpty());
+
    // This should be avoided whenever possible. Having a duplicate would be
    // both a memory leak and a potential collision attack (far fetched).
    // This code avoids leak, but has side effects.
