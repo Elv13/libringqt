@@ -51,6 +51,7 @@ class Profile;
 class UsageStatistics;
 class ContactRequest;
 class BannedContactModel;
+class RingDevice;
 
 //Private
 class AccountPrivate;
@@ -137,7 +138,7 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(bool           upnpEnabled                  READ isUpnpEnabled                 WRITE setUpnpEnabled                 )
    Q_PROPERTY(bool           hasCustomUserAgent           READ hasCustomUserAgent            WRITE setHasCustomUserAgent          )
    Q_PROPERTY(Profile*       profile                      READ profile                       WRITE setProfile                     )
-
+   Q_PROPERTY(RingDevice*    ringDevice                   READ ringDevice                    CONSTANT                             )
    Q_PROPERTY(QString        userAgent                    READ userAgent                     WRITE setUserAgent                   )
    Q_PROPERTY(bool           useDefaultPort               READ useDefaultPort                WRITE setUseDefaultPort              )
    Q_PROPERTY(QString        displayName                  READ displayName                   WRITE setDisplayName                 )
@@ -154,20 +155,20 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(bool           allowIncomingFromContact     READ allowIncomingFromContact      WRITE setAllowIncomingFromContact    )
    Q_PROPERTY(bool           allowIncomingFromUnknown     READ allowIncomingFromUnknown      WRITE setAllowIncomingFromUnknown    )
 
-   Q_PROPERTY(CredentialModel*         credentialModel             READ credentialModel                                           )
-   Q_PROPERTY(CodecModel*              codecModel                  READ codecModel                                                )
-   Q_PROPERTY(KeyExchangeModel*        keyExchangeModel            READ keyExchangeModel                                          )
-   Q_PROPERTY(CipherModel*             cipherModel                 READ cipherModel                                               )
-   Q_PROPERTY(AccountStatusModel*      statusModel                 READ statusModel                                               )
-   Q_PROPERTY(SecurityEvaluationModel* securityEvaluationModel     READ securityEvaluationModel                                   )
-   Q_PROPERTY(TlsMethodModel*          tlsMethodModel              READ tlsMethodModel                                            )
-   Q_PROPERTY(ProtocolModel*           protocolModel               READ protocolModel                                             )
-   Q_PROPERTY(BootstrapModel*          bootstrapModel              READ bootstrapModel                                            )
-   Q_PROPERTY(RingDeviceModel*         ringDeviceModel             READ ringDeviceModel                                           )
-   Q_PROPERTY(NetworkInterfaceModel*   networkInterfaceModel       READ networkInterfaceModel                                     )
-   Q_PROPERTY(QAbstractItemModel*      knownCertificateModel       READ knownCertificateModel                                     )
-   Q_PROPERTY(QAbstractItemModel*      bannedCertificatesModel     READ bannedCertificatesModel                                   )
-   Q_PROPERTY(QAbstractItemModel*      allowedCertificatesModel    READ allowedCertificatesModel                                  )
+   Q_PROPERTY(CredentialModel*         credentialModel             READ credentialModel           CONSTANT                        )
+   Q_PROPERTY(CodecModel*              codecModel                  READ codecModel                CONSTANT                        )
+   Q_PROPERTY(KeyExchangeModel*        keyExchangeModel            READ keyExchangeModel          CONSTANT                        )
+   Q_PROPERTY(CipherModel*             cipherModel                 READ cipherModel               CONSTANT                        )
+   Q_PROPERTY(AccountStatusModel*      statusModel                 READ statusModel               CONSTANT                        )
+   Q_PROPERTY(SecurityEvaluationModel* securityEvaluationModel     READ securityEvaluationModel   CONSTANT                        )
+   Q_PROPERTY(TlsMethodModel*          tlsMethodModel              READ tlsMethodModel            CONSTANT                        )
+   Q_PROPERTY(ProtocolModel*           protocolModel               READ protocolModel             CONSTANT                        )
+   Q_PROPERTY(BootstrapModel*          bootstrapModel              READ bootstrapModel            CONSTANT                        )
+   Q_PROPERTY(RingDeviceModel*         ringDeviceModel             READ ringDeviceModel           CONSTANT                        )
+   Q_PROPERTY(NetworkInterfaceModel*   networkInterfaceModel       READ networkInterfaceModel     CONSTANT                        )
+   Q_PROPERTY(QAbstractItemModel*      knownCertificateModel       READ knownCertificateModel     CONSTANT                        )
+   Q_PROPERTY(QAbstractItemModel*      bannedCertificatesModel     READ bannedCertificatesModel   CONSTANT                        )
+   Q_PROPERTY(QAbstractItemModel*      allowedCertificatesModel    READ allowedCertificatesModel  CONSTANT                        )
 
    Q_PROPERTY(QString turnServer                        READ turnServer                     WRITE setTurnServer                   )
    Q_PROPERTY(QString turnServerUsername                READ turnServerUsername             WRITE setTurnServerUsername           )
@@ -452,6 +453,7 @@ class LIB_EXPORT Account : public ItemBase {
       Protocol           protocol          () const;
       ContactMethod*     contactMethod     () const;
       Profile*           profile           () const;
+      RingDevice*        ringDevice        () const;
       bool    allowIncomingFromUnknown     () const;
       bool    allowIncomingFromHistory     () const;
       bool    allowIncomingFromContact     () const;

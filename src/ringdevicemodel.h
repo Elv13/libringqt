@@ -21,6 +21,8 @@
 
 #include <typedefs.h>
 
+#include <ringdevice.h>
+
 class Account;
 
 class RingDeviceModelPrivate;
@@ -32,20 +34,35 @@ public:
    friend class Account;
    friend class AccountModelPrivate;
 
+   enum class Roles {
+       ID = Qt::UserRole+1,
+       NAME,
+       OBJECT,
+       IS_SELF,
+   };
+
+   RingDevice* ownDevice() const;
+
    //Abstract model accessors
    virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole        ) const override;
+   virtual bool          setData     ( const QModelIndex& index, const QVariant &value, int role   )       override;
    virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role          ) const override;
    virtual int           rowCount    ( const QModelIndex& parent = QModelIndex()                   ) const override;
    virtual int           columnCount ( const QModelIndex& parent = QModelIndex()                   ) const override;
    virtual Qt::ItemFlags flags       (const QModelIndex &index                                     ) const override;
-
+   virtual QHash<int,QByteArray> roleNames(                                                        ) const override;
    virtual int           size        (                               ) const;
 
+Q_SIGNALS:
+   void deviceRevoked(RingDevice* device, RingDevice::RevocationStatus status);
+
 private:
-   explicit RingDeviceModel(Account* a);
+   explicit RingDeviceModel(Account* a, const QString& devId, const QString& devName);
    virtual ~RingDeviceModel();
 
    RingDeviceModelPrivate* d_ptr;
    Q_DECLARE_PRIVATE(RingDeviceModel)
 
 };
+
+Q_DECLARE_METATYPE(RingDeviceModel*)

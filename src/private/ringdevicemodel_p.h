@@ -23,18 +23,24 @@
 
 typedef void (RingDeviceModelPrivate::*RingDeviceModelPrivateFct)();
 
-class RingDeviceModelPrivate
+class RingDeviceModelPrivate : public QObject
 {
+    Q_OBJECT
 public:
-   RingDeviceModelPrivate(RingDeviceModel* q,Account* a);
+    RingDeviceModelPrivate(RingDeviceModel* q,Account* a);
 
-   //Attributes
-   Account*                   m_pAccount     ;
-   QVector<RingDevice*>       m_lRingDevices ;
-   RingDeviceModel*           q_ptr          ;
+    //Attributes
+    Account*                   m_pAccount            ;
+    QVector<RingDevice*>       m_lRingDevices        ;
+    RingDevice*                m_pOwnDevice {nullptr};
+    QString                    m_DevId               ;
+    RingDeviceModel*           q_ptr                 ;
 
-   void reload();
-   void reload(MapStringString accountDevices);
-   void clearLines();
+    void reload();
+    void reload(const MapStringString& accountDevices);
+    void clearLines();
+    void revoked(const QString& deviceId, int status);
 
+public Q_SLOT:
+    void slotNameChanged(const QString& name, const QString& oldName);
 };

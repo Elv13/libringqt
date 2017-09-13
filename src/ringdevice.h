@@ -21,7 +21,7 @@
 #include <itembase.h>
 
 class RingDevicePrivate;
-
+class Account;
 
 class LIB_EXPORT RingDevice : public ItemBase
 {
@@ -31,23 +31,37 @@ class LIB_EXPORT RingDevice : public ItemBase
     friend class RingDeviceModelPrivate;
 
 public:
+    enum class RevocationStatus {
+        SUCCESS = 0,
+        WRONG_PASSWORD = 1,
+        UNKNOWN_DEVICE = 2,
+    };
+    Q_ENUM(RevocationStatus);
 
-    enum class Column {
-       Id = 0,
-       Name
-   };
+    Q_PROPERTY(QString  id      READ id      CONSTANT                        )
+    Q_PROPERTY(QString  name    READ name    WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(Account* account READ account CONSTANT                        )
+    Q_PROPERTY(bool     isSelf  READ isSelf  CONSTANT                        )
 
-    Q_PROPERTY(QString  id     READ id  )
-    Q_PROPERTY(QString  name   READ name)
+    // Getters
+    const QString id     () const;
+    const QString name   () const;
+    Account*      account() const;
+    bool          isSelf () const;
 
-    //Getters
-    const QString        id         (        )   const;
-    const QString        name       (        )   const;
-    Q_INVOKABLE QVariant columnData (int column) const;
+    // Setters
+    bool setName(const QString& name);
 
+    // Mutators
+    Q_INVOKABLE void revoke(const QString& password);
+
+Q_SIGNALS:
+    void nameChanged(const QString& name, const QString& old);
+    void revoked(RevocationStatus status);
 
 private:
-    RingDevice(const QString& id, const QString& name);
+    explicit RingDevice(const QString& id, const QString& name, Account* a, bool isSelf);
+
     RingDevicePrivate* d_ptr;
     Q_DECLARE_PRIVATE(RingDevice)
 };

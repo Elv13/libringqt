@@ -96,6 +96,8 @@ void AccountModelPrivate::init()
             &AccountModelPrivate::slotKownDevicesChanged, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::exportOnRingEnded, this,
             &AccountModelPrivate::slotExportOnRingEnded, Qt::QueuedConnection);
+    connect(&configurationManager, &ConfigurationManagerInterface::deviceRevocationEnded, this,
+            &AccountModelPrivate::slotDeviceRevocationEnded, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::migrationEnded, this,
             &AccountModelPrivate::slotMigrationEnded, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::contactRemoved, this,
@@ -508,7 +510,7 @@ void AccountModelPrivate::slotKownDevicesChanged(const QString& accountId, const
    if (!a) {
       qWarning() << "Known devices changed for unknown account" << accountId;
       return;
-  }
+   }
 
    a->ringDeviceModel()->d_ptr->reload(accountDevices);
 }
@@ -523,9 +525,21 @@ void AccountModelPrivate::slotExportOnRingEnded(const QString& accountId, int st
    if (!a) {
       qWarning() << "export on Ring ended for unknown account" << accountId;
       return;
-  }
+   }
 
-  emit a->exportOnRingEnded(static_cast<Account::ExportOnRingStatus>(status), pin);
+   emit a->exportOnRingEnded(static_cast<Account::ExportOnRingStatus>(status), pin);
+}
+
+void AccountModelPrivate::slotDeviceRevocationEnded(const QString& accountId, const QString& deviceId, int status)
+{
+    Account* a = q_ptr->getById(accountId.toLatin1());
+
+    if (!a) {
+        qWarning() << "device revocation on Ring ended for unknown account" << accountId;
+        return;
+    }
+
+    a->ringDeviceModel()->d_ptr->revoked(deviceId, status);
 }
 
 /// Migration ended

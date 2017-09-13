@@ -36,12 +36,13 @@
 //Ring
 #include "account.h"
 
-RingDeviceModelPrivate::RingDeviceModelPrivate(RingDeviceModel* q,Account* a) : q_ptr(q),m_pAccount(a)
+RingDeviceModelPrivate::RingDeviceModelPrivate(RingDeviceModel* q, Account* a) : q_ptr(q),m_pAccount(a)
 {
 }
 
 void RingDeviceModelPrivate::clearLines()
 {
+    m_pOwnDevice = nullptr;
     q_ptr->beginRemoveRows(QModelIndex(),0,m_lRingDevices.size());
     qDeleteAll(m_lRingDevices);
     m_lRingDevices.clear();
@@ -54,7 +55,7 @@ void RingDeviceModelPrivate::reload()
     reload(accountDevices);
 }
 
-void RingDeviceModelPrivate::reload(MapStringString accountDevices)
+void RingDeviceModelPrivate::reload(const MapStringString& accountDevices)
 {
     clearLines();
 
@@ -62,16 +63,41 @@ void RingDeviceModelPrivate::reload(MapStringString accountDevices)
     while (i.hasNext()) {
         i.next();
 
-        RingDevice* device = new RingDevice(i.key(), i.value());
+        const bool isSelf = i.key() == m_DevId;
 
-        q_ptr->beginInsertRows(QModelIndex(),m_lRingDevices.size(), m_lRingDevices.size());
+        RingDevice* device = new RingDevice(i.key(), i.value(), m_pAccount, isSelf);
+
+        if (isSelf)
+            m_pOwnDevice = device;
+
+        q_ptr->beginInsertRows({} ,m_lRingDevices.size(), m_lRingDevices.size());
         m_lRingDevices << device;
         q_ptr->endInsertRows();
     }
 }
 
-RingDeviceModel::RingDeviceModel(Account* a) : QAbstractTableModel(a), d_ptr(new RingDeviceModelPrivate(this,a))
+void RingDeviceModelPrivate::revoked(const QString& deviceId, int status)
 {
+    Q_ASSERT(status <= 2 && status >= 0);
+    const auto s = static_cast<RingDevice::RevocationStatus>(status);
+
+    auto d = std::find_if(m_lRingDevices.constBegin(), m_lRingDevices.constEnd(), [&deviceId](RingDevice* d) {
+        return d->id() == deviceId;
+    });
+
+    if (d == m_lRingDevices.constEnd()) {
+        qWarning() << "The revoked device has not been found" << deviceId;
+        return;
+    }
+
+    emit (*d)->revoked(s);
+    emit q_ptr->deviceRevoked((*d), s);
+}
+
+RingDeviceModel::RingDeviceModel(Account* a, const QString& devId, const QString& devName) : QAbstractTableModel(a), d_ptr(new RingDeviceModelPrivate(this,a))
+{
+    Q_UNUSED(devName)
+    d_ptr->m_DevId = devId;
     d_ptr->reload();
 }
 
@@ -81,59 +107,104 @@ RingDeviceModel::~RingDeviceModel()
     delete d_ptr;
 }
 
+QHash<int,QByteArray> RingDeviceModel::roleNames() const
+{
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+
+    if (!initRoles) {
+        initRoles = true;
+        roles.insert((int)Roles::NAME   , QByteArray( "name"   ));
+        roles.insert((int)Roles::ID     , QByteArray( "id"     ));
+        roles.insert((int)Roles::OBJECT , QByteArray( "object" ));
+        roles.insert((int)Roles::IS_SELF, QByteArray( "isSelf" ));
+    }
+
+    return roles;
+}
+
 QVariant RingDeviceModel::data( const QModelIndex& index, int role) const
 {
     Q_UNUSED(role);
 
-    if (role == Qt::DisplayRole && index.isValid()) {
+    if (!index.isValid())
+        return {};
 
-        RingDevice* device = nullptr;
-        if (index.row() < d_ptr->m_lRingDevices.size())
-            device = d_ptr->m_lRingDevices[index.row()];
+    const auto device = d_ptr->m_lRingDevices[index.row()];
 
-        if (!device)
-            return QVariant();
+    switch (role) {
+        case Qt::DisplayRole:
+        case (int) Roles::NAME:
+            return device->name();
+        case (int) Roles::ID:
+            return device->id();
+        case (int) Roles::OBJECT:
+            return QVariant::fromValue(device);
+        case (int) Roles::IS_SELF:
+            return device->isSelf();
+    }
 
-        return device->columnData(index.column());
-    } else
-        return QVariant();
+    return {};
+}
+
+bool RingDeviceModel::setData(const QModelIndex& index, const QVariant &value, int role)
+{
+    if (!index.isValid())
+        return false;
+
+    if (role == (int) Roles::NAME) {
+        auto device = d_ptr->m_lRingDevices[index.row()];
+
+        if (!device->isSelf())
+            return false;
+
+        if (device->setName(value.toString())) {
+            emit dataChanged(index, index);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 QVariant RingDeviceModel::headerData( int section, Qt::Orientation ori, int role) const
 {
-   if (role == Qt::DisplayRole) {
-      if (ori == Qt::Vertical)
-         return section;
+    Q_UNUSED(section)
+    if (role != Qt::DisplayRole || ori != Qt::Horizontal)
+        return {};
 
-      switch (section) {
-         case static_cast<int>(RingDevice::Column::Id):
-            return tr("Id");
-         case static_cast<int>(RingDevice::Column::Name):
-            return tr("Name");
-        default:
-            return QVariant();
-      }
-   }
-   return QVariant();
+    return tr("Name");
 }
-
 
 int RingDeviceModel::rowCount( const QModelIndex& parent) const
 {
-   return parent.isValid()?0:d_ptr->m_lRingDevices.size();
+    return parent.isValid()?0:d_ptr->m_lRingDevices.size();
 }
 
 int RingDeviceModel::columnCount( const QModelIndex& parent) const
 {
-   return parent.isValid()?0:2;
+    return parent.isValid()?0:1;
 }
 
 int RingDeviceModel::size() const
 {
-   return d_ptr->m_lRingDevices.size();
+    return d_ptr->m_lRingDevices.size();
 }
 
 Qt::ItemFlags RingDeviceModel::flags(const QModelIndex &index) const
 {
     return index.isValid() ? (Qt::ItemIsEnabled | Qt::ItemIsSelectable) : Qt::NoItemFlags;
+}
+
+/// Return the device corresponding to this account
+RingDevice* RingDeviceModel::ownDevice() const
+{
+    return d_ptr->m_pOwnDevice;
+}
+
+void RingDeviceModelPrivate::slotNameChanged(const QString& name, const QString& oldName)
+{
+    Q_UNUSED(name)
+    Q_UNUSED(oldName)
+    m_pAccount << Account::EditAction::MODIFY;
 }

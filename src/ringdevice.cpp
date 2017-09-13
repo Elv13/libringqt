@@ -20,6 +20,8 @@
 #include <QtCore/QObject>
 
 #include "ringdevice.h"
+#include "account.h"
+#include "dbus/configurationmanager.h"
 
 
 class RingDevicePrivate final : public QObject
@@ -28,9 +30,11 @@ public:
     Q_OBJECT
     Q_DECLARE_PUBLIC(RingDevice)
 
-    RingDevice*   q_ptr   ;
-    QString       m_ID   ;
-    QString       m_Name ;
+    RingDevice* q_ptr     ;
+    QString     m_ID      ;
+    QString     m_Name    ;
+    Account*    m_pAccount;
+    bool        m_IsSelf  ;
 
     // Constructor
     explicit RingDevicePrivate(RingDevice* device);
@@ -40,12 +44,14 @@ RingDevicePrivate::RingDevicePrivate(RingDevice* device) : QObject(device), q_pt
 {
 }
 
- ///Constructors
-RingDevice::RingDevice(const QString& id, const QString& name)
+/// Constructors
+RingDevice::RingDevice(const QString& id, const QString& name, Account* a, bool isSelf)
 {
     d_ptr = new RingDevicePrivate(this);
-    d_ptr->m_ID = id;
-    d_ptr->m_Name = name;
+    d_ptr->m_pAccount = a;
+    d_ptr->m_ID       = id;
+    d_ptr->m_Name     = name;
+    d_ptr->m_IsSelf   = isSelf;
 }
 
 const QString RingDevice::id() const
@@ -58,19 +64,35 @@ const QString RingDevice::name() const
     return d_ptr->m_Name;
 }
 
-#define CAST(item) static_cast<int>(item)
-QVariant RingDevice::columnData(int column) const
+bool RingDevice::setName(const QString& name)
 {
-    switch(column) {
-        case CAST(RingDevice::Column::Id):
-            return id();
-        case CAST(RingDevice::Column::Name):
-            return name();
-        default:
-            return QVariant();
-   }
+    if (!isSelf())
+        return false;
+
+    const auto oldName = d_ptr->m_Name;
+
+    d_ptr->m_Name = name;
+
+    emit nameChanged(name, oldName);
+
+    return true;
 }
-#undef CAST
+
+Account* RingDevice::account() const
+{
+    return d_ptr->m_pAccount;
+}
+
+bool RingDevice::isSelf() const
+{
+    return d_ptr->m_IsSelf;
+}
+
+void RingDevice::revoke(const QString& password)
+{
+    if (!ConfigurationManager::instance().revokeDevice(account()->id(), password, id()))
+        qWarning() << "Device revokation failed" << account() << id();
+}
 
 
 #include <ringdevice.moc>

@@ -558,9 +558,13 @@ BootstrapModel* Account::bootstrapModel() const
 RingDeviceModel* Account::ringDeviceModel() const
 {
     if (!d_ptr->m_pRingDeviceModel)
-      d_ptr->m_pRingDeviceModel = new RingDeviceModel(const_cast<Account*>(this));
+        d_ptr->m_pRingDeviceModel = new RingDeviceModel(
+            const_cast<Account*>(this),
+            d_ptr->accountDetail(DRing::Account::ConfProperties::RING_DEVICE_ID  ),
+            d_ptr->accountDetail(DRing::Account::ConfProperties::RING_DEVICE_NAME)
+        );
 
-   return d_ptr->m_pRingDeviceModel;
+    return d_ptr->m_pRingDeviceModel;
 }
 
 QAbstractItemModel* Account::knownCertificateModel() const
@@ -2055,6 +2059,11 @@ Profile* Account::profile() const
    return d_ptr->m_pProfile;
 }
 
+RingDevice* Account::ringDevice() const
+{
+    return ringDeviceModel()->ownDevice();
+}
+
 void Account::setLastSipRegistrationStatus(const QString& value )
 {
     d_ptr->m_LastSipRegistrationStatus = value;
@@ -2472,6 +2481,14 @@ bool Account::updateState()
 void AccountPrivate::save()
 {
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
+
+   // Sync the device name
+   if (q_ptr->ringDevice() && q_ptr->ringDevice()->name() != accountDetail(DRing::Account::ConfProperties::RING_DEVICE_NAME))
+      setAccountProperty(
+         DRing::Account::ConfProperties::RING_DEVICE_NAME,
+         q_ptr->ringDevice()->name()
+      );
+
    if (q_ptr->isNew()) {
       MapStringString details;
       QMutableHashIterator<QString,QString> iter(m_hAccountDetails);
