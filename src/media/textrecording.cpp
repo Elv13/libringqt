@@ -24,6 +24,7 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/QDateTime>
 #include <QtCore/QUrl>
+#include <QtCore/QFile>
 
 //Daemon
 #include <account_const.h>

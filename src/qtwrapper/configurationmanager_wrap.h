@@ -117,6 +117,10 @@ public:
                [this] (const std::string &accountId, int status, const std::string &pin) {
                     Q_EMIT this->exportOnRingEnded(QString(accountId.c_str()), status, QString(pin.c_str()));
          }),
+         exportable_callback<ConfigurationSignal::DeviceRevocationEnded>(
+               [this] (const std::string &accountId, const std::string &deviceId, int status) {
+                    Q_EMIT this->deviceRevocationEnded(QString(accountId.c_str()), QString(deviceId.c_str()), status);
+         }),
          exportable_callback<ConfigurationSignal::NameRegistrationEnded>(
                [this] (const std::string &accountId, int status, const std::string &name) {
                            Q_EMIT this->nameRegistrationEnded(QString(accountId.c_str()), status, QString(name.c_str()));
@@ -652,6 +656,11 @@ public Q_SLOTS: // METHODS
       DRing::removeContact(accountId.toStdString(), uri.toStdString(), ban);
    }
 
+   bool revokeDevice(const QString& accountID, const QString& password, const QString& deviceId)
+   {
+      return DRing::revokeDevice(accountID.toStdString(), password.toStdString(), deviceId.toStdString());
+   }
+
    void addContact(const QString &accountId, const QString &uri)
    {
       DRing::addContact(accountId.toStdString(), uri.toStdString());
@@ -698,6 +707,7 @@ Q_SIGNALS: // SIGNALS
    void incomingTrustRequest(const QString& accountId, const QString& from, const QByteArray& payload, qulonglong timeStamp);
    void knownDevicesChanged(const QString& accountId, const MapStringString& devices);
    void exportOnRingEnded(const QString& accountId, int status, const QString& pin);
+   void deviceRevocationEnded(const QString& accountId, const QString& deciceId, int status);
    void incomingAccountMessage(const QString& accountId, const QString& from, const MapStringString& payloads);
    void mediaParametersChanged(const QString& accountId);
    void audioDeviceEvent();
