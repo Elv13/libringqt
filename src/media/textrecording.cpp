@@ -23,6 +23,7 @@
 #include <QtCore/QJsonValue>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QDateTime>
+#include <QtCore/QUrl>
 
 //Daemon
 #include <account_const.h>

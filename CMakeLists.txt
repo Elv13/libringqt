@@ -174,6 +174,8 @@ IF("${ENABLE_LIBWRAP}" MATCHES true)
 #      MESSAGE(FATAL_ERROR "The daemon is required")
 #   ENDIF()
 
+   ADD_DEFINITIONS(-fPIC)
+
    ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper)
    ADD_DEFINITIONS(-DENABLE_LIBWRAP=true) # Use native calls (no dbus)
    ADD_DEFINITIONS(-Wno-unknown-pragmas)
