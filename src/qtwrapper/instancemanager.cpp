@@ -25,8 +25,6 @@
  #include "videomanager.h"
 #endif //ENABLE_VIDEO
 
-static int ringFlags = 0;
-
 void pollEvents();
 
 InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
@@ -51,6 +49,8 @@ InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
    connect(m_pTimer,&QTimer::timeout,this,&InstanceManagerInterface::pollEvents);
 #endif
    m_pTimer->start();
+
+   static int ringFlags = 0;
 
 #ifndef MUTE_DRING
    ringFlags |= DRing::DRING_FLAG_DEBUG;

@@ -617,18 +617,6 @@ SET(libringclient_PRIVATE_HDRS
    src/private/personstatistics.hpp
 )
 
-IF(${ENABLE_LIBWRAP} MATCHES true)
-   SET(libringclient_PRIVATE_HDRS
-      ${libringclient_PRIVATE_HDRS}
-
-      src/qtwrapper/callmanager_wrap.h
-      src/qtwrapper/configurationmanager_wrap.h
-      src/qtwrapper/instancemanager_wrap.h
-      src/qtwrapper/presencemanager_wrap.h
-      src/qtwrapper/videomanager_wrap.h
-   )
-ENDIF()
-
 QT5_WRAP_CPP(LIB_HEADER_MOC ${libringclient_PRIVATE_HDRS})
 
 IF(NOT "${ENABLE_STATIC}" MATCHES true)
@@ -701,6 +689,8 @@ SET_TARGET_PROPERTIES(ringclient PROPERTIES
 
 TARGET_LINK_LIBRARIES( ringclient
    -lpthread
+   -L/usr/lib64/libQt5Core.so.5.7.1
+   qtwrapper
    ${QT_QTCORE_LIBRARY}
 )
 

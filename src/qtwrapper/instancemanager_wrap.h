@@ -34,12 +34,12 @@
 /*
  * Proxy class for interface org.ring.Ring.Instance
  */
-class InstanceManagerInterface: public QObject
+class InstanceManagerInterface final: public QObject
 {
    Q_OBJECT
 public:
-   InstanceManagerInterface();
-   ~InstanceManagerInterface();
+   explicit InstanceManagerInterface();
+   virtual ~InstanceManagerInterface();
 
 // TODO: These are not present in dring.h
 

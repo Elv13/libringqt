@@ -24,10 +24,23 @@ ENDIF()
 FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Ring REQUIRED)
 
+SET(CMAKE_AUTOMOC TRUE)
+
 SET(libqtwrapper_LIB_SRCS
    instancemanager.cpp
    videomanager_wrap.cpp
 )
+
+SET(libqtwrapper_LIB_SRCS
+   ${libqtwrapper_LIB_SRCS}
+   callmanager_wrap.h
+   configurationmanager_wrap.h
+   instancemanager_wrap.h
+   presencemanager_wrap.h
+   videomanager_wrap.h
+)
+
+QT5_WRAP_CPP(LIB_WRAPPER_HEADER_MOC ${libqtwrapper_LIB_SRCS})
 
 IF(NOT (${ENABLE_VIDEO} MATCHES "false"))
    MESSAGE("VIDEO enabled")
@@ -41,12 +54,14 @@ INCLUDE_DIRECTORIES(${ring_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../dbus)
 
-ADD_LIBRARY( qtwrapper STATIC ${libqtwrapper_LIB_SRCS})
+ADD_LIBRARY( qtwrapper STATIC ${libqtwrapper_LIB_SRCS} ${LIB_WRAPPER_HEADER_MOC})
 
 
 IF(NOT ${ring_BIN} MATCHES "ring_BIN-NOTFOUND")
    TARGET_LINK_LIBRARIES( qtwrapper
-      ${QT_QTCORE_LIBRARY}
+      Qt5::Core
+   -L/usr/lib64/libQt5Core.so.5.7.1
+           ${QT_QTCORE_LIBRARY}
       ${ring_BIN}
    )
 ENDIF()
