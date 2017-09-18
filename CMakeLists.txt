@@ -689,8 +689,6 @@ SET_TARGET_PROPERTIES(ringclient PROPERTIES
 
 TARGET_LINK_LIBRARIES( ringclient
    -lpthread
-   -L/usr/lib64/libQt5Core.so.5.7.1
-   qtwrapper
    ${QT_QTCORE_LIBRARY}
 )
 
