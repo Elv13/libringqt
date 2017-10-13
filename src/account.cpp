@@ -102,16 +102,8 @@ const Matrix2D<Account::EditState, Account::EditAction, account_function> Accoun
 //when objects have a different status for each account
 static uint p_sAutoIncrementId = 0;
 
-AccountPrivate::AccountPrivate(Account* acc) : QObject(acc),q_ptr(acc),m_pCredentials(nullptr),m_pCodecModel(nullptr),
-m_LastErrorCode(-1),m_VoiceMailCount(0),m_CurrentState(Account::EditState::READY),
-m_pAccountNumber(nullptr),m_pKeyExchangeModel(nullptr),m_pSecurityEvaluationModel(nullptr),m_pTlsMethodModel(nullptr),
-m_pCaCert(nullptr),m_pTlsCert(nullptr),m_isLoaded(true),m_pCipherModel(nullptr),
-m_pStatusModel(nullptr),m_LastTransportCode(0),m_RegistrationState(Account::RegistrationState::UNREGISTERED),
-m_UseDefaultPort(false),m_pProtocolModel(nullptr),m_pBootstrapModel(nullptr),m_RemoteEnabledState(false),
-m_pKnownCertificates(nullptr),
-m_pBannedCertificates(nullptr), m_pAllowedCertificates(nullptr),m_InternalId(++p_sAutoIncrementId),
-m_pNetworkInterfaceModel(nullptr),m_pAllowedCerts(nullptr),m_pBannedCerts(nullptr),m_pPendingContactRequestModel(nullptr),
-m_pRingDeviceModel(nullptr)
+AccountPrivate::AccountPrivate(Account* acc) : QObject(acc), q_ptr(acc),
+m_InternalId(++p_sAutoIncrementId)
 {
 }
 
@@ -1369,7 +1361,6 @@ QVariant Account::roleData(int role) const
    return QVariant();
 }
 #undef CAST
-
 
 bool Account::supportScheme( URI::SchemeType type ) const
 {

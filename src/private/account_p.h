@@ -45,99 +45,99 @@ class AccountPrivate final : public QObject
    Q_DECLARE_PUBLIC(Account)
 public:
 
-   class RegistrationEnabled {
-      public:
-         constexpr static const char* YES  = "true";
-         constexpr static const char* NO   = "false";
-   };
+    class RegistrationEnabled {
+        public:
+            constexpr static const char* YES  = "true";
+            constexpr static const char* NO   = "false";
+    };
 
-   friend class AccountPlaceHolder;
+    friend class AccountPlaceHolder;
 
-   //Constructor
-   explicit AccountPrivate(Account* acc);
+    //Constructor
+    explicit AccountPrivate(Account* acc);
 
-   //Attributes
-   QByteArray                 m_AccountId                ;
-   QHash<QString,QString>     m_hAccountDetails          ;
-   ContactMethod*             m_pAccountNumber           ;
-   Account*                   q_ptr                      ;
-   bool                       m_isLoaded                 ;
-   int                        m_LastTransportCode        ;
-   QString                    m_LastTransportMessage     ;
-   Account::RegistrationState m_RegistrationState        ;
-   QString                    m_LastSipRegistrationStatus;
-   unsigned short             m_UseDefaultPort           ;
-   bool                       m_RemoteEnabledState       ;
-   uint                       m_InternalId               ;
+    //Attributes
+    QByteArray                 m_AccountId                ;
+    QHash<QString,QString>     m_hAccountDetails          ;
+    QString                    m_LastTransportMessage     ;
+    QString                    m_LastSipRegistrationStatus;
+    ContactMethod*             m_pAccountNumber           {nullptr};
+    uint                       m_InternalId               ; //init in .cpp
+    Account*                   q_ptr                      {nullptr};
+    bool                       m_isLoaded                 {true};
+    int                        m_LastTransportCode        {0};
+    Account::RegistrationState m_RegistrationState        {Account::RegistrationState::UNREGISTERED};
+    unsigned short             m_UseDefaultPort           {false};
+    bool                       m_RemoteEnabledState       {false};
+    Account::EditState         m_CurrentState             {Account::EditState::READY};
+    Account::Protocol          m_Protocol                 {Account::Protocol::COUNT__};
+    QMetaObject::Connection    m_cTlsCert                 {};
+    QMetaObject::Connection    m_cTlsCaCert               {};
+    Account::ContactMethods    m_NumbersFromDaemon        {};
 
-   //Factory
-   static Account* buildExistingAccountFromId(const QByteArray& _accountId);
-   static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
+    //Factory
+    static Account* buildExistingAccountFromId(const QByteArray& _accountId);
+    static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
 
-   //Setters
-   void setAccountProperties(const QHash<QString,QString>& m          );
-   bool setAccountProperty  (const QString& param, const QString& val );
+    //Setters
+    void setAccountProperties(const QHash<QString,QString>& m          );
+    bool setAccountProperty  (const QString& param, const QString& val );
 
-   //Getters
-   QString accountDetail(const QString& param) const;
+    //Getters
+    QString accountDetail(const QString& param) const;
 
-   //Mutator
-   bool merge(Account* account);
+    //Mutator
+    bool merge(Account* account);
 
-   //Helpers
-   inline void changeState(Account::EditState state);
-   bool updateState();
-   void regenSecurityValidation();
+    //Helpers
+    inline void changeState(Account::EditState state);
+    bool updateState();
+    void regenSecurityValidation();
 
-   //State actions
-   void performAction(Account::EditAction action);
-   void nothing();
-   void edit   ();
-   void modify ();
-   void remove ();
-   void cancel ();
-   void outdate();
-   void reload ();
-   void save   ();
-   void reloadMod() {reload();modify();}
+    //State actions
+    void performAction(Account::EditAction action);
+    void nothing();
+    void edit   ();
+    void modify ();
+    void remove ();
+    void cancel ();
+    void outdate();
+    void reload ();
+    void save   ();
+    void reloadMod() {reload();modify();}
 
-   CredentialModel*             m_pCredentials             ;
-   CodecModel*                  m_pCodecModel              ;
-   KeyExchangeModel*            m_pKeyExchangeModel        ;
-   CipherModel*                 m_pCipherModel             ;
-   AccountStatusModel*          m_pStatusModel             ;
-   SecurityEvaluationModel*     m_pSecurityEvaluationModel ;
-   TlsMethodModel*              m_pTlsMethodModel          ;
-   ProtocolModel*               m_pProtocolModel           ;
-   BootstrapModel*              m_pBootstrapModel          ;
-   RingDeviceModel*             m_pRingDeviceModel         ;
-   QAbstractItemModel*          m_pKnownCertificates       ;
-   QAbstractItemModel*          m_pBannedCertificates      ;
-   QAbstractItemModel*          m_pAllowedCertificates     ;
-   NetworkInterfaceModel*       m_pNetworkInterfaceModel   ;
-   DaemonCertificateCollection* m_pAllowedCerts            ;
-   DaemonCertificateCollection* m_pBannedCerts             ;
-   Account::EditState           m_CurrentState             ;
-   QMetaObject::Connection      m_cTlsCert                 ;
-   QMetaObject::Connection      m_cTlsCaCert               ;
-   Profile*                     m_pProfile {nullptr}       ;
-   PendingContactRequestModel*  m_pPendingContactRequestModel;
-   Account::ContactMethods      m_NumbersFromDaemon        ;
-   Account::Protocol            m_Protocol {Account::Protocol::COUNT__};
-   BannedContactModel* m_pBannedContactModel {nullptr};
+    CredentialModel*             m_pCredentials                {nullptr};
+    CodecModel*                  m_pCodecModel                 {nullptr};
+    KeyExchangeModel*            m_pKeyExchangeModel           {nullptr};
+    CipherModel*                 m_pCipherModel                {nullptr};
+    AccountStatusModel*          m_pStatusModel                {nullptr};
+    SecurityEvaluationModel*     m_pSecurityEvaluationModel    {nullptr};
+    TlsMethodModel*              m_pTlsMethodModel             {nullptr};
+    ProtocolModel*               m_pProtocolModel              {nullptr};
+    BootstrapModel*              m_pBootstrapModel             {nullptr};
+    RingDeviceModel*             m_pRingDeviceModel            {nullptr};
+    QAbstractItemModel*          m_pKnownCertificates          {nullptr};
+    QAbstractItemModel*          m_pBannedCertificates         {nullptr};
+    QAbstractItemModel*          m_pAllowedCertificates        {nullptr};
+    NetworkInterfaceModel*       m_pNetworkInterfaceModel      {nullptr};
+    DaemonCertificateCollection* m_pAllowedCerts               {nullptr};
+    DaemonCertificateCollection* m_pBannedCerts                {nullptr};
+    Profile*                     m_pProfile                    {nullptr};
+    BannedContactModel*          m_pBannedContactModel         {nullptr};
+    PendingContactRequestModel*  m_pPendingContactRequestModel {nullptr};
 
-   QHash<int, Account::RoleStatus> m_hRoleStatus;
+    QHash<int, Account::RoleStatus> m_hRoleStatus;
 
-   // State machines
-   static const Matrix2D<Account::EditState, Account::EditAction, account_function> stateMachineActionsOnState;
+    // State machines
+    static const Matrix2D<Account::EditState, Account::EditAction, account_function> stateMachineActionsOnState;
 
-   //Cached account details (as they are called too often for the hash)
-   mutable QString      m_HostName;
-   mutable QString      m_LastErrorMessage;
-   mutable int          m_LastErrorCode;
-   mutable int          m_VoiceMailCount;
-   mutable Certificate* m_pCaCert;
-   mutable Certificate* m_pTlsCert;
+    //Cached account details (as they are called too often for the hash)
+    mutable QString      m_HostName;
+    mutable QString      m_LastErrorMessage;
+    mutable int          m_LastErrorCode {-1};
+    mutable int          m_VoiceMailCount {0};
+    mutable Certificate* m_pCaCert  {nullptr};
+    mutable Certificate* m_pTlsCert {nullptr};
 
 public Q_SLOTS:
       void slotPresentChanged        (bool  present  );
