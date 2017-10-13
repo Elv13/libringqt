@@ -24,6 +24,7 @@
 
 //Ring
 #include <account.h>
+#include <mime.h>
 #include <accountmodel.h>
 #include "matrixutils.h"
 class AccountModel;
@@ -33,51 +34,57 @@ class QItemSelectionModel;
 
 class AccountModelPrivate final : public QObject
 {
-   Q_OBJECT
-   Q_DECLARE_PUBLIC(AccountModel)
+    Q_OBJECT
+    Q_DECLARE_PUBLIC(AccountModel)
 
 public:
-   //Constructor
-   explicit AccountModelPrivate(AccountModel* parent);
-   void init();
+    //Constructor
+    explicit AccountModelPrivate(AccountModel* parent);
+    void init();
 
-   //Helpers
-   void enableProtocol(Account::Protocol proto);
-   AccountModel::EditState convertAccountEditState(const Account::EditState s);
-   void insertAccount(Account* a, int idx);
-   void removeAccount(Account* account);
+    //Helpers
+    void enableProtocol(Account::Protocol proto);
+    AccountModel::EditState convertAccountEditState(const Account::EditState s);
+    void insertAccount(Account* a, int idx);
+    void removeAccount(Account* account);
 
-   //Attributes
-   AccountModel*                     q_ptr                ;
-   QVector<Account*>                 m_lAccounts          ;
-   QStringList                       m_lDeletedAccounts   ;
-   Account*                          m_pIP2IP             ;
-   QList<Account*>                   m_pRemovedAccounts   ;
-   ProtocolModel*                    m_pProtocolModel     ;
-   QItemSelectionModel*              m_pSelectionModel    ;
-   QItemSelectionModel*              m_pUserSelectionModel {nullptr};
-   QStringList                       m_lMimes             ;
-   QList<Account*>                   m_lSipAccounts       ;
-   QList<Account*>                   m_lRingAccounts      ;
-   Matrix1D<Account::Protocol, bool> m_lSupportedProtocols;
-   PendingContactRequestModel*       m_pPendingIncomingRequests {nullptr};
-   QMutex                            m_pSingleton         ;
+    //Attributes
+    QItemSelectionModel*              m_pSelectionModel          {nullptr};
+    QItemSelectionModel*              m_pUserSelectionModel      {nullptr};
+    Account*                          m_pIP2IP                   {nullptr};
+    ProtocolModel*                    m_pProtocolModel           {nullptr};
+    PendingContactRequestModel*       m_pPendingIncomingRequests {nullptr};
 
-   //Future account cache
-   static QHash<QByteArray,AccountPlaceHolder*> m_hsPlaceHolder;
+    QVector<Account*>                 m_lAccounts       ;
+    QStringList                       m_lDeletedAccounts;
+    QList<Account*>                   m_pRemovedAccounts;
+    QList<Account*>                   m_lSipAccounts    ;
+    QList<Account*>                   m_lRingAccounts   ;
+    QMutex                            m_pSingleton      ;
+
+    QStringList                       m_lMimes {{RingMimes::ACCOUNT}};
+    Matrix1D<Account::Protocol, bool> m_lSupportedProtocols {{
+        { Account::Protocol::SIP  , false},
+        { Account::Protocol::RING , false},
+    }};
+
+    AccountModel* q_ptr;
+
+    //Future account cache
+    static QHash<QByteArray,AccountPlaceHolder*> m_hsPlaceHolder;
 
 public Q_SLOTS:
-   void slotDaemonAccountChanged(const QString& account, const QString&  registration_state, unsigned code, const QString& status);
-   void slotAccountChanged(Account* a);
-   void slotSupportedProtocolsChanged();
-   void slotVoiceMailNotify( const QString& accountID , int count );
-   void slotAccountPresenceEnabledChanged(bool state);
-   void slotVolatileAccountDetailsChange(const QString& accountId, const MapStringString& details);
-   void slotMediaParametersChanged(const QString& accountId);
-   void slotIncomingContactRequest(const QString& accountId, const QString& hash, const QByteArray& payload, time_t time);
-   void slotDeviceRevocationEnded(const QString& accountId, const QString& deviceId, int status);
-   void slotKownDevicesChanged(const QString& accountId, const MapStringString& devices);
-   void slotExportOnRingEnded(const QString& accountId, int status, const QString& pin);
-   void slotMigrationEnded(const QString& accountId, const QString& result);
-   void slotContactRemoved(const QString &accountID, const QString &uri, bool banned);
+    void slotDaemonAccountChanged(const QString& account, const QString&  registration_state, unsigned code, const QString& status);
+    void slotAccountChanged(Account* a);
+    void slotSupportedProtocolsChanged();
+    void slotVoiceMailNotify( const QString& accountID , int count );
+    void slotAccountPresenceEnabledChanged(bool state);
+    void slotVolatileAccountDetailsChange(const QString& accountId, const MapStringString& details);
+    void slotMediaParametersChanged(const QString& accountId);
+    void slotIncomingContactRequest(const QString& accountId, const QString& hash, const QByteArray& payload, time_t time);
+    void slotDeviceRevocationEnded(const QString& accountId, const QString& deviceId, int status);
+    void slotKownDevicesChanged(const QString& accountId, const MapStringString& devices);
+    void slotExportOnRingEnded(const QString& accountId, int status, const QString& pin);
+    void slotMigrationEnded(const QString& accountId, const QString& result);
+    void slotContactRemoved(const QString &accountID, const QString &uri, bool banned);
 };
