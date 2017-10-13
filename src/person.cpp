@@ -132,77 +132,71 @@ void Person::Address::setType(const QString& value)
 
 QString PersonPrivate::filterString()
 {
-   if (m_CachedFilterString.size())
-      return m_CachedFilterString;
+    if (m_CachedFilterString.size())
+        return m_CachedFilterString;
 
-   //Also filter by phone numbers, accents are negligible
-   foreach(const ContactMethod* n , m_Numbers) {
-      m_CachedFilterString += n->uri();
-   }
+    //Also filter by phone numbers, accents are negligible
+    for (const ContactMethod* n : qAsConst(m_Numbers)) {
+        m_CachedFilterString += n->uri();
+    }
 
-   //Strip non essential characters like accents from the filter string
-   foreach(const QChar& char2,(m_FormattedName+'\n'+m_Organization+'\n'+m_Group+'\n'+
-      m_Department+'\n'+m_PreferredEmail).toLower().normalized(QString::NormalizationForm_KD) ) {
-      if (!char2.combiningClass())
-         m_CachedFilterString += char2;
-   }
+    //Strip non essential characters like accents from the filter string
+    foreach(const QChar& char2,(m_FormattedName+'\n'+m_Organization+'\n'+m_Group+'\n'+
+        m_Department+'\n'+m_PreferredEmail).toLower().normalized(QString::NormalizationForm_KD) ) {
+        if (!char2.combiningClass())
+            m_CachedFilterString += char2;
+    }
 
-   return m_CachedFilterString;
+    return m_CachedFilterString;
 }
 
 void PersonPrivate::changed()
 {
-   m_CachedFilterString.clear();
-   foreach (Person* c,m_lParents) {
-      emit c->changed();
-   }
+    m_CachedFilterString.clear();
+
+    for (Person* c : qAsConst(m_lParents))
+        emit c->changed();
 }
 
 void PersonPrivate::presenceChanged( ContactMethod* n )
 {
-   foreach (Person* c,m_lParents) {
-      emit c->presenceChanged(n);
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->presenceChanged(n);
 }
 
 void PersonPrivate::statusChanged  ( bool s )
 {
-   foreach (Person* c,m_lParents) {
-      emit c->statusChanged(s);
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->statusChanged(s);
 }
 
 void PersonPrivate::phoneNumbersChanged()
 {
-   foreach (Person* c,m_lParents) {
-      emit c->phoneNumbersChanged();
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->phoneNumbersChanged();
 }
 
 void PersonPrivate::phoneNumbersAboutToChange()
 {
-   foreach (Person* c,m_lParents) {
-      emit c->phoneNumbersAboutToChange();
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->phoneNumbersAboutToChange();
 }
 
 void PersonPrivate::registerContactMethod(ContactMethod* m)
 {
-   m_HiddenContactMethods << m;
+    m_HiddenContactMethods << m;
 
-   foreach (Person* c,m_lParents) {
-      emit c->relatedContactMethodsAdded(m);
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->relatedContactMethodsAdded(m);
 
-   connect(m, &ContactMethod::lastUsedChanged, this, &PersonPrivate::slotLastUsedTimeChanged);
-   connect(m, &ContactMethod::callAdded, this, &PersonPrivate::slotCallAdded);
+    connect(m, &ContactMethod::lastUsedChanged, this, &PersonPrivate::slotLastUsedTimeChanged);
+    connect(m, &ContactMethod::callAdded, this, &PersonPrivate::slotCallAdded);
 
-   if ((!m_LastUsedCM) || m->lastUsed() > m_LastUsedCM->lastUsed())
-      slotLastContactMethod(m);
+    if ((!m_LastUsedCM) || m->lastUsed() > m_LastUsedCM->lastUsed())
+        slotLastContactMethod(m);
 }
 
 PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
-   m_Numbers(),m_DisplayPhoto(false),m_Active(true),m_isPlaceHolder(false),
    q_ptr(contact)
 {
    moveToThread(QCoreApplication::instance()->thread());
@@ -266,7 +260,6 @@ d_ptr(new PersonPrivate(this))
    d_ptr->m_Department           = other.d_ptr->m_Department          ;
    d_ptr->m_DisplayPhoto         = other.d_ptr->m_DisplayPhoto        ;
    d_ptr->m_Numbers              = other.d_ptr->m_Numbers             ;
-   d_ptr->m_Active               = other.d_ptr->m_Active              ;
    d_ptr->m_isPlaceHolder        = other.d_ptr->m_isPlaceHolder       ;
    d_ptr->m_lAddresses           = other.d_ptr->m_lAddresses          ;
    d_ptr->m_lCustomAttributes    = other.d_ptr->m_lCustomAttributes   ;
@@ -478,7 +471,7 @@ void Person::setContactMethods(const ContactMethods& numbers)
          certIds << n->uri().userinfo(); // certid must only contain the hash, no scheme
    }
 
-   foreach(const QString& hash , certIds) {
+   for (const QString& hash : qAsConst(certIds)) {
       Certificate* cert = CertificateModel::instance().getCertificateFromId(hash);
       if (cert) {
          for (Account* a : ringAccounts) {
@@ -564,21 +557,21 @@ void Person::setDepartment(const QString& name)
 ///Return if one of the ContactMethod is present
 bool Person::isPresent() const
 {
-   foreach(const ContactMethod* n,d_ptr->m_Numbers) {
-      if (n->isPresent())
-         return true;
-   }
-   return false;
+    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->isPresent())
+            return true;
+    }
+    return false;
 }
 
 ///Return if one of the ContactMethod is tracked
 bool Person::isTracked() const
 {
-   foreach(const ContactMethod* n,d_ptr->m_Numbers) {
-      if (n->isTracked())
-         return true;
-   }
-   return false;
+    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->isTracked())
+            return true;
+    }
+    return false;
 }
 
 bool Person::isPlaceHolder() const
@@ -601,32 +594,34 @@ time_t Person::lastUsedTime() const
 ///Return if one of the ContactMethod support presence
 bool Person::supportPresence() const
 {
-   foreach(const ContactMethod* n,d_ptr->m_Numbers) {
-      if (n->supportPresence())
-         return true;
-   }
-   return false;
+    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->supportPresence())
+            return true;
+    }
+    return false;
 }
 
 ///Return true if there is a change one if the account can be used to reach that person
 bool Person::isReachable() const
 {
-   if (!d_ptr->m_Numbers.size())
-      return false;
+    if (!d_ptr->m_Numbers.size())
+        return false;
 
-   foreach (const ContactMethod* n, d_ptr->m_Numbers) {
-      if (n->isReachable())
-         return true;
-   }
-   return false;
+    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->isReachable())
+            return true;
+    }
+    return false;
 }
 
 bool Person::hasBeenCalled() const
 {
-   foreach( ContactMethod* cm, phoneNumbers()) {
-      if (cm->callCount())
-         return true;
-   }
+    const auto pn = phoneNumbers();
+
+    for (ContactMethod* cm : qAsConst(pn)) {
+        if (cm->callCount())
+            return true;
+    }
 
    return false;
 }
@@ -641,25 +636,27 @@ bool Person::hasBeenCalled() const
  */
 bool Person::hasRecording(Media::Media::Type type, Media::Media::Direction direction) const
 {
-   Q_UNUSED(direction) //TODO implement
+    Q_UNUSED(direction) //TODO implement
 
-   switch (type) {
-      case Media::Media::Type::AUDIO:
-      case Media::Media::Type::VIDEO:
-         return false; //TODO implement
-      case Media::Media::Type::TEXT:
-         foreach( ContactMethod* cm, phoneNumbers()) {
-            if (cm->textRecording() && !cm->textRecording()->isEmpty())
-               return true;
-         }
+    switch (type) {
+        case Media::Media::Type::AUDIO:
+        case Media::Media::Type::VIDEO:
+            return false; //TODO implement
+        case Media::Media::Type::TEXT: {
+            const auto pn = phoneNumbers();
+            for (ContactMethod* cm : qAsConst(pn)) {
+                if (cm->textRecording() && !cm->textRecording()->isEmpty())
+                    return true;
+            }
 
-         return false;
-      case Media::Media::Type::FILE:
-      case Media::Media::Type::COUNT__:
-         break;
-   }
+            return false;
+        }
+        case Media::Media::Type::FILE:
+        case Media::Media::Type::COUNT__:
+            break;
+    }
 
-   return false;
+    return false;
 }
 
 ///Recomputing the filter string is heavy, cache it
@@ -825,7 +822,7 @@ void Person::addPhoneNumber(ContactMethod* cm)
 
     if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
         d_ptr->m_HiddenContactMethods.removeAll(cm);
-        foreach (Person* c, d_ptr->m_lParents)
+        for (Person* c : qAsConst(d_ptr->m_lParents))
             emit c->relatedContactMethodsRemoved(cm);
     }
 }
@@ -845,7 +842,7 @@ QMultiMap<QByteArray, QByteArray> Person::otherFields() const
 /// Get the custom fields for a specific key
 QList<QByteArray> Person::getCustomFields(const QByteArray& name) const
 {
-    return d_ptr->m_lCustomAttributes.values("X-RINGACCOUNTID");
+    return d_ptr->m_lCustomAttributes.values(name);
 }
 
 ///Add custom fields for contact profiles
@@ -863,41 +860,43 @@ int Person::removeAllCustomFields(const QByteArray& key)
 
 const QByteArray Person::toVCard(QList<Account*> accounts) const
 {
-   //serializing here
-   VCardUtils maker;
-   maker.startVCard(QStringLiteral("2.1"));
-   maker.addProperty(VCardUtils::Property::UID, uid());
-   maker.addProperty(VCardUtils::Property::NAME, (secondName()
-                                                   + VCardUtils::Delimiter::SEPARATOR_TOKEN
-                                                   + firstName()));
-   maker.addProperty(VCardUtils::Property::FORMATTED_NAME, formattedName());
-   maker.addProperty(VCardUtils::Property::ORGANIZATION, organization());
+    //serializing here
+    VCardUtils maker;
+    maker.startVCard(QStringLiteral("2.1"));
+    maker.addProperty(VCardUtils::Property::UID, uid());
+    maker.addProperty(VCardUtils::Property::NAME, (secondName()
+                                                    + VCardUtils::Delimiter::SEPARATOR_TOKEN
+                                                    + firstName()));
+    maker.addProperty(VCardUtils::Property::FORMATTED_NAME, formattedName());
+    maker.addProperty(VCardUtils::Property::ORGANIZATION, organization());
 
-   maker.addEmail(QStringLiteral("PREF"), preferredEmail());
+    maker.addEmail(QStringLiteral("PREF"), preferredEmail());
 
-   foreach (ContactMethod* phone , phoneNumbers()) {
-      QString uri = phone->uri();
-      // in the case of a RingID, we want to make sure that the uri contains "ring:" so that the user
-      // can tell it is a RING number and not some other hash
-      if (phone->uri().protocolHint() == URI::ProtocolHint::RING)
-         uri = phone->uri().full();
-      maker.addContactMethod(phone->category()->name(), uri);
-   }
+    const auto pn = phoneNumbers();
 
-   foreach (const Address& addr , d_ptr->m_lAddresses) {
-      maker.addAddress(addr);
-   }
+    for (ContactMethod* phone : qAsConst(pn)) {
+        QString uri = phone->uri();
+        // in the case of a RingID, we want to make sure that the uri contains "ring:" so that the user
+        // can tell it is a RING number and not some other hash
+        if (phone->uri().protocolHint() == URI::ProtocolHint::RING)
+            uri = phone->uri().full();
+        maker.addContactMethod(phone->category()->name(), uri);
+    }
 
-   for (auto i = d_ptr->m_lCustomAttributes.constBegin(); i != d_ptr->m_lCustomAttributes.constEnd(); i++) {
-      maker.addProperty(i.key(), i.value());
-   }
+    for (const Address& addr : qAsConst(d_ptr->m_lAddresses)) {
+        maker.addAddress(addr);
+    }
 
-   foreach (Account* acc , accounts) {
-      maker.addProperty(VCardUtils::Property::X_RINGACCOUNT, acc->id());
-   }
+    for (auto i = d_ptr->m_lCustomAttributes.constBegin(); i != d_ptr->m_lCustomAttributes.constEnd(); i++) {
+        maker.addProperty(i.key(), i.value());
+    }
 
-   maker.addPhoto(GlobalInstances::pixmapManipulator().toByteArray(photo()));
-   return maker.endVCard();
+    for (Account* acc : qAsConst(accounts)) {
+        maker.addProperty(VCardUtils::Property::X_RINGACCOUNT, acc->id());
+    }
+
+    maker.addPhoto(GlobalInstances::pixmapManipulator().toByteArray(photo()));
+    return maker.endVCard();
 }
 
 void PersonPrivate::slotLastUsedTimeChanged(::time_t t)
@@ -915,21 +914,19 @@ void PersonPrivate::slotLastUsedTimeChanged(::time_t t)
 
 void PersonPrivate::slotLastContactMethod(ContactMethod* cm)
 {
-   if (cm && q_ptr->lastUsedTime() > cm->lastUsed())
-      return;
+    if (cm && q_ptr->lastUsedTime() > cm->lastUsed())
+        return;
 
-   m_LastUsedCM = cm;
+    m_LastUsedCM = cm;
 
-   foreach (Person* c, m_lParents) {
-      emit c->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
-   }
+    for (Person* c : qAsConst(m_lParents))
+        emit c->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
 }
 
 void PersonPrivate::slotCallAdded(Call *call)
 {
-    foreach (Person* c,m_lParents) {
+    for (Person* c : qAsConst(m_lParents))
         emit c->callAdded(call);
-    }
 }
 
 /**

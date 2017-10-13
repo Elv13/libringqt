@@ -31,65 +31,65 @@ class PersonStatistics;
 
 class PersonPrivate final : public QObject
 {
-   Q_OBJECT
-   friend class ContactMethod;
+    Q_OBJECT
+    friend class ContactMethod;
 public:
-   explicit PersonPrivate(Person* contact);
-   virtual ~PersonPrivate();
-   QString                  m_FirstName           ;
-   QString                  m_SecondName          ;
-   QString                  m_NickName            ;
-   QVariant                 m_vPhoto              ;
-   QString                  m_FormattedName       ;
-   QString                  m_PreferredEmail      ;
-   QString                  m_Organization        ;
-   QByteArray               m_Uid                 ;
-   QString                  m_Group               ;
-   QString                  m_Department          ;
-   bool                     m_DisplayPhoto        ;
-   Person::ContactMethods   m_Numbers             ;
-   bool                     m_Active              ;
-   bool                     m_isPlaceHolder       ;
-   QList<Person::Address>   m_lAddresses          ;
-   ContactMethod*           m_LastUsedCM {nullptr};
-   QVector<ContactMethod*>  m_HiddenContactMethods;
-   PersonStatistics*        m_pStats              ;
+    explicit PersonPrivate(Person* contact);
+    virtual ~PersonPrivate();
+    QString                  m_FirstName           ;
+    QString                  m_SecondName          ;
+    QString                  m_NickName            ;
+    QVariant                 m_vPhoto              ;
+    QString                  m_FormattedName       ;
+    QString                  m_PreferredEmail      ;
+    QString                  m_Organization        ;
+    QByteArray               m_Uid                 ;
+    QString                  m_Group               ;
+    QString                  m_Department          ;
+    bool                     m_DisplayPhoto        {false};
+    Person::ContactMethods   m_Numbers             ;
+    bool                     m_isPlaceHolder       {false};
+    QList<Person::Address>   m_lAddresses          ;
+    ContactMethod*           m_LastUsedCM {nullptr};
+    QVector<ContactMethod*>  m_HiddenContactMethods;
+    PersonStatistics*        m_pStats              {nullptr};
 
-   QMultiMap<QByteArray, QByteArray>  m_lCustomAttributes;
+    QMultiMap<QByteArray, QByteArray>  m_lCustomAttributes;
 
-   QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
-   QWeakPointer<QAbstractItemModel> m_pAddressModel;
+    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
+    QWeakPointer<QAbstractItemModel> m_pAddressModel;
 
-   /*
+    Person* q_ptr;
+
+    /*
     * NOTE If new attributes are added, please update the explicit Person copy
     * constructor as Qt force QObject copy via serialization (to force developers
     * to use references, copy-on-write based containers and smart pointers
     * instead), which is overkill for this scenario and would detach all the
     * containers causing useless increase in memory usage.
-   */
+    */
 
-   //Cache
-   QString m_CachedFilterString;
+    //Cache
+    QString m_CachedFilterString;
 
-   QString filterString();
+    QString filterString();
 
-   //Helper code to help handle multiple parents
-   QList<Person*> m_lParents;
-   Person* q_ptr;
+    //Helper code to help handle multiple parents
+    QList<Person*> m_lParents;
 
-   //As a single D-Pointer can have multiple parent (when merged), all emit need
-   //to use a proxy to make sure everybody is notified
-   void presenceChanged          ( ContactMethod* );
-   void statusChanged            ( bool           );
-   void changed                  (                );
-   void phoneNumbersChanged      (                );
-   void phoneNumbersAboutToChange(                );
+    //As a single D-Pointer can have multiple parent (when merged), all emit need
+    //to use a proxy to make sure everybody is notified
+    void presenceChanged          ( ContactMethod* );
+    void statusChanged            ( bool           );
+    void changed                  (                );
+    void phoneNumbersChanged      (                );
+    void phoneNumbersAboutToChange(                );
 
-   //Helper
-   void registerContactMethod(ContactMethod* m);
+    //Helper
+    void registerContactMethod(ContactMethod* m);
 
 public Q_SLOTS:
-   void slotLastUsedTimeChanged(::time_t t       );
-   void slotLastContactMethod  (ContactMethod* cm);
-   void slotCallAdded          (Call *call       );
+    void slotLastUsedTimeChanged(::time_t t       );
+    void slotLastContactMethod  (ContactMethod* cm);
+    void slotCallAdded          (Call *call       );
 };
