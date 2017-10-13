@@ -50,5 +50,5 @@ template<class T>
 T* CollectionExtensionModel::getExtension()
 {
    CollectionExtensionModel::instance();
-   return (T*)CollectionExtensionModelSpecific::entries()[registerExtension<T>()];
+   return static_cast<T*>(CollectionExtensionModelSpecific::entries()[registerExtension<T>()]);
 }
