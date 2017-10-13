@@ -47,7 +47,6 @@ public:
 SecurityEvaluationExtension::SecurityEvaluationExtension(QObject* parent) :
    CollectionExtensionInterface(parent), d_ptr(new SecurityEvaluationExtensionPrivate())
 {
-
 }
 
 SecurityEvaluationExtension::~SecurityEvaluationExtension()

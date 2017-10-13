@@ -18,6 +18,7 @@
 #pragma once
 
 #include <QtCore/QAbstractListModel>
+#include <QtCore/QMutex>
 
 #include <functional>
 

@@ -1348,15 +1348,15 @@ QVariant Account::roleData(int role) const
       case CAST(Account::Role::HasActiveCallLimit):
          return hasActiveCallLimit();
       case CAST(Account::Role::SecurityLevel):
-         if (extension<SecurityEvaluationExtension>()) {
+         if (const auto ext = extension<SecurityEvaluationExtension>()) {
             return QVariant::fromValue(
-               extension<SecurityEvaluationExtension>()->securityLevel(this)
+               ext->securityLevel(this)
             );
          };
          break;
       case CAST(Account::Role::SecurityLevelIcon):
-         if (extension<SecurityEvaluationExtension>()) {
-            return extension<SecurityEvaluationExtension>()->securityLevelIcon(this);
+         if (const auto ext = extension<SecurityEvaluationExtension>()) {
+            return ext->securityLevelIcon(this);
          }
          break;
       case CAST(Account::Role::LastStatusChangeTimeStamp):

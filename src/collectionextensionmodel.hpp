@@ -17,24 +17,40 @@
  ***************************************************************************/
 
 
+class CollectionExtensionModelSpecificPrivate;
+
 class CollectionExtensionModelSpecific final
 {
 public:
-   static QList<CollectionExtensionInterface*>& entries();
-   static QList<std::function<void()>>& queuedEntries();
+   static const QList<CollectionExtensionInterface*>& entries();
+   static const QList<std::function<void()>>& queuedEntries();
+   static void insertEntry(CollectionExtensionInterface* e);
+   static void insertQueuedEntry(const std::function<void()>& e);
+
+   static QMutex m_Mutex;
+   static QMutex m_InsertMutex;
 };
 
 template<class T>
 int CollectionExtensionModel::registerExtension()
 {
+   // Make sure the ID is unique to avoid that one in a million collision that
+   // causes a ~10 bytes head overflow.
+   CollectionExtensionModelSpecific::m_Mutex.lock();
+   CollectionExtensionModelSpecific::m_InsertMutex.lock();
+
    static bool typeInit = false;
 
-   static int typeId = CollectionExtensionModelSpecific::entries().size();
+   static int typeId = CollectionExtensionModelSpecific::entries().size()
+      + CollectionExtensionModelSpecific::queuedEntries().size();
+
+   CollectionExtensionModelSpecific::m_Mutex.unlock();
+   CollectionExtensionModelSpecific::m_InsertMutex.unlock();
 
    if (!typeInit) {
-      CollectionExtensionModelSpecific::queuedEntries() << []() {
-          CollectionExtensionModelSpecific::entries() << new T(nullptr);
-      };
+      CollectionExtensionModelSpecific::insertQueuedEntry([]() {
+          CollectionExtensionModelSpecific::insertEntry(new T(nullptr));
+      });
    }
 
    return typeId;
