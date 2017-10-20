@@ -658,9 +658,25 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    QT5_USE_MODULES(ringclient Concurrent)
 ENDIF()
 
+#This hack force Debian based system to return a non multi-arch path
+#this is required to prevent the .deb libringclient.so from having an
+#higher priority than the prefixed one.
+STRING(REPLACE "${CMAKE_LIBRARY_ARCHITECTURE}" "" SANE_LIBRARY_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" )
+
+SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+
+SET(LIB_INSTALL_DIR ${SANE_LIBRARY_PATH})
+
+SET(libringclient_CONFIG_PATH "${CMAKE_CURRENT_BINARY_DIR}/LibRingClientConfig.cmake")
+
+CONFIGURE_PACKAGE_CONFIG_FILE(
+   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibRingClientConfig.cmake.in" ${libringclient_CONFIG_PATH}
+   INSTALL_DESTINATION ${LIB_INSTALL_DIR}/libringclient/cmake
+   PATH_VARS INCLUDE_INSTALL_DIR
+)
 
 SET_TARGET_PROPERTIES(ringclient PROPERTIES
-  PUBLIC_HEADER "${libringclient_LIB_HDRS};${libringclient_extra_LIB_HDRS}"
+    PUBLIC_HEADER "${libringclient_LIB_HDRS};${libringclient_extra_LIB_HDRS}"
 )
 
 TARGET_LINK_LIBRARIES( ringclient
@@ -717,18 +733,12 @@ SET_TARGET_PROPERTIES( ringclient
   PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
 )
 
-#This hack force Debian based system to return a non multi-arch path
-#this is required to prevent the .deb libringclient.so from having an
-#higher priority than the prefixed one.
-STRING(REPLACE "${CMAKE_LIBRARY_ARCHITECTURE}" "" SANE_LIBRARY_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" )
-
-SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
-
-IF("${DISABLE_EXPORT}" MATCHES "ON")
+IF("${DISABLE_EXPORT}" MATCHES "OFF")
     INSTALL(TARGETS ringclient
         EXPORT LibRingClientTargets
         PUBLIC_HEADER DESTINATION "${INCLUDE_INSTALL_DIR}/libringclient"
         LIBRARY DESTINATION "${SANE_LIBRARY_PATH}" COMPONENT ringclient
+        ARCHIVE DESTINATION ${SANE_LIBRARY_PATH}
         COMPONENT Devel
     )
 
@@ -768,22 +778,12 @@ IF("${DISABLE_EXPORT}" MATCHES "ON")
         LIBRARY DESTINATION ${SANE_LIBRARY_PATH}
         DESTINATION ${SANE_LIBRARY_PATH}
     )
+
+    INSTALL( FILES ${libringclient_CONFIG_PATH}
+      DESTINATION ${SANE_LIBRARY_PATH}/cmake/LibRingClient
+      COMPONENT Devel
+    )
 ENDIF()
-
-SET(LIB_INSTALL_DIR ${SANE_LIBRARY_PATH})
-
-SET(libringclient_CONFIG_PATH "${CMAKE_CURRENT_BINARY_DIR}/LibRingClientConfig.cmake")
-
-CONFIGURE_PACKAGE_CONFIG_FILE(
-   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibRingClientConfig.cmake.in" ${libringclient_CONFIG_PATH}
-   INSTALL_DESTINATION ${LIB_INSTALL_DIR}/libringclient/cmake
-   PATH_VARS INCLUDE_INSTALL_DIR
-)
-
-INSTALL( FILES ${libringclient_CONFIG_PATH}
-  DESTINATION ${SANE_LIBRARY_PATH}/cmake/LibRingClient
-  COMPONENT Devel
-)
 
 # translations
 IF( Qt5LinguistTools_FOUND )
@@ -799,7 +799,7 @@ IF( Qt5LinguistTools_FOUND )
 
    ADD_CUSTOM_TARGET(translations ALL DEPENDS ${QM_FILES})
 
-   IF("${DISABLE_EXPORT}" MATCHES "ON")
+   IF("${DISABLE_EXPORT}" MATCHES "OFF")
       INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringclient/translations")
    ENDIF()
 ENDIF()
