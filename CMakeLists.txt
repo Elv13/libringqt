@@ -566,7 +566,7 @@ SET_TARGET_PROPERTIES(ringclient PROPERTIES
 
 TARGET_LINK_LIBRARIES( ringclient
    -lpthread
-   ${QT_QTCORE_LIBRARY}
+   Qt5::Core
 )
 
 # Include as PRIVATE because of the /src/ component
@@ -593,7 +593,7 @@ ENDIF()
 # Use the daemon when libringclient doesn't link directly to libring
 IF(NOT ENABLE_LIBWRAP)
    TARGET_LINK_LIBRARIES( ringclient
-      ${QT_QTDBUS_LIBRARY}
+      Qt5::DBus
    )
 ELSE()
    TARGET_LINK_LIBRARIES( ringclient
