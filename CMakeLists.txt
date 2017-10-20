@@ -42,6 +42,7 @@ OPTION(BUILD_SHARED_LIBS   "Build the shared library (instead of static)" ON )
 OPTION(MUTE_DRING          "Do not print libring debug output"            OFF)
 OPTION(VERBOSE_IPC         "Print all dring function calls (for debug)"   OFF)
 OPTION(ENABLE_TEST_ASSERTS "Enable extra asserts (cpu intensive)"         OFF)
+OPTION(USE_STATIC_LIBRING  "Always prefer the static libring (buggy)"     OFF)
 
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
