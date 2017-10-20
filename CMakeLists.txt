@@ -38,8 +38,10 @@ ADD_DEFINITIONS(
 
 PROJECT(ringclient)
 
-OPTION(BUILD_SHARED_LIBS "Build the shared library (instead of static)" ON )
-OPTION(MUTE_DRING        "Do not print libring debug output"            OFF)
+OPTION(BUILD_SHARED_LIBS   "Build the shared library (instead of static)" ON )
+OPTION(MUTE_DRING          "Do not print libring debug output"            OFF)
+OPTION(VERBOSE_IPC         "Print all dring function calls (for debug)"   OFF)
+OPTION(ENABLE_TEST_ASSERTS "Enable extra asserts (cpu intensive)"         OFF)
 
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
@@ -91,10 +93,6 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(ENABLE_LIBWRAP)
    INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/wraplibring.cmake)
-   IF(${VERBOSE_IPC} MATCHES true)
-      MESSAGE(STATUS "Adding more debug output")
-      ADD_DEFINITIONS(-DVERBOSE_IPC=true)
-   ENDIF()
 ENDIF()
 
 IF(NOT "${ENABLE_VIDEO}" MATCHES false)
@@ -601,6 +599,12 @@ ELSE()
    TARGET_LINK_LIBRARIES( ringclient
       ${ring_BIN}
    )
+ENDIF()
+
+# Make LRC slow, but catches issues
+IF(${ENABLE_TEST_ASSERTS} MATCHES "ON")
+   MESSAGE(STATUS "Adding more debug output")
+   ADD_DEFINITIONS(-DENABLE_TEST_ASSERTS=true)
 ENDIF()
 
 # Fix some issues on Linux and Android

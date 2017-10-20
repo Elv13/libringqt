@@ -63,7 +63,7 @@ public:
 
     // Helpers
     int init();
-    void debugState();
+    inline void debugState();
 
     // Invert the list access to maximize the entropy of the end of the list.
     // The has a better performance profile when you consider the recently
@@ -213,7 +213,7 @@ std::vector<CMTimelineNode*>::iterator PeersTimelineModelPrivate::getNextIndex(t
 /// Extra code for the integration tests (slow for-loop)
 void PeersTimelineModelPrivate::debugState()
 {
-#if ENABLE_TEST_ASSERTS
+#ifdef ENABLE_TEST_ASSERTS
     bool correct(true), correct2(true), correct3(true);
     for (uint i = 0; i < m_lRows.size()  - 1; i++) {
         correct2 &= m_lRows[i]->m_Time  <= m_lRows[i+1]->m_Time;
