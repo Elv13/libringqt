@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
+PROJECT(ringclient)
+
 IF(POLICY CMP0053)
    CMAKE_POLICY(SET CMP0053 NEW)
 ENDIF(POLICY CMP0053)
@@ -31,13 +33,6 @@ INCLUDE(CheckLibraryExists)
 
 SET(CMAKE_CXX_STANDARD 14)
 
-ADD_DEFINITIONS(
-   ${QT_DEFINITIONS}
-   -fexceptions
-)
-
-PROJECT(ringclient)
-
 OPTION(BUILD_SHARED_LIBS   "Build the shared library (instead of static)" ON )
 OPTION(ENABLE_VIDEO        "Enable video support"                         ON )
 OPTION(MUTE_DRING          "Do not print libring debug output"            OFF)
@@ -55,13 +50,8 @@ ENDIF()
 
 # First, check is the compiler is new enough, most version of Clang are fine
 # until problems arise, checking for GCC is enough
-IF (CMAKE_COMPILER_IS_GNUCC)
-   EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-   IF (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
-      MESSAGE(STATUS "Found GCC version >= 4.8: " ${GCC_VERSION})
-   ELSE()
-      MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 4.8 or later")
-   ENDIF()
+IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+   MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 5 or later")
 ENDIF()
 
 SET(CMAKE_AUTOMOC TRUE)
