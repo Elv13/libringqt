@@ -90,14 +90,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(ENABLE_LIBWRAP)
-
-   ADD_DEFINITIONS(-fPIC)
-
    INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/wraplibring.cmake)
-
-   SET(ENABLE_QT5 true) # Use Qt5
-   MESSAGE(STATUS "Compiling with qtwrapper enabled, Qt5 enabled.")
-
    IF(${VERBOSE_IPC} MATCHES true)
       MESSAGE(STATUS "Adding more debug output")
       ADD_DEFINITIONS(-DVERBOSE_IPC=true)
