@@ -27,6 +27,7 @@ ENDIF(POLICY CMP0023)
 INCLUDE(GNUInstallDirs)
 INCLUDE(CMakePackageConfigHelpers)
 INCLUDE(GenerateExportHeader)
+INCLUDE(CheckLibraryExists)
 
 ADD_DEFINITIONS("-std=c++1y")
 ADD_DEFINITIONS(
@@ -708,11 +709,19 @@ ELSE()
    )
 ENDIF()
 
-# Fix some linking issues on Linux
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-   TARGET_LINK_LIBRARIES( ringclient
-      -lrt
-   )
+# Fix some issues on Linux and Android
+CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" NEED_LIBRT)
+IF(NEED_LIBRT)
+   TARGET_LINK_LIBRARIES(ringclient rt)
+
+   IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+      ADD_DEFINITIONS(-D__ANDROID__=1)
+   ELSE()
+      ADD_DEFINITIONS(-D__ANDROID__=0)
+   ENDIF()
+
+ELSE()
+   ADD_DEFINITIONS(-D__ANDROID__=0)
 ENDIF()
 
 EXPORT(TARGETS ringclient
