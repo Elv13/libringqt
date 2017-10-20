@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 IF(POLICY CMP0053)
    CMAKE_POLICY(SET CMP0053 NEW)
@@ -29,7 +29,8 @@ INCLUDE(CMakePackageConfigHelpers)
 INCLUDE(GenerateExportHeader)
 INCLUDE(CheckLibraryExists)
 
-ADD_DEFINITIONS("-std=c++1y")
+SET(CMAKE_CXX_STANDARD 14)
+
 ADD_DEFINITIONS(
    ${QT_DEFINITIONS}
    -fexceptions
@@ -516,10 +517,7 @@ SET( libringclient_extra_LIB_HDRS
   src/typedefs.h
 )
 
-IF(ENABLE_LIBWRAP)
-   # done this way because of bug in cmake 2.8
-   # (not necessary in 3.0+)
-ELSE()
+IF(NOT ENABLE_LIBWRAP)
    # presence manager interface
    SET ( presencemanager_xml  ${dbus_xml_introspecs_path}/cx.ring.Ring.PresenceManager.xml )
 
