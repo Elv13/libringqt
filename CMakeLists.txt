@@ -36,7 +36,8 @@ ADD_DEFINITIONS(
 
 PROJECT(ringclient)
 
-OPTION(BUILD_SHARED_LIBS "Build the shared library (instead of static)" ON)
+OPTION(BUILD_SHARED_LIBS "Build the shared library (instead of static)" ON )
+OPTION(MUTE_DRING        "Do not print libring debug output"            OFF)
 
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
@@ -183,15 +184,11 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(ENABLE_LIBWRAP)
-   # The daemon is only required for when using direct linking
-#   IF (${RING_FOUND} MATCHES "false")
-#      MESSAGE(FATAL_ERROR "The daemon is required")
-#   ENDIF()
 
    ADD_DEFINITIONS(-fPIC)
 
-   ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper)
-   ADD_DEFINITIONS(-DENABLE_LIBWRAP=true) # Use native calls (no dbus)
+   INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/wraplibring.cmake)
+
    ADD_DEFINITIONS(-Wno-unknown-pragmas)
    SET(ENABLE_QT5 true) # Use Qt5
    MESSAGE(STATUS "Compiling with qtwrapper enabled, Qt5 enabled.")
@@ -225,6 +222,8 @@ ENDIF()
 
 #File to compile
 SET( libringclient_LIB_SRCS
+  ${libringclient_LIB_SRCS}
+
   #Data objects
   src/call.cpp
   src/uri.cpp
@@ -692,38 +691,36 @@ TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Allow building with undefined symbols when only the daemon headers are provided
+# It speeds up our CI builds
+IF(${ring_BIN} MATCHES "ring_BIN-NOTFOUND" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    SET_TARGET_PROPERTIES( ringclient PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
+ENDIF()
 
-IF(ENABLE_LIBWRAP)
-   IF(NOT ${ring_BIN} MATCHES "ring_BIN-NOTFOUND")
-      SET(EXTRA_EXPORT_TARGET qtwrapper)
-      TARGET_LINK_LIBRARIES( ringclient PRIVATE
-         qtwrapper
-         ${ring_BIN}
-      )
-   ELSE()
-      # Allow building with undefined symbols when only the daemon headers are provided
-      # It speeds up our CI builds
-      IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-         SET_TARGET_PROPERTIES( ringclient PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
-      ENDIF()
-   ENDIF()
-ELSE()
+# Use the daemon when libringclient doesn't link directly to libring
+IF(NOT ENABLE_LIBWRAP)
    TARGET_LINK_LIBRARIES( ringclient
       ${QT_QTDBUS_LIBRARY}
    )
+ELSE()
+   TARGET_LINK_LIBRARIES( ringclient
+      ${ring_BIN}
+   )
 ENDIF()
 
+# Fix some linking issues on Linux
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    TARGET_LINK_LIBRARIES( ringclient
       -lrt
    )
 ENDIF()
 
-EXPORT(TARGETS ringclient ${EXTRA_EXPORT_TARGET}
-  FILE "${PROJECT_BINARY_DIR}/LibRingClientTargets.cmake")
+EXPORT(TARGETS ringclient
+   FILE "${PROJECT_BINARY_DIR}/LibRingClientTargets.cmake"
+)
 
 SET_TARGET_PROPERTIES( ringclient
-  PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
+   PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
 )
 
 IF("${DISABLE_EXPORT}" MATCHES "OFF")
