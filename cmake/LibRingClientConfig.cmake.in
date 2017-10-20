@@ -4,8 +4,6 @@ INCLUDE(GNUInstallDirs)
 
 SET(LIB_RING_CLIENT_INCLUDE_DIR @INCLUDE_INSTALL_DIR@/libringclient)
 
-STRING(REPLACE "${CMAKE_LIBRARY_ARCHITECTURE}" "" SANE_LIBRARY_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" )
-
 # First, always set the dynamic path
 SET(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib;.so;.dll")
 SET(LIB_RING_CLIENT_LIBRARY_NAME "ringclient")
@@ -84,5 +82,5 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(ringclient_static
 )
 
 if(NOT TARGET ringclient AND NOT ringclient_BINARY_DIR)
-  include("@SANE_LIBRARY_PATH@/cmake/LibRingClient/LibRingClientTargets.cmake")
+  include("@CMAKE_INSTALL_FULL_LIBDIR@/cmake/LibRingClient/LibRingClientTargets.cmake")
 endif()

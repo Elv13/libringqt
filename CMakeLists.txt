@@ -658,14 +658,7 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    QT5_USE_MODULES(ringclient Concurrent)
 ENDIF()
 
-#This hack force Debian based system to return a non multi-arch path
-#this is required to prevent the .deb libringclient.so from having an
-#higher priority than the prefixed one.
-STRING(REPLACE "${CMAKE_LIBRARY_ARCHITECTURE}" "" SANE_LIBRARY_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" )
-
 SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
-
-SET(LIB_INSTALL_DIR ${SANE_LIBRARY_PATH})
 
 SET(libringclient_CONFIG_PATH "${CMAKE_CURRENT_BINARY_DIR}/LibRingClientConfig.cmake")
 
@@ -737,13 +730,13 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
     INSTALL(TARGETS ringclient
         EXPORT LibRingClientTargets
         PUBLIC_HEADER DESTINATION "${INCLUDE_INSTALL_DIR}/libringclient"
-        LIBRARY DESTINATION "${SANE_LIBRARY_PATH}" COMPONENT ringclient
-        ARCHIVE DESTINATION ${SANE_LIBRARY_PATH}
+        LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}" COMPONENT ringclient
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         COMPONENT Devel
     )
 
     INSTALL(EXPORT LibRingClientTargets
-        DESTINATION ${SANE_LIBRARY_PATH}/cmake/LibRingClient
+        DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingClient
         COMPONENT Devel
     )
 
@@ -773,14 +766,14 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
     )
 
     INSTALL( TARGETS ringclient
-        ARCHIVE DESTINATION ${SANE_LIBRARY_PATH}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-        LIBRARY DESTINATION ${SANE_LIBRARY_PATH}
-        DESTINATION ${SANE_LIBRARY_PATH}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+        DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
     )
 
     INSTALL( FILES ${libringclient_CONFIG_PATH}
-      DESTINATION ${SANE_LIBRARY_PATH}/cmake/LibRingClient
+      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingClient
       COMPONENT Devel
     )
 ENDIF()
