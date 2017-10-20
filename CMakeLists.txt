@@ -20,6 +20,10 @@ IF(POLICY CMP0063)
    CMAKE_POLICY(SET CMP0063 NEW)
 ENDIF(POLICY CMP0063)
 
+IF(POLICY CMP0023)
+  CMAKE_POLICY(SET CMP0023 OLD)
+ENDIF(POLICY CMP0023)
+
 INCLUDE(GNUInstallDirs)
 INCLUDE(CMakePackageConfigHelpers)
 INCLUDE(GenerateExportHeader)
@@ -31,6 +35,16 @@ ADD_DEFINITIONS(
 )
 
 PROJECT(ringclient)
+
+OPTION(BUILD_SHARED_LIBS "Build the shared library (instead of static)" ON)
+
+IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
+   OPTION(DISABLE_EXPORT    "Do not install anything"                      OFF)
+ELSE()
+   OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  ON )
+   OPTION(DISABLE_EXPORT    "Do not install anything"                      ON )
+ENDIF()
 
 # First, check is the compiler is new enough, most version of Clang are fine
 # until problems arise, checking for GCC is enough
@@ -168,7 +182,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-IF("${ENABLE_LIBWRAP}" MATCHES true)
+IF(ENABLE_LIBWRAP)
    # The daemon is only required for when using direct linking
 #   IF (${RING_FOUND} MATCHES "false")
 #      MESSAGE(FATAL_ERROR "The daemon is required")
@@ -345,7 +359,7 @@ SET( libringclient_LIB_SRCS
   src/extensions/securityevaluationextension.cpp
 )
 
-IF(${ENABLE_LIBWRAP} MATCHES true)
+IF(ENABLE_LIBWRAP)
    SET(libringclient_LIB_SRCS ${libringclient_LIB_SRCS}
       src/private/directrenderer.cpp
    )
@@ -353,7 +367,7 @@ ELSE()
    SET(libringclient_LIB_SRCS ${libringclient_LIB_SRCS}
       src/private/shmrenderer.cpp
    )
-ENDIF(${ENABLE_LIBWRAP} MATCHES true)
+ENDIF(ENABLE_LIBWRAP)
 
 # Public API
 SET( libringclient_LIB_HDRS
@@ -502,7 +516,7 @@ SET( libringclient_extra_LIB_HDRS
   src/typedefs.h
 )
 
-IF(${ENABLE_LIBWRAP} MATCHES true)
+IF(ENABLE_LIBWRAP)
    # done this way because of bug in cmake 2.8
    # (not necessary in 3.0+)
 ELSE()
@@ -619,13 +633,7 @@ SET(libringclient_PRIVATE_HDRS
 
 QT5_WRAP_CPP(LIB_HEADER_MOC ${libringclient_PRIVATE_HDRS})
 
-IF(NOT "${ENABLE_STATIC}" MATCHES true)
-   MESSAGE(STATUS "Only creating the shared target")
-   ADD_LIBRARY( ringclient SHARED ${libringclient_LIB_SRCS} ${LIB_HEADER_MOC} )
-ELSE()
-   MESSAGE(STATUS "Only creating the static target")
-   ADD_LIBRARY( ringclient STATIC ${libringclient_LIB_SRCS} ${LIB_HEADER_MOC} )
-ENDIF()
+ADD_LIBRARY( ringclient ${libringclient_LIB_SRCS} ${LIB_HEADER_MOC} )
 
 IF (DEFINED ring_INCLUDE_DIRS)
    TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
@@ -633,38 +641,9 @@ IF (DEFINED ring_INCLUDE_DIRS)
    )
 ENDIF()
 
-IF(${ENABLE_LIBWRAP} MATCHES true)
+IF(ENABLE_LIBWRAP)
    TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper/
-   )
-ENDIF()
-
-IF(NOT "${ENABLE_STATIC}" MATCHES false)
-   ADD_LIBRARY( ringclient_static  STATIC ${libringclient_LIB_SRCS} ${LIB_HEADER_MOC} )
-   QT5_USE_MODULES(ringclient_static Core)
-   TARGET_LINK_LIBRARIES( ringclient_static
-      -lpthread
-      ${QT_QTDBUS_LIBRARY}
-      ${QT_QTCORE_LIBRARY}
-      )
-   SET_TARGET_PROPERTIES( ringclient_static
-      PROPERTIES VERSION ${GENERIC_LIB_VERSION}
-   )
-
-   TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/src
-   )
-
-   TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/private/
-   )
-
-   TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-      ${CMAKE_CURRENT_BINARY_DIR}
-   )
-
-   TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-      ${ring_INCLUDE_DIRS}
    )
 ENDIF()
 
@@ -672,9 +651,6 @@ QT5_USE_MODULES(ringclient Core)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   QT5_USE_MODULES(ringclient DBus)
-  IF(NOT "${ENABLE_STATIC}" MATCHES false)
-      QT5_USE_MODULES(ringclient_static DBus)
-  ENDIF()
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    FIND_PACKAGE(Qt5Concurrent)
 
@@ -708,7 +684,7 @@ TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
 )
 
 
-IF(${ENABLE_LIBWRAP} MATCHES true)
+IF(ENABLE_LIBWRAP)
    IF(NOT ${ring_BIN} MATCHES "ring_BIN-NOTFOUND")
       SET(EXTRA_EXPORT_TARGET qtwrapper)
       TARGET_LINK_LIBRARIES( ringclient PRIVATE
@@ -722,24 +698,6 @@ IF(${ENABLE_LIBWRAP} MATCHES true)
          SET_TARGET_PROPERTIES( ringclient PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
       ENDIF()
    ENDIF()
-   IF(NOT "${ENABLE_STATIC}" MATCHES false)
-      TARGET_LINK_LIBRARIES( ringclient_static
-         qtwrapper
-         ${ring_BIN}
-      )
-
-      TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-         ${CMAKE_CURRENT_SOURCE_DIR}/src
-      )
-
-      TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-         ${CMAKE_CURRENT_SOURCE_DIR}/src/private/
-      )
-
-      TARGET_INCLUDE_DIRECTORIES( ringclient_static PRIVATE
-         ${CMAKE_CURRENT_BINARY_DIR}
-      )
-   ENDIF()
 ELSE()
    TARGET_LINK_LIBRARIES( ringclient
       ${QT_QTDBUS_LIBRARY}
@@ -750,12 +708,6 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    TARGET_LINK_LIBRARIES( ringclient
       -lrt
    )
-
-   IF(NOT "${ENABLE_STATIC}" MATCHES false)
-      TARGET_LINK_LIBRARIES( ringclient_static
-         -lrt
-      )
-   ENDIF()
 ENDIF()
 
 EXPORT(TARGETS ringclient ${EXTRA_EXPORT_TARGET}
@@ -772,7 +724,7 @@ STRING(REPLACE "${CMAKE_LIBRARY_ARCHITECTURE}" "" SANE_LIBRARY_PATH "${CMAKE_INS
 
 SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 
-IF(NOT "${ENABLE_STATIC}" MATCHES "true")
+IF("${DISABLE_EXPORT}" MATCHES "ON")
     INSTALL(TARGETS ringclient
         EXPORT LibRingClientTargets
         PUBLIC_HEADER DESTINATION "${INCLUDE_INSTALL_DIR}/libringclient"
@@ -847,7 +799,7 @@ IF( Qt5LinguistTools_FOUND )
 
    ADD_CUSTOM_TARGET(translations ALL DEPENDS ${QM_FILES})
 
-   IF(NOT "${ENABLE_STATIC}" MATCHES "true")
+   IF("${DISABLE_EXPORT}" MATCHES "ON")
       INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringclient/translations")
    ENDIF()
 ENDIF()
