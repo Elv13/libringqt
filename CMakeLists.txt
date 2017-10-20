@@ -39,6 +39,7 @@ ADD_DEFINITIONS(
 PROJECT(ringclient)
 
 OPTION(BUILD_SHARED_LIBS   "Build the shared library (instead of static)" ON )
+OPTION(ENABLE_VIDEO        "Enable video support"                         ON )
 OPTION(MUTE_DRING          "Do not print libring debug output"            OFF)
 OPTION(VERBOSE_IPC         "Print all dring function calls (for debug)"   OFF)
 OPTION(ENABLE_TEST_ASSERTS "Enable extra asserts (cpu intensive)"         OFF)
@@ -96,11 +97,12 @@ IF(ENABLE_LIBWRAP)
    INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/wraplibring.cmake)
 ENDIF()
 
-IF(NOT "${ENABLE_VIDEO}" MATCHES false)
-   MESSAGE(STATUS "VIDEO enabled")
-   SET(ENABLE_VIDEO 1 CACHE BOOLEAN "Enable video")
+IF(ENABLE_VIDEO)
+   MESSAGE(STATUS "Video enabled")
    add_definitions( -DENABLE_VIDEO=true )
-ENDIF(NOT "${ENABLE_VIDEO}" MATCHES false)
+ELSE()
+   MESSAGE(STATUS "Video disabled")
+ENDIF()
 
 # ADD_DEFINITIONS(-DQT_DISABLE_DEPRECATED_BEFORE=1)
 

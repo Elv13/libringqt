@@ -9,8 +9,6 @@ IF (${MUTE_DRING} MATCHES "ON")
    ADD_DEFINITIONS(-DMUTE_DRING=true)
 ENDIF()
 
-SET(CMAKE_AUTOMOC TRUE)
-
 SET(libringclient_LIB_SRCS
    ${libringclient_LIB_SRCS}
    src/qtwrapper/instancemanager.cpp
@@ -18,15 +16,17 @@ SET(libringclient_LIB_SRCS
    src/qtwrapper/configurationmanager_wrap.h
    src/qtwrapper/instancemanager_wrap.h
    src/qtwrapper/presencemanager_wrap.h
-   src/qtwrapper/videomanager_wrap.h
 )
 
 QT5_WRAP_CPP(LIB_WRAPPER_HEADER_MOC ${libqtwrapper_LIB_SRCS})
 
-IF(NOT (${ENABLE_VIDEO} MATCHES "false"))
-   ADD_DEFINITIONS(-DENABLE_VIDEO=true)
-   SET(ENABLE_VIDEO 1 CACHE BOOLEAN "Enable video")
-ENDIF(NOT (${ENABLE_VIDEO} MATCHES "false"))
+IF(ENABLE_VIDEO)
+   SET(libringclient_LIB_SRCS
+      ${libringclient_LIB_SRCS}
+      src/qtwrapper/videomanager_wrap.h
+      src/qtwrapper/videomanager_wrap.cpp
+   )
+ENDIF()
 
 ADD_DEFINITIONS(-fPIC)
 
