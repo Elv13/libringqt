@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 PROJECT(ringclient)
+SET(GENERIC_LIB_VERSION "1.0.0")
 
 IF(POLICY CMP0053)
    CMAKE_POLICY(SET CMP0053 NEW)
@@ -32,6 +33,7 @@ INCLUDE(GenerateExportHeader)
 INCLUDE(CheckLibraryExists)
 
 SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_AUTOMOC TRUE)
 
 OPTION(BUILD_SHARED_LIBS   "Build the shared library (instead of static)" ON )
 OPTION(ENABLE_VIDEO        "Enable video support"                         ON )
@@ -40,6 +42,7 @@ OPTION(VERBOSE_IPC         "Print all dring function calls (for debug)"   OFF)
 OPTION(ENABLE_TEST_ASSERTS "Enable extra asserts (cpu intensive)"         OFF)
 OPTION(USE_STATIC_LIBRING  "Always prefer the static libring (buggy)"     OFF)
 
+# DBus is the default on Linux, LibRing on anything else
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
    OPTION(DISABLE_EXPORT    "Do not install anything"                      OFF)
@@ -54,35 +57,20 @@ IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
    MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 5 or later")
 ENDIF()
 
-SET(CMAKE_AUTOMOC TRUE)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-SET(LOCAL_CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${LOCAL_CMAKE_MODULE_PATH})
+FIND_PACKAGE(Ring             REQUIRED)
+FIND_PACKAGE(Qt5Core          REQUIRED)
+FIND_PACKAGE(Qt5LinguistTools QUIET   ) # translations
 
-SET(QT5_MODULE_PATH ${QT5_PATH}/lib/cmake)
-
-FIND_PACKAGE(Ring REQUIRED)
-FIND_PACKAGE(Qt5Core REQUIRED)
-FIND_PACKAGE(Qt5LinguistTools QUIET) # translations
-
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND NOT ENABLE_LIBWRAP)
-   FIND_PACKAGE(Qt5DBus)
-ELSE()
-   SET(ENABLE_LIBWRAP true)
+IF(NOT ENABLE_LIBWRAP)
+   FIND_PACKAGE(Qt5DBus REQUIRED)
 ENDIF()
 
+# Always print as many warning as possible
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/extrawarnings.cmake)
 
-# OS X
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-   SET(CMAKE_MACOSX_RPATH ON)
-   SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-   SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-   SET(CMAKE_INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}")
-   SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
+# Skip the daemon and use LibRing directly (require adding signal and slots support)
 IF(ENABLE_LIBWRAP)
    INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/wraplibring.cmake)
 ENDIF()
@@ -92,21 +80,6 @@ IF(ENABLE_VIDEO)
    add_definitions( -DENABLE_VIDEO=true )
 ELSE()
    MESSAGE(STATUS "Video disabled")
-ENDIF()
-
-# ADD_DEFINITIONS(-DQT_DISABLE_DEPRECATED_BEFORE=1)
-
-SET(GENERIC_LIB_VERSION "1.0.0")
-
-INCLUDE_DIRECTORIES(SYSTEM ${QT_INCLUDES} )
-
-# Build dbus interfaces
-IF(DEFINED RING_XML_INTERFACES_DIR)
-    SET (dbus_xml_introspecs_path ${RING_XML_INTERFACES_DIR})
-ELSEIF(EXISTS "${RING_BUILD_DIR}/../bin/dbus")
-    SET (dbus_xml_introspecs_path ${RING_BUILD_DIR}/../bin/dbus)
-ELSE()
-    SET (dbus_xml_introspecs_path ${CMAKE_INSTALL_PREFIX}/share/dbus-1/interfaces)
 ENDIF()
 
 #File to compile
@@ -404,7 +377,18 @@ SET( libringclient_extra_LIB_HDRS
   src/typedefs.h
 )
 
+# Build all dbus IPC interfaces
 IF(NOT ENABLE_LIBWRAP)
+
+   # Build dbus interfaces
+   IF(DEFINED RING_XML_INTERFACES_DIR)
+      SET (dbus_xml_introspecs_path ${RING_XML_INTERFACES_DIR})
+   ELSEIF(EXISTS "${RING_BUILD_DIR}/../bin/dbus")
+      SET (dbus_xml_introspecs_path ${RING_BUILD_DIR}/../bin/dbus)
+   ELSE()
+      SET (dbus_xml_introspecs_path ${CMAKE_INSTALL_PREFIX}/share/dbus-1/interfaces)
+   ENDIF()
+
    # presence manager interface
    SET ( presencemanager_xml  ${dbus_xml_introspecs_path}/cx.ring.Ring.PresenceManager.xml )
 
@@ -566,22 +550,10 @@ TARGET_LINK_LIBRARIES( ringclient
 #TODO figure out how to make them public without an error. This
 #allows some extra macros to start working
 TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/private/
 )
-
-TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-# Allow building with undefined symbols when only the daemon headers are provided
-# It speeds up our CI builds
-IF(${ring_BIN} MATCHES "ring_BIN-NOTFOUND" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    SET_TARGET_PROPERTIES( ringclient PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
-ENDIF()
 
 # Use the daemon when libringclient doesn't link directly to libring
 IF(NOT ENABLE_LIBWRAP)
@@ -698,7 +670,9 @@ ENDIF()
 CONFIGURE_FILE(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
+    IMMEDIATE @ONLY
+)
 
 ADD_CUSTOM_TARGET(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+)
