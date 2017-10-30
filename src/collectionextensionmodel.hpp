@@ -22,8 +22,8 @@ class CollectionExtensionModelSpecificPrivate;
 class CollectionExtensionModelSpecific final
 {
 public:
-   static const QList<CollectionExtensionInterface*>& entries();
-   static const QList<std::function<void()>>& queuedEntries();
+   static const QList<CollectionExtensionInterface*> entries();
+   static const QList<std::function<void()>> queuedEntries();
    static void insertEntry(CollectionExtensionInterface* e);
    static void insertQueuedEntry(const std::function<void()>& e);
 

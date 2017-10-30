@@ -33,12 +33,9 @@ public:
 class CollectionExtensionModelSpecificPrivate final
 {
 public:
-    static QList<std::function<void()>>         m_slQueuedEntries;
-    static QList<CollectionExtensionInterface*> m_slEntries;
+    static QList<std::function<void()>>*         queuedEntries();
+    static QList<CollectionExtensionInterface*>* entries();
 };
-
-QList<std::function<void()>> CollectionExtensionModelSpecificPrivate::m_slQueuedEntries = {};
-QList<CollectionExtensionInterface*> CollectionExtensionModelSpecificPrivate::m_slEntries = {};
 
 CollectionExtensionModel::CollectionExtensionModel() : d_ptr(new CollectionExtensionModelPrivate)
 {
@@ -53,12 +50,12 @@ CollectionExtensionModel::CollectionExtensionModel() : d_ptr(new CollectionExten
            for (const auto& ini : qAsConst(currentEntries))
               ini();
 
-           CollectionExtensionModelSpecificPrivate::m_slQueuedEntries.clear();
+           CollectionExtensionModelSpecificPrivate::queuedEntries()->clear();
         }
 
         // Technically, there should be a small usleep here...
         QMutexLocker l(&CollectionExtensionModelSpecific::m_Mutex);
-        if (CollectionExtensionModelSpecificPrivate::m_slQueuedEntries.isEmpty()) {
+        if (CollectionExtensionModelSpecificPrivate::queuedEntries()->isEmpty()) {
             break;
         }
     }
@@ -69,9 +66,21 @@ CollectionExtensionModel::~CollectionExtensionModel()
    delete d_ptr;
 }
 
-const QList<CollectionExtensionInterface*>& CollectionExtensionModelSpecific::entries()
+QList<std::function<void()>>* CollectionExtensionModelSpecificPrivate::queuedEntries()
 {
-   return CollectionExtensionModelSpecificPrivate::m_slEntries;
+   static QList<std::function<void()>> m_slQueuedEntries;
+   return &m_slQueuedEntries;
+}
+
+QList<CollectionExtensionInterface*>* CollectionExtensionModelSpecificPrivate::entries()
+{
+   static QList<CollectionExtensionInterface*> m_slEntries;
+   return &m_slEntries;
+}
+
+const QList<CollectionExtensionInterface*> CollectionExtensionModelSpecific::entries()
+{
+   return *CollectionExtensionModelSpecificPrivate::entries();
 }
 
 /** Will insert elements into the entries() once the model has been created.
@@ -79,14 +88,14 @@ const QList<CollectionExtensionInterface*>& CollectionExtensionModelSpecific::en
  * This avoids a static QObject initialization and those are now banned by the
  * tests.
  */
-const QList<std::function<void()>>& CollectionExtensionModelSpecific::queuedEntries()
+const QList<std::function<void()>> CollectionExtensionModelSpecific::queuedEntries()
 {
-   return CollectionExtensionModelSpecificPrivate::m_slQueuedEntries;
+   return *CollectionExtensionModelSpecificPrivate::queuedEntries();
 }
 
 void CollectionExtensionModelSpecific::insertEntry(CollectionExtensionInterface* e)
 {
-    CollectionExtensionModelSpecificPrivate::m_slEntries << e;
+    CollectionExtensionModelSpecificPrivate::entries()->append(e);
 }
 
 void CollectionExtensionModelSpecific::insertQueuedEntry(const std::function<void()>& e)
@@ -94,7 +103,7 @@ void CollectionExtensionModelSpecific::insertQueuedEntry(const std::function<voi
    // The ids are based on the size of this vector, so it is important to avoid
    // duplicate IDs (and thus wrong casting) during load.
    QMutexLocker l(&m_InsertMutex);
-   CollectionExtensionModelSpecificPrivate::m_slQueuedEntries << e;
+   CollectionExtensionModelSpecificPrivate::queuedEntries()->append(e);
 }
 
 CollectionExtensionModel& CollectionExtensionModel::instance()
@@ -106,7 +115,7 @@ CollectionExtensionModel& CollectionExtensionModel::instance()
 QVariant CollectionExtensionModel::data( const QModelIndex& index, int role ) const
 {
    if (!index.isValid())
-      return QVariant();
+      return {};
 
    return CollectionExtensionModelSpecific::entries()[index.row()]->data(role);
 }
