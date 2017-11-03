@@ -130,7 +130,7 @@ public:
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
 
    //Mutator
-   Q_INVOKABLE void addAddress(const Address& addr);
+   Q_INVOKABLE void addAddress(Address* addr);
    Q_INVOKABLE void addPhoneNumber(ContactMethod* cm);
    Q_INVOKABLE void addCustomField(const QByteArray& key, const QByteArray& value);
    Q_INVOKABLE int  removeAllCustomFields(const QByteArray& key);
@@ -167,7 +167,7 @@ public:
    UsageStatistics* usageStatistics () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
-   QList<Address> addresses        () const;
+   QList<Address*> addresses        () const;
    QMultiMap<QByteArray, QByteArray> otherFields() const;
    QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
@@ -224,6 +224,10 @@ Q_SIGNALS:
    void phoneNumbersChanged       (                );
    ///The number of and/or the contact methods themselvesd are about to change
    void phoneNumbersAboutToChange (                );
+   ///The address themselves have changed
+   void addressesChanged          (                );
+   ///The address themselvesd are about to change
+   void addressesAboutToChange    (                );
    ///The person data were merged from another source
    void rebased                   ( Person* other  );
    ///The last time there was an interaction with this person changed

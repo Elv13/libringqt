@@ -169,7 +169,8 @@ struct VCardMapper final {
    }
 
    void addAddress(Person* c, const QString& key, const QByteArray& fn) {
-      auto addr = Person::Address();
+      auto addr = new Person::Address;
+
       QList<QByteArray> fields = fn.split(VCardUtils::Delimiter::SEPARATOR_TOKEN[0]);
       QStringList keyFields = key.split(VCardUtils::Delimiter::SEPARATOR_TOKEN);
 
@@ -178,12 +179,12 @@ struct VCardMapper final {
           return;
       }
 
-      addr.setType        (keyFields[1]                   );
-      addr.setAddressLine (QString::fromUtf8(fields[2])   );
-      addr.setCity        (QString::fromUtf8(fields[3])   );
-      addr.setState       (QString::fromUtf8(fields[4])   );
-      addr.setZipCode     (QString::fromUtf8(fields[5])   );
-      addr.setCountry     (QString::fromUtf8(fields[6])   );
+      addr->setType        (keyFields[1]                   );
+      addr->setAddressLine (QString::fromUtf8(fields[2])   );
+      addr->setCity        (QString::fromUtf8(fields[3])   );
+      addr->setState       (QString::fromUtf8(fields[4])   );
+      addr->setZipCode     (QString::fromUtf8(fields[5])   );
+      addr->setCountry     (QString::fromUtf8(fields[6])   );
 
       c->addAddress(addr);
    }
@@ -252,25 +253,25 @@ void VCardUtils::addEmail(const QString& type, const QString& email)
    addProperty(QStringLiteral("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg(QStringLiteral("TYPE=")).arg(type).toLatin1(), email);
 }
 
-void VCardUtils::addAddress(const Person::Address& addr)
+void VCardUtils::addAddress(Person::Address* addr)
 {
    const QByteArray prop = QStringLiteral("%1%2%3").arg(Property::ADDRESS)
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.type()).toLatin1();
+         .arg(addr->type()).toLatin1();
 
    //First two fiels are left empty for now, they are for Postal box and Extended Address
    QString value = QStringLiteral("%1%2%3%4%5%6%7%8%9%10%11")
          .arg(Delimiter::SEPARATOR_TOKEN)
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.addressLine())
+         .arg(addr->addressLine())
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.city())
+         .arg(addr->city())
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.state())
+         .arg(addr->state())
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.zipCode())
+         .arg(addr->zipCode())
          .arg(Delimiter::SEPARATOR_TOKEN)
-         .arg(addr.country());
+         .arg(addr->country());
 
    addProperty(prop, value);
 }

@@ -205,6 +205,8 @@ PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
 
 PersonPrivate::~PersonPrivate()
 {
+    while (!m_lAddresses.isEmpty())
+        delete m_lAddresses.takeFirst();
 }
 
 ///Constructor
@@ -797,9 +799,11 @@ bool Person::operator==(const Person& other) const
 }
 
 ///Add a new address to this contact
-void Person::addAddress(const Person::Address& addr)
+void Person::addAddress(Person::Address* addr)
 {
+   emit addressesAboutToChange();
    d_ptr->m_lAddresses << addr;
+   emit addressesChanged();
 }
 
 void Person::addPhoneNumber(ContactMethod* cm)
@@ -828,7 +832,7 @@ void Person::addPhoneNumber(ContactMethod* cm)
 }
 
 /// Returns the addresses associated with the person.
-QList<Person::Address> Person::addresses() const
+QList<Person::Address*> Person::addresses() const
 {
     return d_ptr->m_lAddresses;
 }
@@ -883,7 +887,7 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
         maker.addContactMethod(phone->category()->name(), uri);
     }
 
-    for (const Address& addr : qAsConst(d_ptr->m_lAddresses)) {
+    for (Address* addr : qAsConst(d_ptr->m_lAddresses)) {
         maker.addAddress(addr);
     }
 

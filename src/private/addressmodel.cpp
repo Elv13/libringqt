@@ -29,8 +29,8 @@ AddressModel::AddressModel(const Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), m_pPerson(const_cast<Person*>(parent))
 {
     // Row inserted/deleted can be implemented later
-    connect(parent, &Person::phoneNumbersChanged, this, [this](){beginResetModel();});
-    connect(parent, &Person::phoneNumbersAboutToChange, this, [this](){endResetModel();});
+    connect(parent, &Person::addressesAboutToChange, this, [this](){beginResetModel();});
+    connect(parent, &Person::addressesChanged      , this, [this](){endResetModel();});
 }
 
 AddressModel::~AddressModel()
@@ -41,22 +41,22 @@ QVariant AddressModel::data( const QModelIndex& index, int role ) const
     if (!index.isValid())
         return {};
 
-    const auto& a = m_pPerson->addresses()[index.row()];
+    const auto a = m_pPerson->addresses()[index.row()];
 
     switch(role) {
         case Qt::DisplayRole:
         case (int)Person::Address::Role::ADDRESSLINE:
-            return a.addressLine();
+            return a->addressLine();
         case (int)Person::Address::Role::CITY:
-            return a.city();
+            return a->city();
         case (int)Person::Address::Role::ZIPCODE:
-            return a.zipCode();
+            return a->zipCode();
         case (int)Person::Address::Role::STATE:
-            return a.state();
+            return a->state();
         case (int)Person::Address::Role::COUNTRY:
-            return a.country();
+            return a->country();
         case (int)Person::Address::Role::TYPE:
-            return a.type();
+            return a->type();
     }
 
     return {};
