@@ -1044,7 +1044,12 @@ int CallModel::acceptedPayloadTypes()
 ///There is always 1 column
 int CallModel::columnCount ( const QModelIndex& parentIdx) const
 {
-    return parentIdx.isValid() ? 0 : 1;
+    if (!parentIdx.isValid())
+        return 1;
+
+    const InternalStruct* modelItem = static_cast<InternalStruct*>(parentIdx.internalPointer());
+
+    return modelItem->m_lChildren.isEmpty() ? 0 : 1;
 }
 
 ///Return the conference if 'index' is part of one
