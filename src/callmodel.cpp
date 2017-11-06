@@ -499,6 +499,40 @@ Call* CallModelPrivate::addCall2(Call* call, Call* parentCall)
    return call;
 } //addCall
 
+bool CallModel::supportsDTMF() const
+{
+    const auto call = selectedCall();
+
+    qDebug() << "DDD" << call;
+
+    if (!call)
+        return false;
+
+    switch(call->state()) {
+        case Call::State::NEW:
+        case Call::State::DIALING:
+        case Call::State::CURRENT:
+            return true;
+        case Call::State::TRANSFERRED:
+        case Call::State::ERROR:
+        case Call::State::ABORTED:
+        case Call::State::OVER:
+        case Call::State::INCOMING:
+        case Call::State::RINGING:
+        case Call::State::INITIALIZATION:
+        case Call::State::CONNECTED:
+        case Call::State::HOLD:
+        case Call::State::FAILURE:
+        case Call::State::BUSY:
+        case Call::State::TRANSF_HOLD:
+        case Call::State::CONFERENCE:
+        case Call::State::CONFERENCE_HOLD:
+        case Call::State::COUNT__:
+            return false;
+    };
+
+    return false;
+}
 
 bool CallModel::hasDialingCall() const
 {
