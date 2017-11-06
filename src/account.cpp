@@ -988,6 +988,9 @@ Account::Protocol Account::protocol() const
 ///Return the contact method associated with this account
 ContactMethod* Account::contactMethod() const
 {
+   if (!d_ptr->m_pAccountNumber)
+      d_ptr->reload();
+
    return d_ptr->m_pAccountNumber;
 }
 
