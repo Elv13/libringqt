@@ -499,6 +499,18 @@ Call* CallModelPrivate::addCall2(Call* call, Call* parentCall)
    return call;
 } //addCall
 
+
+bool CallModel::hasDialingCall() const
+{
+    // Only top level calls can be dialing, no need to be recursive
+    for (const auto i : qAsConst(d_ptr->m_lInternalModel)) {
+        if (i->call_real->lifeCycleState() == Call::LifeCycleState::CREATION)
+            return true;
+    }
+
+    return false;
+}
+
 ///Return the current or create a new dialing call from peer ContactMethod
 Call* CallModel::dialingCall(ContactMethod* cm, Call* parent)
 {

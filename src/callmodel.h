@@ -77,6 +77,7 @@ public:
    Q_PROPERTY(bool             hasConference   READ hasConference   )
    Q_PROPERTY(bool             isConnected     READ isConnected     )
    Q_PROPERTY(Call*            selectedCall    READ selectedCall    )
+   Q_PROPERTY(bool             hasDialingCall  READ hasDialingCall  NOTIFY callStateChanged)
    Q_PROPERTY(UserActionModel* userActionModel READ userActionModel CONSTANT)
 
    //Call related
@@ -105,6 +106,7 @@ public:
    bool                 hasConference       () const;
    bool                 isConnected         () const;
    UserActionModel*     userActionModel     () const;
+   bool                 hasDialingCall      () const;
    Q_INVOKABLE QItemSelectionModel* selectionModel() const;
 
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
