@@ -102,6 +102,9 @@ public:
 private:
     CallModel* q_ptr;
 
+public Q_SLOTS:
+    void slotSelectionChanged(const QModelIndex& idx);
+
 private Q_SLOTS:
     void slotCallStateChanged   ( const QString& callID    , const QString &state, int code);
     void slotIncomingCall       ( const QString& accountID , const QString & callID );
@@ -264,8 +267,11 @@ QHash<int,QByteArray> CallModel::roleNames() const
 
 QItemSelectionModel* CallModel::selectionModel() const
 {
-    if (!d_ptr->m_pSelectionModel)
+    if (!d_ptr->m_pSelectionModel) {
         d_ptr->m_pSelectionModel = new QItemSelectionModel(const_cast<CallModel*>(this));
+        connect(d_ptr->m_pSelectionModel, &QItemSelectionModel::currentChanged,
+            d_ptr.data(), &CallModelPrivate::slotSelectionChanged);
+    }
 
     return d_ptr->m_pSelectionModel;
 }
@@ -1593,6 +1599,11 @@ void CallModelPrivate::slotPeerHold( const QString& callId, bool state)
 {
     if (auto call = q_ptr->getCall(callId))
         call->d_ptr->peerHoldChanged(state);
+}
+
+void CallModelPrivate::slotSelectionChanged(const QModelIndex& idx)
+{
+    emit q_ptr->selectionChanged(q_ptr->getCall(idx));
 }
 
 #include <callmodel.moc>

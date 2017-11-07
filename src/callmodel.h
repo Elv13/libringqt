@@ -76,10 +76,11 @@ public:
    Q_PROPERTY(bool             isValid         READ isValid         )
    Q_PROPERTY(bool             hasConference   READ hasConference   )
    Q_PROPERTY(bool             isConnected     READ isConnected     )
-   Q_PROPERTY(Call*            selectedCall    READ selectedCall    )
+   Q_PROPERTY(Call*            selectedCall    READ selectedCall  WRITE selectCall NOTIFY selectionChanged)
    Q_PROPERTY(bool             hasDialingCall  READ hasDialingCall  NOTIFY callStateChanged)
    Q_PROPERTY(bool             supportsDTMF    READ supportsDTMF    NOTIFY callStateChanged)
    Q_PROPERTY(UserActionModel* userActionModel READ userActionModel CONSTANT)
+   Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
 
    //Call related
    Q_INVOKABLE Call*       dialingCall       ( const QString& peerName=QString(), Account* account=nullptr, Call* parent = nullptr );
@@ -109,7 +110,7 @@ public:
    UserActionModel*     userActionModel     () const;
    bool                 hasDialingCall      () const;
    bool                 supportsDTMF        () const;
-   Q_INVOKABLE QItemSelectionModel* selectionModel() const;
+   QItemSelectionModel* selectionModel      () const;
 
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
    Q_INVOKABLE QList<Call*> getConferenceParticipants(Call *conf) const;
@@ -166,5 +167,7 @@ Q_SIGNALS:
    void dialNumberChanged       ( Call* call, const QString& entry        );
    ///Notify when a media state change
    void mediaStateChanged( Call* call, Media::Media* media, const Media::Media::State s, const Media::Media::State m);
+   ///When the selected call changed
+   void selectionChanged(Call* call);
 };
 Q_DECLARE_METATYPE(CallModel*)
