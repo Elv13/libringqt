@@ -851,8 +851,10 @@ const QString Call::formattedName() const
         return tr("Conference");
 
     auto name = peerContactMethod()->bestName();
-    if (name.isEmpty())
+
+    if (name.isEmpty() && lifeCycleState() != Call::LifeCycleState::CREATION)
         return tr("Unknown");
+
     return name;
 }
 
