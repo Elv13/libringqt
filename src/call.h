@@ -140,6 +140,7 @@ public:
       LastDTMFidx        , /*!< The last DTMF (button) sent on this call                            */
       DropPosition       , /*!< GUI related state to keep track of metadata during drag and drop    */
       AudioRecording     , /*!< The Media::AVRecording object or null                               */
+      IsConference       , /*!< If the call is a conference (for QML convenience)                   */
       DateOnly           ,
       DateTime           ,
       SecurityLevel      , //TODO REMOVE use the extensions
