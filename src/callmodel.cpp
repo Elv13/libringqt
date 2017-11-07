@@ -510,8 +510,6 @@ bool CallModel::supportsDTMF() const
 {
     const auto call = selectedCall();
 
-    qDebug() << "DDD" << call;
-
     if (!call)
         return false;
 
@@ -1475,8 +1473,10 @@ void CallModelPrivate::slotStateChanged(Call::State newState, Call::State previo
 {
    Q_UNUSED(newState)
 
-   if (auto call = qobject_cast<Call*>(sender()))
+   if (auto call = qobject_cast<Call*>(sender())) {
         emit q_ptr->callStateChanged(call, previousState);
+        emit q_ptr->selectionSupportsDTMFChanged(q_ptr->supportsDTMF());
+   }
 }
 
 /// Forward the Call::dialNumberChanged signal
@@ -1604,6 +1604,7 @@ void CallModelPrivate::slotPeerHold( const QString& callId, bool state)
 void CallModelPrivate::slotSelectionChanged(const QModelIndex& idx)
 {
     emit q_ptr->selectionChanged(q_ptr->getCall(idx));
+    emit q_ptr->selectionSupportsDTMFChanged(q_ptr->supportsDTMF());
 }
 
 #include <callmodel.moc>

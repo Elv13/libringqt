@@ -78,7 +78,7 @@ public:
    Q_PROPERTY(bool             isConnected     READ isConnected     )
    Q_PROPERTY(Call*            selectedCall    READ selectedCall  WRITE selectCall NOTIFY selectionChanged)
    Q_PROPERTY(bool             hasDialingCall  READ hasDialingCall  NOTIFY callStateChanged)
-   Q_PROPERTY(bool             supportsDTMF    READ supportsDTMF    NOTIFY callStateChanged)
+   Q_PROPERTY(bool             supportsDTMF    READ supportsDTMF    NOTIFY selectionSupportsDTMFChanged)
    Q_PROPERTY(UserActionModel* userActionModel READ userActionModel CONSTANT)
    Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
 
@@ -169,5 +169,7 @@ Q_SIGNALS:
    void mediaStateChanged( Call* call, Media::Media* media, const Media::Media::State s, const Media::Media::State m);
    ///When the selected call changed
    void selectionChanged(Call* call);
+   ///When the selected calls can receive DTMF
+   void selectionSupportsDTMFChanged(bool supported);
 };
 Q_DECLARE_METATYPE(CallModel*)
