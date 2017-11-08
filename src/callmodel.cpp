@@ -857,22 +857,43 @@ Call* CallModelPrivate::addConference(const QString& confID)
 
 bool CallModel::createJoinOrMergeConferenceFromCall(Call* call1, Call* call2)
 {
-  if (!call1 || !call2) return false;
-  qDebug() << "Joining call: " << call1 << " and " << call2;
-  if (call1->type() == Call::Type::CONFERENCE)
+   if (!call1 || !call2) {
+      qWarning() << "Trying to join a call with nothing";
+      return false;
+   }
+
+   if (call1->lifeCycleState() == Call::LifeCycleState::CREATION || call2->lifeCycleState() == Call::LifeCycleState::CREATION) {
+       qWarning() << "Trying to add a dialing call to the conference, it wont work";
+       return false;
+   }
+
+   qDebug() << "Joining call: " << call1 << " and " << call2;
+
+   if (call1->type() == Call::Type::CONFERENCE)
       return addParticipant(call2, call1);
-  else if (call2->type() == Call::Type::CONFERENCE)
+   else if (call2->type() == Call::Type::CONFERENCE)
       return addParticipant(call1, call2);
-  else if (call1->type() == Call::Type::CONFERENCE && call2->type() == Call::Type::CONFERENCE)
+   else if (call1->type() == Call::Type::CONFERENCE && call2->type() == Call::Type::CONFERENCE)
       return mergeConferences(call1, call2);
-  else
-    Q_NOREPLY CallManager::instance().joinParticipant(call1->dringId(),call2->dringId());
-  return true;
+   else
+      Q_NOREPLY CallManager::instance().joinParticipant(call1->dringId(),call2->dringId());
+
+   return true;
 } //createConferenceFromCall
 
 ///Add a new participant to a conference
 bool CallModel::addParticipant(Call* call2, Call* conference)
 {
+    if ((!conference) || (call2)) {
+        qWarning() << "Trying to join a call with nothing";
+        return false;
+    }
+
+    if (call2->lifeCycleState() == Call::LifeCycleState::CREATION) {
+        qWarning() << "Trying to add a dialing call to the conference, it wont work";
+        return false;
+    }
+
     if (conference->type() == Call::Type::CONFERENCE) {
         Q_NOREPLY CallManager::instance().addParticipant(call2->dringId(), conference->dringId());
         return true;
