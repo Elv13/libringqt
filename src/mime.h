@@ -18,6 +18,7 @@
 #pragma once
 
 // Qt
+#include <QtCore/QByteArray>
 class QMimeData;
 
 // LRC
@@ -27,10 +28,11 @@ class Person;
 
 namespace RingMimes {
    //TODO use QStringLiteral
-   constexpr static const char* CALLID      = "text/ring.call.id"        ;
-   constexpr static const char* CONTACT     = "text/ring.contact"        ;
-   constexpr static const char* HISTORYID   = "text/ring.history.id"     ;
-   constexpr static const char* PHONENUMBER = "text/ring.phone.number"   ;
+   constexpr static const char* CALLID      = "x-ring/callid"            ;
+   constexpr static const char* CONTACT     = "x-ring/contactid"         ;
+   constexpr static const char* HISTORYID   = "x-ring/historyid"         ;
+   constexpr static const char* PHONENUMBER = "x-ring/contactmethodid"   ;
+   constexpr static const char* XRINGACTION = "x-ring/dropaction"        ;
    constexpr static const char* PLAIN_TEXT  = "text/plain"               ;
    constexpr static const char* HTML_TEXT   = "text/html"                ;
    constexpr static const char* PROFILE     = "text/ring.profile.id"     ;
@@ -45,4 +47,19 @@ namespace RingMimes {
    constexpr static const char* URI_LIST    = "text/uri-list"            ;
 
    QMimeData* payload(const Call* c, const ContactMethod* cm, const Person* p);
+
+   enum class Actions {
+      INVALID  = 0  ,
+      JOIN     = 100,
+      TRANSFER = 101,
+   };
+
+   namespace ActionNames {
+      constexpr static const char* INVALID  = "invalid";
+      constexpr static const char* JOIN     = "join";
+      constexpr static const char* TRANSFER = "transfer";
+   };
+
+   QByteArray toActionName(Actions action);
+   Actions fromActionName(const QByteArray& name);
 }

@@ -148,11 +148,6 @@ public:
       DropState          = static_cast<int>(Ring::Role::DropState), /*!< GUI related state to keep track of metadata during drag and drop */
    };
 
-   enum DropAction {
-      Conference = 100,
-      Transfer   = 101,
-   };
-
    ///Possible call states
    enum class State : unsigned int{
       NEW             = 0, /*!< The call has been created, but no dialing number been set                         */

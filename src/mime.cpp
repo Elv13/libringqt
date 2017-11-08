@@ -167,3 +167,31 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
 
    return d;
 }
+
+QByteArray RingMimes::toActionName(Actions action)
+{
+    switch(action) {
+        case Actions::INVALID:
+            return ActionNames::INVALID;
+        case Actions::JOIN:
+            return ActionNames::JOIN;
+        case Actions::TRANSFER:
+            return ActionNames::TRANSFER;
+    }
+
+    Q_ASSERT(false);
+    return {};
+}
+
+RingMimes::Actions RingMimes::fromActionName(const QByteArray& name)
+{
+    static QHash<QByteArray, uchar> mapping = {
+        {ActionNames::JOIN    , (uchar) Actions::JOIN    },
+        {ActionNames::TRANSFER, (uchar) Actions::TRANSFER},
+    };
+
+    if (!mapping.contains(name))
+        return Actions::INVALID;
+
+    return (Actions) mapping.value(name);
+}

@@ -1148,6 +1148,7 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
 {
    Q_UNUSED(action)
    const QModelIndex targetIdx = index( row,column,parentIdx );
+
    if (mimedata->hasFormat(RingMimes::CALLID)) {
       const QByteArray encodedCallId = mimedata->data( RingMimes::CALLID    );
       Call* call                     = fromMime ( encodedCallId        );
@@ -1165,8 +1166,13 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
          return false;
       }
 
-      switch (mimedata->property("dropAction").toInt()) {
-         case Call::DropAction::Conference:
+      auto dropAction = (RingMimes::Actions) mimedata->property("dropAction").toInt();
+
+      if (dropAction == RingMimes::Actions::INVALID && mimedata->hasFormat(RingMimes::XRINGACTION))
+          dropAction = RingMimes::fromActionName(mimedata->data(RingMimes::XRINGACTION));
+
+      switch (dropAction) {
+         case RingMimes::Actions::JOIN:
 
             //Call or conference dropped on part of itself -> cannot merge conference with itself
             if (d_ptr->isPartOf(targetIdx,call) || d_ptr->isPartOf(targetIdx.parent(),call) || (call && targetParent && targetParent == call)) {
@@ -1211,11 +1217,14 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
             }
 
             break;
-         case Call::DropAction::Transfer:
+         case RingMimes::Actions::TRANSFER:
             qDebug() << "Performing an attended transfer";
             attendedTransfer(call,target);
             break;
+         case RingMimes::Actions::INVALID:
+             break;
          default:
+            Q_ASSERT(false); // A cast went seriously wrong, abort
             break;
       }
    }
