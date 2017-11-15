@@ -158,15 +158,7 @@ PeersTimelineModel::~PeersTimelineModel()
 
 QHash<int,QByteArray> PeersTimelineModel::roleNames() const
 {
-    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-    static bool initRoles = false;
-    if (!initRoles) {
-        QHash<int, QByteArray>::const_iterator i;
-        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
-            roles[i.key()] = i.value();
-    }
-
-    return roles;
+    return PhoneDirectoryModel::instance().roleNames();
 }
 
 bool PeersTimelineModel::setData( const QModelIndex& idx, const QVariant &value, int role)
