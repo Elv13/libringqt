@@ -67,6 +67,11 @@ IF(NOT ENABLE_LIBWRAP)
    FIND_PACKAGE(Qt5DBus REQUIRED)
 ENDIF()
 
+# Make sure that the d_ptr work as intended
+SET(CMAKE_C_VISIBILITY_PRESET hidden)
+SET(CMAKE_CXX_VISIBILITY_PRESET hidden)
+SET(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 # Always print as many warning as possible
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/extrawarnings.cmake)
 

@@ -170,7 +170,7 @@ Q_DECLARE_METATYPE(UserActionModel::Action)
 DECLARE_ENUM_FLAGS(UserActionModel::Context)
 
 
-UserActionModel* operator<<(UserActionModel* m,UserActionModel::Action action);
+LIB_EXPORT UserActionModel* operator<<(UserActionModel* m,UserActionModel::Action action);
 
 /**
  * "Java bean" used to avoid having a 5+ parameter pixmap delegate

@@ -18,6 +18,8 @@
  ***********************************************************************************/
 #pragma once
 
+#include <typedefs.h>
+
 // Qt
 #include <QtCore/QAbstractItemModel>
 
@@ -41,7 +43,7 @@ class PeerTimelineModelPrivate;
  * themselves.
  *
  */
-class PeerTimelineModel final : public QAbstractItemModel
+class LIB_EXPORT PeerTimelineModel final : public QAbstractItemModel
 {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"

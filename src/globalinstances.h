@@ -77,14 +77,14 @@ void LIB_EXPORT setActionExtender(std::unique_ptr<Interfaces::ActionExtenderI> i
 
 
 //Private use only
-void setInterfaceInternal(Interfaces::AccountListColorizerI    *);
-void setInterfaceInternal(Interfaces::ContactMethodSelectorI   *);
-void setInterfaceInternal(Interfaces::DBusErrorHandlerI        *);
-void setInterfaceInternal(Interfaces::ItemModelStateSerializerI*);
-void setInterfaceInternal(Interfaces::PixmapManipulatorI       *);
-void setInterfaceInternal(Interfaces::PresenceSerializerI      *);
-void setInterfaceInternal(Interfaces::ShortcutCreatorI         *);
-void setInterfaceInternal(Interfaces::ActionExtenderI          *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::AccountListColorizerI    *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::ContactMethodSelectorI   *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::DBusErrorHandlerI        *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::ItemModelStateSerializerI*);
+void LIB_EXPORT setInterfaceInternal(Interfaces::PixmapManipulatorI       *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::PresenceSerializerI      *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::ShortcutCreatorI         *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::ActionExtenderI          *);
 
 /**
  * Generic interface setter. This metamethod can set any type of interface

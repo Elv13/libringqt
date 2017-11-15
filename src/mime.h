@@ -17,6 +17,8 @@
  ***************************************************************************/
 #pragma once
 
+#include <typedefs.h>
+
 // Qt
 #include <QtCore/QByteArray>
 class QMimeData;
@@ -60,6 +62,6 @@ namespace RingMimes {
       constexpr static const char* TRANSFER = "transfer";
    };
 
-   QByteArray toActionName(Actions action);
-   Actions fromActionName(const QByteArray& name);
+   QByteArray LIB_EXPORT toActionName(Actions action);
+   Actions LIB_EXPORT fromActionName(const QByteArray& name);
 }

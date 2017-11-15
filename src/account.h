@@ -611,7 +611,7 @@ Q_DECLARE_METATYPE(Account::EditAction)
 Q_DECLARE_METATYPE(Account::Protocol)
 Q_DECLARE_METATYPE(DtmfType)
 
-Account* operator<<(Account* a, Account::EditAction action);
+LIB_EXPORT Account* operator<<(Account* a, Account::EditAction action);
 
 /**
  * Some accounts can be loaded at later time. This object will be upgraded

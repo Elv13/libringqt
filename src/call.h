@@ -359,7 +359,7 @@ public:
 
 private:
    Call(const QString& confId, const QString& account);
-   ~Call();
+   virtual ~Call();
    explicit Call(Call::State startState, const QString& peerName = QString(), ContactMethod* number = nullptr, Account* account = nullptr); //TODO MOVE TO PRIVATE
 
    //Friend API
@@ -407,8 +407,8 @@ Q_DECLARE_METATYPE(Call::LifeCycleState)
 
 DECLARE_ENUM_FLAGS(Call::HoldFlags)
 
-Call* operator<<(Call* c, Call::Action a);
-QDebug LIB_EXPORT operator<<(QDebug dbg, const Call::State& c       );
-QDebug LIB_EXPORT operator<<(QDebug dbg, const Call::Action& c      );
+LIB_EXPORT Call* operator<<(Call* c, Call::Action a);
+LIB_EXPORT QDebug operator<<(QDebug dbg, const Call::State& c       );
+LIB_EXPORT QDebug operator<<(QDebug dbg, const Call::Action& c      );
 
 #include <call.hpp>
