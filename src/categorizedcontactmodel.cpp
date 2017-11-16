@@ -521,7 +521,7 @@ QModelIndex CategorizedContactModel::parent( const QModelIndex& index) const
 
 QModelIndex CategorizedContactModel::index( int row, int column, const QModelIndex& parent) const
 {
-   if (column)
+   if (column || row == -1)
       return {};
 
    if (!parent.isValid() && row < d_ptr->m_lCategoryCounter.size()) {
