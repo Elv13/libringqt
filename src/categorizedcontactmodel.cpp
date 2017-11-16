@@ -509,14 +509,14 @@ int CategorizedContactModel::columnCount ( const QModelIndex& parent) const
 QModelIndex CategorizedContactModel::parent( const QModelIndex& index) const
 {
    if (!index.isValid() || !index.internalPointer())
-      return QModelIndex();
+      return {};
 
    const ContactTreeNode* modelItem = static_cast<ContactTreeNode*>(index.internalPointer());
 
    if (modelItem && modelItem->m_pParent)
       return createIndex(modelItem->m_pParent->m_Index,0,modelItem->m_pParent);
 
-   return QModelIndex();
+   return {};
 }
 
 QModelIndex CategorizedContactModel::index( int row, int column, const QModelIndex& parent) const
@@ -524,16 +524,18 @@ QModelIndex CategorizedContactModel::index( int row, int column, const QModelInd
    if (column || row == -1)
       return {};
 
-   if (!parent.isValid() && row < d_ptr->m_lCategoryCounter.size()) {
+   if ((!parent.isValid()) && row < d_ptr->m_lCategoryCounter.size())
       return createIndex(row,column,d_ptr->m_lCategoryCounter[row]);
-   }
+
+   if (!parent.isValid())
+       return {};
 
    ContactTreeNode* parentNode = static_cast<ContactTreeNode*>(parent.internalPointer());
 
    if (parentNode && row < parentNode->m_lChildren.size())
       return createIndex(row,column,parentNode->m_lChildren[row]);
 
-   return QModelIndex();
+   return {};
 }
 
 QStringList CategorizedContactModel::mimeTypes() const
