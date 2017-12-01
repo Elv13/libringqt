@@ -1010,6 +1010,32 @@ bool AccountModel::isRingSupported() const
    return d_ptr->m_lSupportedProtocols[Account::Protocol::RING];
 }
 
+/**
+ * Returns true if more than one account can be used for the same URI.
+ *
+ * This happens if there is multiple ring accounts or multiple SIP accounts.
+ *
+ * It is useful, for examples, to show the account name alongside each CM when
+ * there is an ambiguity, but otherwise hide it.
+ */
+bool AccountModel::hasAmbiguousAccounts() const
+{
+    switch(d_ptr->m_lAccounts.size()) {
+        case 0:
+        case 1:
+            return false;
+        case 2:
+            return !hasMultipleProtocols();
+    }
+
+    return true;
+}
+
+bool AccountModel::hasMultipleProtocols() const
+{
+    return d_ptr->m_lSupportedProtocols[Account::Protocol::RING] &&
+        d_ptr->m_lSupportedProtocols[Account::Protocol::SIP ];
+}
 
 ProtocolModel* AccountModel::protocolModel() const
 {

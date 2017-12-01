@@ -50,6 +50,8 @@ public:
    Q_PROPERTY(bool           isRingSupported            READ isRingSupported  NOTIFY supportedProtocolsChanged)
    Q_PROPERTY(Account*       selectedAccount            READ selectedAccount                                  )
    Q_PROPERTY(Account*       userChosenAccount          READ userChosenAccount      WRITE setUserChosenAccount)
+   Q_PROPERTY(bool           hasAmbiguousAccounts       READ hasAmbiguousAccounts   NOTIFY accountListUpdated )
+   Q_PROPERTY(bool           hasMultipleProtocols       READ hasMultipleProtocols   NOTIFY accountListUpdated )
 
    Q_PROPERTY(QAbstractItemModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT       )
 
@@ -81,6 +83,8 @@ public:
    bool                 isSipSupported              (                                      ) const;
    bool                 isIP2IPSupported            (                                      ) const;
    bool                 isRingSupported             (                                      ) const;
+   bool                 hasAmbiguousAccounts        (                                      ) const;
+   bool                 hasMultipleProtocols        (                                      ) const;
    EditState            editState                   (                                      ) const;
    Account*             selectedAccount             (                                      ) const;
    QList<Account*>      accountsToMigrate           (                                      ) const;
@@ -93,7 +97,7 @@ public:
 
    //Abstract model accessors
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;
-   virtual int                   rowCount    ( const QModelIndex& parent = QModelIndex()                 ) const override;
+   virtual int                   rowCount    ( const QModelIndex& parent = {}                            ) const override;
    virtual Qt::ItemFlags         flags       ( const QModelIndex& index                                  ) const override;
    virtual bool                  setData     ( const QModelIndex& index, const QVariant &value, int role )       override;
    virtual QHash<int,QByteArray> roleNames   (                                                           ) const override;
