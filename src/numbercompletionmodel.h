@@ -40,7 +40,6 @@ public:
    //Properties
    Q_PROPERTY(QString prefix READ prefix)
    Q_PROPERTY(bool displayMostUsedNumbers READ displayMostUsedNumbers WRITE setDisplayMostUsedNumbers)
-   Q_PROPERTY(Call* call READ call WRITE setCall)
 
    enum class LookupStatus {
        NOT_APPLICABLE,
@@ -76,12 +75,10 @@ public:
    virtual QHash<int,QByteArray> roleNames() const override;
 
    //Setters
-   void setCall(Call* call);
    void setUseUnregisteredAccounts(bool value);
    void setDisplayMostUsedNumbers(bool value);
 
    //Getters
-   Call* call() const;
    ContactMethod* number(const QModelIndex& idx) const;
    bool isUsingUnregisteredAccounts();
    QString prefix() const;

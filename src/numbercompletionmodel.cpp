@@ -32,6 +32,7 @@
 #include "phonedirectorymodel.h"
 #include "contactmethod.h"
 #include "call.h"
+#include "callmodel.h"
 #include "uri.h"
 #include "numbercategory.h"
 #include "accountmodel.h"
@@ -143,6 +144,9 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
 NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
 {
    setObjectName(QStringLiteral("NumberCompletionModel"));
+   connect(&CallModel::instance(), &CallModel::dialNumberChanged, d_ptr,
+      [this](Call*, const QString& str) {d_ptr->setPrefix(str);}
+   );
 }
 
 NumberCompletionModel::~NumberCompletionModel()
@@ -291,70 +295,60 @@ bool NumberCompletionModel::setData(const QModelIndex& index, const QVariant &va
    return false;
 }
 
-//Set the current call
-void NumberCompletionModel::setCall(Call* call)
-{
-   if (call == d_ptr->m_pCall)
-      return;
-
-   d_ptr->resetSelectionModel();
-
-   if (d_ptr->m_pCall)
-      disconnect(d_ptr->m_pCall,SIGNAL(dialNumberChanged(QString)),d_ptr,SLOT(setPrefix(QString)));
-
-   d_ptr->m_pCall = call;
-
-   if (d_ptr->m_pCall)
-      connect(d_ptr->m_pCall,SIGNAL(dialNumberChanged(QString)),d_ptr,SLOT(setPrefix(QString)));
-
-   d_ptr->setPrefix(call?call->dialNumber():QString());
-}
-
 void NumberCompletionModelPrivate::setPrefix(const QString& str)
 {
-   m_Prefix = str;
-   const bool e = ((m_pCall && m_pCall->lifeCycleState() == Call::LifeCycleState::CREATION) || (!m_pCall)) && ((m_DisplayMostUsedNumbers || !str.isEmpty()));
+    if (!CallModel::instance().hasDialingCall()) {
+        m_Prefix.clear();
+        if (auto c = CallModel::instance().dialingCall()) {
 
-   if (m_Enabled != e) {
-      m_Enabled = e;
-      emit q_ptr->enabled(e);
-   }
+            if (c != m_pCall)
+                resetSelectionModel();
 
-   if (m_Enabled)
-      updateModel();
-   else {
-      q_ptr->beginRemoveRows(QModelIndex(), 0, m_hNumbers.size()-1);
-      m_hNumbers.clear();
-      q_ptr->endRemoveRows();
-   }
+            m_pCall = c;
+        }
+        else
+            m_pCall = nullptr;
+    }
 
-   auto show = matchSipAndRing(m_Prefix);
+    m_Prefix = str;
 
-   if (show.second) {
-      for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
-         if (!cm)
+    const bool e = ((m_pCall && m_pCall->lifeCycleState() == Call::LifeCycleState::CREATION) || (!m_pCall)) && ((m_DisplayMostUsedNumbers || !str.isEmpty()));
+
+    if (m_Enabled != e) {
+        m_Enabled = e;
+        emit q_ptr->enabled(e);
+    }
+
+    if (m_Enabled)
+        updateModel();
+    else {
+        q_ptr->beginRemoveRows(QModelIndex(), 0, m_hNumbers.size()-1);
+        m_hNumbers.clear();
+        q_ptr->endRemoveRows();
+    }
+
+    auto show = matchSipAndRing(m_Prefix);
+
+    if (show.second) {
+        for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
+            if (!cm)
             continue;
 
-         cm->setUri(m_Prefix);
-
-         // Perform name lookups
-         if (str.size() >=3 && !m_hNameCache.contains(str)) {
-            NameDirectory::instance().lookupName(cm->account(), {}, str);
-         }
-      }
-   }
-
-   if (show.first) {
-      for(auto cm : m_hSipTemporaryNumbers) {
-         if (cm)
             cm->setUri(m_Prefix);
-      }
-   }
-}
 
-Call* NumberCompletionModel::call() const
-{
-   return d_ptr->m_pCall;
+            // Perform name lookups
+            if (str.size() >=3 && !m_hNameCache.contains(str)) {
+            NameDirectory::instance().lookupName(cm->account(), {}, str);
+            }
+        }
+    }
+
+    if (show.first) {
+        for(auto cm : m_hSipTemporaryNumbers) {
+            if (cm)
+            cm->setUri(m_Prefix);
+        }
+    }
 }
 
 ContactMethod* NumberCompletionModel::number(const QModelIndex& idx) const
@@ -600,7 +594,7 @@ bool NumberCompletionModel::callSelectedNumber()
 
    d_ptr->m_pCall->performAction(Call::Action::ACCEPT);
 
-   setCall(nullptr);
+   d_ptr->setPrefix({});
 
    return true;
 }

@@ -2102,6 +2102,7 @@ void Call::backspaceItemText()
       if(textSize > 0) {
          editNumber->setUri(text.remove(textSize-1, 1));
          emit changed();
+         emit dialNumberChanged(d_ptr->m_pDialNumber->uri());
       }
       else {
          d_ptr->changeCurrentState(Call::State::ABORTED);
