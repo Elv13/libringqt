@@ -171,5 +171,7 @@ Q_SIGNALS:
    void selectionChanged(Call* call);
    ///When the selected calls can receive DTMF
    void selectionSupportsDTMFChanged(bool supported);
+   /// When a DTMF has been sent/emulated on a call
+   void dtmfPlayed(Call* call, const QChar& code);
 };
 Q_DECLARE_METATYPE(CallModel*)

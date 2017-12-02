@@ -1585,9 +1585,25 @@ void CallModelPrivate::slotDTMFPlayed( const QString& str )
       else if (s == '#'            ) idx = 11          ;
       else                           idx = -1          ;
       call->setProperty("latestDtmfIdx",idx);
+
+      QChar code;
+
+      switch(idx) {
+          case 9:
+              code = '*';
+              break;
+          case 10:
+              code = '0';
+              break;
+          case 11:
+              code = '#';
+              break;
+          default:
+              code = QString::number(idx+1)[0];
+      }
+
+      emit q_ptr->dtmfPlayed(call, code);
    }
-   const auto idx = q_ptr->getIndex(call);
-   q_ptr->setData(idx,50, static_cast<int>(Call::Role::DTMFAnimState));
 }
 
 ///Called when a recording state change
