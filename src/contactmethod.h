@@ -149,7 +149,6 @@ public:
    bool                  isReachable     () const;
    Certificate*          certificate     () const;
    QString               registeredName  () const;
-   Q_DECL_DEPRECATED QString getBestId   () const;
    QString               bestId          () const;
    bool                  isDuplicate     () const;
    QString               bestName        () const;

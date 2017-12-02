@@ -517,13 +517,6 @@ QString ContactMethod::registeredName() const
    return d_ptr->m_RegisteredName.isEmpty()? QString() : d_ptr->m_RegisteredName;
 }
 
-/// Returns the registered name if available, otherwise returns the uri
-/// Deprecated for not following LRC naming convention, please use bestId() instead
-QString ContactMethod::getBestId() const
-{
-   return bestId();
-}
-
 /// Returns if this contact method is currently involved in a recording
 bool ContactMethod::isRecording() const
 {
