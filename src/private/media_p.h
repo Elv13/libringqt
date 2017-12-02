@@ -47,9 +47,9 @@ public:
 
 private:
    //Attributes
-   Media::Media::State m_State;
-   Call* m_pCall;
-   Media::Media::Direction m_Direction;
+   Media::Media::State m_State {Media::Media::State::ACTIVE};
+   Call* m_pCall {nullptr};
+   Media::Media::Direction m_Direction {Media::Direction::OUT};
 
    Media* q_ptr;
 };

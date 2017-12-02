@@ -41,8 +41,7 @@ const Matrix2D<Media::Media::State, Media::Media::Action, Media::MediaTransition
 
 namespace Media {
 
-MediaPrivate::MediaPrivate(Media* parent) :
- m_State(Media::Media::State::ACTIVE),m_pCall(nullptr),q_ptr(parent),m_Direction(Media::Direction::OUT)
+MediaPrivate::MediaPrivate(Media* parent) : q_ptr(parent)
 {
 
 }
