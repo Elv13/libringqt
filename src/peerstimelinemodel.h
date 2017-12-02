@@ -66,6 +66,8 @@ public:
         CATEGORY_ENTRIES = Qt::UserRole + 1,
         ACTIVE_CATEGORIES,
         TOTAL_ENTRIES,
+        RECENT_DATE,
+        DISTANT_DATE,
     };
     Q_ENUMS(SumaryRoles)
 

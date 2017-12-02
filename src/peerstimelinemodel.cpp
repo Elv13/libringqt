@@ -23,6 +23,7 @@
 
 // Qt
 #include <QtCore/QSortFilterProxyModel>
+#include <QtCore/QDateTime>
 
 // Ring
 #include <contactmethod.h>
@@ -392,6 +393,10 @@ QVariant SummaryModel::data(const QModelIndex& idx, int role) const
             return (int) d_ptr->m_lRows.size(); //FIXME use the proxy
         case (int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES:
             return d_ptr->q_ptr->timelineSummaryModel()->rowCount();
+        case (int)PeersTimelineModel::SummaryRoles::RECENT_DATE:
+            return QDateTime::fromTime_t(cur->m_Time);
+        case (int)PeersTimelineModel::SummaryRoles::DISTANT_DATE:
+            return {}; //TODO
     }
 
     return HistoryTimeCategoryModel::data(idx, role);
@@ -405,6 +410,8 @@ QHash<int,QByteArray> SummaryModel::roleNames() const
         roles[(int)PeersTimelineModel::SummaryRoles::CATEGORY_ENTRIES ] = "categoryEntries";
         roles[(int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES] = "activeCategories";
         roles[(int)PeersTimelineModel::SummaryRoles::TOTAL_ENTRIES    ] = "totalEntries";
+        roles[(int)PeersTimelineModel::SummaryRoles::RECENT_DATE      ] = "recentDate";
+        roles[(int)PeersTimelineModel::SummaryRoles::DISTANT_DATE     ] = "distantDate";
     }
 
     return roles;
