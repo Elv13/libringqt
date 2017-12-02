@@ -40,6 +40,7 @@ public:
    //Properties
    Q_PROPERTY(QString prefix READ prefix)
    Q_PROPERTY(bool displayMostUsedNumbers READ displayMostUsedNumbers WRITE setDisplayMostUsedNumbers)
+   Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
 
    enum class LookupStatus {
        NOT_APPLICABLE,
