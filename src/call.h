@@ -350,7 +350,7 @@ public:
    template<typename T>
    T* addOutgoingMedia(bool useExisting = true);
    Q_INVOKABLE void appendText(const QString& str);
-   void backspaceItemText();
+   Q_INVOKABLE void backspaceItemText();
    void reset();
    bool joinToParent();
 
