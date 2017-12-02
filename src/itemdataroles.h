@@ -94,6 +94,7 @@ enum class ObjectType
     ContactRequest,
     COUNT__
 };
+Q_ENUMS(ObjectType)
 
 } // namespace Ring
 
