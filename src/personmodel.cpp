@@ -125,9 +125,13 @@ PersonModel& PersonModel::instance()
 
 QHash<int,QByteArray> PersonModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   static bool initRoles = false;
-   if (!initRoles) {
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+    if (!initRoles) {
+      QHash<int, QByteArray>::const_iterator i;
+      for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+         roles[i.key()] = i.value();
+
       initRoles = true;
       roles[ (int)Person::Role::Organization      ] = "organization";
       roles[ (int)Person::Role::Group             ] = "group";
