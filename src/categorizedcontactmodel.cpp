@@ -22,6 +22,7 @@
 #include <QtCore/QDate>
 #include <QtCore/QMimeData>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QSortFilterProxyModel>
 
 //Ring
 #include "callmodel.h"
@@ -290,21 +291,15 @@ CategorizedContactModel& CategorizedContactModel::instance()
 
 QHash<int,QByteArray> CategorizedContactModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   static bool initRoles = false;
-   if (!initRoles) {
-      initRoles = true;
-      roles.insert((int)Person::Role::Organization      ,QByteArray("organization")     );
-      roles.insert((int)Person::Role::Group             ,QByteArray("group")            );
-      roles.insert((int)Person::Role::Department        ,QByteArray("department")       );
-      roles.insert((int)Person::Role::PreferredEmail    ,QByteArray("preferredEmail")   );
-      roles.insert((int)Person::Role::FormattedLastUsed ,QByteArray("formattedLastUsed"));
-      roles.insert((int)Person::Role::IndexedLastUsed   ,QByteArray("indexedLastUsed")  );
-      roles.insert((int)Person::Role::DatedLastUsed     ,QByteArray("datedLastUsed")    );
-      roles.insert((int)Person::Role::Filter            ,QByteArray("filter")           );
-      roles.insert((int)Person::Role::DropState         ,QByteArray("dropState")        );
-   }
-   return roles;
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+    static bool initRoles = false;
+    if (!initRoles) {
+        QHash<int, QByteArray>::const_iterator i;
+        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+            roles[i.key()] = i.value();
+    }
+
+    return roles;
 }
 
 ContactTreeNode* CategorizedContactModelPrivate::getContactTopLevelItem(const QString& category)
@@ -327,7 +322,6 @@ void CategorizedContactModelPrivate::reloadCategories()
 {
    //TODO This could be optimized
    q_ptr->beginResetModel();
-
    m_hCategories.clear();
    for (auto item : qAsConst(m_lCategoryCounter))
       delete item;
@@ -677,7 +671,7 @@ void CategorizedContactModelPrivate::reloadTreeVisibility( ContactTreeNode* node
    };
 }
 
-QSortFilterProxyModel* CategorizedContactModel::SortedProxy::model() const
+QAbstractItemModel* CategorizedContactModel::SortedProxy::model() const
 {
     if (!CategorizedContactModel::instance().d_ptr->m_pSortedProxy)
         CategorizedContactModel::instance().d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();

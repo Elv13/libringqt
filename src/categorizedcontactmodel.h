@@ -82,9 +82,9 @@ public:
          COUNT__
       };
 
-      QSortFilterProxyModel* model                 () const;
-      QAbstractItemModel   * categoryModel         () const;
-      QItemSelectionModel  * categorySelectionModel() const;
+      QAbstractItemModel * model                 () const;
+      QAbstractItemModel * categoryModel         () const;
+      QItemSelectionModel* categorySelectionModel() const;
       static CategorizedContactModel::SortedProxy& instance();
    };
 
