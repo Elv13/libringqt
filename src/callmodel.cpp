@@ -361,6 +361,28 @@ CallList CallModel::getActiveConferences()
     return confList;
 } //getConferenceList
 
+/**
+ * Returns true if it is possible to create a conference using the calls currently
+ * tracked by CallModel.
+ */
+bool CallModel::conferencePossible() const
+{
+    if (rowCount() < 2)
+        return false;
+
+    int compatible = 0;
+
+    for (const InternalStruct* s : qAsConst(d_ptr->m_lInternalModel)) {
+        if (s->m_lChildren.size())
+            return true;
+
+        compatible += s->call_real->lifeCycleState() == Call::LifeCycleState::PROGRESS ?
+            1 : 0;
+    }
+
+    return compatible >= 2;
+}
+
 bool CallModel::hasConference() const
 {
    for (const InternalStruct* s : qAsConst(d_ptr->m_lInternalModel)) {
@@ -481,6 +503,7 @@ Call* CallModelPrivate::addCall2(Call* call, Call* parentCall)
       emit q_ptr->callAdded(call,parentCall);
       const QModelIndex idx = q_ptr->index(m_lInternalModel.size()-1,0,{});
       emit q_ptr->dataChanged(idx, idx);
+      emit q_ptr->callStateChanged(call, call->state());
       connect(call, &Call::changed, this, &CallModelPrivate::slotCallChanged);
       connect(call,&Call::stateChanged,this,&CallModelPrivate::slotStateChanged);
       connect(call,&Call::dialNumberChanged,this,&CallModelPrivate::slotDialNumberChanged);

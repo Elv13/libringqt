@@ -81,6 +81,7 @@ public:
    Q_PROPERTY(bool             supportsDTMF    READ supportsDTMF    NOTIFY selectionSupportsDTMFChanged)
    Q_PROPERTY(UserActionModel* userActionModel READ userActionModel CONSTANT)
    Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
+   Q_PROPERTY(bool conferencePossible READ conferencePossible NOTIFY callStateChanged)
 
    //Call related
    Q_INVOKABLE Call*       dialingCall       ( const QString& peerName=QString(), Account* account=nullptr, Call* parent = nullptr );
@@ -98,6 +99,7 @@ public:
    Q_INVOKABLE bool mergeConferences         ( Call* conf1, Call* conf2      );
    Q_INVOKABLE bool addParticipant           ( Call* call2, Call* conference );
    Q_INVOKABLE bool detachParticipant        ( Call* call                    );
+   Q_INVOKABLE bool mergeAllCalls            (                               );
 
    //Getters
    Q_INVOKABLE CallList getActiveCalls      ();
@@ -110,6 +112,7 @@ public:
    UserActionModel*     userActionModel     () const;
    bool                 hasDialingCall      () const;
    bool                 supportsDTMF        () const;
+   bool                 conferencePossible  () const;
    QItemSelectionModel* selectionModel      () const;
 
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
