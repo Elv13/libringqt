@@ -72,9 +72,9 @@ public:
 
    //Properties
    Q_PROPERTY(int              size            READ size            )
-   Q_PROPERTY(int              callCount       READ rowCount        )
+   Q_PROPERTY(int              callCount       READ rowCount        NOTIFY callStateChanged)
    Q_PROPERTY(bool             isValid         READ isValid         )
-   Q_PROPERTY(bool             hasConference   READ hasConference   )
+   Q_PROPERTY(bool             hasConference   READ hasConference   NOTIFY callStateChanged)
    Q_PROPERTY(bool             isConnected     READ isConnected     )
    Q_PROPERTY(Call*            selectedCall    READ selectedCall  WRITE selectCall NOTIFY selectionChanged)
    Q_PROPERTY(bool             hasDialingCall  READ hasDialingCall  NOTIFY callStateChanged)
@@ -100,6 +100,7 @@ public:
    Q_INVOKABLE bool addParticipant           ( Call* call2, Call* conference );
    Q_INVOKABLE bool detachParticipant        ( Call* call                    );
    Q_INVOKABLE bool mergeAllCalls            (                               );
+   Q_INVOKABLE bool detachAllCalls           (                               );
 
    //Getters
    Q_INVOKABLE CallList getActiveCalls      ();

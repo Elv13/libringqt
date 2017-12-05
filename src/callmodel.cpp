@@ -389,7 +389,6 @@ bool CallModel::hasConference() const
       if (s->m_lChildren.size())
          return true;
    }
-
    return false;
 }
 
@@ -941,6 +940,51 @@ bool CallModel::mergeConferences(Call* conf1, Call* conf2)
    return true;
 }
 
+/// Take all Call::LifeCycleState::PROGRESS calls and merge them as a conference.
+bool CallModel::mergeAllCalls()
+{
+    if (rowCount() < 2)
+        return false;
+
+    QList<Call*> compatible;
+
+    for (const InternalStruct* s : qAsConst(d_ptr->m_lInternalModel)) {
+        if (s->call_real->type() == Call::Type::CALL && s->call_real->lifeCycleState() == Call::LifeCycleState::PROGRESS)
+            compatible << s->call_real;
+    }
+
+    if (compatible.size() < 2)
+        return false;
+
+    Call* first  = compatible.takeFirst();
+    Call* second = compatible.takeFirst();
+
+    createJoinOrMergeConferenceFromCall(first, second);
+
+    return true;
+}
+
+/// Remove all participants from all conferences.
+bool CallModel::detachAllCalls()
+{
+
+    QList<Call*> calls;
+
+    // Do not iterate directly on the conference while mutating it
+    for (const InternalStruct* conf : qAsConst(d_ptr->m_lInternalModel)) {
+        if (conf->call_real->type() == Call::Type::CONFERENCE) {
+            for (const InternalStruct* call : qAsConst(conf->m_lChildren))
+                calls << call->call_real;
+
+        }
+    }
+
+    for (auto c : qAsConst(calls))
+        detachParticipant(c);
+
+    return calls.size();
+}
+
 ///Remove a conference from the model and the TreeView
 void CallModelPrivate::removeConference(const QString &confId)
 {
@@ -1388,6 +1432,7 @@ void CallModelPrivate::slotIncomingConference(const QString& confID)
     qDebug() << "Adding conference" << conf << confID;
 
     emit q_ptr->conferenceCreated(conf);
+    emit q_ptr->callStateChanged(conf, conf->state());
 }
 
 ///When a conference change
@@ -1513,6 +1558,7 @@ void CallModelPrivate::slotConferenceRemoved(const QString &confId)
    removeConference(confId);
    emit q_ptr->layoutChanged();
    emit q_ptr->conferenceRemoved(conf);
+   emit q_ptr->callStateChanged(conf, conf->state());
 }
 
 ///Make the call aware it has a recording
