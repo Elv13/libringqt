@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
-PROJECT(ringclient)
+PROJECT(ringqt)
 SET(GENERIC_LIB_VERSION "1.0.0")
 
 IF(POLICY CMP0053)
@@ -88,8 +88,8 @@ ELSE()
 ENDIF()
 
 #File to compile
-SET( libringclient_LIB_SRCS
-  ${libringclient_LIB_SRCS}
+SET( libringqt_LIB_SRCS
+  ${libringqt_LIB_SRCS}
 
   #Data objects
   src/call.cpp
@@ -226,17 +226,17 @@ SET( libringclient_LIB_SRCS
 )
 
 IF(ENABLE_LIBWRAP)
-   SET(libringclient_LIB_SRCS ${libringclient_LIB_SRCS}
+   SET(libringqt_LIB_SRCS ${libringqt_LIB_SRCS}
       src/private/directrenderer.cpp
    )
 ELSE()
-   SET(libringclient_LIB_SRCS ${libringclient_LIB_SRCS}
+   SET(libringqt_LIB_SRCS ${libringqt_LIB_SRCS}
       src/private/shmrenderer.cpp
    )
 ENDIF(ENABLE_LIBWRAP)
 
 # Public API
-SET( libringclient_LIB_HDRS
+SET( libringqt_LIB_HDRS
   src/account.h
   src/ringdevice.h
   src/credential.h
@@ -328,7 +328,7 @@ SET( libringclient_LIB_HDRS
   src/bannedcontactmodel.h
 )
 
-SET(libringclient_video_LIB_HDRS
+SET(libringqt_video_LIB_HDRS
   src/video/device.h
   src/video/devicemodel.h
   src/video/sourcemodel.h
@@ -341,7 +341,7 @@ SET(libringclient_video_LIB_HDRS
   #The renderer implementations are not exported on purpose
 )
 
-SET(libringclient_audio_LIB_HDRS
+SET(libringqt_audio_LIB_HDRS
   src/audio/alsapluginmodel.h
   src/audio/inputdevicemodel.h
   src/audio/managermodel.h
@@ -350,12 +350,12 @@ SET(libringclient_audio_LIB_HDRS
   src/audio/settings.h
 )
 
-SET(libringclient_extensions_LIB_HDRS
+SET(libringqt_extensions_LIB_HDRS
   src/extensions/presencecollectionextension.h
   src/extensions/securityevaluationextension.h
 )
 
-SET(libringclient_media_LIB_HDRS
+SET(libringqt_media_LIB_HDRS
   src/media/media.h
   src/media/audio.h
   src/media/video.h
@@ -367,7 +367,7 @@ SET(libringclient_media_LIB_HDRS
   src/media/recordingmodel.h
 )
 
-SET(libringclient_interface_LIB_HDRS
+SET(libringqt_interface_LIB_HDRS
   src/interfaces/accountlistcolorizeri.h
   src/interfaces/contactmethodselectori.h
   src/interfaces/presenceserializeri.h
@@ -378,7 +378,7 @@ SET(libringclient_interface_LIB_HDRS
   src/interfaces/dbuserrorhandleri.h
 )
 
-SET( libringclient_extra_LIB_HDRS
+SET( libringqt_extra_LIB_HDRS
   src/typedefs.h
 )
 
@@ -407,7 +407,7 @@ IF(NOT ENABLE_LIBWRAP)
    )
 
    QT5_ADD_DBUS_INTERFACE(
-      libringclient_LIB_SRCS
+      libringqt_LIB_SRCS
       ${presencemanager_xml}
       presencemanager_dbus_interface
    )
@@ -423,7 +423,7 @@ IF(NOT ENABLE_LIBWRAP)
    )
 
    QT5_ADD_DBUS_INTERFACE(
-      libringclient_LIB_SRCS
+      libringqt_LIB_SRCS
       ${configurationmanager_xml}
       configurationmanager_dbus_interface
    )
@@ -439,7 +439,7 @@ IF(NOT ENABLE_LIBWRAP)
    )
 
    QT5_ADD_DBUS_INTERFACE(
-      libringclient_LIB_SRCS
+      libringqt_LIB_SRCS
       ${callmanager_xml}
       callmanager_dbus_interface
    )
@@ -455,7 +455,7 @@ IF(NOT ENABLE_LIBWRAP)
    )
 
    QT5_ADD_DBUS_INTERFACE(
-      libringclient_LIB_SRCS
+      libringqt_LIB_SRCS
       ${video_xml}
       video_dbus_interface
    )
@@ -472,7 +472,7 @@ IF(NOT ENABLE_LIBWRAP)
    )
 
    QT5_ADD_DBUS_INTERFACE(
-      libringclient_LIB_SRCS
+      libringqt_LIB_SRCS
       ${instance_xml}
       instance_dbus_interface
    )
@@ -480,7 +480,7 @@ IF(NOT ENABLE_LIBWRAP)
 ENDIF()
 
 # Manually wrap private files and interfaces
-SET(libringclient_PRIVATE_HDRS
+SET(libringqt_PRIVATE_HDRS
    src/private/call_p.h
    src/private/ringdevicemodel_p.h
    src/private/namedirectory_p.h
@@ -505,48 +505,48 @@ SET(libringclient_PRIVATE_HDRS
    src/private/personstatistics.hpp
 )
 
-QT5_WRAP_CPP(LIB_HEADER_MOC ${libringclient_PRIVATE_HDRS})
+QT5_WRAP_CPP(LIB_HEADER_MOC ${libringqt_PRIVATE_HDRS})
 
-ADD_LIBRARY( ringclient ${libringclient_LIB_SRCS} ${LIB_HEADER_MOC} )
+ADD_LIBRARY( ringqt ${libringqt_LIB_SRCS} ${LIB_HEADER_MOC} )
 
 IF (DEFINED ring_INCLUDE_DIRS)
-   TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
+   TARGET_INCLUDE_DIRECTORIES( ringqt PRIVATE
       ${ring_INCLUDE_DIRS}
    )
 ENDIF()
 
 IF(ENABLE_LIBWRAP)
-   TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
+   TARGET_INCLUDE_DIRECTORIES( ringqt PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper/
    )
 ENDIF()
 
-QT5_USE_MODULES(ringclient Core)
+QT5_USE_MODULES(ringqt Core)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  QT5_USE_MODULES(ringclient DBus)
+  QT5_USE_MODULES(ringqt DBus)
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    FIND_PACKAGE(Qt5Concurrent)
 
    #For some reason, QSemaphore wont compile on Windows without QtConcurrent
-   QT5_USE_MODULES(ringclient Concurrent)
+   QT5_USE_MODULES(ringqt Concurrent)
 ENDIF()
 
 SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 
-SET(libringclient_CONFIG_PATH "${CMAKE_CURRENT_BINARY_DIR}/LibRingClientConfig.cmake")
+SET(libringqt_CONFIG_PATH "${CMAKE_CURRENT_BINARY_DIR}/LibRingQtConfig.cmake")
 
 CONFIGURE_PACKAGE_CONFIG_FILE(
-   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibRingClientConfig.cmake.in" ${libringclient_CONFIG_PATH}
-   INSTALL_DESTINATION ${LIB_INSTALL_DIR}/libringclient/cmake
+   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibRingQtConfig.cmake.in" ${libringqt_CONFIG_PATH}
+   INSTALL_DESTINATION ${LIB_INSTALL_DIR}/libringqt/cmake
    PATH_VARS INCLUDE_INSTALL_DIR
 )
 
-SET_TARGET_PROPERTIES(ringclient PROPERTIES
-    PUBLIC_HEADER "${libringclient_LIB_HDRS};${libringclient_extra_LIB_HDRS}"
+SET_TARGET_PROPERTIES(ringqt PROPERTIES
+    PUBLIC_HEADER "${libringqt_LIB_HDRS};${libringqt_extra_LIB_HDRS}"
 )
 
-TARGET_LINK_LIBRARIES( ringclient
+TARGET_LINK_LIBRARIES( ringqt
    -lpthread
    Qt5::Core
 )
@@ -554,19 +554,19 @@ TARGET_LINK_LIBRARIES( ringclient
 # Include as PRIVATE because of the /src/ component
 #TODO figure out how to make them public without an error. This
 #allows some extra macros to start working
-TARGET_INCLUDE_DIRECTORIES( ringclient PRIVATE
+TARGET_INCLUDE_DIRECTORIES( ringqt PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/private/
 )
 
-# Use the daemon when libringclient doesn't link directly to libring
+# Use the daemon when libringqt doesn't link directly to libring
 IF(NOT ENABLE_LIBWRAP)
-   TARGET_LINK_LIBRARIES( ringclient
+   TARGET_LINK_LIBRARIES( ringqt
       Qt5::DBus
    )
 ELSE()
-   TARGET_LINK_LIBRARIES( ringclient
+   TARGET_LINK_LIBRARIES( ringqt
       ${ring_BIN}
    )
 ENDIF()
@@ -580,7 +580,7 @@ ENDIF()
 # Fix some issues on Linux and Android
 CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" NEED_LIBRT)
 IF(NEED_LIBRT)
-   TARGET_LINK_LIBRARIES(ringclient rt)
+   TARGET_LINK_LIBRARIES(ringqt rt)
 
    IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
       ADD_DEFINITIONS(-D__ANDROID__=1)
@@ -592,62 +592,62 @@ ELSE()
    ADD_DEFINITIONS(-D__ANDROID__=0)
 ENDIF()
 
-EXPORT(TARGETS ringclient
-   FILE "${PROJECT_BINARY_DIR}/LibRingClientTargets.cmake"
+EXPORT(TARGETS ringqt
+   FILE "${PROJECT_BINARY_DIR}/LibRingQtTargets.cmake"
 )
 
-SET_TARGET_PROPERTIES( ringclient
+SET_TARGET_PROPERTIES( ringqt
    PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
 )
 
 IF("${DISABLE_EXPORT}" MATCHES "OFF")
-    INSTALL(TARGETS ringclient
-        EXPORT LibRingClientTargets
-        PUBLIC_HEADER DESTINATION "${INCLUDE_INSTALL_DIR}/libringclient"
-        LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}" COMPONENT ringclient
+    INSTALL(TARGETS ringqt
+        EXPORT LibRingQtTargets
+        PUBLIC_HEADER DESTINATION "${INCLUDE_INSTALL_DIR}/libringqt"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}" COMPONENT ringqt
         ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         COMPONENT Devel
     )
 
-    INSTALL(EXPORT LibRingClientTargets
-        DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingClient
+    INSTALL(EXPORT LibRingQtTargets
+        DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingQt
         COMPONENT Devel
     )
 
-    INSTALL( FILES ${libringclient_video_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/video
+    INSTALL( FILES ${libringqt_video_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/video
     COMPONENT Devel
     )
 
-    INSTALL( FILES ${libringclient_audio_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/audio
+    INSTALL( FILES ${libringqt_audio_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/audio
     COMPONENT Devel
     )
 
-    INSTALL( FILES ${libringclient_media_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/media
+    INSTALL( FILES ${libringqt_media_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/media
     COMPONENT Devel
     )
 
-    INSTALL( FILES ${libringclient_extensions_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/extensions
+    INSTALL( FILES ${libringqt_extensions_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/extensions
     COMPONENT Devel
     )
 
-    INSTALL( FILES ${libringclient_interface_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringclient/interfaces
+    INSTALL( FILES ${libringqt_interface_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/interfaces
     COMPONENT Devel
     )
 
-    INSTALL( TARGETS ringclient
+    INSTALL( TARGETS ringqt
         ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
         LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
     )
 
-    INSTALL( FILES ${libringclient_CONFIG_PATH}
-      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingClient
+    INSTALL( FILES ${libringqt_CONFIG_PATH}
+      DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingQt
       COMPONENT Devel
     )
 ENDIF()
@@ -667,7 +667,7 @@ IF( Qt5LinguistTools_FOUND )
    ADD_CUSTOM_TARGET(translations ALL DEPENDS ${QM_FILES})
 
    IF("${DISABLE_EXPORT}" MATCHES "OFF")
-      INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringclient/translations")
+      INSTALL(FILES ${QM_FILES} DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libringqt/translations")
    ENDIF()
 ENDIF()
 

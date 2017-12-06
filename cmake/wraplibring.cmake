@@ -18,8 +18,8 @@ IF (${MUTE_DRING} MATCHES "ON")
    ADD_DEFINITIONS(-DMUTE_DRING=true)
 ENDIF()
 
-SET(libringclient_LIB_SRCS
-   ${libringclient_LIB_SRCS}
+SET(libringqt_LIB_SRCS
+   ${libringqt_LIB_SRCS}
    src/qtwrapper/instancemanager.cpp
    src/qtwrapper/callmanager_wrap.h
    src/qtwrapper/configurationmanager_wrap.h
@@ -30,8 +30,8 @@ SET(libringclient_LIB_SRCS
 QT5_WRAP_CPP(LIB_WRAPPER_HEADER_MOC ${libqtwrapper_LIB_SRCS})
 
 IF(ENABLE_VIDEO)
-   SET(libringclient_LIB_SRCS
-      ${libringclient_LIB_SRCS}
+   SET(libringqt_LIB_SRCS
+      ${libringqt_LIB_SRCS}
       src/qtwrapper/videomanager_wrap.h
       src/qtwrapper/videomanager_wrap.cpp
    )
@@ -47,7 +47,7 @@ ENDIF()
 # Allow building with undefined symbols when only the daemon headers are provided
 # It speeds up our CI builds
 IF(${ring_BIN} MATCHES "ring_BIN-NOTFOUND" AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    SET_TARGET_PROPERTIES( ringclient PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
+    SET_TARGET_PROPERTIES( ringqt PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
 ENDIF()
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/qtwrapper)

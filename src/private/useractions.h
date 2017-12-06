@@ -37,7 +37,7 @@
 
 /**
  * This code used to be in the KDE client. It doesn't really fit well in well
- * in what libringclient is supposed to do, but as it has to be replicated for
+ * in what libringqt is supposed to do, but as it has to be replicated for
  * each clients, then UserActionModel will provide an abstract way to call those
  * functions.
  */
