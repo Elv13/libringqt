@@ -297,7 +297,7 @@ bool NumberCompletionModel::setData(const QModelIndex& index, const QVariant &va
 
 void NumberCompletionModelPrivate::setPrefix(const QString& str)
 {
-    if (!CallModel::instance().hasDialingCall()) {
+    if ((!str.isEmpty()) && !CallModel::instance().hasDialingCall()) {
         m_Prefix.clear();
         if (auto c = CallModel::instance().dialingCall()) {
 
