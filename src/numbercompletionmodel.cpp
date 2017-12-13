@@ -184,6 +184,7 @@ QHash<int,QByteArray> NumberCompletionModel::roleNames() const
       roles[Role::IS_TEMP          ]= "temporary"       ;
       roles[Role::NAME_STATUS      ]= "nameStatus"      ;
       roles[Role::NAME_STATUS_SRING]= "nameStatusString";
+      roles[Role::SUPPORTS_REGISTRY]= "supportsRegistry";
    }
 
    return roles;
@@ -232,6 +233,9 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
                return QVariant::fromValue(d_ptr->entryStatus(n));
             case static_cast<int>(Role::NAME_STATUS_SRING):
                return d_ptr->entryStatusName(n);
+            case static_cast<int>(Role::SUPPORTS_REGISTRY):
+               return n->type() == ContactMethod::Type::TEMPORARY &&
+                  n->account() && n->account()->protocol() == Account::Protocol::RING;
          };
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:

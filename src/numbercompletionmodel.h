@@ -60,6 +60,7 @@ public:
       IS_TEMP            ,
       NAME_STATUS        ,
       NAME_STATUS_SRING  ,
+      SUPPORTS_REGISTRY  ,
    };
 
    explicit NumberCompletionModel();
