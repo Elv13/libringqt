@@ -67,7 +67,6 @@ public:
    QSet<Account*> locateNameRange  (const QString& prefix, QSet<ContactMethod*>& set);
    QSet<Account*> locateNumberRange(const QString& prefix, QSet<ContactMethod*>& set);
    uint getWeight(ContactMethod* number);
-   uint getWeight(Account* account);
    QSet<Account*> getRange(const QMap<QString,NumberWrapper*>& map, const QString& prefix, QSet<ContactMethod*>& set) const;
 
    //Attributes
@@ -421,7 +420,7 @@ void NumberCompletionModelPrivate::updateModel()
             if (perfectMatches1.contains(cm->account()) || perfectMatches2.contains(cm->account()))
                continue;
 
-            const int weight = getWeight(cm->account());
+            const int weight = getWeight(cm);
             if (weight) {
                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
                m_hNumbers.insert(weight,cm);
@@ -435,7 +434,7 @@ void NumberCompletionModelPrivate::updateModel()
             if (!cm) continue;
             if (perfectMatches1.contains(cm->account()) || perfectMatches2.contains(cm->account()))
                continue;
-            if (auto weight = getWeight(cm->account())) {
+            if (auto weight = getWeight(cm)) {
                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
                m_hNumbers.insert(weight, cm);
                q_ptr->endInsertRows();
@@ -515,30 +514,47 @@ QSet<Account*> NumberCompletionModelPrivate::locateNumberRange(const QString& pr
 
 uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)
 {
-   uint weight = 1;
+    // Don't waste effort on unregistered accounts
+    if(number->account() && number->account()->registrationState() != Account::RegistrationState::READY)
+        return 0;
 
-   weight += (number->weekCount()+1)*150;
-   weight += (number->trimCount()+1)*75 ;
-   weight += (number->callCount()+1)*35 ;
-   weight *= (number->uri().indexOf(m_Prefix)!= -1?3:1);
-   weight *= (number->isPresent()?2:1);
+    uint weight = 1;
 
-   return weight;
-}
+    // Ring accounts should have higher priorities when the registered name exists,
+    // but not too much to avoid a bias on common names.
+    const bool isDialingRing = m_Prefix.size() && number->account()
+        && number->account()->protocol() == Account::Protocol::RING
+        && number->type()  == ContactMethod::Type::TEMPORARY
+        && number->registeredName() == m_Prefix;
 
-uint NumberCompletionModelPrivate::getWeight(Account* account)
-{
-   if ((!account) || account->registrationState() != Account::RegistrationState::READY)
-      return 0; //TODO handle the case where the account get registered during dialing
+    const auto account = number->account();
 
-   uint weight = 1;
+    switch(number->type()) {
+        case ContactMethod::Type::TEMPORARY:
+            Q_ASSERT(account);
+            weight += (account->weekCallCount         ()+1)*15;
+            weight += (account->trimesterCallCount    ()+1)*7 ;
+            weight += (account->totalCallCount        ()+1)*3 ;
+            weight *= (account->isUsedForOutgogingCall()?3:1 );
+            weight *= isDialingRing ? 10 : 1;
+            break;
+        case ContactMethod::Type::USED:
+        case ContactMethod::Type::UNUSED:
+            weight += (number->weekCount()+1)*150;
+            weight += (number->trimCount()+1)*75 ;
+            weight += (number->callCount()+1)*35 ;
+            weight *= (number->uri().indexOf(m_Prefix)!= -1?3:1);
+            weight *= (number->isPresent()?2:1);
+            weight *= isDialingRing ? 1.1 : 1;
+            break;
+        case ContactMethod::Type::ACCOUNT:
+            qWarning() << "An account own contact method leaked into the completion";
+            return 0;
+        case ContactMethod::Type::BLANK:
+            Q_ASSERT(false);
+    }
 
-   weight += (account->weekCallCount         ()+1)*15;
-   weight += (account->trimesterCallCount    ()+1)*7 ;
-   weight += (account->totalCallCount        ()+1)*3 ;
-   weight *= (account->isUsedForOutgogingCall()?3:1 );
-
-   return weight;
+    return weight;
 }
 
 QString NumberCompletionModel::prefix() const
@@ -680,6 +696,8 @@ void NumberCompletionModelPrivate::slotRegisteredNameFound(const Account* accoun
 {
     Q_UNUSED(account)
 
+    bool reload = false;
+
     // Check if there's a match
     for (TemporaryContactMethod* cm : qAsConst(m_hRingTemporaryNumbers)) {
         if (cm->uri() == name) {
@@ -689,9 +707,9 @@ void NumberCompletionModelPrivate::slotRegisteredNameFound(const Account* accoun
                 address : QStringLiteral("-1");
 
             if (status == NameDirectory::LookupStatus::SUCCESS) {
-                qDebug() << "\n\nREPLACE" << address << name;
                 cm->setUri(address);
                 cm->setRegisteredName(name);
+                reload = true;
             }
 
             // Until the patch to cleanup model insertion is merged, this will
@@ -699,6 +717,9 @@ void NumberCompletionModelPrivate::slotRegisteredNameFound(const Account* accoun
             emit q_ptr->dataChanged(q_ptr->index(0,0), q_ptr->index(m_hNumbers.size()-1, 0));
         }
     }
+
+    if (reload)
+        updateModel();
 }
 
 void NumberCompletionModelPrivate::slotClearNameCache()
