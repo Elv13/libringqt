@@ -121,7 +121,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
    }
 
    //If SIP accounts are present, IP2IP is not needed
-   if (!hasNonIp2Ip) {
+   if (ip2ip && !hasNonIp2Ip) {
       TemporaryContactMethod* cm = new TemporaryContactMethod();
       cm->setAccount(ip2ip);
       m_hSipTemporaryNumbers[ip2ip] = cm;
