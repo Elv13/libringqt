@@ -357,6 +357,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
             connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
             emit q_ptr->dataChanged(q_ptr->index(i,0),q_ptr->index(q_ptr->size()-1));
             emit q_ptr->layoutChanged();
+            emit q_ptr->accountAdded(acc);
 
             if (!acc->isIp2ip())
                enableProtocol(acc->protocol());
@@ -599,6 +600,8 @@ void AccountModel::update()
          //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
          connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
          emit layoutChanged();
+
+         emit accountAdded(a);
 
          if (!a->isIp2ip())
             d_ptr->enableProtocol(a->protocol());
@@ -1203,6 +1206,7 @@ Account* AccountModel::operator[] (const QByteArray& i) {
 void AccountModel::add(Account* acc)
 {
    d_ptr->insertAccount(acc,d_ptr->m_lAccounts.size());
+   emit accountAdded(acc);
 }
 
 

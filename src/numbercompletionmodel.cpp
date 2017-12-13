@@ -137,7 +137,6 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
    t->setInterval(5 * 60 * 1000);
    connect(t, &QTimer::timeout, this, &NumberCompletionModelPrivate::slotClearNameCache);
    t->start();
-
 }
 
 NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
