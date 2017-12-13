@@ -322,9 +322,7 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
         emit q_ptr->enabled(e);
     }
 
-    if (m_Enabled)
-        updateModel();
-    else {
+    if (!m_Enabled) {
         q_ptr->beginRemoveRows(QModelIndex(), 0, m_hNumbers.size()-1);
         m_hNumbers.clear();
         q_ptr->endRemoveRows();
@@ -369,6 +367,9 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
                 cm->setUri(m_Prefix);
         }
     }
+
+    if (m_Enabled)
+        updateModel();
 }
 
 ContactMethod* NumberCompletionModel::number(const QModelIndex& idx) const
@@ -528,7 +529,7 @@ uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)
     // but not too much to avoid a bias on common names.
     const bool isDialingRing = m_Prefix.size() && number->account()
         && number->account()->protocol() == Account::Protocol::RING
-        && number->type()  == ContactMethod::Type::TEMPORARY
+        && number->type() == ContactMethod::Type::TEMPORARY
         && number->registeredName() == m_Prefix;
 
     const auto account = number->account();
@@ -734,6 +735,9 @@ void NumberCompletionModelPrivate::slotClearNameCache()
 NumberCompletionModel::LookupStatus NumberCompletionModelPrivate::entryStatus(const ContactMethod* cm) const
 {
     if (cm->type() == ContactMethod::Type::TEMPORARY) {
+        if (!cm->registeredName().isEmpty())
+            return NumberCompletionModel::LookupStatus::SUCCESS;
+
         if (m_hNameCache.contains(cm->uri())) {
             return m_hNameCache[cm->uri()] == QLatin1String("-1") ?
                 NumberCompletionModel::LookupStatus::FAILURE:
