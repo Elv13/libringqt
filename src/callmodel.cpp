@@ -1417,8 +1417,10 @@ void CallModelPrivate::slotIncomingCall(const QString& accountID, const QString&
     Q_UNUSED(accountID)
     qDebug() << "Signal : Incoming Call ! ID = " << callID;
 
-    if (auto c = addIncomingCall(callID))
+    if (auto c = addIncomingCall(callID)) {
         emit q_ptr->incomingCall(c);
+        emit q_ptr->callAttentionRequest(c);
+    }
 }
 
 ///When a new conference is incoming
@@ -1575,6 +1577,11 @@ void CallModelPrivate::slotStateChanged(Call::State newState, Call::State previo
    if (auto call = qobject_cast<Call*>(sender())) {
         emit q_ptr->callStateChanged(call, previousState);
         emit q_ptr->selectionSupportsDTMFChanged(q_ptr->supportsDTMF());
+
+        if (call->lifeCycleState() == Call::LifeCycleState::INITIALIZATION
+          && (previousState == Call::State::NEW || previousState == Call::State::DIALING)) {
+            emit q_ptr->callAttentionRequest(call);
+        }
    }
 }
 

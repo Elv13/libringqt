@@ -161,6 +161,8 @@ Q_SIGNALS:
    void conferenceRemoved       ( Call* conf                              );
    ///Emitted when a call is added
    void callAdded               ( Call* call               , Call* parent );
+   ///When a call becomes active (not dialing)
+   void callAttentionRequest    ( Call* call                              );
    ///Emitted when a new Video::Renderer is available
    void rendererAdded           ( Call* call, Video::Renderer* renderer   );
    ///Emitted when a new Video::Renderer is removed
