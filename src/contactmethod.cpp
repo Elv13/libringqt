@@ -405,6 +405,7 @@ void ContactMethodPrivate::setRegisteredName(const QString& registeredName)
    }
 
    m_RegisteredName = registeredName;
+   primaryNameChanged(q_ptr->primaryName());
    registeredNameSet(registeredName);
    changed();
 }
@@ -457,7 +458,7 @@ bool ContactMethod::haveCalled() const
 QString ContactMethod::primaryName() const
 {
    if (type() == ContactMethod::Type::TEMPORARY) {
-      return uri();
+      return registeredName().isEmpty() ? uri() : registeredName();
    }
 
    //Compute the primary name
@@ -1200,11 +1201,20 @@ TemporaryContactMethod::TemporaryContactMethod(const ContactMethod* number) :
 
 void TemporaryContactMethod::setUri(const URI& uri)
 {
+   if (uri != ContactMethod::d_ptr->m_Uri)
+      ContactMethod::d_ptr->m_RegisteredName.clear();
+
    ContactMethod::d_ptr->m_Uri = uri;
 
    //The sha1 is no longer valid
    ContactMethod::d_ptr->m_Sha1.clear();
    ContactMethod::d_ptr->changed();
+}
+
+void TemporaryContactMethod::setRegisteredName(const QString& regName)
+{
+   ContactMethod::d_ptr->m_RegisteredName = regName;
+   ContactMethod::d_ptr->primaryNameChanged(primaryName());
 }
 
 QVariant TemporaryContactMethod::icon() const

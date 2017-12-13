@@ -793,7 +793,14 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
 ContactMethod* PhoneDirectoryModel::fromTemporary(const TemporaryContactMethod* number)
 {
-   return getNumber(number->uri(),number->contact(),number->account());
+    auto ret = getNumber(number->uri(),number->contact(),number->account());
+
+    Q_ASSERT(ret);
+
+    if ((!number->registeredName().isEmpty()) && number->uri() == ret->uri())
+        ret->d_ptr->m_RegisteredName = number->registeredName();
+
+    return ret;
 }
 
 ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)

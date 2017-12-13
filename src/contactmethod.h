@@ -278,6 +278,7 @@ public:
    explicit TemporaryContactMethod(const ContactMethod* number = nullptr);
    virtual QVariant icon() const override;
    void setUri(const URI& uri);
+   void setRegisteredName(const QString& regName);
 
 private:
    TemporaryContactMethodPrivate* d_ptr;

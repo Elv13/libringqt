@@ -332,21 +332,38 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
     if (show.second) {
         for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
             if (!cm)
-            continue;
+                continue;
 
-            cm->setUri(m_Prefix);
+            if (cm->account()->registrationState() != Account::RegistrationState::READY)
+                continue;
+
+            if (m_hNameCache.contains(m_Prefix) && m_hNameCache[m_Prefix] != QLatin1String("-1")) {
+                cm->setUri(m_hNameCache[m_Prefix]);
+                cm->setRegisteredName(m_Prefix);
+            }
+            else
+                cm->setUri(m_Prefix);
 
             // Perform name lookups
-            if (str.size() >=3 && !m_hNameCache.contains(str)) {
-            NameDirectory::instance().lookupName(cm->account(), {}, str);
-            }
+            if (str.size() >=3 && !m_hNameCache.contains(str))
+                NameDirectory::instance().lookupName(cm->account(), {}, str);
         }
     }
 
     if (show.first) {
         for(auto cm : m_hSipTemporaryNumbers) {
-            if (cm)
-            cm->setUri(m_Prefix);
+            if (!cm)
+                continue;
+
+            if (cm->account()->registrationState() != Account::RegistrationState::READY)
+                continue;
+
+            if (m_hNameCache.contains(m_Prefix) && m_hNameCache[m_Prefix] != QLatin1String("-1")) {
+                cm->setUri(m_hNameCache[m_Prefix]);
+                cm->setRegisteredName(m_Prefix);
+            }
+            else
+                cm->setUri(m_Prefix);
         }
     }
 }
@@ -670,6 +687,12 @@ void NumberCompletionModelPrivate::slotRegisteredNameFound(const Account* accoun
             // Cache the names for up to 5 minutes to prevent useless deaemon calls
             m_hNameCache[name] = status == NameDirectory::LookupStatus::SUCCESS ?
                 address : QStringLiteral("-1");
+
+            if (status == NameDirectory::LookupStatus::SUCCESS) {
+                qDebug() << "\n\nREPLACE" << address << name;
+                cm->setUri(address);
+                cm->setRegisteredName(name);
+            }
 
             // Until the patch to cleanup model insertion is merged, this will
             // have to do.

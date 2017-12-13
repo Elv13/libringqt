@@ -555,10 +555,11 @@ TARGET_LINK_LIBRARIES( ringqt
 #TODO figure out how to make them public without an error. This
 #allows some extra macros to start working
 TARGET_INCLUDE_DIRECTORIES( ringqt PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/private/
 )
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Use the daemon when libringqt doesn't link directly to libring
 IF(NOT ENABLE_LIBWRAP)

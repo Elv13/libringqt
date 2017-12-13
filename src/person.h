@@ -125,6 +125,8 @@ public:
    Q_PROPERTY( time_t                lastUsedTime   READ lastUsedTime                           )
    Q_PROPERTY( bool                  hasBeenCalled  READ hasBeenCalled                          )
 
+   Q_PROPERTY( ContactMethod*        lastUsedContactMethod READ lastUsedContactMethod)
+
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> phoneNumbersModel READ phoneNumbersModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
