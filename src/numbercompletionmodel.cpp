@@ -449,9 +449,11 @@ void NumberCompletionModelPrivate::updateModel()
       for (ContactMethod* n : qAsConst(numbers)) {
          if (m_UseUnregisteredAccount || ((n->account() && n->account()->registrationState() == Account::RegistrationState::READY)
           || !n->account())) {
-            q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
-            m_hNumbers.insert(getWeight(n),n);
-            q_ptr->endInsertRows();
+            if (auto weight = getWeight(n)) {
+                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+                m_hNumbers.insert(weight, n);
+                q_ptr->endInsertRows();
+            }
          }
       }
    }
@@ -461,9 +463,11 @@ void NumberCompletionModelPrivate::updateModel()
 
       for (int i=0;i<((cl.size()>=10)?10:cl.size());i++) {
          ContactMethod* n = cl[i];
-         q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
-         m_hNumbers.insert(getWeight(n),n);
-         q_ptr->endInsertRows();
+         if (auto weight = getWeight(n)) {
+            q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+            m_hNumbers.insert(weight, n);
+            q_ptr->endInsertRows();
+         }
       }
    }
 }
@@ -520,6 +524,10 @@ uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)
 {
     // Don't waste effort on unregistered accounts
     if(number->account() && number->account()->registrationState() != Account::RegistrationState::READY)
+        return 0;
+
+    // Do not add own contact methods to the completion
+    if (number->isSelf())
         return 0;
 
     uint weight = 1;
