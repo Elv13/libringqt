@@ -92,6 +92,7 @@ public:
    Q_PROPERTY(bool              isBookmarked     READ isBookmarked                                    )
    Q_PROPERTY(bool              isRecording      READ isRecording                                     )
    Q_PROPERTY(bool              hasActiveCall    READ hasActiveCall     NOTIFY hasActiveCallChanged   )
+   Q_PROPERTY(bool              hasInitCall      READ hasInitCall       NOTIFY hasInitCallChanged     )
    Q_PROPERTY(bool              hasActiveVideo   READ hasActiveVideo                                  )
    Q_PROPERTY(QVariant          icon             READ icon                                            )
    Q_PROPERTY(int               totalSpentTime   READ totalSpentTime                                  )
@@ -154,6 +155,7 @@ public:
    QString               bestName        () const;
    bool                  isRecording     () const;
    bool                  hasActiveCall   () const;
+   bool                  hasInitCall     () const;
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
 
@@ -267,6 +269,8 @@ Q_SIGNALS:
    void canSendTextsChanged(bool status);
    /// When one or more call is in progress.
    void hasActiveCallChanged(bool status);
+   /// When one or more call is undergoing initialization or is ringing
+   void hasInitCallChanged(bool status);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

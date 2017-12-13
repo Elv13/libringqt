@@ -179,7 +179,7 @@ const TypedStateMachine< TypedStateMachine< function , CallPrivate::DaemonState 
 //There is no point to have a 2D matrix, only one transition per state is possible
 const Matrix1D<Call::LifeCycleState,function> CallPrivate::m_mLifeCycleStateChanges = {{
 /* CREATION       */ CP::nothing       ,
-/* INITIALIZATION */ CP::nothing       ,
+/* INITIALIZATION */ CP::notifyInit    ,
 /* PROGRESS       */ CP::initMedia     ,
 /* FINISHED       */ CP::terminateMedia,
 }};
@@ -1475,6 +1475,12 @@ void CallPrivate::initMedia()
    q_ptr->peerContactMethod()->d_ptr->addActiveCall(q_ptr);
 }
 
+void CallPrivate::notifyInit()
+{
+    // Notify the ContactMethod it has a call in progress
+    q_ptr->peerContactMethod()->d_ptr->addInitCall(q_ptr);
+}
+
 void CallPrivate::terminateMedia()
 {
    //Delete remaining media
@@ -1493,6 +1499,7 @@ void CallPrivate::terminateMedia()
    }
 
    // Notify the ContactMethod it has a call in progress
+   q_ptr->peerContactMethod()->d_ptr->removeInitCall(q_ptr);
    q_ptr->peerContactMethod()->d_ptr->removeActiveCall(q_ptr);
 }
 

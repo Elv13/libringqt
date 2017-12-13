@@ -222,6 +222,7 @@ public:
 
     //LifeCycleState change callback
     void initMedia();
+    void notifyInit();
     void terminateMedia();
 
     //Helpers

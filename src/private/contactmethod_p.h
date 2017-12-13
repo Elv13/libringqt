@@ -72,6 +72,8 @@ public:
    //Helpers
    void addActiveCall(Call* c);
    void removeActiveCall(Call* c);
+   void addInitCall(Call* c);
+   void removeInitCall(Call* c);
    void setTextRecording(Media::TextRecording* r);
    void addAlternativeTextRecording(Media::TextRecording* recording);
    void setCertificate (Certificate*);

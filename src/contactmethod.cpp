@@ -63,6 +63,7 @@ public:
     bool         m_HaveCalled    {false};    ///< has object been called? (used for call type object)
     QList<Call*> m_lCalls               ;
     QList<Call*> m_lActiveCalls         ;
+    QList<Call*> m_lInitCalls           ;
 
     // Mutators
     void setHaveCalled();
@@ -533,6 +534,12 @@ bool ContactMethod::isRecording() const
 bool ContactMethod::hasActiveCall() const
 {
    return !d_ptr->m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty();
+}
+
+/// Returns if this contact method currently has ringing or initializing calls
+bool ContactMethod::hasInitCall() const
+{
+    return !d_ptr->m_pUsageStats->d_ptr->m_lInitCalls.isEmpty();
 }
 
 /// Returns if this contact method currently has active video streams
@@ -1166,6 +1173,8 @@ void ContactMethodPrivate::addActiveCall(Call* c)
 
     changed();
 
+    removeInitCall(c);
+
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
         canSendTextsChanged();
 }
@@ -1180,6 +1189,30 @@ void ContactMethodPrivate::removeActiveCall(Call* c)
 
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
         canSendTextsChanged();
+}
+
+void ContactMethodPrivate::addInitCall(Call* c)
+{
+    const int wasEmpty = m_pUsageStats->d_ptr->m_lInitCalls.isEmpty();
+
+    m_pUsageStats->d_ptr->m_lInitCalls << c;
+
+    changed();
+
+    foreach (ContactMethod* n, m_lParents)
+      emit n->hasInitCallChanged(q_ptr->hasInitCall());
+}
+
+void ContactMethodPrivate::removeInitCall(Call* c)
+{
+    const int wasEmpty = m_pUsageStats->d_ptr->m_lInitCalls.isEmpty();
+
+    m_pUsageStats->d_ptr->m_lInitCalls.removeAll(c);
+
+    changed();
+
+    foreach (ContactMethod* n, m_lParents)
+      emit n->hasInitCallChanged(q_ptr->hasInitCall());
 }
 
 
