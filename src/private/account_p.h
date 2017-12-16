@@ -143,4 +143,5 @@ public Q_SLOTS:
       void slotPresentChanged        (bool  present  );
       void slotPresenceMessageChanged(const QString& );
       void slotUpdateCertificate     (               );
+      void slotHasMediaCodecChanged  (               );
 };

@@ -1125,6 +1125,31 @@ bool ContactMethod::canSendTexts(bool warn) const
     return true;
 }
 
+bool ContactMethod::canCall() const
+{
+    if (hasActiveCall())
+        return true;
+
+    auto selectedAccount = account();
+
+    if (selectedAccount && selectedAccount->canCall())
+        return true;
+
+    return true; //TODO find other accounts
+}
+
+bool ContactMethod::canVideoCall() const
+{
+    if (!canCall())
+        return false;
+
+    auto selectedAccount = account();
+
+    if (selectedAccount && selectedAccount->canCall())
+
+    return true;
+}
+
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);

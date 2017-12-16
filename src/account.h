@@ -449,6 +449,8 @@ class LIB_EXPORT Account : public ItemBase {
       QString displayName                  () const;
       QString archivePassword              () const;
       QString archivePin                   () const;
+      bool    canCall                      () const;
+      bool    canVideoCall                 () const;
       RegistrationState  registrationState () const;
       Protocol           protocol          () const;
       ContactMethod*     contactMethod     () const;
@@ -603,6 +605,9 @@ class LIB_EXPORT Account : public ItemBase {
       void migrationEnded(const Account::MigrationEndedStatus);
       /// contact request accepted
       void contactRequestAccepted(const ContactRequest*);
+      /// When the ability to call changed.
+      void canCallChanged(bool status);
+      void canVideoCallChanged(bool status);
 };
 Q_DECLARE_METATYPE(Account*)
 Q_DECLARE_METATYPE(const Account*)

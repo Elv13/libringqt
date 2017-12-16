@@ -104,6 +104,8 @@ public:
    Q_PROPERTY(QString           bestName         READ bestName                                        )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(bool              canSendTexts     READ canSendTexts      NOTIFY canSendTextsChanged    )
+   Q_PROPERTY(bool              canCall          READ canCall                                         )
+   Q_PROPERTY(bool              canVideoCall     READ canVideoCall                                    )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
@@ -160,6 +162,8 @@ public:
    UsageStatistics*      usageStatistics () const;
 
    bool canSendTexts(bool warn = false) const;
+   bool canCall() const;
+   bool canVideoCall() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;

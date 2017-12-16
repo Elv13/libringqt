@@ -111,8 +111,11 @@ void AccountPrivate::changeState(Account::EditState state) {
    const Account::EditState previous = m_CurrentState;
    m_CurrentState = state;
 
-   if (state != previous)
+   if (state != previous) {
       emit q_ptr->editStateChanged(state, previous);
+      emit q_ptr->canVideoCallChanged(q_ptr->canVideoCall());
+      emit q_ptr->canCallChanged(q_ptr->canCall());
+   }
 
    emit q_ptr->changed(q_ptr);
 }
@@ -253,6 +256,12 @@ void AccountPrivate::slotPresenceMessageChanged(const QString& message)
 {
    Q_UNUSED(message)
    emit q_ptr->changed(q_ptr);
+}
+
+void AccountPrivate::slotHasMediaCodecChanged()
+{
+    emit q_ptr->canVideoCallChanged(q_ptr->canVideoCall());
+    emit q_ptr->canCallChanged(q_ptr->canCall());
 }
 
 void AccountPrivate::slotUpdateCertificate()
@@ -483,6 +492,10 @@ CodecModel* Account::codecModel() const
 {
    if (!d_ptr->m_pCodecModel) {
       d_ptr->m_pCodecModel = new CodecModel(const_cast<Account*>(this));
+      connect(d_ptr->m_pCodecModel, &CodecModel::hasAudioChanged,
+         d_ptr.data(), &AccountPrivate::slotHasMediaCodecChanged);
+      connect(d_ptr->m_pCodecModel, &CodecModel::hasVideoChanged,
+         d_ptr.data(), &AccountPrivate::slotHasMediaCodecChanged);
    }
    return d_ptr->m_pCodecModel;
 }
@@ -1019,6 +1032,17 @@ bool Account::supportPresencePublish() const
 bool Account::supportPresenceSubscribe() const
 {
    return d_ptr->accountDetail(DRing::Account::ConfProperties::Presence::SUPPORT_SUBSCRIBE) IS_TRUE;
+}
+
+bool Account::canCall() const
+{
+    return registrationState() == Account::RegistrationState::READY
+        && codecModel()->hasAudio();
+}
+
+bool Account::canVideoCall() const
+{
+    return isVideoEnabled() && canCall() && codecModel()->hasVideo();
 }
 
 bool Account::presenceEnabled() const
@@ -1855,6 +1879,7 @@ void Account::setPresenceEnabled(bool enable)
 void Account::setVideoEnabled(bool enable)
 {
    d_ptr->setAccountProperty(DRing::Account::ConfProperties::Video::ENABLED, (enable)TO_BOOL);
+   emit canVideoCallChanged(canVideoCall());
 }
 
 /**Set the maximum audio port
@@ -2458,8 +2483,11 @@ bool AccountPrivate::updateState()
       setAccountProperty(DRing::Account::ConfProperties::Registration::STATUS, status); //Update -internal- object state
       m_RegistrationState = st;
 
-      if (st != cst)
+      if (st != cst) {
          emit q_ptr->stateChanged(q_ptr->registrationState());
+         emit q_ptr->canVideoCallChanged(q_ptr->canVideoCall());
+         emit q_ptr->canCallChanged(q_ptr->canCall());
+      }
 
       return st == cst;
    }

@@ -188,7 +188,9 @@ public:
    bool isReachable                () const;
    bool isPlaceHolder              () const;
    bool hasBeenCalled              () const;
-
+   bool canCall                    () const;
+   bool canVideoCall               () const;
+   bool canSendTexts               () const;
    bool hasRecording(Media::Media::Type type, Media::Media::Direction direction) const;
 
    //Setters

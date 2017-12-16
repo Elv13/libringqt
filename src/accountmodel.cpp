@@ -355,6 +355,8 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
             connect(acc, &Account::changed                , this, &AccountModelPrivate::slotAccountChanged                );
             connect(acc, &Account::presenceEnabledChanged , this, &AccountModelPrivate::slotAccountPresenceEnabledChanged );
             connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
+            connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
+            connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
             emit q_ptr->dataChanged(q_ptr->index(i,0),q_ptr->index(q_ptr->size()-1));
             emit q_ptr->layoutChanged();
             emit q_ptr->accountAdded(acc);
@@ -571,6 +573,14 @@ AccountModelPrivate::slotContactRemoved(const QString &accountID, const QString 
     auto account = q_ptr->getById(accountID.toLatin1());
     auto cm = PhoneDirectoryModel::instance().getNumber(uri, account);
     account->bannedContactModel()->add(cm);
+}
+
+void AccountModelPrivate::slotHasMediaCodecChanged(bool status)
+{
+    auto account = qobject_cast<Account*>(sender());
+
+    emit q_ptr->canCallChanged(account, status);
+    emit q_ptr->canVideoCallChanged(account, status);
 }
 
 ///Update accounts

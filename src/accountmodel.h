@@ -177,5 +177,8 @@ Q_SIGNALS:
    void contactsList(Account *account);
    /// A new contact has been added.
    void accountContactAdded(Account* a, const ContactRequest* r);
+   /// When one of the account ability to call changed
+   void canCallChanged(Account* a, bool status);
+   void canVideoCallChanged(Account* a, bool status);
 };
 Q_DECLARE_METATYPE(AccountModel*)

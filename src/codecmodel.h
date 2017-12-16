@@ -80,6 +80,8 @@ public:
    Q_PROPERTY(QSortFilterProxyModel* audioCodecs    READ audioCodecs    )
    Q_PROPERTY(QSortFilterProxyModel* videoCodecs    READ videoCodecs    )
    Q_PROPERTY(QItemSelectionModel*   selectionModel READ selectionModel )
+   Q_PROPERTY(bool hasAudio READ hasAudio NOTIFY hasAudioChanged)
+   Q_PROPERTY(bool hasVideo READ hasVideo NOTIFY hasVideoChanged)
 
    //Abstract model member
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;
@@ -104,13 +106,20 @@ public:
    int                   acceptedPayloadTypes() const;
    QItemSelectionModel*  selectionModel      () const;
    CodecModel::EditState editState           () const;
+   bool                  hasAudio            () const;
+   bool                  hasVideo            () const;
 
    //Operator
    CodecModel* operator<<(CodecModel::EditAction& action);
 
 public Q_SLOTS:
-   bool        moveUp      (                        );
-   bool        moveDown    (                        );
+   bool        moveUp  ();
+   bool        moveDown();
+
+Q_SIGNALS:
+    /// When the ability to call changed.
+    void hasAudioChanged(bool status);
+    void hasVideoChanged(bool status);
 
 private:
 

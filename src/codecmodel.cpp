@@ -56,6 +56,12 @@ public:
       QString          auto_quality_enabled;
    };
 
+   enum class CodecType {
+       AUDIO,
+       VIDEO,
+       COUNT__
+   };
+
    //Attributes
    QList<CodecData*>      m_lCodecs        ;
    QMap<int,bool>         m_lEnabledCodecs ;
@@ -66,6 +72,8 @@ public:
    QItemSelectionModel*   m_pSelectionModel;
    CodecModel::EditState  m_EditState      {CodecModel::EditState::LOADING};
    static Matrix2D<CodecModel::EditState, CodecModel::EditAction,CodecModelFct> m_mStateMachine;
+
+   Matrix1D<CodecType, uint> m_mEnabledCount {{0 ,0}};
 
    //Callbacks
    QModelIndex add         (                        );
@@ -314,16 +322,14 @@ void CodecModelPrivate::reload()
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
    QVector<uint> codecIdList = configurationManager.getCodecList();
 
-   QVector<uint> activeCodecList = m_pAccount->isNew() ? codecIdList :
+   const QVector<uint> activeCodecList = m_pAccount->isNew() ? codecIdList :
       configurationManager.getActiveCodecList(m_pAccount->id());
-
-   QStringList tmpNameList;
 
    //TODO: the following method cannot update the order of the codecs if it
    //      changes in the daemon after it has been initially loaded in the client
 
    // load the active codecs first to get the correct order
-   foreach (const int aCodec, activeCodecList) {
+   for (const int aCodec : qAsConst(activeCodecList)) {
 
       const QMap<QString,QString> codec = configurationManager.getCodecDetails(
          m_pAccount->isNew()? QString() : m_pAccount->id(), aCodec
@@ -333,6 +339,14 @@ void CodecModelPrivate::reload()
          const auto idx = add();
          q_ptr->setData(idx,QString::number(aCodec), CodecModel::Role::ID);
       }
+
+      const auto type = codec[DRing::Account::ConfProperties::CodecInfo::TYPE] == QLatin1String("AUDIO") ?
+         CodecType::AUDIO : CodecType::VIDEO;
+
+      const auto isEnabled = Qt::Checked;
+
+      //FIXME fix the enabled coded list
+      m_mEnabledCount.setAt(type, m_mEnabledCount[type] + (isEnabled == Qt::Checked ? 1 : 0));
 
       // update the codec
 
@@ -625,6 +639,18 @@ Qt::DropActions CodecModel::supportedDragActions() const
 Qt::DropActions CodecModel::supportedDropActions() const
 {
    return Qt::MoveAction | Qt::TargetMoveAction;
+}
+
+/// True when at least one audio codec is enabled
+bool CodecModel::hasAudio() const
+{
+    return d_ptr->m_mEnabledCount[CodecModelPrivate::CodecType::AUDIO];
+}
+
+/// True when at least one video codec is enabled
+bool CodecModel::hasVideo() const
+{
+    return d_ptr->m_mEnabledCount[CodecModelPrivate::CodecType::VIDEO];
 }
 
 #include <codecmodel.moc>

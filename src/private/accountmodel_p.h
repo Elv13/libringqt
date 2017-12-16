@@ -87,4 +87,5 @@ public Q_SLOTS:
     void slotExportOnRingEnded(const QString& accountId, int status, const QString& pin);
     void slotMigrationEnded(const QString& accountId, const QString& result);
     void slotContactRemoved(const QString &accountID, const QString &uri, bool banned);
+    void slotHasMediaCodecChanged(bool status);
 };

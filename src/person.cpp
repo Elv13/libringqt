@@ -635,6 +635,49 @@ bool Person::hasBeenCalled() const
    return false;
 }
 
+
+bool Person::canCall() const
+{
+    if (!d_ptr->m_Numbers.size())
+        return false;
+
+    const auto pn = phoneNumbers();
+    for (ContactMethod* cm : qAsConst(pn)) {
+        if (cm->canCall())
+            return true;
+    }
+
+   return false;
+}
+
+bool Person::canVideoCall() const
+{
+    if (!d_ptr->m_Numbers.size())
+        return false;
+
+    const auto pn = phoneNumbers();
+    for (ContactMethod* cm : qAsConst(pn)) {
+        if (cm->canVideoCall())
+            return true;
+    }
+
+   return false;
+}
+
+bool Person::canSendTexts() const
+{
+    if (!d_ptr->m_Numbers.size())
+        return false;
+
+    const auto pn = phoneNumbers();
+    for (ContactMethod* cm : qAsConst(pn)) {
+        if (cm->canSendTexts())
+            return true;
+    }
+
+   return false;
+}
+
 /**
  * Return if one of the contact method has a recording
  *
