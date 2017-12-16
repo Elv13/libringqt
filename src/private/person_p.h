@@ -82,6 +82,7 @@ public:
     void presenceChanged          ( ContactMethod* );
     void statusChanged            ( bool           );
     void changed                  (                );
+    void photoChanged             (                );
     void phoneNumbersChanged      (                );
     void phoneNumbersAboutToChange(                );
 

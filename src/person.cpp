@@ -150,6 +150,12 @@ QString PersonPrivate::filterString()
     return m_CachedFilterString;
 }
 
+void PersonPrivate::photoChanged()
+{
+    for (Person* c : qAsConst(m_lParents))
+        emit c->changed();
+}
+
 void PersonPrivate::changed()
 {
     m_CachedFilterString.clear();
@@ -512,6 +518,7 @@ void Person::setPhoto(const QVariant& photo)
 {
    d_ptr->m_vPhoto = photo;
    d_ptr->changed();
+   d_ptr->photoChanged();
 }
 
 ///Set the formatted name (display name)

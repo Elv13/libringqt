@@ -238,6 +238,8 @@ Q_SIGNALS:
    void callAdded                 ( Call* call     );
    void relatedContactMethodsAdded( ContactMethod* cm );
    void relatedContactMethodsRemoved( ContactMethod* cm );
+   ///When the photo changed
+   void photoChanged();
 
 protected:
    //Presence secret methods
