@@ -119,8 +119,7 @@ ContactSortingCategoryModel::~ContactSortingCategoryModel()
 
 }
 
-void sortContact(QSortFilterProxyModel* p, int roleIdx);
-void sortContact(QSortFilterProxyModel* p, int roleIdx)
+static void sortContact(QSortFilterProxyModel* p, int roleIdx)
 {
    static auto& m = CategorizedContactModel::instance();
    switch(static_cast<CategorizedContactModel::SortedProxy::Categories>(roleIdx)) {
