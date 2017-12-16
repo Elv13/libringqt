@@ -150,6 +150,8 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(uint           weekCallCount                READ weekCallCount                                                      )
    Q_PROPERTY(uint           trimesterCallCount           READ trimesterCallCount                                                 )
    Q_PROPERTY(time_t         lastUsed                     READ lastUsed                                                           )
+   Q_PROPERTY(bool           canCall                      READ canCall                      NOTIFY canCallChanged                 )
+   Q_PROPERTY(bool           canVideoCall                 READ canVideoCall                 NOTIFY canVideoCallChanged            )
 
    Q_PROPERTY(bool           allowIncomingFromHistory     READ allowIncomingFromHistory      WRITE setAllowIncomingFromHistory    )
    Q_PROPERTY(bool           allowIncomingFromContact     READ allowIncomingFromContact      WRITE setAllowIncomingFromContact    )

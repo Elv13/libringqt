@@ -492,6 +492,7 @@ SET(libringqt_PRIVATE_HDRS
    src/private/textrecording_p.h
    src/private/videodevice_p.h
    src/private/collectionmodel_p.h
+   src/private/contactmethod_p.h
    src/private/securityflaw_p.h
    src/private/macromodel_p.h
    src/private/person_p.h

@@ -72,7 +72,7 @@ public:
    };
 
    //Properties
-   Q_PROPERTY(Account*          account          READ account           WRITE setAccount              )
+   Q_PROPERTY(Account*          account          READ account WRITE setAccount NOTIFY accountChanged  )
    Q_PROPERTY(Person*           person           READ contact           WRITE setPerson NOTIFY contactChanged)
    Q_PROPERTY(int               lastUsed         READ lastUsed          WRITE setLastUsed             )
    Q_PROPERTY(QString           uri              READ uri                                             )
@@ -106,6 +106,7 @@ public:
    Q_PROPERTY(bool              canSendTexts     READ canSendTexts      NOTIFY canSendTextsChanged    )
    Q_PROPERTY(bool              canCall          READ canCall                                         )
    Q_PROPERTY(bool              canVideoCall     READ canVideoCall                                    )
+   Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
@@ -139,6 +140,7 @@ public:
    uint                  trimCount       () const;
    bool                  haveCalled      () const;
    const QList<Call*>    calls           () const;
+   Call*                firstOutgoingCall() const;
    QHash<QString, QPair<int, time_t>> alternativeNames() const;
    QString               primaryName     () const;
    bool                  isBookmarked    () const;
@@ -224,10 +226,6 @@ protected:
 private:
    friend class ContactMethodPrivate;
 
-private Q_SLOTS:
-   void accountDestroyed(QObject* o);
-   void contactRebased(Person* other);
-
 public Q_SLOTS:
    bool sendOfflineTextMessage(const QMap<QString, QString>& payloads);
 
@@ -275,6 +273,8 @@ Q_SIGNALS:
    void hasActiveCallChanged(bool status);
    /// When one or more call is undergoing initialization or is ringing
    void hasInitCallChanged(bool status);
+   /// When an account is set, it should not "change" after that
+   void accountChanged(Account* account);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

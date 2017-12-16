@@ -19,14 +19,26 @@
 
 //Internal
 #include "usagestatistics.h"
+#include "uri.h"
+#include <contactmethod.h>
+
+class Call;
+class Person;
+class NumberCategory;
+
+namespace Media {
+    class TextRecording;
+}
 
 class PeerTimelineModel;
 
-class ContactMethodPrivate final {
+class ContactMethodPrivate final: public QObject
+{
+    Q_OBJECT
 public:
    ContactMethodPrivate(const URI& number, NumberCategory* cat, ContactMethod::Type st,
                         ContactMethod* q);
-   ~ContactMethodPrivate();
+   virtual ~ContactMethodPrivate();
 
    NumberCategory*    m_pCategory         {nullptr};
    bool               m_Present           { false };
@@ -68,6 +80,7 @@ public:
    void rebased(ContactMethod* other);
    void registeredNameSet(const QString& registeredName);
    void bookmarkedChanged(bool);
+   void accountChanged();
 
    //Helpers
    void addActiveCall(Call* c);
@@ -78,6 +91,10 @@ public:
    void addAlternativeTextRecording(Media::TextRecording* recording);
    void setCertificate (Certificate*);
    void setRegisteredName(const QString& registeredName);
+
+public Q_SLOTS:
+   void slotAccountDestroyed(QObject* o);
+   void slotContactRebased(Person* other);
 
  private:
    ContactMethod* q_ptr;

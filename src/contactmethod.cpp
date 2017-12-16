@@ -150,6 +150,12 @@ void ContactMethodPrivate::bookmarkedChanged(bool value)
       emit n->bookmarkedChanged(value);
 }
 
+void ContactMethodPrivate::accountChanged()
+{
+    foreach (ContactMethod* n, m_lParents)
+      emit n->accountChanged(m_pAccount);
+}
+
 const ContactMethod* ContactMethod::BLANK()
 {
     static auto instance = []{
@@ -272,7 +278,7 @@ void ContactMethod::setAccount(Account* account)
    d_ptr->m_Sha1.clear();
 
    if (d_ptr->m_pAccount)
-      connect (d_ptr->m_pAccount,SIGNAL(destroyed(QObject*)),this,SLOT(accountDestroyed(QObject*)));
+      connect (d_ptr->m_pAccount,SIGNAL(destroyed(QObject*)), d_ptr,SLOT(slotAccountDestroyed(QObject*)));
 
    //Track Ring contacts by default
    if (this->protocolHint() == URI::ProtocolHint::RING || this->protocolHint() == URI::ProtocolHint::RING_USERNAME) {
@@ -280,6 +286,7 @@ void ContactMethod::setAccount(Account* account)
    }
 
    d_ptr->changed();
+   d_ptr->accountChanged();
 }
 
 ///Set this number contact
@@ -306,7 +313,7 @@ void ContactMethod::setPerson(Person* contact)
       PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+QStringList(contact->formattedName()));
       d_ptr->m_PrimaryName_cache = contact->formattedName();
       d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
-      connect(contact,SIGNAL(rebased(Person*)),this,SLOT(contactRebased(Person*)));
+      connect(contact,SIGNAL(rebased(Person*)), d_ptr,SLOT(slotContactRebased(Person*)));
    }
    d_ptr->changed();
 
@@ -636,6 +643,17 @@ const QList<Call*> ContactMethod::calls() const
    return d_ptr->m_pUsageStats->d_ptr->m_lCalls;
 }
 
+Call* ContactMethod::firstOutgoingCall() const
+{
+    const auto calls = d_ptr->m_pUsageStats->d_ptr->m_lActiveCalls;
+
+    for (Call* c : calls)
+        if (c->direction() == Call::Direction::OUTGOING)
+            return c;
+
+    return nullptr;
+}
+
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const
 {
    return d_ptr->m_hNames;
@@ -893,24 +911,26 @@ void ContactMethod::incrementAlternativeName(const QString& name, const time_t l
    emit changed();
 }
 
-void ContactMethod::accountDestroyed(QObject* o)
+void ContactMethodPrivate::slotAccountDestroyed(QObject* o)
 {
-   if (o == d_ptr->m_pAccount)
-      d_ptr->m_pAccount = nullptr;
+   if (o == m_pAccount) {
+      m_pAccount = nullptr;
+      accountChanged();
+   }
 }
 
 /**
  * When the ContactMethod contact is merged with another one, the phone number
  * data might be replaced, like the preferred name.
  */
-void ContactMethod::contactRebased(Person* other)
+void ContactMethodPrivate::slotContactRebased(Person* other)
 {
-   d_ptr->m_PrimaryName_cache = other->formattedName();
-   d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
-   setPerson(other);
+   m_PrimaryName_cache = other->formattedName();
+   primaryNameChanged(m_PrimaryName_cache);
+   q_ptr->setPerson(other);
 
-   d_ptr->changed();
-   d_ptr->rebased(this);
+   changed();
+   rebased(q_ptr);
 }
 
 /**
