@@ -159,8 +159,8 @@ const TypedStateMachine< TypedStateMachine< function , CallPrivate::DaemonState 
 {{
 //                      RINGING          CONNECTING      CURRENT            BUSY               HOLD               HUNGUP         FAILURE          OVER        INACTIVE     /**/
 /*NEW            */  {{CP::nothing    , CP::nothing   , CP::nothing   , CP::nothing      , CP::nothing      , CP::nothing    , CP::nothing  , CP::nothing , CP::nothing}}, /**/
-/*INCOMING       */  {{CP::nothing    , CP::nothing   , CP::start     , CP::startWeird   , CP::startWeird   , CP::startStop  , CP::failure  , CP::nothing , CP::nothing}}, /**/
-/*RINGING        */  {{CP::nothing    , CP::nothing   , CP::start     , CP::failure      , CP::start        , CP::startStop  , CP::failure  , CP::nothing , CP::nothing}}, /**/
+/*INCOMING       */  {{CP::nothing    , CP::nothing   , CP::start     , CP::startWeird   , CP::startWeird   , CP::startStop  , CP::failure  , CP::failure , CP::nothing}}, /**/
+/*RINGING        */  {{CP::nothing    , CP::nothing   , CP::start     , CP::failure      , CP::start        , CP::startStop  , CP::failure  , CP::failure , CP::nothing}}, /**/
 /*CURRENT        */  {{CP::nothing    , CP::nothing   , CP::nothing   , CP::warning      , CP::nothing      , CP::stop       , CP::nothing  , CP::stop    , CP::nothing}}, /**/
 /*DIALING        */  {{CP::nothing    , CP::nothing   , CP::warning   , CP::warning      , CP::warning      , CP::stop       , CP::warning  , CP::stop    , CP::nothing}}, /**/
 /*HOLD           */  {{CP::nothing    , CP::nothing   , CP::nothing   , CP::warning      , CP::nothing      , CP::stop       , CP::nothing  , CP::stop    , CP::nothing}}, /**/
@@ -1582,6 +1582,8 @@ void CallPrivate::failure()
    //This is how it always was done
    //The main point is to leave the call in the CallList
    start();
+
+   emit q_ptr->changed();
 }
 
 ///Accept the call
@@ -1608,6 +1610,11 @@ void CallPrivate::refuse()
    //If the daemon crashed then re-spawned when a call is ringing, this happen.
    if (!ret)
       FORCE_ERROR_STATE_P()
+}
+
+void CallPrivate::miss()
+{
+
 }
 
 ///Accept the transfer

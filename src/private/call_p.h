@@ -202,6 +202,7 @@ public:
     void failure           ();
     void accept            ();
     void refuse            ();
+    void miss              ();
     void acceptTransf      ();
     void acceptHold        ();
     void hangUp            ();

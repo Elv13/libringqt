@@ -1402,7 +1402,10 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
     if ((sn == DRing::Call::StateEvent::HUNGUP)
       || ((oldState == Call::State::OVER) && (call->state() == Call::State::OVER))
       || (oldLifeCycleState != Call::LifeCycleState::FINISHED && call->state() == Call::State::OVER))
-        removeCall(call);
+        QTimer::singleShot(0, [this,call]() {
+            if (!call->isMissed())
+                removeCall(call);
+        });
 
     //Add to history
     if (call->lifeCycleState() == Call::LifeCycleState::FINISHED) {
@@ -1619,7 +1622,12 @@ void CallModelPrivate::slotCallChanged()
         //Over can be caused by local events
         case Call::State::ABORTED:
         case Call::State::OVER:
-            removeCall(call);
+            // Do it later to give the change to other handler to do something first
+            QTimer::singleShot(0, [this, call]() {
+                if (!call->isMissed()) {
+                    removeCall(call);
+                }
+            });
             break;
         //Let the daemon handle the others
         case Call::State::INCOMING:
