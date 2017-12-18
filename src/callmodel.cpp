@@ -90,6 +90,7 @@ public:
     QHash< QString     , InternalStruct* > m_shDringId         {       };
     QItemSelectionModel*                   m_pSelectionModel   {nullptr};
     UserActionModel*                       m_pUserActionModel  {nullptr};
+    int                                    m_AutoCleanDelay    {   0   };
 
 
     //Helpers
@@ -416,6 +417,17 @@ bool CallModel::isConnected() const
 bool CallModel::isValid()
 {
    return CallManager::instance().isValid();
+}
+
+/// The number of milliseconds before removing finished calls from the model.
+int CallModel::autoCleanDelay() const
+{
+    return d_ptr->m_AutoCleanDelay;
+}
+
+void CallModel::setAudoCleanDelay(int delay)
+{
+    d_ptr->m_AutoCleanDelay = delay;
 }
 
 UserActionModel* CallModel::userActionModel() const
@@ -1404,7 +1416,9 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
       || (oldLifeCycleState != Call::LifeCycleState::FINISHED && call->state() == Call::State::OVER))
         QTimer::singleShot(0, [this,call]() {
             if (!call->isMissed())
-                removeCall(call);
+                QTimer::singleShot(m_AutoCleanDelay, [this, call]() {
+                    removeCall(call);
+                });
         });
 
     //Add to history
@@ -1625,7 +1639,9 @@ void CallModelPrivate::slotCallChanged()
             // Do it later to give the change to other handler to do something first
             QTimer::singleShot(0, [this, call]() {
                 if (!call->isMissed()) {
-                    removeCall(call);
+                    QTimer::singleShot(m_AutoCleanDelay, [this, call]() {
+                        removeCall(call);
+                    });
                 }
             });
             break;

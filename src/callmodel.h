@@ -79,6 +79,7 @@ public:
    Q_PROPERTY(Call*            selectedCall    READ selectedCall  WRITE selectCall NOTIFY selectionChanged)
    Q_PROPERTY(bool             hasDialingCall  READ hasDialingCall  NOTIFY callStateChanged)
    Q_PROPERTY(bool             supportsDTMF    READ supportsDTMF    NOTIFY selectionSupportsDTMFChanged)
+   Q_PROPERTY(int              autoCleanDelay  READ autoCleanDelay  WRITE setAudoCleanDelay)
    Q_PROPERTY(UserActionModel* userActionModel READ userActionModel CONSTANT)
    Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
    Q_PROPERTY(bool conferencePossible READ conferencePossible NOTIFY callStateChanged)
@@ -114,10 +115,14 @@ public:
    bool                 hasDialingCall      () const;
    bool                 supportsDTMF        () const;
    bool                 conferencePossible  () const;
+   int                  autoCleanDelay      () const;
    QItemSelectionModel* selectionModel      () const;
 
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
    Q_INVOKABLE QList<Call*> getConferenceParticipants(Call *conf) const;
+
+   // Setters
+   void setAudoCleanDelay(int delay);
 
    //Model implementation
    virtual bool          setData      ( const QModelIndex& index, const QVariant &value, int role   ) override;
