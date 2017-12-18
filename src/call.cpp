@@ -59,6 +59,7 @@
 #include "tlsmethodmodel.h"
 #include "audio/settings.h"
 #include "personmodel.h"
+#include "accountstatusmodel.h"
 #include "private/contactmethod_p.h"
 
 #include "media/audio.h"
@@ -1532,6 +1533,16 @@ bool Call::joinToParent()
     if (success)
         setParentCall(nullptr);
     return success;
+}
+
+int Call::lastErrorCode() const
+{
+    return d_ptr->m_LastErrorCode;
+}
+
+QString Call::lastErrorMessage() const
+{
+    return AccountStatusModel::codeToMessage(lastErrorCode());
 }
 
 QMimeData* Call::mimePayload() const

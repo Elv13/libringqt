@@ -502,3 +502,9 @@ time_t AccountStatusModel::lastTimeStamp() const
 
    return d_ptr->m_lRows.constLast()->timestamp;
 }
+
+QString AccountStatusModel::codeToMessage(int code)
+{
+    init_statuscode();
+    return AccountStatusModelPrivate::m_shKnownErrors.value(code);
+}

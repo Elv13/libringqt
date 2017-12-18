@@ -67,6 +67,8 @@ public:
    int     lastErrorCode   () const;
    time_t  lastTimeStamp   () const;
 
+   static QString codeToMessage(int code);
+
 private:
    //Private mutators
    void addSipRegistrationEvent(const QString& fallbackMessage, int errorCode);

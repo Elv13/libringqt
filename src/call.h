@@ -276,6 +276,8 @@ public:
    Q_PROPERTY( bool               hasVideo           READ hasVideo                                  )
    Q_PROPERTY( Certificate*       certificate        READ certificate       CONSTANT                )
    Q_PROPERTY( bool               hasParentCall      READ hasParentCall                             )
+   Q_PROPERTY( int                lastErrorCode      READ lastErrorCode     NOTIFY errorChanged     )
+   Q_PROPERTY( QString            lastErrorMessage   READ lastErrorMessage  NOTIFY errorChanged     )
    Q_PROPERTY( Video::SourceModel* sourceModel       READ sourceModel       NOTIFY mediaAdded       )
 
    //Read/write properties
@@ -317,6 +319,8 @@ public:
    Certificate*             certificate      () const;
    FlagPack<HoldFlags>      holdFlags        () const;
    bool                     hasParentCall    () const;
+   int                      lastErrorCode    () const;
+   QString                  lastErrorMessage () const;
    QDateTime                dateTime         () const;
    QDate                    date             () const;
    Video::SourceModel*      sourceModel      () const;
@@ -396,6 +400,8 @@ Q_SIGNALS:
    void mediaStateChanged(Media::Media* media, const Media::Media::State s, const Media::Media::State m);
    ///The holding combination has changed
    void holdFlagsChanged(const FlagPack<HoldFlags>& current, const FlagPack<HoldFlags>& previous);
+   /// When the last error code changed
+   void errorChanged();
 };
 
 Q_DECLARE_METATYPE(Call*)

@@ -1388,6 +1388,11 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
 
     qDebug() << "Call found" << call << call->state();
 
+    if (code && code != call->d_ptr->m_LastErrorCode) {
+        call->d_ptr->m_LastErrorCode = code;
+        emit call->errorChanged();
+    }
+
     const Call::LifeCycleState oldLifeCycleState = call->lifeCycleState();
     const Call::State          oldState          = call->state();
 

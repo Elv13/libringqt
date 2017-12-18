@@ -111,6 +111,7 @@ public:
     Call*                     m_pParentCall        {          nullptr        };
     QDateTime*                m_pDateTime          {          nullptr        };
     QDate*                    m_pDateOnly          {          nullptr        };
+    int                       m_LastErrorCode      {            200          };
 
     //Cache
     HistoryTimeCategoryModel::HistoryConst m_HistoryConst {HistoryTimeCategoryModel::HistoryConst::Never};
