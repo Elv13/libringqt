@@ -103,10 +103,11 @@ public:
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName                                        )
    Q_PROPERTY(Type              type             READ type                                            )
-   Q_PROPERTY(bool              canSendTexts     READ canSendTexts      NOTIFY canSendTextsChanged    )
-   Q_PROPERTY(bool              canCall          READ canCall                                         )
-   Q_PROPERTY(bool              canVideoCall     READ canVideoCall                                    )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
+
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts      NOTIFY canSendTextsChanged    )
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall           NOTIFY changed                )
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canVideoCall READ canVideoCall      NOTIFY changed                )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
@@ -123,6 +124,23 @@ public:
       ACCOUNT   = 4, /*!< This number correspond to the URI of a SIP account               */
    };
    Q_ENUMS(Type)
+
+   /**
+    * Track why a media can or cannot be used with this contact method.
+    *
+    * @note The errors are ordered by criticality
+    */
+   enum class MediaAvailailityStatus : char {
+       AVAILABLE    = 0, /*!< There is no issue                                              */
+       NO_CALL      = 1, /*!< The media is unavailable because it requires an active call    */
+       UNSUPPORTED  = 2, /*!< The media is unavailable because the account doesn't support it*/
+       SETTINGS     = 3, /*!< The media is unavailable because it's disabled on purpose      */
+       NO_ACCOUNT   = 4, /*!< No account is available for the URI protocol                   */
+       CODECS       = 5, /*!< The media is unavailable because all codecs are unchecked      */
+       ACCOUNT_DOWN = 6, /*!< An account is set, but it's not currently available            */
+       NETWORK      = 7, /*!< There is a known network issue                                 */
+   };
+   Q_ENUM(MediaAvailailityStatus)
 
    //Getters
    URI                   uri             () const;
@@ -163,9 +181,9 @@ public:
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
 
-   bool canSendTexts(bool warn = false) const;
-   bool canCall() const;
-   bool canVideoCall() const;
+   MediaAvailailityStatus canSendTexts(bool warn = false) const;
+   MediaAvailailityStatus canCall() const;
+   MediaAvailailityStatus canVideoCall() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;
@@ -268,7 +286,7 @@ Q_SIGNALS:
    /// When a new alternative TextRecording is added
    void alternativeTextRecordingAdded(Media::TextRecording* t);
    /// When the capacity to send text messages changes.
-   void canSendTextsChanged(bool status);
+   void canSendTextsChanged(MediaAvailailityStatus status);
    /// When one or more call is in progress.
    void hasActiveCallChanged(bool status);
    /// When one or more call is undergoing initialization or is ringing
@@ -278,6 +296,7 @@ Q_SIGNALS:
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)
+Q_DECLARE_METATYPE(ContactMethod::MediaAvailailityStatus)
 
 ///@class TemporaryContactMethod: An incomplete phone number
 class LIB_EXPORT TemporaryContactMethod : public ContactMethod {

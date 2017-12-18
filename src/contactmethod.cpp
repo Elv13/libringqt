@@ -99,7 +99,7 @@ void ContactMethodPrivate::changed()
 
 void ContactMethodPrivate::canSendTextsChanged()
 {
-    const bool v = q_ptr->canSendTexts();
+    const ContactMethod::MediaAvailailityStatus v = q_ptr->canSendTexts();
     const bool a = q_ptr->hasActiveCall();
 
     for (auto n : qAsConst(m_lParents)) {
@@ -1119,62 +1119,75 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
  * Detect every case where the capacity of a contact method to send (valid)
  * text messages is affected.
  */
-bool ContactMethod::canSendTexts(bool warn) const
+ContactMethod::MediaAvailailityStatus ContactMethod::canSendTexts(bool warn) const
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
 
     // Texts might still fail, but there is no reliable way to know, assume the
     // best.
     if (hasActiveCall())
-        return true;
+        return ContactMethod::MediaAvailailityStatus::AVAILABLE;
 
     if (!selectedAccount) {
         if (warn)
             qWarning() << "Failed to send an offline text message. No account "
                 "available for this contactmethod";
-        return false;
+        return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
+    }
+
+    if (selectedAccount->registrationState() != Account::RegistrationState::READY) {
+        if (warn)
+            qWarning() << "Failed to send an offline text message. The account"
+            " isn't registered";
+        return ContactMethod::MediaAvailailityStatus::ACCOUNT_DOWN;
     }
 
     if (selectedAccount->protocol() != Account::Protocol::RING) {
         if (warn)
             qWarning() << "Failed to send an offline message because a SIP account"
                 " was used";
-        return false;
+        return ContactMethod::MediaAvailailityStatus::NO_CALL;
     }
 
-    return true;
+    return ContactMethod::MediaAvailailityStatus::AVAILABLE;
 }
 
-bool ContactMethod::canCall() const
+ContactMethod::MediaAvailailityStatus ContactMethod::canCall() const
 {
     if (hasActiveCall())
-        return true;
+        return ContactMethod::MediaAvailailityStatus::AVAILABLE;
 
     auto selectedAccount = account();
 
-    if (selectedAccount && selectedAccount->canCall())
-        return true;
+    if (!selectedAccount)
+        return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
 
-    return true; //TODO find other accounts
+    if (!selectedAccount->canCall())
+        return ContactMethod::MediaAvailailityStatus::ACCOUNT_DOWN;
+
+    return ContactMethod::MediaAvailailityStatus::AVAILABLE; //TODO find other accounts
 }
 
-bool ContactMethod::canVideoCall() const
+ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
 {
-    if (!canCall())
-        return false;
+    const auto callStatus = canCall();
 
     auto selectedAccount = account();
 
-    if (selectedAccount && selectedAccount->canCall())
+    if (!selectedAccount)
+        return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
 
-    return true;
+    if (!selectedAccount->canVideoCall())
+        return ContactMethod::MediaAvailailityStatus::ACCOUNT_DOWN;
+
+    return ContactMethod::MediaAvailailityStatus::AVAILABLE; //TODO find other accounts
 }
 
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
 
-    if (!canSendTexts(true))
+    if (canSendTexts(true) != ContactMethod::MediaAvailailityStatus::AVAILABLE)
         return false;
 
     // This is too easy to cause accidentally. Better just fix it an hope for

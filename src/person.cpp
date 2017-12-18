@@ -635,7 +635,6 @@ bool Person::hasBeenCalled() const
    return false;
 }
 
-
 bool Person::canCall() const
 {
     if (!d_ptr->m_Numbers.size())
@@ -643,7 +642,7 @@ bool Person::canCall() const
 
     const auto pn = phoneNumbers();
     for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canCall())
+        if (cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
             return true;
     }
 
@@ -657,7 +656,7 @@ bool Person::canVideoCall() const
 
     const auto pn = phoneNumbers();
     for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canVideoCall())
+        if (cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
             return true;
     }
 
@@ -671,7 +670,7 @@ bool Person::canSendTexts() const
 
     const auto pn = phoneNumbers();
     for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canSendTexts())
+        if (cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
             return true;
     }
 
