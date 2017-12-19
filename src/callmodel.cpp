@@ -1415,7 +1415,11 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
       || ((oldState == Call::State::OVER) && (call->state() == Call::State::OVER))
       || (oldLifeCycleState != Call::LifeCycleState::FINISHED && call->state() == Call::State::OVER))
         QTimer::singleShot(0, [this,call]() {
-            if (!call->isMissed())
+            if (call->state() == Call::State::ABORTED) {
+                removeCall(call);
+                return;
+            }
+            else if (!call->isMissed())
                 QTimer::singleShot(m_AutoCleanDelay, [this, call]() {
                     removeCall(call);
                 });
@@ -1638,7 +1642,11 @@ void CallModelPrivate::slotCallChanged()
         case Call::State::OVER:
             // Do it later to give the change to other handler to do something first
             QTimer::singleShot(0, [this, call]() {
-                if (!call->isMissed()) {
+                if (call->state() == Call::State::ABORTED) {
+                    removeCall(call);
+                    return;
+                }
+                else if (!call->isMissed()) {
                     QTimer::singleShot(m_AutoCleanDelay, [this, call]() {
                         removeCall(call);
                     });
