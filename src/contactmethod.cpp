@@ -231,7 +231,24 @@ QString ContactMethod::presenceMessage() const
 
 ///Return the number
 URI ContactMethod::uri() const {
-   return d_ptr->m_Uri ;
+   // Set the Scheme now that it is know to avoid prorating ::NONE
+    if (d_ptr->m_pAccount && d_ptr->m_Uri.schemeType() == URI::SchemeType::NONE) {
+        switch(d_ptr->m_pAccount->protocol()) {
+            case Account::Protocol::RING:
+                d_ptr->m_Uri.setSchemeType(URI::SchemeType::RING);
+                break;
+            case Account::Protocol::SIP:
+                d_ptr->m_Uri.setSchemeType(d_ptr->m_pAccount->isTlsEnabled() ?
+                    URI::SchemeType::SIPS :
+                    URI::SchemeType::SIP
+                );
+                break;
+            case Account::Protocol::COUNT__:
+                Q_ASSERT(false);
+        }
+    }
+
+    return d_ptr->m_Uri ;
 }
 
 ///Return the phone number type
