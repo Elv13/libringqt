@@ -110,6 +110,9 @@ private:
    QScopedPointer<PhoneDirectoryModelPrivate> d_ptr;
    Q_DECLARE_PRIVATE(PhoneDirectoryModel)
 
+public Q_SLOTS:
+    void setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name);
+
 Q_SIGNALS:
    void lastUsedChanged(ContactMethod* cm, time_t t);
    void contactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);

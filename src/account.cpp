@@ -2835,6 +2835,21 @@ Account::RegistrationState Account::fromDaemonName(const QString& st)
 
 }
 
+QDebug operator<<(QDebug dbg, const Account::Protocol& p)
+{
+    switch(p) {
+        case Account::Protocol::RING:
+            dbg.nospace() << QStringLiteral("RING");\
+            break;
+        case Account::Protocol::SIP:
+            dbg.nospace() << QStringLiteral("RING");
+            break;
+        case Account::Protocol::COUNT__:
+            Q_ASSERT(false);
+    }
+    return dbg.space();
+}
+
 #undef TO_BOOL
 #undef IS_TRUE
 #include <account.moc>

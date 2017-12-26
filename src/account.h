@@ -332,7 +332,7 @@ class LIB_EXPORT Account : public ItemBase {
          RING = 1, /*!< Used for RING-DHT calls           */
          COUNT__,
       };
-      Q_ENUMS(Protocol)
+      Q_ENUM(Protocol)
 
       ///Possible account export status
       enum class ExportOnRingStatus {
@@ -619,6 +619,8 @@ Q_DECLARE_METATYPE(Account::Protocol)
 Q_DECLARE_METATYPE(DtmfType)
 
 LIB_EXPORT Account* operator<<(Account* a, Account::EditAction action);
+
+LIB_EXPORT QDebug operator<<(QDebug dbg, const Account::Protocol& p);
 
 /**
  * Some accounts can be loaded at later time. This object will be upgraded

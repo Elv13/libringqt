@@ -42,6 +42,8 @@
 #include "dbus/configurationmanager.h"
 #include "media/recordingmodel.h"
 #include "media/textrecording.h"
+#include "localnameservicecache.h"
+#include "categorizedbookmarkmodel.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -56,6 +58,9 @@ public:
 PhoneDirectoryModelPrivate::PhoneDirectoryModelPrivate(PhoneDirectoryModel* parent) : QObject(parent), q_ptr(parent),
 m_CallWithAccount(false),m_pPopularModel(nullptr)
 {
+    QTimer::singleShot(0, [this]() {
+        m_pNameServiceCache = CategorizedBookmarkModel::instance().addCollection<LocalNameServiceCache>(LoadOptions::FORCE_ENABLED);
+    });
     connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound, this, &PhoneDirectoryModelPrivate::slotRegisteredNameFound);
 }
 
@@ -189,7 +194,12 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
       case PhoneDirectoryModelPrivate::Columns::ACCOUNT:
          switch (role) {
             case Qt::DisplayRole:
-               return number->account()?number->account()->id():QVariant();
+               static QMetaEnum metaEnum = QMetaEnum::fromType<Account::Protocol>();
+               return number->account()?
+                  QString(QStringLiteral("(%1) %2"))
+                     .arg( metaEnum.valueToKey((int)number->account()->protocol()))
+                     .arg(QString(number->account()->id()))
+                  : QVariant();
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::STATE:
@@ -985,6 +995,24 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
    }
 }
 
+
+/**
+ * Useful for caching locally some names
+ */
+void
+PhoneDirectoryModel::setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name)
+{
+    auto account = AccountModel::instance().findAccountIf([](const Account& a) {
+        return a.protocol() == Account::Protocol::RING;
+    });
+
+    // Make sure a CM exists otherwise this is NOP
+    if (account)
+        getNumber(ringId, account);
+
+    d_ptr->slotRegisteredNameFound(nullptr, NameDirectory::LookupStatus::SUCCESS, ringId, name);
+}
+
 void
 PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
 {
@@ -1011,9 +1039,10 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
             if (!cm->account())
                 cm->setAccount(account);
 
-            if (cm->account() == account) {
+            if ((!account) || cm->account() == account) {
                 cm->incrementAlternativeName(name, QDateTime::currentDateTimeUtc().toTime_t());
                 cm->d_ptr->setRegisteredName(name);
+                m_pNameServiceCache->editor<ContactMethod>()->addExisting(cm);
 
                 // Add the CM to the directory using the registered name too.
                 // Note that in theory the wrapper can exist already if the

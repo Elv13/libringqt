@@ -184,6 +184,7 @@ SET( libringqt_LIB_SRCS
   src/localprofilecollection.cpp
   src/localmacrocollection.cpp
   src/localbookmarkcollection.cpp
+  src/localnameservicecache.cpp
   src/localringtonecollection.cpp
   src/peerprofilecollection2.cpp
 

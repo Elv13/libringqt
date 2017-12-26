@@ -21,6 +21,7 @@
 
 //Ring
 class PhoneDirectoryModel;
+class LocalNameServiceCache;
 #include "contactmethod.h"
 #include "namedirectory.h"
 
@@ -97,6 +98,7 @@ public:
    QHash<QString,NumberWrapper*> m_hNumbersByNames  ;
    bool                          m_CallWithAccount  ;
    MostPopularNumberModel*       m_pPopularModel    ;
+   LocalNameServiceCache*        m_pNameServiceCache;
 
    Q_DECLARE_PUBLIC(PhoneDirectoryModel)
 

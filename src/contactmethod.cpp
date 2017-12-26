@@ -492,7 +492,7 @@ QString ContactMethod::primaryName() const
       if (d_ptr->m_hNames.size() == 1)
          ret =  d_ptr->m_hNames.constBegin().key();
       else {
-         QString toReturn = uri();
+         QString toReturn = registeredName().isEmpty() ? uri() : registeredName();
          QPair<int, time_t> max = {0, 0};
 
          for (QHash<QString,QPair<int, time_t>>::const_iterator i = d_ptr->m_hNames.constBegin(); i != d_ptr->m_hNames.constEnd(); ++i) {
@@ -513,7 +513,7 @@ QString ContactMethod::primaryName() const
    }
    //Fallback: Use the URI
    if (d_ptr->m_PrimaryName_cache.isEmpty()) {
-      return uri();
+      return registeredName().isEmpty() ? uri() : registeredName();
    }
 
    //Return the cached primaryname

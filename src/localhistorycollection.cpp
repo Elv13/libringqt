@@ -88,6 +88,12 @@ void LocalHistoryEditor::saveCall(QTextStream& stream, const Call* call)
       Call::HistoryStateName::INCOMING : Call::HistoryStateName::OUTGOING;
 
    const Account* a = call->account();
+
+   if (a && a->protocol() == Account::Protocol::RING) {
+       URI uri = call->peerContactMethod()->uri().format(URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME | URI::Section::PORT);
+       Q_ASSERT(uri.schemeType() == URI::SchemeType::RING);
+   }
+
    stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::CALLID          ).arg(call->historyId()                       );
    stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_START ).arg(call->startTimeStamp()                  );
    stream << QStringLiteral("%1=%2\n").arg(Call::HistoryMapFields::TIMESTAMP_STOP  ).arg(call->stopTimeStamp()                   );
