@@ -59,6 +59,7 @@
 #include "tlsmethodmodel.h"
 #include "audio/settings.h"
 #include "personmodel.h"
+#include "namedirectory.h"
 #include "accountstatusmodel.h"
 #include "private/contactmethod_p.h"
 
@@ -436,9 +437,9 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
 {
     const auto& details = getCallDetailsCommon(callId);
 
-    const auto& peerNumber    = details[ DRing::Call::Details::PEER_NUMBER ];
-    const auto& peerName      = details[ DRing::Call::Details::DISPLAY_NAME];
-    const auto& account       = details[ DRing::Call::Details::ACCOUNTID   ];
+    auto peerNumber      = details[ DRing::Call::Details::PEER_NUMBER ];
+    const auto& peerName = details[ DRing::Call::Details::DISPLAY_NAME];
+    const auto& account  = details[ DRing::Call::Details::ACCOUNTID   ];
 
     //It may be possible that the call has already been invalidated
     if (account.isEmpty()) {
@@ -447,7 +448,19 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
     }
 
     const auto& acc = AccountModel::instance().getById(account.toLatin1());
-    const auto& nb  = PhoneDirectoryModel::instance().getNumber(peerNumber, acc);
+
+    // Sanitize invalid data sent by the daemon
+    if (acc->protocol() == Account::Protocol::RING && peerNumber.left(4) == QStringLiteral("sip:"))
+        peerNumber = peerNumber.replace(0, 4, QStringLiteral("ring:"));
+    else if (acc->protocol() == Account::Protocol::RING && peerNumber.left(5) == QStringLiteral("sip:"))
+        peerNumber = peerNumber.replace(0, 5, QStringLiteral("ring:"));
+
+    const auto& nb = PhoneDirectoryModel::instance().getNumber(peerNumber, acc);
+
+    // When a peer calls for the first time, it's registered name isn't known yet
+    if (acc->protocol() == Account::Protocol::RING && nb->registeredName().isEmpty()) {
+        NameDirectory::instance().lookupAddress(acc, acc->nameServiceURL(), nb->uri());
+    }
 
     auto call = std::unique_ptr<Call, decltype(deleteCall)&>( new Call(startState, peerName, nb, acc),
                                                              deleteCall );
