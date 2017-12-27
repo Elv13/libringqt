@@ -20,6 +20,7 @@
 //Qt
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
+#include <QtCore/QMetaEnum>
 
 //DRing
 #include <account_const.h>
