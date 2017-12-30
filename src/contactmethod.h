@@ -62,11 +62,16 @@ public:
 
    enum class Role {
       Uri          = static_cast<int>(Ring::Role::UserRole) + 1000,
-      Object       ,
-      CategoryIcon ,
-      CategoryName ,
-      IsReachable  ,
-      Filter       ,
+      Object           ,
+      CategoryIcon     ,
+      CategoryName     ,
+      IsReachable      ,
+      Filter           ,
+      CanCall          ,
+      CanVideoCall     ,
+      CanSendTexts     ,
+      TotalCallCount   ,
+      TotalMessageCount,
       UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };

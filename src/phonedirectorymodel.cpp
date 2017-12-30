@@ -147,6 +147,11 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
         roles[ static_cast<int>(ContactMethod::Role::CategoryIcon) ] = "categoryIcon";
         roles[ static_cast<int>(ContactMethod::Role::CategoryName) ] = "categoryName";
         roles[ static_cast<int>(ContactMethod::Role::IsReachable) ] = "isReachable";
+        roles[ static_cast<int>(ContactMethod::Role::CanCall) ] = "canCall";
+        roles[ static_cast<int>(ContactMethod::Role::CanVideoCall) ] = "canVideoCall";
+        roles[ static_cast<int>(ContactMethod::Role::CanSendTexts) ] = "canSendTexts";
+        roles[ static_cast<int>(ContactMethod::Role::TotalCallCount) ] = "totalCallCount";
+        roles[ static_cast<int>(ContactMethod::Role::TotalMessageCount) ] = "totalMessageCount";
 
     }
 
@@ -1085,8 +1090,10 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
                     m_hDirectory[name]->numbers << cm;
                 }
             }
-            else
-                qDebug() << "registered name: uri matches but not account" << name << address << account << cm->account();
+            else {
+                // too noisy
+                //qDebug() << "registered name: uri matches but not account" << name << address << account << cm->account();
+            }
         }
     } else {
         // got a registered name for a CM which hasn't been created yet

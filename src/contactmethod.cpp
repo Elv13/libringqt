@@ -757,6 +757,20 @@ QVariant ContactMethod::roleData(int role) const
          break;
       case static_cast<int>(Role::IsReachable):
           return isReachable();
+      case static_cast<int>(Role::CanCall):
+          return canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+      case static_cast<int>(Role::CanVideoCall):
+          return canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+      case static_cast<int>(Role::CanSendTexts):
+          return canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+      case static_cast<int>(Role::TotalCallCount):
+          return callCount();
+      case static_cast<int>(Role::TotalMessageCount):
+          if (auto rec = textRecording())
+            cat = rec->sentCount() + rec->receivedCount();
+         else
+            cat = 0;
+         break;
       case static_cast<int>(Role::Filter):
           return QStringLiteral("%1//%2//%3//%4//%5//%6")
             .arg(bestName())
