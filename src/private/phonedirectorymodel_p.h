@@ -98,7 +98,7 @@ public:
    QHash<QString,NumberWrapper*> m_hNumbersByNames  ;
    bool                          m_CallWithAccount  ;
    MostPopularNumberModel*       m_pPopularModel    ;
-   LocalNameServiceCache*        m_pNameServiceCache;
+   LocalNameServiceCache*        m_pNameServiceCache {nullptr};
 
    Q_DECLARE_PUBLIC(PhoneDirectoryModel)
 

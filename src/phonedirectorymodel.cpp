@@ -1048,7 +1048,10 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
             if ((!account) || cm->account() == account) {
                 cm->incrementAlternativeName(name, QDateTime::currentDateTimeUtc().toTime_t());
                 cm->d_ptr->setRegisteredName(name);
-                m_pNameServiceCache->editor<ContactMethod>()->addExisting(cm);
+
+                // There is a potential race condition, for now ignore it, the cache isn't critical
+                if (m_pNameServiceCache)
+                    m_pNameServiceCache->editor<ContactMethod>()->addExisting(cm);
 
                 // Add the CM to the directory using the registered name too.
                 // Note that in theory the wrapper can exist already if the
