@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2009-2016 by Savoir-faire Linux                          *
+ *   Copyright (C) 2009-2017 Savoir-faire Linux                             *
  *   Author : Jérémy Quentin <jeremy.quentin@savoirfairelinux.com>          *
  *            Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
@@ -30,6 +30,7 @@ typedef QMap<QString, QString>                              MapStringString     
 typedef QMap<QString, int>                                  MapStringInt                  ;
 typedef QVector<int>                                        VectorInt                     ;
 typedef QVector<uint>                                       VectorUInt                    ;
+typedef QVector<qulonglong>                                 VectorULongLong               ;
 typedef QVector< QMap<QString, QString> >                   VectorMapStringString         ;
 typedef QVector< QString >                                  VectorString                  ;
 typedef QMap< QString, QMap< QString, QVector<QString> > >  MapStringMapStringVectorString;
@@ -37,6 +38,20 @@ typedef QMap< QString, QVector<QString> >                   MapStringVectorStrin
 typedef QMap< QString, QMap< QString, QStringList > >       MapStringMapStringStringList  ;
 typedef QMap< QString, QStringList >                        MapStringStringList           ;
 typedef QVector< QByteArray >                               VectorVectorByte              ;
+
+// Adapted from libring DRing::DataTransferInfo
+struct DataTransferInfo
+{
+    bool isOutgoing;
+    uint lastEvent;
+    qulonglong totalSize;
+    qulonglong bytesProgress;
+    QString displayName;
+    QString path;
+    QString accountId;
+    QString peer;
+};
+Q_DECLARE_METATYPE(DataTransferInfo)
 
 /**
  * This function add a safe way to get an enum class size.
@@ -51,7 +66,6 @@ constexpr int enum_class_size() {
 }
 
 #define LIB_EXPORT Q_DECL_EXPORT
-#define LIB_IMPORT Q_DECL_IMPORT
 
 //Doesn't work
 #if ((__GNUC_MINOR__ > 8) || (__GNUC_MINOR__ == 8))
