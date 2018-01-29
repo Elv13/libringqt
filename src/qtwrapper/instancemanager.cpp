@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2009-2016 by Savoir-faire Linux                          *
+ *   Copyright (C) 2009-2017 Savoir-faire Linux                          *
  *   Authors : Alexandre Lision alexandre.lision@savoirfairelinux.com       *
  *   Author : Alexandre Lision <alexandre.lision@savoirfairelinux.com>      *
  *                                                                          *
@@ -25,6 +25,8 @@
  #include "videomanager.h"
 #endif //ENABLE_VIDEO
 
+static int ringFlags = 0;
+
 void pollEvents();
 
 InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
@@ -36,6 +38,7 @@ InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
    using DRing::CallSignal;
    using DRing::ConfigurationSignal;
    using DRing::PresenceSignal;
+   using DRing::DataTransferSignal;
 
 #ifdef ENABLE_VIDEO
    using DRing::VideoSignal;
@@ -50,8 +53,6 @@ InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
 #endif
    m_pTimer->start();
 
-   static int ringFlags = 0;
-
 #ifndef MUTE_DRING
    ringFlags |= DRing::DRING_FLAG_DEBUG;
    ringFlags |= DRing::DRING_FLAG_CONSOLE_LOG;
@@ -62,6 +63,7 @@ InstanceManagerInterface::InstanceManagerInterface() : m_pTimer(nullptr)
    registerCallHandlers(CallManager::instance().callHandlers);
    registerConfHandlers(ConfigurationManager::instance().confHandlers);
    registerPresHandlers(PresenceManager::instance().presHandlers);
+   registerDataXferHandlers(ConfigurationManager::instance().dataXferHandlers);
 #ifdef ENABLE_VIDEO
    registerVideoHandlers(VideoManager::instance().videoHandlers);
 #endif

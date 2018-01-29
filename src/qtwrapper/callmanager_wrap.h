@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2014-2016 by Savoir-faire Linux                                 *
+ *   Copyright (C) 2014-2017 Savoir-faire Linux                                 *
  *   Author : Philippe Groarke <philippe.groarke@savoirfairelinux.com>        *
  *   Author : Alexandre Lision <alexandre.lision@savoirfairelinux.com>        *
  *                                                                            *
@@ -281,6 +281,16 @@ public Q_SLOTS: // METHODS
     QString placeCall(const QString &accountID, const QString &to)
     {
         QString temp(DRing::placeCall(accountID.toStdString(), to.toStdString()).c_str());
+        return temp;
+    }
+
+    QString placeCall(const QString &accountID,
+                      const QString &to,
+                      const std::map<std::string, std::string>& volatileCallDetails)
+    {
+        QString temp(DRing::placeCall(accountID.toStdString(),
+                                       to.toStdString(),
+                                       volatileCallDetails).c_str());
         return temp;
     }
 
