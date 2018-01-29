@@ -33,6 +33,7 @@
 #include "private/vcardutils.h"
 #include "personmodel.h"
 #include "historytimecategorymodel.h"
+#include "phonedirectorymodel.h"
 #include "numbercategorymodel.h"
 #include "numbercategory.h"
 #include "personcmmodel.h"
@@ -855,15 +856,20 @@ void Person::addAddress(Person::Address* addr)
    emit addressesChanged();
 }
 
-void Person::addPhoneNumber(ContactMethod* cm)
+ContactMethod* Person::addPhoneNumber(ContactMethod* cm)
 {
     if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
-        return;
+        return nullptr;
 
     if (Q_UNLIKELY(d_ptr->m_Numbers.indexOf(cm) != -1)) {
         qWarning() << this << "already has the phone number" << cm;
-        return;
+        return cm;
     }
+
+    if (cm->type() == ContactMethod::Type::TEMPORARY)
+        cm = PhoneDirectoryModel::instance().fromTemporary(
+            static_cast<TemporaryContactMethod*>(cm)
+        );
 
     if (Q_UNLIKELY(cm->contact() && cm->contact()->d_ptr != d_ptr)) {
         qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
@@ -878,6 +884,70 @@ void Person::addPhoneNumber(ContactMethod* cm)
         for (Person* c : qAsConst(d_ptr->m_lParents))
             emit c->relatedContactMethodsRemoved(cm);
     }
+
+    return cm;
+}
+
+ContactMethod* Person::removePhoneNumber(ContactMethod* cm)
+{
+    if (Q_UNLIKELY(!cm)) {
+        return nullptr;
+    }
+
+    const int idx = d_ptr->m_Numbers.indexOf(cm);
+
+    if (Q_UNLIKELY(idx == -1)) {
+        qWarning() << this << "trying to replace a phone number that doesn't exist";
+        return nullptr;
+    }
+
+    d_ptr->phoneNumbersAboutToChange();
+    d_ptr->m_Numbers.remove(idx);
+    d_ptr->phoneNumbersChanged();
+
+    d_ptr->m_HiddenContactMethods << cm;
+
+    emit relatedContactMethodsAdded(cm);
+
+    return cm;
+}
+
+/// ContactMethods URI are immutable, they need to be replaced when edited
+ContactMethod* Person::replacePhoneNumber(ContactMethod* old, ContactMethod* newCm)
+{
+    if (Q_UNLIKELY(!newCm)) {
+        qWarning() << this << "trying to replace a phone number with nothing";
+        return nullptr;
+    }
+
+    const int idx = d_ptr->m_Numbers.indexOf(old);
+
+    if (Q_UNLIKELY((!old) || idx == -1)) {
+        qWarning() << this << "trying to replace a phone number that doesn't exist";
+        return nullptr;
+    }
+
+    if (old == newCm) {
+        qWarning() << "Trying to replace a phone number with itself";
+        return old;
+    }
+
+    if (newCm->type() == ContactMethod::Type::TEMPORARY)
+        newCm = PhoneDirectoryModel::instance().fromTemporary(
+            static_cast<TemporaryContactMethod*>(newCm)
+        );
+
+    d_ptr->phoneNumbersAboutToChange();
+
+    d_ptr->m_Numbers.replace(idx, newCm);
+
+    d_ptr->m_HiddenContactMethods << newCm;
+
+    emit relatedContactMethodsAdded(old);
+
+    d_ptr->phoneNumbersChanged();
+
+    return newCm;
 }
 
 /// Returns the addresses associated with the person.

@@ -24,6 +24,9 @@
 #include <contactmethod.h>
 class Person;
 
+// Private
+struct FutureCMData;
+
 /**
  * Simple class to access the phone numbers of a Person object as a model.
  *
@@ -34,17 +37,29 @@ class PersonCMModel final : public QAbstractListModel
     Q_OBJECT
 
 public:
+    Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
+
     explicit PersonCMModel(const Person* parent);
     virtual ~PersonCMModel();
 
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    virtual bool setData( const QModelIndex& index, const QVariant &value, int role) override;
     virtual int rowCount( const QModelIndex& parent = {} ) const override;
+    virtual QModelIndex index(int row, int col, const QModelIndex& parent = {}) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
     virtual bool removeRows(int row, int count, const QModelIndex &parent) override;
+
+    bool hasEditRow() const;
+    void setEditRow(bool v);
+
+Q_SIGNALS:
+    void hasEditRowChanged(bool v);
+
 
 private:
     // This is a private class, no need for d_ptr
     Person* m_pPerson;
     QMetaObject::Connection m_cBeginCB;
     QMetaObject::Connection m_cEndCB;
+    TemporaryContactMethod* m_pTmpCM {nullptr};
 };

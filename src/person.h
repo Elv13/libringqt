@@ -133,7 +133,9 @@ public:
 
    //Mutator
    Q_INVOKABLE void addAddress(Address* addr);
-   Q_INVOKABLE void addPhoneNumber(ContactMethod* cm);
+   Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
+   Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
+   Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
    Q_INVOKABLE void addCustomField(const QByteArray& key, const QByteArray& value);
    Q_INVOKABLE int  removeAllCustomFields(const QByteArray& key);
    Q_INVOKABLE const QByteArray toVCard(QList<Account*> accounts = {}) const;

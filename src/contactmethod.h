@@ -46,7 +46,35 @@ namespace Media {
    class TextRecording;
 }
 
-///ContactMethod: represent a phone number
+/**
+ * Minimal information to reach somehone and its associated metadata.
+ *
+ * A ContactMethod has the following primary key:
+ *
+ *  * An URI
+ *
+ * And secondary key:
+ *
+ *  * An account
+ *  * A person (contact)
+ *
+ * There CM are created by the PhoneDirectoryModel. Only 1 instance per
+ * primary+secondary keys can exists at any time. The PhoneDirectoryModel
+ * ensure implicitly. Note that these objects are proxies and can be merged
+ * and split transparently by the PhoneDirectoryModel. The URI is immutable
+ * while the account and contact can go from nullptr to a value (but not the
+ * other way around).
+ *
+ * Note that if multiple account exits, it is possible to have multiple
+ * ContactMethod with the same URI, but different accounts.
+ *
+ * The TemporaryContactMethod class allows to create CM with mutable URI. Once
+ * it is converted into a standard ContactMethod, it is no longer mutable.
+ *
+ * To edit an URI of a ContactMethod, a new one needs to be created everytime.
+ * Note that the CM are only freed if they are duplicates. It is not recommended
+ * to create too many temporary ones.
+ */
 class LIB_EXPORT ContactMethod : public ItemBase
 {
    Q_OBJECT

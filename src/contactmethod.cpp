@@ -1321,12 +1321,17 @@ TemporaryContactMethod::TemporaryContactMethod(const ContactMethod* number) :
    }
 }
 
-void TemporaryContactMethod::setUri(const URI& uri)
+void TemporaryContactMethod::setUri(const URI& u)
 {
-   if (uri != ContactMethod::d_ptr->m_Uri)
+   if (ContactMethod::d_ptr->m_Type != ContactMethod::Type::TEMPORARY) {
+      qWarning() << "Trying to edit an uri after saving" << uri() << u;
+      return;
+   }
+
+   if (u != ContactMethod::d_ptr->m_Uri)
       ContactMethod::d_ptr->m_RegisteredName.clear();
 
-   ContactMethod::d_ptr->m_Uri = uri;
+   ContactMethod::d_ptr->m_Uri = u;
 
    //The sha1 is no longer valid
    ContactMethod::d_ptr->m_Sha1.clear();
