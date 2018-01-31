@@ -133,6 +133,7 @@ public Q_SLOTS:
     void slotTextRecordingAdded(Media::TextRecording* r);
     void slotRebased(ContactMethod* other);
     void slotPhoneNumberChanged();
+    void slotPersonDestroyed();
 };
 
 const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::peerTimelineNodeName = {
@@ -220,10 +221,16 @@ PeerTimelineModel::PeerTimelineModel(Person* cm) : QAbstractItemModel(cm), d_ptr
 
 PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
 {
-    if (cm->contact())
+    if (cm->contact()) {
         d_ptr->m_pPerson = cm->contact();
-    else
+        connect(d_ptr->m_pPerson, &QObject::destroyed,
+            d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
+    }
+    else {
         d_ptr->m_pCM = cm;
+        connect(cm, &QObject::destroyed,
+            d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
+    }
 
     d_ptr->init();
 }
@@ -668,6 +675,17 @@ void PeerTimelineModelPrivate::slotPhoneNumberChanged()
     //TODO detect removed CMs and reload
 }
 
+// It can happen if something hold a smart pointer for too long. This is a bug
+// elsewhere, but given I can't fix Qt5::Quick internal GC race conditions, it
+// mitigates potential crashes.
+void PeerTimelineModelPrivate::slotPersonDestroyed()
+{
+    // The slots will be disconnected by QObject
+    m_pPerson = nullptr;
+    m_pCM     = nullptr;
+    qWarning() << "A contact was destroyed while its timeline is referenced" << this;
+}
+
 void PeerTimelineModelPrivate::slotReload()
 {
     // Eventually, this could be optimized to detect if `reset` is more efficient
@@ -720,6 +738,9 @@ void PeerTimelineModelPrivate::slotClear(PeerTimelineNode* root)
 
 void PeerTimelineModelPrivate::disconnectOldCms()
 {
+    // Both m_pPerson and m_pCM can be null if the smart pointer race condition
+    // inside of Qt5::Quick happens
+
     if (m_pPerson) {
         disconnect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
@@ -748,8 +769,9 @@ void PeerTimelineModelPrivate::disconnectOldCms()
                 this, &PeerTimelineModelPrivate::slotRebased);
         }
     }
-    else {
-        disconnect(m_pCM->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+    else if (m_pCM) {
+        if (auto textRec = m_pCM->textRecording())
+            disconnect(textRec->d_ptr, &Media::TextRecordingPrivate::messageAdded,
             this, &PeerTimelineModelPrivate::slotMessageAdded);
 
         disconnect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
@@ -777,7 +799,14 @@ slotContactChanged(Person* newContact, Person* oldContact)
     if (oldContact && newContact->uid() == oldContact->uid())
         return;
 
+    if (m_pPerson)
+        disconnect(m_pPerson, &QObject::destroyed,
+            this, &PeerTimelineModelPrivate::slotPersonDestroyed);
+
     m_pPerson = newContact;
+
+    connect(m_pPerson, &QObject::destroyed,
+        this, &PeerTimelineModelPrivate::slotPersonDestroyed);
 
     // Tracking what can and cannot be salvaged isn't worth it
     disconnectOldCms();
