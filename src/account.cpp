@@ -2695,8 +2695,21 @@ void AccountPrivate::modify()  {
          //New accounts will get the hash later
          if (q_ptr->isNew() && q_ptr->username().isEmpty())
             m_hRoleStatus[(int)R::Username] = ST::OK     ;
-         else if (q_ptr->isNew() && !q_ptr->username().isEmpty())
+         else if (q_ptr->isNew() && !q_ptr->username().isEmpty()) {
+            // New account can have username in the future
             m_hRoleStatus[(int)R::Username] = ST::INVALID;
+         }
+         else if (q_ptr->username().isEmpty()) {
+            // There is an high probability of the config file being corrupted
+            static std::atomic_flag warnflag {ATOMIC_FLAG_INIT};
+            if (!warnflag.test_and_set())
+               qWarning() << "A Ring account has an empty username, this is not normal";
+
+            // Allow to save the account if it is disable to avoid no being able
+            // to save the accountmodel
+            m_hRoleStatus[(int)R::Username] = q_ptr->isEnabled() ?
+               ST::INVALID : ST::OK;
+         }
 
          break;
       case Account::Protocol::COUNT__:
