@@ -37,56 +37,54 @@ class CollectionInterface2;
 
 class LIB_EXPORT CategorizedBookmarkModel :  public QAbstractItemModel, public CollectionManagerInterface<ContactMethod>
 {
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   Q_OBJECT
-   #pragma GCC diagnostic pop
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+    Q_OBJECT
+    #pragma GCC diagnostic pop
+    friend class NumberTreeBackend;
 public:
-   friend class NumberTreeBackend;
-   //Constructor
-   virtual ~CategorizedBookmarkModel();
-   explicit CategorizedBookmarkModel(QObject* parent);
+    Q_PROPERTY(bool displayMostPopular READ displayMostPopular WRITE setDisplayPopular)
 
-   //Setters
-   void setRole(int role);
-   void setShowAll(bool showAll);
+    //Constructor
+    virtual ~CategorizedBookmarkModel();
+    explicit CategorizedBookmarkModel(QObject* parent);
 
-   //Model implementation
-   virtual bool          setData     ( const QModelIndex& index, const QVariant &value, int role   )       override;
-   virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole        ) const override;
-   virtual int           rowCount    ( const QModelIndex& parent = QModelIndex()                   ) const override;
-   virtual Qt::ItemFlags flags       ( const QModelIndex& index                                    ) const override;
-   virtual int           columnCount ( const QModelIndex& parent = QModelIndex()                   ) const override;
-   virtual QModelIndex   parent      ( const QModelIndex& index                                    ) const override;
-   virtual QModelIndex   index       ( int row, int column, const QModelIndex& parent=QModelIndex()) const override;
-   virtual QStringList   mimeTypes   (                                                             ) const override;
-   virtual QMimeData*    mimeData    ( const QModelIndexList &indexes                              ) const override;
-   virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
-   virtual QHash<int,QByteArray> roleNames() const override;
+    bool displayMostPopular() const;
+    void setDisplayPopular(bool value);
 
-   //Management
-   void remove        (const QModelIndex& idx );
-   void addBookmark   (ContactMethod* number    );
-   void removeBookmark(ContactMethod* number    );
+    //Model implementation
+    virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole                 ) const override;
+    virtual int           rowCount    ( const QModelIndex& parent = {}                                       ) const override;
+    virtual Qt::ItemFlags flags       ( const QModelIndex& index                                             ) const override;
+    virtual int           columnCount ( const QModelIndex& parent = {}                                       ) const override;
+    virtual QModelIndex   parent      ( const QModelIndex& index                                             ) const override;
+    virtual QModelIndex   index       ( int row, int column, const QModelIndex& parent = {}                  ) const override;
+    virtual QStringList   mimeTypes   (                                                                      ) const override;
+    virtual QMimeData*    mimeData    ( const QModelIndexList &indexes                                       ) const override;
+    virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
+    virtual QHash<int,QByteArray> roleNames() const override;
 
-   //Getters
-   int          acceptedPayloadTypes();
-   ContactMethod* getNumber(const QModelIndex& idx);
+    //Management
+    void remove        (const QModelIndex& idx   );
+    void addBookmark   (ContactMethod* number    );
+    void removeBookmark(ContactMethod* number    );
 
-   //Singleton
-   static CategorizedBookmarkModel& instance();
+    //Getters
+    int acceptedPayloadTypes();
+
+    //Singleton
+    static CategorizedBookmarkModel& instance();
 
 private:
-   CategorizedBookmarkModelPrivate* d_ptr;
-   Q_DECLARE_PRIVATE(CategorizedBookmarkModel)
+    CategorizedBookmarkModelPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(CategorizedBookmarkModel)
 
-   //Backend interface
-   virtual void collectionAddedCallback(CollectionInterface* backend) override;
-   virtual bool addItemCallback(const ContactMethod* item) override;
-   virtual bool removeItemCallback(const ContactMethod* item) override;
+    //Backend interface
+    virtual void collectionAddedCallback(CollectionInterface* backend) override;
+    virtual bool addItemCallback(const ContactMethod* item) override;
+    virtual bool removeItemCallback(const ContactMethod* item) override;
 
 public Q_SLOTS:
-   void reloadCategories();
-   void clear();
+    void clear();
 };
 
