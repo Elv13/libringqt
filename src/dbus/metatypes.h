@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2009-2016 by Savoir-faire Linux                                 *
+ *   Copyright (C) 2009-2018 Savoir-faire Linux                                 *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com>   *
  *            Jérémy Quentin <jeremy.quentin@savoirfairelinux.com>            *
  *                                                                            *
@@ -37,9 +37,46 @@ Q_DECLARE_METATYPE(VectorMapStringString)
 Q_DECLARE_METATYPE(MapStringMapStringStringList)
 Q_DECLARE_METATYPE(VectorInt)
 Q_DECLARE_METATYPE(VectorUInt)
+Q_DECLARE_METATYPE(VectorULongLong)
 Q_DECLARE_METATYPE(VectorString)
 Q_DECLARE_METATYPE(MapStringVectorString)
 Q_DECLARE_METATYPE(VectorVectorByte)
+
+#ifndef ENABLE_LIBWRAP
+static inline QDBusArgument &operator<<(QDBusArgument& argument, const DataTransferInfo& info)
+{
+    argument.beginStructure();
+    argument << info.accountId;
+    argument << info.lastEvent;
+    argument << info.flags;
+    argument << info.totalSize;
+    argument << info.bytesProgress;
+    argument << info.peer;
+    argument << info.displayName;
+    argument << info.path;
+    argument << info.mimetype;
+    argument.endStructure();
+
+    return argument;
+}
+
+static inline const QDBusArgument &operator>>(const QDBusArgument& argument, DataTransferInfo& info)
+{
+    argument.beginStructure();
+    argument >> info.accountId;
+    argument >> info.lastEvent;
+    argument >> info.flags;
+    argument >> info.totalSize;
+    argument >> info.bytesProgress;
+    argument >> info.peer;
+    argument >> info.displayName;
+    argument >> info.path;
+    argument >> info.mimetype;
+    argument.endStructure();
+
+    return argument;
+}
+#endif
 
 #ifndef ENABLE_LIBWRAP
 static bool dbus_metaTypeInit = false;
@@ -52,13 +89,14 @@ inline void registerCommTypes() {
    qDBusRegisterMetaType<MapStringMapStringVectorString>();
    qDBusRegisterMetaType<VectorInt>                     ();
    qDBusRegisterMetaType<VectorUInt>                    ();
+   qDBusRegisterMetaType<VectorULongLong>               ();
    qDBusRegisterMetaType<VectorString>                  ();
    qDBusRegisterMetaType<MapStringVectorString>         ();
    qDBusRegisterMetaType<VectorVectorByte>              ();
+   qDBusRegisterMetaType<DataTransferInfo>              ();
    dbus_metaTypeInit = true;
 #endif
 }
-
 
 #pragma GCC diagnostic pop
 
