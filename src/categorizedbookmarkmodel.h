@@ -1,5 +1,6 @@
 /****************************************************************************
  *   Copyright (C) 2013-2016 by Savoir-faire Linux                          *
+ *   Copyright (C) 2018 by Bluesystems                                      *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -18,30 +19,20 @@
 #pragma once
 
 #include <QtCore/QAbstractItemModel>
-#include <QtCore/QHash>
-#include <QtCore/QStringList>
-#include <QtCore/QDateTime>
 
 //Ring
 #include "collectionmanagerinterface.h"
-#include "collectioninterface.h"
 #include "typedefs.h"
 #include "contactmethod.h"
-// #include "person.h"
-// #include "call.h"
-class PersonBackend;
-class NumberTreeBackend;
 
 class CategorizedBookmarkModelPrivate;
-class CollectionInterface2;
 
-class LIB_EXPORT CategorizedBookmarkModel :  public QAbstractItemModel, public CollectionManagerInterface<ContactMethod>
+class LIB_EXPORT CategorizedBookmarkModel : public QAbstractItemModel, public CollectionManagerInterface<ContactMethod>
 {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
     Q_OBJECT
     #pragma GCC diagnostic pop
-    friend class NumberTreeBackend;
 public:
     Q_PROPERTY(bool displayMostPopular READ displayMostPopular WRITE setDisplayPopular)
 
@@ -65,9 +56,9 @@ public:
     virtual QHash<int,QByteArray> roleNames() const override;
 
     //Management
-    void remove        (const QModelIndex& idx   );
-    void addBookmark   (ContactMethod* number    );
-    void removeBookmark(ContactMethod* number    );
+    void remove        (const QModelIndex& idx);
+    void addBookmark   (ContactMethod* number );
+    void removeBookmark(ContactMethod* number );
 
     //Getters
     int acceptedPayloadTypes();

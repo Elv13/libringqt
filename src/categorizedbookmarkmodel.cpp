@@ -1,5 +1,6 @@
 /****************************************************************************
  *   Copyright (C) 2013-2016 by Savoir-faire Linux                          *
+ *   Copyright (C) 2018 by Bluesystems                                      *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -23,14 +24,9 @@
 #include <QtCore/QAbstractItemModel>
 
 //Ring
-#include "categorizedhistorymodel.h"
-#include "dbus/presencemanager.h"
 #include "phonedirectorymodel.h"
 #include "contactmethod.h"
 #include "callmodel.h"
-#include "call.h"
-#include "person.h"
-#include "uri.h"
 #include "mime.h"
 #include "collectioneditor.h"
 #include "collectioninterface.h"
@@ -45,15 +41,16 @@ public:
     CategorizedBookmarkModelPrivate(CategorizedBookmarkModel* parent);
 
     //Attributes
-    QVector<BookmarkNode*>                     m_lCategoryCounter ;
-    QHash<QString,BookmarkNode*>               m_hCategories      ;
-    QHash<const ContactMethod*, BookmarkNode*> m_hTracked         ;
-    bool                                       m_DisplayPopular {false};
+    QVector<BookmarkNode*>       m_lCategoryCounter ;
+    QHash<QString,BookmarkNode*> m_hCategories      ;
+    bool                         m_DisplayPopular {false};
+
+    QHash<const ContactMethodPrivate*, BookmarkNode*> m_hTracked;
 
     //Helpers
-    QString                 category    ( BookmarkNode* number   ) const;
-    QVector<ContactMethod*> bookmarkList(                        ) const;
-    ContactMethod*          getNumber   ( const QModelIndex& idx ) const;
+    QVector<ContactMethod*> bookmarkList(                  ) const;
+    BookmarkNode*           getCategory ( BookmarkNode* bm );
+    void                    clear       (                  );
 
 public Q_SLOTS:
     void slotIndexChanged( const QModelIndex& idx );
@@ -75,11 +72,11 @@ public:
 
     //Constructor
     explicit BookmarkNode(const QString& name);
-    BookmarkNode(ContactMethod* number);
+    BookmarkNode(const ContactMethod* number);
     ~BookmarkNode();
 
     //Attributes
-    ContactMethod*          m_pNumber    {nullptr};
+    const ContactMethod*    m_pNumber    {nullptr};
     BookmarkNode*           m_pParent    {nullptr};
     int                     m_Index      {  -1   };
     Type                    m_Type       {       };
@@ -94,18 +91,17 @@ CategorizedBookmarkModelPrivate::CategorizedBookmarkModelPrivate(CategorizedBook
 QObject(parent), q_ptr(parent)
 {}
 
-BookmarkNode::BookmarkNode(ContactMethod* number):
-m_pNumber(number), m_Type(BookmarkNode::Type::BOOKMARK)
-{
-    Q_ASSERT(number != nullptr);
-}
+BookmarkNode::BookmarkNode(const ContactMethod* number)
+    : m_pNumber(number), m_Type(BookmarkNode::Type::BOOKMARK)
+{}
 
 BookmarkNode::BookmarkNode(const QString& name)
-   : m_Type(BookmarkNode::Type::CATEGORY),m_Name(name)
+    : m_Type(BookmarkNode::Type::CATEGORY),m_Name(name)
 {}
 
 BookmarkNode::~BookmarkNode()
 {
+    qDeleteAll(m_lChildren);
     QObject::disconnect(m_ChConn);
     QObject::disconnect(m_NameConn);
 }
@@ -115,23 +111,25 @@ d_ptr(new CategorizedBookmarkModelPrivate(this))
 {
     setObjectName(QStringLiteral("CategorizedBookmarkModel"));
     d_ptr->reloadCategories();
+}
 
-    if (displayMostPopular()) {
-        connect(PhoneDirectoryModel::instance().mostPopularNumberModel(),
-            &QAbstractItemModel::rowsInserted,
-            d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
-        );
-    }
+void CategorizedBookmarkModelPrivate::clear()
+{
+    q_ptr->beginResetModel();
+
+    m_hCategories.clear();
+
+    qDeleteAll(m_lCategoryCounter);
+
+    m_hTracked.clear();
+    m_lCategoryCounter.clear();
+
+    q_ptr->endResetModel();
 }
 
 CategorizedBookmarkModel::~CategorizedBookmarkModel()
 {
-    for (auto item : qAsConst(d_ptr->m_lCategoryCounter)) {
-        for (auto child : qAsConst(item->m_lChildren))
-            delete child;
-
-        delete item;
-    }
+    d_ptr->clear();
     delete d_ptr;
 }
 
@@ -146,88 +144,49 @@ QHash<int,QByteArray> CategorizedBookmarkModel::roleNames() const
     return PhoneDirectoryModel::instance().roleNames();
 }
 
+
+BookmarkNode* CategorizedBookmarkModelPrivate::getCategory(BookmarkNode* bm)
+{
+    const QString val = bm->m_pNumber->bestName().left(1).toUpper();
+
+    if (auto category = m_hCategories.value(val))
+        return category;
+
+    auto cat = new BookmarkNode(val);
+    const int catSize = m_lCategoryCounter.size();
+    m_hCategories[val] = cat;
+
+    cat->m_Index = catSize;
+
+    q_ptr->beginInsertRows({}, catSize, catSize);
+    m_lCategoryCounter << cat;
+    q_ptr->endInsertRows();
+
+    return cat;
+}
+
 ///Reload bookmark cateogries
 void CategorizedBookmarkModelPrivate::reloadCategories()
 {
-    m_hCategories.clear();
-
-    q_ptr->beginRemoveRows({}, 0, m_lCategoryCounter.size()-1);
-
-    //TODO this is not efficient, nor necessary
-    for (auto item : qAsConst(m_lCategoryCounter)) {
-        for (auto child : qAsConst(item->m_lChildren)) {
-            delete child;
-        }
-        delete item;
-    }
-    m_hTracked.clear();
-    m_lCategoryCounter.clear();
-
-    q_ptr->endRemoveRows();
+    clear();
 
     //Load most used contacts
     if (q_ptr->displayMostPopular()) {
         auto item = new BookmarkNode(tr("Most popular"));
-        const int catSize = m_lCategoryCounter.size();
 
         m_hCategories[QStringLiteral("mp")] = item;
-        item->m_Index       = catSize;
+        item->m_Index       = 0;
         item->m_MostPopular = true;
 
-        q_ptr->beginInsertRows({}, catSize, catSize);
+        q_ptr->beginInsertRows({}, 0, 0);
         m_lCategoryCounter << item;
         q_ptr->endInsertRows();
     }
 
     const auto bookmarks = bookmarkList();
 
-    for (auto bookmark : qAsConst(bookmarks)) {
-        auto bm = new BookmarkNode(bookmark);
-        const QString val = category(bm);
-
-        auto category = m_hCategories.value(val);
-
-        if (!category) {
-            category = new BookmarkNode(val);
-            const int catSize = m_lCategoryCounter.size();
-            m_hCategories[val] = category;
-
-            category->m_Index = catSize;
-
-            q_ptr->beginInsertRows({}, catSize, catSize);
-            m_lCategoryCounter << category;
-            q_ptr->endInsertRows();
-        }
-
-        bookmark->setBookmarked(true);
-        bm->m_pParent = category;
-        bm->m_Index   = category->m_lChildren.size();
-        bm->m_ChConn  = connect(bookmark, &ContactMethod::changed, bookmark, [this,bm]() {
-            slotIndexChanged(
-                q_ptr->index(bm->m_Index, 0, q_ptr->index(bm->m_pParent->m_Index,0))
-            );
-        });
-
-        q_ptr->beginInsertRows(q_ptr->index(category->m_Index,0), category->m_lChildren.size(), category->m_lChildren.size());
-        category->m_lChildren << bm;
-        q_ptr->endInsertRows();
-
-        if (!m_hTracked.contains(bookmark)) {
-            const QString displayName = bm->m_pNumber->roleData(Qt::DisplayRole).toString();
-
-            category->m_NameConn = connect(bookmark, &ContactMethod::primaryNameChanged, bookmark, [this,displayName,bm]() {
-                //If a contact arrive later, reload
-                if (displayName != bm->m_pNumber->roleData(Qt::DisplayRole))
-                    reloadCategories();
-            });
-
-            m_hTracked[bookmark] = bm;
-        }
-    }
-
-
-    emit q_ptr->layoutAboutToBeChanged();
-    emit q_ptr->layoutChanged();
+    for (auto bookmark : qAsConst(bookmarks))
+        q_ptr->addItemCallback(bookmark);
 }
 
 QVariant CategorizedBookmarkModel::data( const QModelIndex& index, int role) const
@@ -259,14 +218,14 @@ QVariant CategorizedBookmarkModel::data( const QModelIndex& index, int role) con
             switch (role) {
                 case Qt::DisplayRole:
                     return modelItem->m_Name;
-                case static_cast<int>(Call::Role::Name):
+                case static_cast<int>(Ring::Role::Name):
                     //Make sure it is at the top of the bookmarks when sorted
                     return modelItem->m_MostPopular ? "000000" : modelItem->m_Name;
             }
             break;
         case BookmarkNode::Type::BOOKMARK:
             return modelItem->m_pNumber->roleData(role == Qt::DisplayRole ?
-                (int)Call::Role::Name : role);
+                (int)Ring::Role::Name : role);
             break;
     };
 
@@ -389,12 +348,17 @@ QMimeData* CategorizedBookmarkModel::mimeData(const QModelIndexList &indexes) co
     auto mimeData = new QMimeData();
 
     for (const auto& index : qAsConst(indexes)) {
-        if (index.isValid()) {
-            QString text = data(index, static_cast<int>(Call::Role::Number)).toString();
-            mimeData->setData(RingMimes::PLAIN_TEXT , text.toUtf8());
-            mimeData->setData(RingMimes::PHONENUMBER, text.toUtf8());
-            return mimeData;
-        }
+        if (!index.isValid())
+            continue;
+
+        const auto text = data(
+            index, static_cast<int>(ContactMethod::Role::Uri)
+        ).toString().toUtf8();
+
+        mimeData->setData(RingMimes::PLAIN_TEXT , text);
+        mimeData->setData(RingMimes::PHONENUMBER, text);
+
+        return mimeData;
     }
 
     return mimeData;
@@ -406,20 +370,6 @@ int CategorizedBookmarkModel::acceptedPayloadTypes()
     return CallModel::DropPayloadType::CALL;
 }
 
-///Get category
-QString CategorizedBookmarkModelPrivate::category(BookmarkNode* number) const
-{
-    if (number->m_Name.size())
-        return number->m_Name;
-
-    QString cat = number->m_pNumber->roleData(Qt::DisplayRole).toString();
-
-    if (cat.size())
-        cat = cat[0].toUpper();
-
-    return cat;
-}
-
 bool CategorizedBookmarkModel::displayMostPopular() const
 {
     return d_ptr->m_DisplayPopular;
@@ -428,6 +378,18 @@ bool CategorizedBookmarkModel::displayMostPopular() const
 void CategorizedBookmarkModel::setDisplayPopular(bool value)
 {
     d_ptr->m_DisplayPopular = value;
+
+    if (d_ptr->m_DisplayPopular)
+        connect(PhoneDirectoryModel::instance().mostPopularNumberModel(),
+            &QAbstractItemModel::rowsInserted,
+            d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
+        );
+    else
+        disconnect(PhoneDirectoryModel::instance().mostPopularNumberModel(),
+            &QAbstractItemModel::rowsInserted,
+            d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
+        );
+
     d_ptr->reloadCategories();
 }
 
@@ -468,24 +430,20 @@ void CategorizedBookmarkModel::removeBookmark(ContactMethod* number)
 
 void CategorizedBookmarkModel::remove(const QModelIndex& idx)
 {
-    collections().first()->editor<ContactMethod>()->remove(d_ptr->getNumber(idx));
+    if ((!idx.isValid()) || idx.model() != this)
+        return;
+
+    const auto item = static_cast<BookmarkNode*>(idx.internalPointer());
+
+    if ((!item) || item->m_Type== BookmarkNode::Type::CATEGORY)
+        return;
+
+    collections().first()->editor<ContactMethod>()->remove(item->m_pNumber);
 }
 
 void CategorizedBookmarkModel::clear()
 {
     collections().first()->clear();
-}
-
-ContactMethod* CategorizedBookmarkModelPrivate::getNumber(const QModelIndex& idx) const
-{
-    if (!idx.isValid())
-        return nullptr;
-
-    if (idx.parent().isValid() || idx.parent().row() < m_lCategoryCounter.size())
-        return nullptr;
-
-    return m_lCategoryCounter[idx.parent().row()]
-        ->m_lChildren[idx.row()]->m_pNumber;
 }
 
 ///Callback when an item change
@@ -494,21 +452,53 @@ void CategorizedBookmarkModelPrivate::slotIndexChanged(const QModelIndex& idx)
     emit q_ptr->dataChanged(idx,idx);
 }
 
-bool CategorizedBookmarkModel::addItemCallback(const ContactMethod* item)
+bool CategorizedBookmarkModel::addItemCallback(const ContactMethod* bookmark)
 {
-    Q_UNUSED(item)
-
-    if (d_ptr->m_hTracked.contains(item))
+    // Contact methods can be duplicates of each other, make sure to handle them
+    if ((!bookmark) || d_ptr->m_hTracked.contains(bookmark->d()) || bookmark->isSelf())
         return true;
 
-    d_ptr->reloadCategories(); //TODO this is far from optimal
+    auto bm = new BookmarkNode(bookmark);
+    auto category = d_ptr->getCategory(bm);
+
+    bm->m_pParent = category;
+    bm->m_Index   = category->m_lChildren.size();
+    bm->m_ChConn  = connect(bookmark, &ContactMethod::changed, bookmark, [this,bm]() {
+        d_ptr->slotIndexChanged(
+            index(bm->m_Index, 0, index(bm->m_pParent->m_Index,0))
+        );
+    });
+
+    beginInsertRows(index(category->m_Index,0), bm->m_Index, bm->m_Index);
+    category->m_lChildren << bm;
+    endInsertRows();
+
+    const QString displayName = bookmark->bestName();
+    auto dptr = bookmark->d();
+
+    //If a contact arrive later, remove and add again (as the category may have changed)
+    category->m_NameConn = connect(bookmark, &ContactMethod::primaryNameChanged, bookmark, [this,displayName,bookmark]() {
+        if (displayName != bookmark->bestName()) {
+            Q_ASSERT(d_ptr->m_hTracked.contains(bookmark->d()));
+            removeItemCallback(bookmark);
+            addItemCallback(bookmark);
+        }
+    });
+
+    //If something like the nameservice causes a rebase, update the reverse map
+    connect(bookmark, &ContactMethod::rebased, bookmark, [bm, dptr, this]() {
+        d_ptr->m_hTracked.remove(dptr);
+        d_ptr->m_hTracked[bm->m_pNumber->d()] = bm;
+    });
+
+    d_ptr->m_hTracked[dptr] = bm;
 
     return true;
 }
 
 bool CategorizedBookmarkModel::removeItemCallback(const ContactMethod* cm)
 {
-    auto item = d_ptr->m_hTracked.value(cm);
+    auto item = d_ptr->m_hTracked.value(cm->d());
 
     if (!item)
         return false;
@@ -551,7 +541,7 @@ bool CategorizedBookmarkModel::removeItemCallback(const ContactMethod* cm)
 
     delete item;
 
-    d_ptr->m_hTracked.remove(cm);
+    d_ptr->m_hTracked.remove(cm->d());
 
     return true;
 }

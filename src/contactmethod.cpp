@@ -176,6 +176,12 @@ ContactMethodPrivate::~ContactMethodPrivate()
     delete m_pUsageStats;
 }
 
+
+ContactMethodPrivate* ContactMethod::d() const
+{
+    return d_ptr;
+}
+
 ///Constructor
 ContactMethod::ContactMethod(const URI& number, NumberCategory* cat, Type st) : ItemBase(&PhoneDirectoryModel::instance()),
 d_ptr(new ContactMethodPrivate(number,cat,st,this))

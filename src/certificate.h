@@ -22,6 +22,7 @@
 
 //Qt
 class QAbstractItemModel;
+#include <QtCore/QDateTime>
 
 class CertificatePrivate;
 class Account;

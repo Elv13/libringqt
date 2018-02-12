@@ -214,6 +214,9 @@ public:
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
 
+   /// Opaque pointer to be used as a deduplicated identifier
+   ContactMethodPrivate* d() const;
+
    MediaAvailailityStatus canSendTexts(bool warn = false) const;
    MediaAvailailityStatus canCall() const;
    MediaAvailailityStatus canVideoCall() const;
