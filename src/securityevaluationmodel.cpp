@@ -736,8 +736,10 @@ void SecurityEvaluationModelPrivate::updateReal()
 
    //Notify
    for (const Severity s : EnumIterator<Severity>()) {
-      if (countCache[(int)s] != m_SeverityCount[(int)s] && m_lSignalMap[s])
+      if (countCache[(int)s] != m_SeverityCount[(int)s] && m_lSignalMap[s]) {
          (q_ptr->*m_lSignalMap[s])();
+         emit m_pAccount->changed(m_pAccount);
+      }
    }
 
    //Update the security level
@@ -745,6 +747,7 @@ void SecurityEvaluationModelPrivate::updateReal()
       m_CurrentSecurityLevel = maxLevel;
 
       emit q_ptr->securityLevelChanged();
+      emit m_pAccount->changed(m_pAccount);
    }
 
    m_isScheduled = false;

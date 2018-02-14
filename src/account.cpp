@@ -767,15 +767,16 @@ QString Account::password() const
 {
    switch (protocol()) {
       case Account::Protocol::SIP:
-         if (credentialModel()->primaryCredential(Credential::Type::SIP))
-            return credentialModel()->primaryCredential(Credential::Type::SIP)->password();
+         if (auto cred = credentialModel()->primaryCredential(Credential::Type::SIP))
+            return cred->password();
          break;
       case Account::Protocol::RING:
          return tlsPassword();
       case Account::Protocol::COUNT__:
          break;
    };
-   return QLatin1String("");
+
+   return {};
 }
 
 ///Return the account security fallback
@@ -1640,6 +1641,7 @@ void Account::setPassword(const QString& detail)
       case Account::Protocol::COUNT__:
          break;
    };
+   performAction(Account::EditAction::MODIFY);
 }
 
 ///Set the TLS (encryption) password
