@@ -47,9 +47,9 @@ public:
    QItemSelectionModel* selectionModel() const;
 
    //Getter
-   static Account* currentDefaultAccount(const ContactMethod* method = nullptr);
-   static Account* currentDefaultAccount(URI::SchemeType schemeType);
-   static bool validAccountForScheme(Account* account, URI::SchemeType scheme);
+   Q_INVOKABLE Account* currentDefaultAccount(const ContactMethod* method = nullptr);
+   Q_INVOKABLE Account* currentDefaultAccount(URI::SchemeType schemeType);
+   Q_INVOKABLE bool validAccountForScheme(Account* account, URI::SchemeType scheme);
 
    //Singleton
    static AvailableAccountModel& instance();

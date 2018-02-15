@@ -1818,7 +1818,7 @@ void CallPrivate::call()
     // Otherwise set default account
     if (!m_Account) {
         qDebug() << "Account is not set, taking the first registered.";
-        m_Account = AvailableAccountModel::currentDefaultAccount(peerCM);
+        m_Account = AvailableAccountModel::instance().currentDefaultAccount(peerCM);
         if (!m_Account) {
             qDebug() << "Trying to call "
                      << (m_pTransferNumber ? static_cast<QString>(m_pTransferNumber->uri()) : QStringLiteral("ERROR"))

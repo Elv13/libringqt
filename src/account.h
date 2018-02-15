@@ -151,6 +151,8 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(time_t         lastUsed                     READ lastUsed                      NOTIFY changed                                     )
    Q_PROPERTY(bool           canCall                      READ canCall                       NOTIFY canCallChanged                              )
    Q_PROPERTY(bool           canVideoCall                 READ canVideoCall                  NOTIFY canVideoCallChanged                         )
+   Q_PROPERTY(ContactMethod* contactMethod                READ contactMethod                 CONSTANT                                           )
+   Q_PROPERTY(Profile*       profile                      READ profile                       WRITE setProfile                     NOTIFY changed)
 
    Q_PROPERTY(bool           allowIncomingFromHistory     READ allowIncomingFromHistory      WRITE setAllowIncomingFromHistory    NOTIFY changed)
    Q_PROPERTY(bool           allowIncomingFromContact     READ allowIncomingFromContact      WRITE setAllowIncomingFromContact    NOTIFY changed)

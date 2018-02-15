@@ -1158,7 +1158,7 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
  */
 ContactMethod::MediaAvailailityStatus ContactMethod::canSendTexts(bool warn) const
 {
-    auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
+    auto selectedAccount = account() ? account() : AvailableAccountModel::instance().currentDefaultAccount(this);
 
     // Texts might still fail, but there is no reliable way to know, assume the
     // best.
@@ -1222,7 +1222,7 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
 
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
-    auto selectedAccount = account() ? account() : AvailableAccountModel::currentDefaultAccount(this);
+    auto selectedAccount = account() ? account() : AvailableAccountModel::instance().currentDefaultAccount(this);
 
     if (canSendTexts(true) != ContactMethod::MediaAvailailityStatus::AVAILABLE)
         return false;
