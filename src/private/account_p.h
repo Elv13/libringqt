@@ -133,7 +133,6 @@ public:
 
     //Cached account details (as they are called too often for the hash)
     mutable QString      m_HostName;
-    mutable QString      m_LastErrorMessage;
     mutable int          m_LastErrorCode {-1};
     mutable int          m_VoiceMailCount {0};
     mutable Certificate* m_pCaCert  {nullptr};

@@ -370,7 +370,7 @@ const QString Account::toHumanStateName() const
    if(s == DRing::Account::States::TRYING           )
       return trying                 ;
    if(s == DRing::Account::States::ERROR            )
-      return d_ptr->m_LastErrorMessage.isEmpty()?error:d_ptr->m_LastErrorMessage;
+      return lastErrorMessage().isEmpty()?error:lastErrorMessage();
    if(s == DRing::Account::States::ERROR_AUTH       )
       return authenticationFailed   ;
    if(s == DRing::Account::States::ERROR_NETWORK    )
@@ -922,7 +922,8 @@ QString Account::ringtonePath() const
 ///Return the last error message received
 QString Account::lastErrorMessage() const
 {
-   return statusModel()->lastErrorMessage();
+    const auto message = statusModel()->lastErrorMessage();
+    return message.isEmpty() ? toHumanStateName() : message;
 }
 
 ///Return the last error code (useful for debugging)
@@ -1383,6 +1384,10 @@ QVariant Account::roleData(int role) const
          return QVariant::fromValue(statusModel()->lastTimeStamp());
       case CAST(Account::Role::RegisteredName):
          return registeredName();
+      case CAST(Account::Role::LastErrorCode):
+         return lastErrorCode();
+      case CAST(Account::Role::LastErrorMessage):
+         return lastErrorMessage();
       default:
          return QVariant();
    }
