@@ -526,6 +526,7 @@ void Person::setPhoto(const QVariant& photo)
 void Person::setFormattedName(const QString& name)
 {
    d_ptr->m_FormattedName = name;
+   setObjectName(name);
    d_ptr->changed();
 }
 
@@ -968,10 +969,22 @@ QList<QByteArray> Person::getCustomFields(const QByteArray& name) const
     return d_ptr->m_lCustomAttributes.values(name);
 }
 
+/// Return if the person has a (or more) custom field called `name`
+bool Person::hasCustomField(const QByteArray& name) const
+{
+    return d_ptr->m_lCustomAttributes.contains(name);
+}
+
 ///Add custom fields for contact profiles
 void Person::addCustomField(const QByteArray& key, const QByteArray& value)
 {
    d_ptr->m_lCustomAttributes.insert(key, value);
+}
+
+/// Remove a specific instance of a custom field
+bool Person::removeCustomField(const QByteArray& key, const QByteArray& value)
+{
+    return d_ptr->m_lCustomAttributes.remove(key, value);
 }
 
 ///Remove all custom fields corresponding to the key
