@@ -56,6 +56,15 @@
 //REV:20080424T195243Z
 //END:VCARD
 
+//BUG VERSION is added multiple time when saving
+//BUG BEGIN is added multiple time when saving
+
+//TODO PARSE using a state machine for the PROPERTY:attr:attr = foo
+//TODO using a state machine for the BEGIN/END sections
+//TODO use raw C++17 Qt is not very useful here (beside qhash)
+//TODO export a template version to create objects with custom fields
+//TODO do not use Person directly, but keep separated
+
 struct VCardMapper;
 
 typedef void (VCardMapper:: *mapToProperty)(Person*, const QString&, const QByteArray&);
