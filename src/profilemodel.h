@@ -27,19 +27,21 @@ class QStringList;
 // Ring
 #include "collectionmanagerinterface.h"
 class Person;
-class ProfileContentBackend;
-class VCardMapper;
 class ProfileModelPrivate;
-class Profile;
 class Account;
 
 template<typename T> class CollectionMediator;
 
+/**
+ * This model manage the "profile" property of `::Account` objects.
+ *
+ * When the vCards are loaded, it checks the X-RINGACCOUNTID entries and
+ * assume this is the profile.
+ */
 class LIB_EXPORT ProfileModel :
-    public QAbstractItemModel, public CollectionManagerInterface<Profile> {
+    public QAbstractItemModel, public CollectionManagerInterface<Person> {
    Q_OBJECT
-   friend class ProfileContentBackend;
-   friend class ProfileEditor;
+
 public:
    explicit ProfileModel(QObject* parent = nullptr);
    virtual ~ProfileModel();
@@ -66,10 +68,9 @@ public:
    QItemSelectionModel* selectionModel() const;
    QItemSelectionModel* sortedProxySelectionModel() const;
    QAbstractItemModel*  sortedProxyModel() const;
-   Profile* getProfile(const QModelIndex& idx) const;
-   Profile* selectedProfile() const;
 
-   QList<Account*> getAccountsForProfile(const QString& id);
+   Person* getProfile(const QModelIndex& idx) const;
+   QItemSelectionModel* getAccountSelectionModel(Account* a) const;
 
 private:
    ProfileModelPrivate* d_ptr;
@@ -77,8 +78,8 @@ private:
 
    //Backend interface
    virtual void collectionAddedCallback(CollectionInterface* backend) override;
-   virtual bool addItemCallback(const Profile* item) override;
-   virtual bool removeItemCallback(const Profile* item) override;
+   virtual bool addItemCallback(const Person* item) override;
+   virtual bool removeItemCallback(const Person* item) override;
 
 public Q_SLOTS:
    bool remove(const QModelIndex& idx);

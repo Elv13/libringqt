@@ -47,11 +47,11 @@ class RingDeviceModel         ;
 class NetworkInterfaceModel   ;
 class KeyExchangeModelPrivate ;
 class PendingContactRequestModel;
-class Profile;
 class UsageStatistics;
 class ContactRequest;
 class BannedContactModel;
 class RingDevice;
+class Person;
 
 //Private
 class AccountPrivate;
@@ -136,7 +136,7 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(int            audioPortMin                 READ audioPortMin                  WRITE setAudioPortMin                NOTIFY changed)
    Q_PROPERTY(bool           upnpEnabled                  READ isUpnpEnabled                 WRITE setUpnpEnabled                 NOTIFY changed)
    Q_PROPERTY(bool           hasCustomUserAgent           READ hasCustomUserAgent            WRITE setHasCustomUserAgent          NOTIFY changed)
-   Q_PROPERTY(Profile*       profile                      READ profile                       WRITE setProfile                     NOTIFY changed)
+   Q_PROPERTY(Person*        profile                      READ profile                       WRITE setProfile                     NOTIFY changed)
    Q_PROPERTY(RingDevice*    ringDevice                   READ ringDevice                    CONSTANT                                           )
    Q_PROPERTY(QString        userAgent                    READ userAgent                     WRITE setUserAgent                   NOTIFY changed)
    Q_PROPERTY(bool           useDefaultPort               READ useDefaultPort                WRITE setUseDefaultPort              NOTIFY changed)
@@ -152,7 +152,6 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(bool           canCall                      READ canCall                       NOTIFY canCallChanged                              )
    Q_PROPERTY(bool           canVideoCall                 READ canVideoCall                  NOTIFY canVideoCallChanged                         )
    Q_PROPERTY(ContactMethod* contactMethod                READ contactMethod                 CONSTANT                                           )
-   Q_PROPERTY(Profile*       profile                      READ profile                       WRITE setProfile                     NOTIFY changed)
 
    Q_PROPERTY(bool           allowIncomingFromHistory     READ allowIncomingFromHistory      WRITE setAllowIncomingFromHistory    NOTIFY changed)
    Q_PROPERTY(bool           allowIncomingFromContact     READ allowIncomingFromContact      WRITE setAllowIncomingFromContact    NOTIFY changed)
@@ -459,7 +458,7 @@ class LIB_EXPORT Account : public ItemBase {
       RegistrationState  registrationState () const;
       Protocol           protocol          () const;
       ContactMethod*     contactMethod     () const;
-      Profile*           profile           () const;
+      Person*            profile           () const;
       RingDevice*        ringDevice        () const;
       bool    allowIncomingFromUnknown     () const;
       bool    allowIncomingFromHistory     () const;
@@ -552,7 +551,7 @@ class LIB_EXPORT Account : public ItemBase {
       void setAllowIncomingFromContact      (bool value );
       void setAllowIncomingFromUnknown      (bool value );
       void setHasActiveCallLimit            (bool value );
-      void setProfile                       (Profile* p );
+      void setProfile                       (Person* p );
       void setLastSipRegistrationStatus     (const QString& value );
       void setLastTransportCode             (int value  );
       void setLastTransportMessage          (const QString& value );

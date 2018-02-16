@@ -17,32 +17,26 @@
  ***************************************************************************/
 #pragma once
 
-#include "collectioninterface.h"
-#include "collectioneditor.h"
-
-class Profile;
-
-template<typename T> class CollectionMediator;
+#include "fallbackpersoncollection.h"
 
 class LocalProfileCollectionPrivate;
 
-class LIB_EXPORT LocalProfileCollection : public CollectionInterface
+/**
+ * Store account profiles as vCard
+ */
+class LIB_EXPORT LocalProfileCollection : public FallbackPersonCollection
 {
 public:
-    explicit LocalProfileCollection(CollectionMediator<Profile>* mediator);
+    explicit LocalProfileCollection(CollectionMediator<Person>* mediator);
     virtual ~LocalProfileCollection();
 
     virtual bool load  () override;
     virtual bool reload() override;
-    virtual bool clear () override;
 
     virtual QString    name     () const override;
     virtual QString    category () const override;
-    virtual QVariant   icon     () const override;
     virtual bool       isEnabled() const override;
     virtual QByteArray id       () const override;
-
-    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
 private:
     LocalProfileCollectionPrivate* d_ptr;

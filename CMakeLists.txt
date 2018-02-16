@@ -108,7 +108,6 @@ SET( libringqt_LIB_SRCS
   src/certificate.cpp
   src/securityflaw.cpp
   src/ringtone.cpp
-  src/profile.cpp
   src/contactrequest.cpp
   src/media/media.cpp
   src/media/audio.cpp
@@ -291,7 +290,6 @@ SET( libringqt_LIB_HDRS
   src/uri.h
   src/macro.h
   src/ringtone.h
-  src/profile.h
   src/itembase.h
   src/itembase.hpp
   src/mime.h

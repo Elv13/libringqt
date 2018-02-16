@@ -74,7 +74,6 @@
 #include "interfaces/pixmapmanipulatori.h"
 
 #include "profilemodel.h"
-#include "profile.h"
 
 //Track where state changes are performed on finished (over, error, failed) calls
 //while not really problematic, it is technically wrong
@@ -1716,7 +1715,8 @@ void CallPrivate::abort()
  */
 void CallPrivate::sendProfile()
 {
-    auto profile = ProfileModel::instance().selectedProfile();
+    auto profile = m_Account->profile();
+
     if (not profile)
         return;
 
@@ -1729,7 +1729,7 @@ void CallPrivate::sendProfile()
      * like this is not. Therefore we use the proprietary PROFILE_VCF MIME.
      */
     auto t = mediaFactory<Media::Text>(Media::Media::Direction::OUT);
-    auto vCard = profile->person()->toVCard();
+    auto vCard = profile->toVCard();
 
     qsrand(time(nullptr));
     const auto& key = QString::number(qrand());

@@ -52,7 +52,6 @@
 #include "ringdevicemodel.h"
 #include "contactrequest.h"
 #include "person.h"
-#include "profile.h"
 #include "profilemodel.h"
 #include "pendingcontactrequestmodel.h"
 #include "private/pendingcontactrequestmodel_p.h"
@@ -1448,7 +1447,7 @@ bool Account::sendContactRequest( const URI& uri )
    QByteArray payload;
 
    // Send our VCard as payload
-   payload = profile()->person()->toVCard();
+   payload = profile()->toVCard();
 
    ConfigurationManager::instance().sendTrustRequest(id(), uri, payload);
 
@@ -1471,7 +1470,7 @@ bool Account::sendContactRequest( Certificate* c )
    QByteArray payload;
 
    // Send our VCard as payload
-   payload = profile()->person()->toVCard();
+   payload = profile()->toVCard();
 
    ConfigurationManager::instance().sendTrustRequest(id(),c->remoteId(), payload);
 
@@ -2043,46 +2042,25 @@ void Account::setDTMFType(DtmfType type)
    d_ptr->setAccountProperty(DRing::Account::ConfProperties::DTMF_TYPE,(type==OverRtp)?"overrtp":"oversip");
 }
 
-void Account::setProfile(Profile* p)
+void Account::setProfile(Person* p)
 {
     if (!p) {
         qWarning() << "Cannot set profile to null as all accounts must belong to a profile";
         return;
     }
 
-    if (p == d_ptr->m_pProfile)
-        return; // nothing to do
+    Q_ASSERT(contactMethod()->isSelf());
 
-    if (d_ptr->m_pProfile)
-        d_ptr->m_pProfile->removeAccount(this);
+    contactMethod()->setPerson(p);
 
-    if (p->addAccount(this))
-        p->save();
-
-    d_ptr->m_pProfile = p;
+    p->save();
 
     emit changed(this);
 }
 
-Profile* Account::profile() const
+Person* Account::profile() const
 {
-   // Make sure all accounts belong to a profile
-   if (!d_ptr->m_pProfile) {
-      Profile* p = ProfileModel::instance().selectedProfile();
-
-      if (!p) // for now default to the first profile
-         p = ProfileModel::instance().getProfile(ProfileModel::instance().index(0,0));
-
-      if (!p)
-         return nullptr;
-
-      // Use a const cast rather than a mutable to make sure the logic is the
-      // same between "automatic" default profile" and the setProfile
-      // implementation.
-      const_cast<Account*>(this)->setProfile(p);
-   }
-
-   return d_ptr->m_pProfile;
+   return contactMethod()->contact();
 }
 
 RingDevice* Account::ringDevice() const

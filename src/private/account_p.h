@@ -35,7 +35,6 @@ class NetworkInterfaceModel;
 class BootstrapModel;
 class DaemonCertificateCollection;
 class PendingContactRequestModel;
-class Profile;
 
 typedef void (AccountPrivate::*account_function)();
 
@@ -122,7 +121,6 @@ public:
     NetworkInterfaceModel*       m_pNetworkInterfaceModel      {nullptr};
     DaemonCertificateCollection* m_pAllowedCerts               {nullptr};
     DaemonCertificateCollection* m_pBannedCerts                {nullptr};
-    Profile*                     m_pProfile                    {nullptr};
     BannedContactModel*          m_pBannedContactModel         {nullptr};
     PendingContactRequestModel*  m_pPendingContactRequestModel {nullptr};
 
