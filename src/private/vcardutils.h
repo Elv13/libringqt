@@ -62,7 +62,8 @@ public:
       constexpr static const char* TITLE               = "TITLE";
       constexpr static const char* URL                 = "URL";
 
-      constexpr static const char* X_RINGACCOUNT       = "X-RINGACCOUNTID";
+      constexpr static const char* X_RINGACCOUNT        = "X-RINGACCOUNTID";
+      constexpr static const char* X_RINGDEFAULTACCOUNT = "X-RINGDefaultACCOUNT";
    };
 
    VCardUtils();
