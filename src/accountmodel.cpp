@@ -362,8 +362,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
             connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
             connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
             connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
-            emit q_ptr->dataChanged(q_ptr->index(i,0),q_ptr->index(q_ptr->size()-1));
-            emit q_ptr->layoutChanged();
+
             emit q_ptr->accountAdded(acc);
 
             if (!acc->isIp2ip())
@@ -614,7 +613,6 @@ void AccountModel::update()
          connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
          //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
          connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
-         emit layoutChanged();
 
          emit accountAdded(a);
 
