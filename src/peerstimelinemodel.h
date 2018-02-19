@@ -86,6 +86,8 @@ public:
 
     QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel() const;
 
+    QSharedPointer<QAbstractItemModel> bookmarkedTimelineModel() const;
+
     QModelIndex contactMethodIndex(ContactMethod* cm) const;
 
 private:

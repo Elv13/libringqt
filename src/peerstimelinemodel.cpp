@@ -35,6 +35,7 @@
 #define NEVER static_cast<int>(HistoryTimeCategoryModel::HistoryConst::Never)
 class SummaryModel;
 class RecentCmModel;
+class BookmarkedCmModel;
 
 struct CMTimelineNode final
 {
@@ -61,6 +62,7 @@ public:
     QSharedPointer<QAbstractItemModel> m_SummaryPtr {nullptr};
     std::vector<CMTimelineNode*> m_lSummaryHead;
     QWeakPointer<RecentCmModel> m_MostRecentCMPtr;
+    QWeakPointer<BookmarkedCmModel> m_BookmarkedCMPtr;
 
     // Helpers
     int init();
@@ -124,6 +126,18 @@ protected:
     virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
 };
 
+/// Only filter the bookmarked entries
+class BookmarkedCmModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+public:
+    explicit BookmarkedCmModel(PeersTimelineModelPrivate* parent) :
+        QSortFilterProxyModel(), d_ptr(parent) {}
+
+    PeersTimelineModelPrivate* d_ptr;
+protected:
+    virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
+};
 
 PeersTimelineModel& PeersTimelineModel::instance()
 {
@@ -487,6 +501,26 @@ bool RecentCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) con
     );
 }
 
+/// Remove all categories without entries
+bool BookmarkedCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) const
+{
+    if (srcParent.isValid())
+        return false;
+
+    if (row > (int) d_ptr->m_lRows.size())
+        return false;
+
+    auto n = d_ptr->m_lRows[d_ptr->realIndex(row)];
+
+    //FIXME There's still duplicate if the person was never contacted but has
+    // multiple contact methods
+
+    // Also flush is "myself" entries that could have become true after they
+    // were first inserted.
+    return n->m_pCM->isBookmarked();
+}
+
+
 /// Only keep the most recently contacted contact method
 QSharedPointer<QAbstractItemModel> PeersTimelineModel::deduplicatedTimelineModel() const
 {
@@ -498,6 +532,18 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::deduplicatedTimelineModel
     }
 
     return d_ptr->m_MostRecentCMPtr;
+}
+
+QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel() const
+{
+    if (!d_ptr->m_BookmarkedCMPtr) {
+        QSharedPointer<BookmarkedCmModel> m = QSharedPointer<BookmarkedCmModel>(new BookmarkedCmModel(d_ptr));
+        m->setSourceModel(const_cast<PeersTimelineModel*>(this));
+        d_ptr->m_BookmarkedCMPtr = m;
+        return m;
+    }
+
+    return d_ptr->m_BookmarkedCMPtr;
 }
 
 QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
