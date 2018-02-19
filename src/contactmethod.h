@@ -90,7 +90,6 @@ public:
 
    enum class Role {
       Uri          = static_cast<int>(Ring::Role::UserRole) + 1000,
-      Object           ,
       CategoryIcon     ,
       CategoryName     ,
       IsReachable      ,

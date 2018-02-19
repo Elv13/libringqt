@@ -142,7 +142,7 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
         roles[ static_cast<int>(Ring::Role::IsRecording) ] = "isRecording";
         roles[ static_cast<int>(Ring::Role::HasActiveCall) ] = "hasActiveCall";
         roles[ static_cast<int>(Ring::Role::HasActiveVideo) ] = "hasActiveVideo";
-        roles[ static_cast<int>(ContactMethod::Role::Object) ] = "object";
+        roles[ static_cast<int>(Ring::Role::Object) ] = "object";
         roles[ static_cast<int>(ContactMethod::Role::Uri) ] = "uri";
         roles[ static_cast<int>(ContactMethod::Role::CategoryIcon) ] = "categoryIcon";
         roles[ static_cast<int>(ContactMethod::Role::CategoryName) ] = "categoryName";

@@ -98,6 +98,8 @@ public:
     void updateIndexes();
     inline bool addProfile(Person* person, const QString& name, CollectionInterface* col);
 
+    void _test_validate();
+
     void slotAccountAdded(Account* acc);
     void setProfile(ProfileNode* accNode, ProfileNode* proNode);
     ProfileNode* profileNodeById(const QByteArray& id) const;
@@ -166,6 +168,8 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
 
     // Update the profile as it's availability could have chnaged
     emit q_ptr->dataChanged(parentIdx, parentIdx);
+
+    _test_validate();
 }
 
 ProfileNode* ProfileModelPrivate::profileNodeById(const QByteArray& id) const
@@ -232,7 +236,7 @@ void ProfileModelPrivate::slotDataChanged(const QModelIndex& tl,const QModelInde
     }
 
     // Also update the profile as the availability could have changed
-    const auto profile = tl.parent();
+    const auto profile = mapFromSource(tl).parent();
 
     if (profile.isValid())
         emit q_ptr->dataChanged(profile, profile);
@@ -264,6 +268,9 @@ void ProfileModelPrivate::slotAccountRemoved(Account* a)
     delete n;
 
     q_ptr->endRemoveRows();
+
+
+    _test_validate();
 }
 
 ProfileNode* ProfileModelPrivate::nodeForAccount(const Account* a) const
@@ -466,7 +473,7 @@ int AvailableProfileModel::rowCount(const QModelIndex& parent) const
     if ((!!m_RcCache) ^ !!(m_RcCache = QSortFilterProxyModel::rowCount(parent)))
         emit d_ptr->q_ptr->hasAvailableProfileChanged();
 
-    return m_RcCache;
+    return parent.isValid() ? 0 : m_RcCache;
 }
 
 QItemSelectionModel* ProfileModel::selectionModel() const
@@ -706,6 +713,8 @@ bool ProfileModel::addItemCallback(const Person* pro)
         }
     });
 
+    d_ptr->_test_validate();
+
     return true;
 }
 
@@ -724,6 +733,8 @@ bool ProfileModel::removeItemCallback(const Person* item)
     d_ptr->updateIndexes();
     delete profile;
     endRemoveRows();
+
+    d_ptr->_test_validate();
 
     return true;
 }
@@ -784,6 +795,27 @@ bool ProfileModelPrivate::addProfile(Person* person, const QString& name, Collec
     col->editor<Person>()->addNew(person);
 
     return true;
+}
+
+void ProfileModelPrivate::_test_validate()
+{
+#ifdef ENABLE_TEST_ASSERTS
+    for (auto prof : qAsConst(m_lProfiles)) {
+        Q_ASSERT(prof->m_pPerson);
+
+        for (auto acc : qAsConst(prof->children)) {
+            Q_ASSERT(acc->m_AccData.m_pAccount);
+            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod());
+            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact());
+            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact()->isProfile());
+            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact() == prof->m_pPerson);
+        }
+
+        // It isn't a profile *yet* if there is no associated accounts
+        Q_ASSERT(prof->m_pPerson->isProfile() || prof->children.isEmpty());
+        Q_ASSERT(prof->m_pPerson->isTracked() || prof->children.isEmpty());
+    }
+#endif
 }
 
 /**

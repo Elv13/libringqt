@@ -97,7 +97,7 @@ BannedContactModel::data( const QModelIndex& index, int role ) const
         switch(role) {
         case Qt::DisplayRole:
             return d_ptr->m_lBanned[index.row()]->bestId();
-        case static_cast<int>(ContactMethod::Role::Object):
+        case static_cast<int>(Ring::Role::Object):
             return QVariant::fromValue(d_ptr->m_lBanned[index.row()]);
         }
     break;

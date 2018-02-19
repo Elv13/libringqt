@@ -212,14 +212,17 @@ ContactMethod::~ContactMethod()
 ///Return if this number presence is being tracked
 bool ContactMethod::isTracked() const
 {
-   //If the number doesn't support it, ignore the flag
-   return supportPresence() && d_ptr->m_Tracked;
+    if (isSelf() && account()->protocol() == Account::Protocol::RING)
+        return true;
+
+    //If the number doesn't support it, ignore the flag
+    return supportPresence() && d_ptr->m_Tracked;
 }
 
 ///Is this number present
 bool ContactMethod::isPresent() const
 {
-   return d_ptr->m_Tracked && d_ptr->m_Present;
+    return d_ptr->m_Tracked && d_ptr->m_Present;
 }
 
 ///Is this CM correspond to its account "self"
@@ -444,10 +447,13 @@ void ContactMethodPrivate::setRegisteredName(const QString& registeredName)
 ///Allow phonedirectorymodel to change presence status
 void ContactMethod::setPresent(bool present)
 {
-   if (d_ptr->m_Present != present) {
-      d_ptr->m_Present = present;
-      d_ptr->presentChanged(present);
-   }
+    if (isSelf()) {
+        //TODO
+    }
+    else if (d_ptr->m_Present != present) {
+        d_ptr->m_Present = present;
+        d_ptr->presentChanged(present);
+    }
 }
 
 void ContactMethod::setPresenceMessage(const QString& message)
@@ -732,7 +738,6 @@ QVariant ContactMethod::roleData(int role) const
          break;
       case static_cast<int>(Call::Role::ContactMethod):
       case static_cast<int>(Ring::Role::Object):
-      case static_cast<int>(Role::Object):
          cat = QVariant::fromValue(const_cast<ContactMethod*>(this));
          break;
       case static_cast<int>(Ring::Role::ObjectType):

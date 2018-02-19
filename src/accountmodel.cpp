@@ -155,7 +155,6 @@ QHash<int,QByteArray> AccountModel::roleNames() const
         roles.insert((int) Account::Role::RingtoneEnabled             , "ringtoneEnabled");
         roles.insert((int) Account::Role::dTMFType                    , "dTMFType");
         roles.insert((int) Account::Role::Id                          , "id");
-        roles.insert((int) Account::Role::Object                      , "object");
         roles.insert((int) Account::Role::TypeName                    , "typeName");
         roles.insert((int) Account::Role::PresenceStatus              , "presenceStatus");
         roles.insert((int) Account::Role::PresenceMessage             , "presenceMessage");

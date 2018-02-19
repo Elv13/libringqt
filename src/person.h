@@ -62,7 +62,6 @@ public:
       LastName          ,
       PrimaryName       ,
       NickName          ,
-      Object            ,
       Filter            , //All roles, all at once
       DropState         = static_cast<int>(Ring::Role::DropState), //State for drag and drop
    };
@@ -124,6 +123,9 @@ public:
    Q_PROPERTY( QString               department     READ department     WRITE setDepartment     )
    Q_PROPERTY( time_t                lastUsedTime   READ lastUsedTime                           )
    Q_PROPERTY( bool                  hasBeenCalled  READ hasBeenCalled                          )
+   Q_PROPERTY( bool                  isProfile      READ isProfile                              )
+   Q_PROPERTY( bool                  isPresent      READ isPresent      NOTIFY presenceChanged  )
+   Q_PROPERTY( bool                  isTracked      READ isTracked      NOTIFY trackedChanged   )
 
    Q_PROPERTY( ContactMethod*        lastUsedContactMethod READ lastUsedContactMethod)
 
@@ -170,6 +172,7 @@ public:
    QVariant photo           () const;
    QString group            () const;
    QString department       () const;
+   bool    isProfile        () const;
    UsageStatistics* usageStatistics () const;
    time_t lastUsedTime              () const;
    ContactMethod* lastUsedContactMethod() const;
@@ -218,12 +221,11 @@ public:
    bool operator==(const Person* other) const;
    bool operator==(const Person& other) const;
 
-private Q_SLOTS:
-   void slotPresenceChanged(); //TODO remove
-
 Q_SIGNALS:
    ///The presence status of a contact method changed
    void presenceChanged           ( ContactMethod* );
+   ///The presence status of a contact method changed
+   void trackedChanged            ( ContactMethod* );
    ///The person presence status changed
    void statusChanged             ( bool           );
    ///The person properties changed
@@ -246,10 +248,6 @@ Q_SIGNALS:
    void relatedContactMethodsRemoved( ContactMethod* cm );
    ///When the photo changed
    void photoChanged();
-
-protected:
-   //Presence secret methods
-   void updatePresenceInformations(const QString& uri, bool status, const QString& message);
 };
 
 class LIB_EXPORT PersonPlaceHolder : public Person {

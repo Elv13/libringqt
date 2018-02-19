@@ -80,6 +80,7 @@ public:
     //As a single D-Pointer can have multiple parent (when merged), all emit need
     //to use a proxy to make sure everybody is notified
     void presenceChanged          ( ContactMethod* );
+    void trackedChanged           ( ContactMethod* );
     void statusChanged            ( bool           );
     void changed                  (                );
     void photoChanged             (                );
@@ -90,6 +91,8 @@ public:
     void registerContactMethod(ContactMethod* m);
 
 public Q_SLOTS:
+    void slotTrackedChanged();
+    void slotPresenceChanged();
     void slotLastUsedTimeChanged(::time_t t       );
     void slotLastContactMethod  (ContactMethod* cm);
     void slotCallAdded          (Call *call       );

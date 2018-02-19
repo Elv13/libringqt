@@ -100,7 +100,7 @@ Account* AvailableAccountModel::currentDefaultAccount(const ContactMethod* metho
     // if no CM is give, we use the user chosen account, since no other parameters are available
     const auto idx = AvailableAccountModel::instance().selectionModel()->currentIndex();
     if (!method && idx.isValid()) {
-        return idx.data(static_cast<int>(Account::Role::Object)).value<Account*>();
+        return idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     }
 
     // Start by validating the scheme used by the ContactMethod
@@ -138,7 +138,7 @@ Account* AvailableAccountModel::currentDefaultAccount(URI::SchemeType schemeType
 {
     // Always try to respect user choice
     const auto idx = AvailableAccountModel::instance().selectionModel()->currentIndex();
-    auto userChosenAccount = idx.data(static_cast<int>(Account::Role::Object)).value<Account*>();
+    auto userChosenAccount = idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     if (userChosenAccount && validAccountForScheme(userChosenAccount, schemeType)) {
         return userChosenAccount;
     }
@@ -219,7 +219,7 @@ QItemSelectionModel* AvailableAccountModel::selectionModel() const
 void AvailableAccountModelPrivate::selectionChanged(const QModelIndex& idx, const QModelIndex& previous)
 {
    Q_UNUSED(previous)
-   Account* a = qvariant_cast<Account*>(idx.data(static_cast<int>(Account::Role::Object)));
+   Account* a = qvariant_cast<Account*>(idx.data(static_cast<int>(Ring::Role::Object)));
 
    setPriorAccount(a);
 }

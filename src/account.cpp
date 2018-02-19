@@ -1194,6 +1194,9 @@ QVariant Account::roleData(int role) const
       case Qt::DecorationRole:
          return GlobalInstances::accountListColorizer().icon(this);
 
+      case CAST(Ring::Role::IsPresent):
+          return contactMethod()->isPresent();
+
       //Specialized
       case CAST(Account::Role::Alias):
          return alias();
@@ -1259,8 +1262,7 @@ QVariant Account::roleData(int role) const
          return DTMFType();
       case CAST(Account::Role::Id):
          return id();
-      case CAST(Ring::Role::Object):
-      case CAST(Account::Role::Object): {
+      case CAST(Ring::Role::Object): {
          QVariant var;
          var.setValue(const_cast<Account*>(this));
          return var;

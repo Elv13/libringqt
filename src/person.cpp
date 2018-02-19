@@ -171,6 +171,12 @@ void PersonPrivate::presenceChanged( ContactMethod* n )
         emit c->presenceChanged(n);
 }
 
+void PersonPrivate::trackedChanged( ContactMethod* n )
+{
+    for (Person* c : qAsConst(m_lParents))
+        emit c->trackedChanged(n);
+}
+
 void PersonPrivate::statusChanged  ( bool s )
 {
     for (Person* c : qAsConst(m_lParents))
@@ -439,8 +445,8 @@ QSharedPointer<QAbstractItemModel> Person::timelineModel() const
         return (*cmi)->timelineModel();
 
     // Too bad, build one
-    if (auto cm = d_ptr->m_Numbers.constFirst())
-        return cm->timelineModel();
+    if (!d_ptr->m_Numbers.isEmpty())
+        return  d_ptr->m_Numbers.constFirst()->timelineModel();
 
     // This person was never contacted
     return QSharedPointer<QAbstractItemModel>();
@@ -453,8 +459,10 @@ void Person::setContactMethods(const ContactMethods& numbers)
    const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
 
    d_ptr->phoneNumbersAboutToChange();
+
    for (ContactMethod* n : d_ptr->m_Numbers) {
-      disconnect(n,SIGNAL(presentChanged(bool)),this,SLOT(slotPresenceChanged()));
+      disconnect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+      disconnect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
       disconnect(n, &ContactMethod::lastUsedChanged, d_ptr, &PersonPrivate::slotLastUsedTimeChanged);
       disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &PersonPrivate::changed);
       disconnect(n, &ContactMethod::callAdded, d_ptr, &PersonPrivate::slotCallAdded);
@@ -463,7 +471,8 @@ void Person::setContactMethods(const ContactMethods& numbers)
    d_ptr->m_Numbers = ContactMethods::fromList(dedup.toList());
 
    for (ContactMethod* n : d_ptr->m_Numbers) {
-      connect(n,SIGNAL(presentChanged(bool)),this,SLOT(slotPresenceChanged()));
+      connect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+      connect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
       connect(n, &ContactMethod::lastUsedChanged, d_ptr, &PersonPrivate::slotLastUsedTimeChanged);
       connect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &PersonPrivate::changed);
       connect(n, &ContactMethod::callAdded, d_ptr, &PersonPrivate::slotCallAdded);
@@ -572,6 +581,32 @@ bool Person::isPresent() const
         if (n->isPresent())
             return true;
     }
+    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
+        if (n->isPresent())
+            return true;
+    }
+    return false;
+}
+
+/** Return if this Person is currently used as a profile.
+ *
+ * @warning This is not cached and if the PhoneDirectoryModel fails to
+ * deduplicate things properly it can take quite long.
+ */
+bool Person::isProfile() const
+{
+    if (d_ptr->m_Numbers.isEmpty() && d_ptr->m_HiddenContactMethods.isEmpty())
+        return false;
+
+    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
+        if (n->isSelf() && n->contact()->d_ptr == d_ptr)
+            return true;
+    }
+    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->isSelf() && n->contact()->d_ptr == d_ptr)
+            return true;
+    }
+
     return false;
 }
 
@@ -579,6 +614,10 @@ bool Person::isPresent() const
 bool Person::isTracked() const
 {
     for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->isTracked())
+            return true;
+    }
+    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
         if (n->isTracked())
             return true;
     }
@@ -749,7 +788,6 @@ QVariant Person::roleData(int role) const
       case static_cast<int>(Person::Role::IndexedLastUsed):
          return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(lastUsedTime())));
       case static_cast<int>(Ring::Role::Object):
-      case static_cast<int>(Person::Role::Object):
          return QVariant::fromValue(const_cast<Person*>(this));
       case static_cast<int>(Ring::Role::ObjectType):
          return QVariant::fromValue(Ring::ObjectType::Person);
@@ -794,9 +832,17 @@ QMimeData* Person::mimePayload() const
 }
 
 ///Callback when one of the phone number presence change
-void Person::slotPresenceChanged()
+void PersonPrivate::slotPresenceChanged()
 {
-   d_ptr->changed();
+    presenceChanged(qobject_cast<ContactMethod*>(sender()));
+    changed();
+}
+
+///Callback when one of the phone number presence change
+void PersonPrivate::slotTrackedChanged()
+{
+    trackedChanged(qobject_cast<ContactMethod*>(sender()));
+    changed();
 }
 
 ///Create a placeholder contact, it will eventually be replaced when the real one is loaded

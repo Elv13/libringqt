@@ -45,6 +45,7 @@ class LIB_EXPORT ProfileModel : public QAbstractItemModel, public CollectionMana
 public:
 
     Q_PROPERTY(QAbstractItemModel* availableProfileModel READ availableProfileModel CONSTANT)
+    Q_PROPERTY(bool hasAvailableProfiles READ hasAvailableProfiles NOTIFY hasAvailableProfileChanged)
 
     explicit ProfileModel(QObject* parent = nullptr);
     virtual ~ProfileModel();
@@ -70,6 +71,7 @@ public:
     QItemSelectionModel* sortedProxySelectionModel() const;
     QAbstractItemModel*  sortedProxyModel() const;
     QAbstractItemModel*  availableProfileModel() const;
+    bool hasAvailableProfiles() const;
 
     Person* getProfile(const QModelIndex& idx) const;
     Account* getAccount(const QModelIndex& idx) const;
@@ -81,8 +83,6 @@ private:
     ProfileModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(ProfileModel)
 
-    //Backend interface
-    //    virtual void collectionAddedCallback(CollectionInterface* backend) override;
     virtual bool addItemCallback(const Person* item) override;
     virtual bool removeItemCallback(const Person* item) override;
 
@@ -90,4 +90,7 @@ public Q_SLOTS:
     bool remove(const QModelIndex& idx);
     bool add(Person* person = nullptr);
     bool add(const QString& name);
+
+Q_SIGNALS:
+    void hasAvailableProfileChanged();
 };

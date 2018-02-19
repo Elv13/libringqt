@@ -252,7 +252,6 @@ class LIB_EXPORT Account : public ItemBase {
          RingtoneEnabled             ,
          dTMFType                    ,
          Id                          ,
-         Object                      ,
          TypeName                    ,
          PresenceStatus              ,
          PresenceMessage             ,

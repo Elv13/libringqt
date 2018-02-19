@@ -267,7 +267,7 @@ CategorizedContactModel::CategorizedContactModel(int role) : QAbstractItemModel(
    connect(&PersonModel::instance(),&PersonModel::personRemoved,d_ptr.data(),&CategorizedContactModelPrivate::slotContactRemoved);
 
    for(int i=0; i < PersonModel::instance().rowCount();i++) {
-      Person* p = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Person::Role::Object));
+      Person* p = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Ring::Role::Object));
       d_ptr->slotContactAdded(p);
    }
 
@@ -330,7 +330,7 @@ void CategorizedContactModelPrivate::reloadCategories()
    q_ptr->endResetModel();
 
    for (int i=0; i < PersonModel::instance().rowCount();i++) {
-      Person* cont = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Person::Role::Object));
+      Person* cont = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Ring::Role::Object));
       slotContactAdded(cont);
    }
 }
