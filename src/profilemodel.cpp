@@ -41,6 +41,19 @@ struct AccountStruct final {
     QItemSelectionModel* m_pSelectionModel {nullptr};
 };
 
+class AvailableProfileModel : public QSortFilterProxyModel
+{
+public:
+    explicit AvailableProfileModel(ProfileModelPrivate* d);
+protected:
+    virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
+    virtual int rowCount(const QModelIndex& parent) const override;
+
+private:
+    mutable int m_RcCache {0};
+    ProfileModelPrivate* d_ptr;
+};
+
 struct ProfileNode final
 {
     explicit ProfileNode(): m_pPerson(nullptr) {}
@@ -95,13 +108,19 @@ public:
     //Constants
     constexpr static const int c_OrderRole = 9999;
 
+    ProfileModel* q_ptr;
+
 public Q_SLOTS:
     void slotDataChanged(const QModelIndex& tl,const QModelIndex& br);
     void slotAccountRemoved(Account* a);
-
-private:
-    ProfileModel* q_ptr;
 };
+
+AvailableProfileModel::AvailableProfileModel(ProfileModelPrivate* d) :
+  QSortFilterProxyModel(d->q_ptr), d_ptr(d)
+{
+    setObjectName("AvailableProfileModel");
+    setSourceModel(d->q_ptr);
+}
 
 void ProfileModelPrivate::slotAccountAdded(Account* acc)
 {
@@ -139,9 +158,14 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     account_pro->m_AccData.m_pAccount = acc;
     account_pro->m_Index = currentNode->children.size();
 
-    q_ptr->beginInsertRows(ProfileModel::instance().index(currentNode->m_Index,0), currentNode->children.size(), currentNode->children.size());
+    const auto parentIdx = ProfileModel::instance().index(currentNode->m_Index,0);
+
+    q_ptr->beginInsertRows(parentIdx, currentNode->children.size(), currentNode->children.size());
     currentNode->children << account_pro;
     q_ptr->endInsertRows();
+
+    // Update the profile as it's availability could have chnaged
+    emit q_ptr->dataChanged(parentIdx, parentIdx);
 }
 
 ProfileNode* ProfileModelPrivate::profileNodeById(const QByteArray& id) const
@@ -206,6 +230,12 @@ void ProfileModelPrivate::slotDataChanged(const QModelIndex& tl,const QModelInde
         const auto idx = mapFromSource(tl);
         emit q_ptr->dataChanged(idx, idx);
     }
+
+    // Also update the profile as the availability could have changed
+    const auto profile = tl.parent();
+
+    if (profile.isValid())
+        emit q_ptr->dataChanged(profile, profile);
 }
 
 void ProfileModelPrivate::slotAccountRemoved(Account* a)
@@ -406,6 +436,39 @@ int ProfileModel::acceptedPayloadTypes() const
     return CallModel::DropPayloadType::ACCOUNT;
 }
 
+/// Return a list of profile with available accounts
+bool AvailableProfileModel::filterAcceptsRow(int row, const QModelIndex& srcParent ) const
+{
+    if (srcParent.isValid())
+        return false;
+
+    if (row < 0 || row >= d_ptr->m_lProfiles.size())
+        return false;
+
+    const auto accs = d_ptr->m_lProfiles[row]->children;
+
+    const auto iter = std::find_if(accs.constBegin(), accs.constEnd(), [](ProfileNode* node) {
+        return node->m_AccData.m_pAccount->contactMethod()->isAvailable();
+    });
+
+    const bool found = iter != accs.constEnd();
+
+    // Emit the signal when the property may have changed
+    if ((!!m_RcCache) ^ found)
+        emit d_ptr->q_ptr->hasAvailableProfileChanged();
+
+    return found;
+}
+
+/// Catch the availability changes
+int AvailableProfileModel::rowCount(const QModelIndex& parent) const
+{
+    if ((!!m_RcCache) ^ !!(m_RcCache = QSortFilterProxyModel::rowCount(parent)))
+        emit d_ptr->q_ptr->hasAvailableProfileChanged();
+
+    return m_RcCache;
+}
+
 QItemSelectionModel* ProfileModel::selectionModel() const
 {
     if (!d_ptr->m_pSelectionModel) {
@@ -450,14 +513,15 @@ QAbstractItemModel* ProfileModel::sortedProxyModel() const
 
 QAbstractItemModel* ProfileModel::availableProfileModel() const
 {
-    if (!d_ptr->m_pAvailableProfileModel) {
-        d_ptr->m_pAvailableProfileModel = new QSortFilterProxyModel(&ProfileModel::instance());
-        d_ptr->m_pAvailableProfileModel->setSourceModel(const_cast<ProfileModel*>(this));
-        d_ptr->m_pAvailableProfileModel->setSortRole(ProfileModelPrivate::c_OrderRole);
-        d_ptr->m_pAvailableProfileModel->sort(0);
-    }
+    if (!d_ptr->m_pAvailableProfileModel)
+        d_ptr->m_pAvailableProfileModel = new AvailableProfileModel(d_ptr);
 
     return d_ptr->m_pAvailableProfileModel;
+}
+
+bool ProfileModel::hasAvailableProfiles() const
+{
+    return availableProfileModel()->rowCount();
 }
 
 void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)

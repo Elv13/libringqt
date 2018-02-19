@@ -141,6 +141,7 @@ public:
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts      NOTIFY canSendTextsChanged    )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall           NOTIFY changed                )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canVideoCall READ canVideoCall      NOTIFY changed                )
+   Q_PROPERTY(bool                                  isAvailable  READ isAvailable       NOTIFY changed                )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
@@ -220,6 +221,7 @@ public:
    MediaAvailailityStatus canSendTexts(bool warn = false) const;
    MediaAvailailityStatus canCall() const;
    MediaAvailailityStatus canVideoCall() const;
+   bool isAvailable() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;

@@ -1220,6 +1220,15 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
     return ContactMethod::MediaAvailailityStatus::AVAILABLE; //TODO find other accounts
 }
 
+/// Detect if the CM is generally available to do useful things.
+bool ContactMethod::isAvailable() const
+{
+    // warning: This is also used for the account own CM, it cannot choose other
+    // accounts.
+    return canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE ||
+        canSendTexts() ==ContactMethod::MediaAvailailityStatus::AVAILABLE;
+}
+
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::instance().currentDefaultAccount(this);
