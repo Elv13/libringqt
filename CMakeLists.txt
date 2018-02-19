@@ -109,6 +109,7 @@ SET( libringqt_LIB_SRCS
   src/securityflaw.cpp
   src/ringtone.cpp
   src/contactrequest.cpp
+  src/presencestatus.cpp
   src/media/media.cpp
   src/media/audio.cpp
   src/media/video.cpp
@@ -256,6 +257,7 @@ SET( libringqt_LIB_HDRS
   src/categorizedcontactmodel.h
   src/useractionmodel.h
   src/presencestatusmodel.h
+  src/presencestatus.h
   src/contactmethod.h
   src/phonedirectorymodel.h
   src/historytimecategorymodel.h

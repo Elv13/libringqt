@@ -23,6 +23,7 @@
 #include <QtCore/QString>
 #include <QtCore/QAbstractTableModel>
 
+#include <presencestatus.h>
 class CollectionInterface;
 class PresenceStatusModelPrivate;
 
@@ -33,75 +34,67 @@ class PresenceStatusModelPrivate;
  * string. This is better from an user point of view, as it take less room
  * in the GUI. The message is either selected from a list or set by hand.
  */
-class LIB_EXPORT PresenceStatusModel : public QAbstractTableModel {
-   #pragma GCC diagnostic push
-   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   Q_OBJECT
-   #pragma GCC diagnostic pop
+class LIB_EXPORT PresenceStatusModel : public QAbstractTableModel, public CollectionManagerInterface<PresenceStatus>
+{
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+    Q_OBJECT
+    #pragma GCC diagnostic pop
 public:
 
-   //Internal representation
-   struct StatusData {
-      QString  name         ;
-      QString  message      ;
-      QVariant color        ;
-      bool     status       ;
-      bool     defaultStatus;
-   };
+    //Table columns
+    enum class Columns {
+        Name    = 0,
+        Message = 1,
+        Color   = 2,
+        Status  = 3,
+        Default = 4,
+    };
 
-   //Table columns
-   enum class Columns {
-      Name    = 0,
-      Message = 1,
-      Color   = 2,
-      Status  = 3,
-      Default = 4,
-   };
+    //Properties
+    Q_PROPERTY( QString     customMessage     READ customMessage    WRITE  setCustomMessage              NOTIFY customMessageChanged(QString)     )
+    Q_PROPERTY( bool        useCustomStatus   READ useCustomStatus  WRITE  setUseCustomStatus            NOTIFY useCustomStatusChanged(bool)      )
+    Q_PROPERTY( bool        customStatus      READ customStatus     WRITE  setCustomStatus               NOTIFY customStatusChanged(bool)         )
+    Q_PROPERTY( bool        currentStatus     READ currentStatus    NOTIFY currentStatusChanged(bool)                                             )
+    Q_PROPERTY( QString     currentMessage    READ currentMessage   NOTIFY currentMessageChanged(QString)                                         )
+    Q_PROPERTY( QModelIndex defaultStatus     READ defaultStatus    WRITE  setDefaultStatus              NOTIFY defaultStatusChanged(QModelIndex) )
+    Q_PROPERTY( QString     currentName       READ currentName      NOTIFY currentNameChanged(QString)                                            )
 
-   //Methods
-   void addStatus(StatusData* status);
+    //Constructor
+    explicit PresenceStatusModel(QObject* parent = nullptr);
+    virtual ~PresenceStatusModel();
 
-   //Properties
-   Q_PROPERTY( QString     customMessage     READ customMessage    WRITE  setCustomMessage              NOTIFY customMessageChanged(QString)     )
-   Q_PROPERTY( bool        useCustomStatus   READ useCustomStatus  WRITE  setUseCustomStatus            NOTIFY useCustomStatusChanged(bool)      )
-   Q_PROPERTY( bool        customStatus      READ customStatus     WRITE  setCustomStatus               NOTIFY customStatusChanged(bool)         )
-   Q_PROPERTY( bool        currentStatus     READ currentStatus    NOTIFY currentStatusChanged(bool)                                             )
-   Q_PROPERTY( QString     currentMessage    READ currentMessage   NOTIFY currentMessageChanged(QString)                                         )
-   Q_PROPERTY( QModelIndex defaultStatus     READ defaultStatus    WRITE  setDefaultStatus              NOTIFY defaultStatusChanged(QModelIndex) )
-   Q_PROPERTY( QString     currentName       READ currentName      NOTIFY currentNameChanged(QString)                                            )
+    //Abstract model members
+    virtual QVariant      data       (const QModelIndex& index, int role = Qt::DisplayRole                 ) const override;
+    virtual int           rowCount   (const QModelIndex& parent = QModelIndex()                            ) const override;
+    virtual int           columnCount(const QModelIndex& parent = QModelIndex()                            ) const override;
+    virtual Qt::ItemFlags flags      (const QModelIndex& index                                             ) const override;
+    virtual bool          setData    (const QModelIndex& index, const QVariant &value, int role            )       override;
+    virtual QVariant      headerData (int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
+    virtual QHash<int,QByteArray> roleNames() const override;
 
-   //Constructor
-   explicit PresenceStatusModel(QObject* parent = nullptr);
-   virtual ~PresenceStatusModel();
+    //Singleton
+    static PresenceStatusModel& instance();
 
-   //Abstract model members
-   virtual QVariant      data       (const QModelIndex& index, int role = Qt::DisplayRole                 ) const override;
-   virtual int           rowCount   (const QModelIndex& parent = QModelIndex()                            ) const override;
-   virtual int           columnCount(const QModelIndex& parent = QModelIndex()                            ) const override;
-   virtual Qt::ItemFlags flags      (const QModelIndex& index                                             ) const override;
-   virtual bool          setData    (const QModelIndex& index, const QVariant &value, int role            )       override;
-   virtual QVariant      headerData (int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
-   virtual QHash<int,QByteArray> roleNames() const override;
+    //Setters
+    void setDefaultStatus( const QModelIndex& idx );
+    void setAutoTracked(CollectionInterface* backend, bool tracked) const;
 
-   //Singleton
-   static PresenceStatusModel& instance();
-
-   //Setters
-   void setDefaultStatus( const QModelIndex& idx );
-   void setAutoTracked(CollectionInterface* backend, bool tracked) const;
-
-   //Getters
-   QString     customMessage   () const;
-   bool        useCustomStatus () const;
-   bool        customStatus    () const;
-   bool        currentStatus   () const;
-   QString     currentMessage  () const;
-   QString     currentName     () const;
-   QModelIndex defaultStatus   () const;
-   bool        isAutoTracked(CollectionInterface* backend) const;
+    //Getters
+    QString     customMessage   () const;
+    bool        useCustomStatus () const;
+    bool        customStatus    () const;
+    bool        currentStatus   () const;
+    QString     currentMessage  () const;
+    QString     currentName     () const;
+    QModelIndex defaultStatus   () const;
+    bool        isAutoTracked(CollectionInterface* backend) const;
 
 private:
-   QScopedPointer<PresenceStatusModelPrivate> d_ptr;
+    QScopedPointer<PresenceStatusModelPrivate> d_ptr;
+
+    virtual bool addItemCallback(const PresenceStatus* item) override;
+    virtual bool removeItemCallback(const PresenceStatus* item) override;
 
 public Q_SLOTS:
    void addRow            (                          );
