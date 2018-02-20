@@ -118,7 +118,7 @@ public:
    Q_PROPERTY( QString               organization   READ organization   WRITE setOrganization   )
    Q_PROPERTY( QByteArray            uid            READ uid            WRITE setUid            )
    Q_PROPERTY( QString               preferredEmail READ preferredEmail WRITE setPreferredEmail )
-   Q_PROPERTY( QVariant              photo          READ photo          WRITE setPhoto          )
+   Q_PROPERTY( QVariant              photo          READ photo          WRITE setPhoto          NOTIFY photoChanged)
    Q_PROPERTY( QString               group          READ group          WRITE setGroup          )
    Q_PROPERTY( QString               department     READ department     WRITE setDepartment     )
    Q_PROPERTY( time_t                lastUsedTime   READ lastUsedTime                           )

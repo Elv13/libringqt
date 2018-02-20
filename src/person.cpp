@@ -154,7 +154,7 @@ QString PersonPrivate::filterString()
 void PersonPrivate::photoChanged()
 {
     for (Person* c : qAsConst(m_lParents))
-        emit c->changed();
+        emit c->photoChanged();
 }
 
 void PersonPrivate::changed()
