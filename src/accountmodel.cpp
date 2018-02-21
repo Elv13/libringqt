@@ -343,7 +343,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
    }
 
    if (a)
-      a->setLastSipRegistrationStatus(status);
+      a->d_ptr->setLastSipRegistrationStatus(status);
 
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
 
@@ -395,7 +395,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
    }
    else {
       const bool isRegistered = a->registrationState() == Account::RegistrationState::READY;
-      a->updateState();
+      a->d_ptr->updateState();
       const QModelIndex idx = a->index();
       emit q_ptr->dataChanged(idx, idx);
       const bool regStateChanged = isRegistered != (a->registrationState() == Account::RegistrationState::READY);
@@ -469,11 +469,14 @@ void AccountModelPrivate::slotVolatileAccountDetailsChange(const QString& accoun
 
       a->statusModel()->addTransportEvent(transportDesc,transportCode);
 
-      a->setLastTransportCode(transportCode);
-      a->setLastTransportMessage(transportDesc);
+      a->d_ptr->setLastTransportCode(transportCode);
+      a->d_ptr->setLastTransportMessage(transportDesc);
 
-      const Account::RegistrationState state = Account::fromDaemonName(a->accountDetail(DRing::Account::ConfProperties::Registration::STATUS));
-      a->setRegistrationState(state);
+      const Account::RegistrationState state = Account::fromDaemonName(
+          a->d_ptr->accountDetail(DRing::Account::ConfProperties::Registration::STATUS)
+      );
+
+      a->d_ptr->setRegistrationState(state);
    }
 }
 

@@ -84,6 +84,16 @@ class LIB_EXPORT Account : public ItemBase {
 
    friend class AccountPlaceHolder;
    friend class AccountModel;
+   friend class AccountModelPrivate;
+   friend class BootstrapModelPrivate;
+   friend class CredentialModelPrivate;
+   friend class TlsMethodModel;
+   friend class TlsMethodModelPrivate;
+   friend class KeyExchangeModel;
+   friend class KeyExchangeModelPrivate;
+   friend class NetworkInterfaceModelPrivate;
+   friend class CipherModel;
+   friend class CipherModelPrivate;
 
    using ContactMethods = QVector<ContactMethod*>;
 
@@ -143,7 +153,7 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(QString        displayName                  READ displayName                   WRITE setDisplayName                 NOTIFY changed)
    Q_PROPERTY(QString        archivePassword              READ archivePassword               WRITE setArchivePassword             NOTIFY changed)
    Q_PROPERTY(QString        archivePin                   READ archivePin                    WRITE setArchivePin                  NOTIFY changed)
-   Q_PROPERTY(RegistrationState registrationState         READ registrationState             WRITE setRegistrationState           NOTIFY changed)
+   Q_PROPERTY(RegistrationState registrationState         READ registrationState                                                  NOTIFY changed)
    Q_PROPERTY(bool           usedForOutgogingCall         READ isUsedForOutgogingCall        NOTIFY changed                                     )
    Q_PROPERTY(uint           totalCallCount               READ totalCallCount                NOTIFY changed                                     )
    Q_PROPERTY(uint           weekCallCount                READ weekCallCount                 NOTIFY changed                                     )
@@ -488,10 +498,8 @@ class LIB_EXPORT Account : public ItemBase {
       Q_INVOKABLE bool sendContactRequest(Certificate* c);
       Q_INVOKABLE bool sendContactRequest(const ContactMethod* c);
       Q_INVOKABLE bool sendContactRequest(const URI& uri);
-      Q_INVOKABLE QString accountDetail(const QString& param) const;
 
       //Setters
-      void setId                            (const QByteArray& id   );
       void setAlias                         (const QString& detail  );
       void setProtocol                      (Account::Protocol proto);
       void setHostname                      (const QString& detail  );
@@ -551,16 +559,7 @@ class LIB_EXPORT Account : public ItemBase {
       void setAllowIncomingFromUnknown      (bool value );
       void setHasActiveCallLimit            (bool value );
       void setProfile                       (Person* p );
-      void setLastSipRegistrationStatus     (const QString& value );
-      void setLastTransportCode             (int value  );
-      void setLastTransportMessage          (const QString& value );
-      void setRegistrationState             (const RegistrationState& value );
       void setRoleData(int role, const QVariant& value);
-
-      bool setAccountProperty(const QString& param, const QString& val);
-
-      //Mutator
-      bool updateState();
 
       //Operators
       bool operator==(const Account&)const;
@@ -568,7 +567,6 @@ class LIB_EXPORT Account : public ItemBase {
 
       //Helper
       static Account::RegistrationState fromDaemonName(const QString& st);
-      void regenSecurityValidation();
 
    public Q_SLOTS:
       void setEnabled(bool checked);

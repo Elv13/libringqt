@@ -79,8 +79,13 @@ public:
     static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
 
     //Setters
-    void setAccountProperties(const QHash<QString,QString>& m          );
-    bool setAccountProperty  (const QString& param, const QString& val );
+    void setAccountProperties(const QHash<QString,QString>& m);
+    bool setAccountProperty(const QString& param, const QString& val);
+    void setRegistrationState(Account::RegistrationState value);
+    void setId(const QByteArray& id);
+    void setLastSipRegistrationStatus(const QString& value);
+    void setLastTransportCode(int value);
+    void setLastTransportMessage(const QString& value);
 
     //Getters
     QString accountDetail(const QString& param) const;
@@ -90,8 +95,8 @@ public:
 
     //Helpers
     inline void changeState(Account::EditState state);
-    bool updateState();
     void regenSecurityValidation();
+    bool updateState();
 
     //State actions
     void performAction(Account::EditAction action);

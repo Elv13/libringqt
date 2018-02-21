@@ -27,6 +27,7 @@
 //Ring
 #include "dbus/configurationmanager.h"
 #include "account.h"
+#include "account_p.h"
 
 class NetworkInterfaceModelPrivate final : public QObject {
    Q_OBJECT
@@ -78,13 +79,13 @@ QHash<int,QByteArray> NetworkInterfaceModel::roleNames() const
 ///Return the account local interface
 QString NetworkInterfaceModelPrivate::localInterface() const
 {
-   return m_pAccount->accountDetail(DRing::Account::ConfProperties::LOCAL_INTERFACE);
+   return m_pAccount->d_ptr->accountDetail(DRing::Account::ConfProperties::LOCAL_INTERFACE);
 }
 
 ///Set the local interface
 void NetworkInterfaceModelPrivate::setLocalInterface(const QString& detail)
 {
-   m_pAccount->setAccountProperty(DRing::Account::ConfProperties::LOCAL_INTERFACE, detail);
+   m_pAccount->d_ptr->setAccountProperty(DRing::Account::ConfProperties::LOCAL_INTERFACE, detail);
 }
 
 //Model functions

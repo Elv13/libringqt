@@ -26,6 +26,7 @@
 
 //Ring
 #include "account.h"
+#include "account_p.h"
 #include "private/matrixutils.h"
 
 class KeyExchangeModelPrivate final : public QObject
@@ -195,14 +196,14 @@ void KeyExchangeModelPrivate::slotCurrentIndexChanged(const QModelIndex& idx, co
 ///Return the key exchange mechanism
 KeyExchangeModel::Type KeyExchangeModelPrivate::keyExchange() const
 {
-   return KeyExchangeModelPrivate::fromDaemonName(m_pAccount->accountDetail(DRing::Account::ConfProperties::SRTP::KEY_EXCHANGE));
+   return KeyExchangeModelPrivate::fromDaemonName(m_pAccount->d_ptr->accountDetail(DRing::Account::ConfProperties::SRTP::KEY_EXCHANGE));
 }
 
 ///Set the Tls method
 void KeyExchangeModelPrivate::setKeyExchange(KeyExchangeModel::Type detail)
 {
-   m_pAccount->setAccountProperty(DRing::Account::ConfProperties::SRTP::KEY_EXCHANGE ,KeyExchangeModelPrivate::toDaemonName(detail));
-   m_pAccount->regenSecurityValidation();
+   m_pAccount->d_ptr->setAccountProperty(DRing::Account::ConfProperties::SRTP::KEY_EXCHANGE ,KeyExchangeModelPrivate::toDaemonName(detail));
+   m_pAccount->d_ptr->regenSecurityValidation();
 }
 
 #include <keyexchangemodel.moc>

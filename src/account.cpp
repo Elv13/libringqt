@@ -418,12 +418,6 @@ QString AccountPrivate::accountDetail(const QString& param) const
    }
 } //accountDetail
 
-///Get an account detail
-QString Account::accountDetail(const QString& param) const
-{
-    return d_ptr->accountDetail(param);
-}
-
 ///Get the alias
 const QString Account::alias() const
 {
@@ -1526,22 +1520,25 @@ bool AccountPrivate::setAccountProperty(const QString& param, const QString& val
     || m_CurrentState == Account::EditState::NEW;
 }
 
-bool Account::setAccountProperty(const QString& param, const QString& val)
-{
-    return d_ptr->setAccountProperty(param, val);
-}
-
 ///Set the account id
-void Account::setId(const QByteArray& id)
+void AccountPrivate::setId(const QByteArray& id)
 {
-   if (! isNew())
-      qDebug() << "Error : setting AccountId of an existing account" << d_ptr->m_AccountId;
-   d_ptr->m_AccountId = id;
+   if (!q_ptr->isNew()) {
+      qDebug() << "Error : setting AccountId of an existing account" << m_AccountId;
+      return;
+   }
+
+   m_AccountId = id;
 }
 
 ///Set the account type, SIP or RING
 void Account::setProtocol(Account::Protocol proto)
 {
+   if (!isNew()) {
+      qWarning() << "The protocol cannot be changed once saved";
+      return;
+   }
+
    //TODO prevent this if the protocol has been saved
    switch (proto) {
       case Account::Protocol::SIP:
@@ -2070,24 +2067,24 @@ RingDevice* Account::ringDevice() const
     return ringDeviceModel()->ownDevice();
 }
 
-void Account::setLastSipRegistrationStatus(const QString& value )
+void AccountPrivate::setLastSipRegistrationStatus(const QString& value )
 {
-    d_ptr->m_LastSipRegistrationStatus = value;
+    m_LastSipRegistrationStatus = value;
 }
 
-void Account::setLastTransportCode(int value)
+void AccountPrivate::setLastTransportCode(int value)
 {
-    d_ptr->m_LastTransportCode = value;
+    m_LastTransportCode = value;
 }
 
-void Account::setLastTransportMessage(const QString& value)
+void AccountPrivate::setLastTransportMessage(const QString& value)
 {
-    d_ptr->m_LastTransportMessage = value;
+    m_LastTransportMessage = value;
 }
 
-void Account::setRegistrationState(const RegistrationState& value)
+void AccountPrivate::setRegistrationState(Account::RegistrationState value)
 {
-    d_ptr->m_RegistrationState = value;
+    m_RegistrationState = value;
 }
 
 #define CAST(item) static_cast<int>(item)
@@ -2187,9 +2184,6 @@ void Account::setRoleData(int role, const QVariant& value)
          break;
       case CAST(Account::Role::dTMFType):
          setDTMFType((DtmfType)value.toInt());
-         break;
-      case CAST(Account::Role::Id):
-         setId(value.toByteArray());
          break;
       case CAST(Account::Role::UserAgent):
          setUserAgent(value.toString());
@@ -2481,11 +2475,6 @@ bool AccountPrivate::updateState()
    return true;
 }
 
-bool Account::updateState()
-{
-    return d_ptr->updateState();
-}
-
 ///Save the current account to the daemon
 void AccountPrivate::save()
 {
@@ -2514,7 +2503,7 @@ void AccountPrivate::save()
 
       q_ptr->codecModel() << CodecModel::EditAction::RELOAD;
 
-      q_ptr->setId(currentId.toLatin1());
+      setId(currentId.toLatin1());
    } //New account
    else { //Existing account
       MapStringString tmp;
@@ -2790,11 +2779,6 @@ bool AccountPrivate::merge(Account* account)
  *                                 Helper                                    *
  *                                                                           *
  ****************************************************************************/
-
-void Account::regenSecurityValidation()
-{
-    d_ptr->regenSecurityValidation();
-}
 
 /**
  * The client have a different point of view when it come to the account
