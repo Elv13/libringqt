@@ -45,91 +45,10 @@
 #include "media/textrecording.h"
 #include "private/personstatistics.hpp"
 #include "mime.h"
+#include "address.h"
 
 // Std
 #include <random>
-
-class AddressPrivate final
-{
-public:
-   ~AddressPrivate() {}
-
-   QString addressLine;
-   QString city;
-   QString zipCode;
-   QString state;
-   QString country;
-   QString type;
-};
-
-Person::Address::Address() : d_ptr(new AddressPrivate())
-{
-
-}
-
-Person::Address::~Address()
-{
-}
-
-QString Person::Address::addressLine() const
-{
-   return d_ptr->addressLine;
-}
-
-QString Person::Address::city() const
-{
-   return d_ptr->city;
-}
-
-QString Person::Address::zipCode() const
-{
-   return d_ptr->zipCode;
-}
-
-QString Person::Address::state() const
-{
-   return d_ptr->state;
-}
-
-QString Person::Address::country() const
-{
-   return d_ptr->country;
-}
-
-QString Person::Address::type() const
-{
-   return d_ptr->type;
-}
-
-void Person::Address::setAddressLine(const QString& value)
-{
-   d_ptr->addressLine = value;
-}
-
-void Person::Address::setCity(const QString& value)
-{
-   d_ptr->city = value;
-}
-
-void Person::Address::setZipCode(const QString& value)
-{
-   d_ptr->zipCode = value;
-}
-
-void Person::Address::setState(const QString& value)
-{
-   d_ptr->state = value;
-}
-
-void Person::Address::setCountry(const QString& value)
-{
-   d_ptr->country = value;
-}
-
-void Person::Address::setType(const QString& value)
-{
-   d_ptr->type = value;
-}
 
 QString PersonPrivate::filterString()
 {
@@ -896,7 +815,7 @@ bool Person::operator==(const Person& other) const
 }
 
 ///Add a new address to this contact
-void Person::addAddress(Person::Address* addr)
+void Person::addAddress(Address* addr)
 {
    emit addressesAboutToChange();
    d_ptr->m_lAddresses << addr;
@@ -998,7 +917,7 @@ ContactMethod* Person::replacePhoneNumber(ContactMethod* old, ContactMethod* new
 }
 
 /// Returns the addresses associated with the person.
-QList<Person::Address*> Person::addresses() const
+QList<Address*> Person::addresses() const
 {
     return d_ptr->m_lAddresses;
 }

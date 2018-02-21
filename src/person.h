@@ -33,6 +33,7 @@ class Account;
 class CollectionInterface;
 class PersonPlaceHolderPrivate;
 class UsageStatistics;
+class Address;
 
 #include "typedefs.h"
 
@@ -70,41 +71,6 @@ public:
    enum class Encoding {
       UID  , /*!< The bytearray only has an unique identifier      */
       vCard, /*!< The bytearray contain a RFC 6868 compliant vCard */
-   };
-
-   ///Represent the physical address of a contact
-   class Address {
-      public:
-         explicit Address();
-         virtual ~Address();
-
-         enum class Role {
-            ADDRESSLINE = Qt::UserRole+1,
-            CITY,
-            ZIPCODE,
-            STATE,
-            COUNTRY,
-            TYPE,
-         };
-
-         //Getters
-         QString addressLine() const;
-         QString city       () const;
-         QString zipCode    () const;
-         QString state      () const;
-         QString country    () const;
-         QString type       () const;
-
-         //Setters
-         void setAddressLine(const QString& value);
-         void setCity       (const QString& value);
-         void setZipCode    (const QString& value);
-         void setState      (const QString& value);
-         void setCountry    (const QString& value);
-         void setType       (const QString& value);
-
-      private:
-         QSharedPointer<AddressPrivate> d_ptr;
    };
 
    typedef QVector<ContactMethod*> ContactMethods;

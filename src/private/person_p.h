@@ -49,7 +49,7 @@ public:
     bool                     m_DisplayPhoto        {false};
     Person::ContactMethods   m_Numbers             ;
     bool                     m_isPlaceHolder       {false};
-    QList<Person::Address*>  m_lAddresses          ;
+    QList<Address*>          m_lAddresses          ;
     ContactMethod*           m_LastUsedCM {nullptr};
     QVector<ContactMethod*>  m_HiddenContactMethods;
     PersonStatistics*        m_pStats              {nullptr};

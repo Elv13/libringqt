@@ -96,6 +96,7 @@ SET( libringqt_LIB_SRCS
   src/uri.cpp
   src/ringdevice.cpp
   src/account.cpp
+  src/address.cpp
   src/credential.cpp
   src/person.cpp
   src/contactmethod.cpp
@@ -239,6 +240,7 @@ ENDIF(ENABLE_LIBWRAP)
 # Public API
 SET( libringqt_LIB_HDRS
   src/account.h
+  src/address.h
   src/ringdevice.h
   src/credential.h
   src/accountmodel.h

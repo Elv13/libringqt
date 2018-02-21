@@ -24,6 +24,7 @@
 #include <categorizedhistorymodel.h>
 #include <phonedirectorymodel.h>
 #include <person.h>
+#include <address.h>
 
 AddressModel::AddressModel(const Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), m_pPerson(const_cast<Person*>(parent))
@@ -45,17 +46,17 @@ QVariant AddressModel::data( const QModelIndex& index, int role ) const
 
     switch(role) {
         case Qt::DisplayRole:
-        case (int)Person::Address::Role::ADDRESSLINE:
+        case (int)Address::Role::ADDRESSLINE:
             return a->addressLine();
-        case (int)Person::Address::Role::CITY:
+        case (int)Address::Role::CITY:
             return a->city();
-        case (int)Person::Address::Role::ZIPCODE:
+        case (int)Address::Role::ZIPCODE:
             return a->zipCode();
-        case (int)Person::Address::Role::STATE:
+        case (int)Address::Role::STATE:
             return a->state();
-        case (int)Person::Address::Role::COUNTRY:
+        case (int)Address::Role::COUNTRY:
             return a->country();
-        case (int)Person::Address::Role::TYPE:
+        case (int)Address::Role::TYPE:
             return a->type();
     }
 
@@ -85,12 +86,12 @@ QHash<int,QByteArray> AddressModel::roleNames() const
     if (!initRoles) {
         initRoles = true;
 
-        roles[ (int)Person::Address::Role::ADDRESSLINE] = "addressLine";
-        roles[ (int)Person::Address::Role::CITY] = "city";
-        roles[ (int)Person::Address::Role::ZIPCODE] = "zipCode";
-        roles[ (int)Person::Address::Role::STATE] = "state";
-        roles[ (int)Person::Address::Role::COUNTRY] = "country";
-        roles[ (int)Person::Address::Role::TYPE] = "type";
+        roles[ (int)Address::Role::ADDRESSLINE] = "addressLine";
+        roles[ (int)Address::Role::CITY] = "city";
+        roles[ (int)Address::Role::ZIPCODE] = "zipCode";
+        roles[ (int)Address::Role::STATE] = "state";
+        roles[ (int)Address::Role::COUNTRY] = "country";
+        roles[ (int)Address::Role::TYPE] = "type";
     }
 
     return roles;

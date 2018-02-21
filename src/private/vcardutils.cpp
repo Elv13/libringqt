@@ -29,6 +29,7 @@
 //Ring
 #include "phonedirectorymodel.h"
 #include "contactmethod.h"
+#include "address.h"
 #include "accountmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
@@ -178,7 +179,7 @@ struct VCardMapper final {
    }
 
    void addAddress(Person* c, const QString& key, const QByteArray& fn) {
-      auto addr = new Person::Address;
+      auto addr = new Address;
 
       QList<QByteArray> fields = fn.split(VCardUtils::Delimiter::SEPARATOR_TOKEN[0]);
       QStringList keyFields = key.split(VCardUtils::Delimiter::SEPARATOR_TOKEN);
@@ -262,7 +263,7 @@ void VCardUtils::addEmail(const QString& type, const QString& email)
    addProperty(QStringLiteral("%1%2%3%4").arg(Property::EMAIL).arg(Delimiter::SEPARATOR_TOKEN).arg(QStringLiteral("TYPE=")).arg(type).toLatin1(), email);
 }
 
-void VCardUtils::addAddress(Person::Address* addr)
+void VCardUtils::addAddress(Address* addr)
 {
    const QByteArray prop = QStringLiteral("%1%2%3").arg(Property::ADDRESS)
          .arg(Delimiter::SEPARATOR_TOKEN)
