@@ -2085,6 +2085,7 @@ void AccountPrivate::setLastTransportMessage(const QString& value)
 void AccountPrivate::setRegistrationState(Account::RegistrationState value)
 {
     m_RegistrationState = value;
+    updateState();
 }
 
 #define CAST(item) static_cast<int>(item)
@@ -2472,6 +2473,11 @@ bool AccountPrivate::updateState()
 
       return st == cst;
    }
+   else if (m_RegistrationState == Account::RegistrationState::READY
+     && q_ptr->protocol() == Account::Protocol::RING && q_ptr->username().isEmpty()) {
+      q_ptr << Account::EditAction::RELOAD;
+   }
+
    return true;
 }
 
