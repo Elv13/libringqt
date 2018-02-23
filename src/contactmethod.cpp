@@ -40,6 +40,7 @@
 #include "numbercategory.h"
 #include "certificate.h"
 #include "accountmodel.h"
+#include "individual.h"
 #include "certificatemodel.h"
 #include "media/textrecording.h"
 #include "mime.h"
@@ -198,10 +199,10 @@ ContactMethod::~ContactMethod()
 {
    // This means there's still something connected to the timeline, but it
    // will crash if it tries to access it, so it has to go.
-   if (d_ptr->m_TimelineModel) {
-      qWarning() << "Deleting a timeline with active references";
-      delete d_ptr->m_TimelineModel.data();
-   }
+//    if (d_ptr->m_TimelineModel) {
+//       qWarning() << "Deleting a timeline with active references";
+//       delete d_ptr->m_TimelineModel.data();
+//    }
 
    d_ptr->m_lParents.remove(this);
 
@@ -335,7 +336,7 @@ void ContactMethod::setPerson(Person* contact)
    d_ptr->m_Sha1.clear();
 
    if (contact && d_ptr->m_Type != ContactMethod::Type::TEMPORARY) {
-      contact->d_ptr->registerContactMethod(this);
+      contact->individual()->registerContactMethod(this);
       PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+QStringList(contact->formattedName()));
       d_ptr->m_PrimaryName_cache = contact->formattedName();
       d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
@@ -835,34 +836,53 @@ QSharedPointer<QAbstractItemModel> ContactMethod::callsModel() const
    return d_ptr->m_CallsModel;
 }
 
+QSharedPointer<Individual> ContactMethod::individual() const
+{
+    if (contact())
+        return contact()->individual();
+
+Q_ASSERT(false); // try to find an existing one first
+
+    if (!d_ptr->m_pIndividual) {
+        auto p = QSharedPointer<Individual>(
+            new Individual(const_cast<ContactMethod*>(this))
+        );
+        d_ptr->m_pIndividual = p;
+        return p;
+    }
+
+    return d_ptr->m_pIndividual;
+}
+
 QSharedPointer<QAbstractItemModel> ContactMethod::timelineModel() const
 {
-   if (d_ptr->m_TimelineModel)
-      return d_ptr->m_TimelineModel;
-
-   // Check if a sibling contact method already build a timeline model
-   if (contact()) {
-      auto begin(contact()->d_ptr->m_Numbers.constBegin()), end(contact()->d_ptr->m_Numbers.constEnd());
-
-      auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
-         return cm->d_ptr->m_TimelineModel;
-      });
-
-      if (cmi != end) {
-         auto tml = (*cmi)->d_ptr->m_TimelineModel;
-
-         tml.data()->addContactMethod(const_cast<ContactMethod*>(this));
-         d_ptr->m_TimelineModel = tml;
-
-         return tml;
-      }
-   }
-
-   auto p = QSharedPointer<PeerTimelineModel>(
-      new PeerTimelineModel(const_cast<ContactMethod*>(this))
-   );
-   d_ptr->m_TimelineModel = p;
-   return p;
+//    if (d_ptr->m_TimelineModel)
+//       return d_ptr->m_TimelineModel;
+//
+//    // Check if a sibling contact method already build a timeline model
+//    if (contact()) {
+//       auto begin(contact()->d_ptr->m_Numbers.constBegin()), end(contact()->d_ptr->m_Numbers.constEnd());
+//
+//       auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
+//          return cm->d_ptr->m_TimelineModel;
+//       });
+//
+//       if (cmi != end) {
+//          auto tml = (*cmi)->d_ptr->m_TimelineModel;
+//
+//          tml.data()->addContactMethod(const_cast<ContactMethod*>(this));
+//          d_ptr->m_TimelineModel = tml;
+//
+//          return tml;
+//       }
+//    }
+// Q_ASSERT(false);
+//    auto p = QSharedPointer<PeerTimelineModel>(
+//       new PeerTimelineModel(const_cast<ContactMethod*>(this))
+//    );
+//    d_ptr->m_TimelineModel = p;
+//    return p;
+    return individual()->timelineModel();
 }
 
 QMimeData* ContactMethod::mimePayload() const
@@ -1214,6 +1234,9 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
 {
     const auto callStatus = canCall();
 
+    if (callStatus != ContactMethod::MediaAvailailityStatus::AVAILABLE)
+        return callStatus;
+
     auto selectedAccount = account();
 
     if (!selectedAccount)
@@ -1302,8 +1325,6 @@ void ContactMethodPrivate::removeActiveCall(Call* c)
 
 void ContactMethodPrivate::addInitCall(Call* c)
 {
-    const int wasEmpty = m_pUsageStats->d_ptr->m_lInitCalls.isEmpty();
-
     m_pUsageStats->d_ptr->m_lInitCalls << c;
 
     changed();
@@ -1314,8 +1335,6 @@ void ContactMethodPrivate::addInitCall(Call* c)
 
 void ContactMethodPrivate::removeInitCall(Call* c)
 {
-    const int wasEmpty = m_pUsageStats->d_ptr->m_lInitCalls.isEmpty();
-
     m_pUsageStats->d_ptr->m_lInitCalls.removeAll(c);
 
     changed();

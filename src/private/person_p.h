@@ -47,16 +47,14 @@ public:
     QString                  m_Group               ;
     QString                  m_Department          ;
     bool                     m_DisplayPhoto        {false};
-    Person::ContactMethods   m_Numbers             ;
     bool                     m_isPlaceHolder       {false};
     QList<Address*>          m_lAddresses          ;
-    ContactMethod*           m_LastUsedCM {nullptr};
-    QVector<ContactMethod*>  m_HiddenContactMethods;
     PersonStatistics*        m_pStats              {nullptr};
 
     QMultiMap<QByteArray, QByteArray>  m_lCustomAttributes;
 
-    QWeakPointer<QAbstractItemModel> m_pPhoneNumbersModel;
+    QSharedPointer<Individual> m_pIndividual;
+
     QWeakPointer<QAbstractItemModel> m_pAddressModel;
 
     Person* q_ptr;
@@ -84,16 +82,8 @@ public:
     void statusChanged            ( bool           );
     void changed                  (                );
     void photoChanged             (                );
-    void phoneNumbersChanged      (                );
-    void phoneNumbersAboutToChange(                );
-
-    //Helper
-    void registerContactMethod(ContactMethod* m);
 
 public Q_SLOTS:
     void slotTrackedChanged();
     void slotPresenceChanged();
-    void slotLastUsedTimeChanged(::time_t t       );
-    void slotLastContactMethod  (ContactMethod* cm);
-    void slotCallAdded          (Call *call       );
 };

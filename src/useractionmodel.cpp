@@ -1058,7 +1058,7 @@ bool UserActionModel::execute(const UserActionModel::Action action) const
       switch(objT) {
          case Ring::ObjectType::Person         :
             p  = qvariant_cast<Person*>(idx.data(static_cast<int>(Ring::Role::Object)));
-            cm = p->phoneNumbers().size() == 1 ? p->phoneNumbers()[0] : nullptr;
+            cm = p->individual()->phoneNumbers().size() == 1 ? p->individual()->phoneNumbers()[0] : nullptr;
             // a  = cm ? cm->account() : nullptr; TODO: uncomment when account is needed
             break;
          case Ring::ObjectType::ContactMethod  :

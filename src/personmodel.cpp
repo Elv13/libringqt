@@ -31,6 +31,7 @@
 #include "collectioninterface.h"
 #include "collectionmodel.h"
 #include "collectioneditor.h"
+#include "individual.h"
 #include "transitionalpersonbackend.h"
 #include "peerprofilecollection2.h"
 
@@ -285,9 +286,9 @@ bool PersonModel::addItemCallback(const Person* c)
 
    //Add the contact method nodes
    const auto idx = index(inode.m_Index,0);
-   beginInsertRows(idx,0,c->phoneNumbers().size());
-   inode.m_lChildren.reserve(c->phoneNumbers().size());
-   const auto cms = c->phoneNumbers();
+   beginInsertRows(idx,0,c->individual()->phoneNumbers().size());
+   inode.m_lChildren.reserve(c->individual()->phoneNumbers().size());
+   const auto cms = c->individual()->phoneNumbers();
    for (auto& m : qAsConst(cms)) {
       inode.m_lChildren.emplace_back(new PersonItemNode {m, PersonItemNode::NodeType::NUMBER});
       auto& child = *inode.m_lChildren.back();
@@ -319,7 +320,7 @@ bool PersonModel::removeItemCallback(const Person* item)
       auto person = d_ptr->m_lPersons[nodeIdx]->m_pPerson;
       if (person == item) {
 
-          const auto cms = person->phoneNumbers();
+          const auto cms = person->individual()->phoneNumbers();
           for ( const auto cm : qAsConst(cms) )
               // cm is not linked to any person anymore
               cm->setPerson(nullptr);

@@ -32,6 +32,7 @@
 #include "address.h"
 #include "accountmodel.h"
 #include "globalinstances.h"
+#include "individual.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "personmodel.h"
 
@@ -103,14 +104,12 @@ struct VCardMapper final {
       QMutexLocker locker(m_pMutex);
 
       for (QHash<Person*, QList<GetNumberFuture>>::iterator i = m_hDelayedCMInserts.begin(); i != m_hDelayedCMInserts.end(); ++i) {
-         Person::ContactMethods m = i.key()->phoneNumbers();
 
          foreach(const GetNumberFuture& v, i.value()) {
             ContactMethod* cm = PhoneDirectoryModel::instance().getNumber(v.uri,v.c,nullptr,v.category);
 
-            m << cm;
+            i.key()->individual()->addPhoneNumber(cm);
          }
-         i.key()->setContactMethods(m);
       }
 
       m_hDelayedCMInserts.clear();
@@ -486,7 +485,7 @@ Person* VCardUtils::mapToPersonFromReceivedProfile(ContactMethod *contactMethod,
     Person* person = nullptr;//contactMethod->contact();
     if (!person) {
         person = new Person();
-        person->setContactMethods({contactMethod});
+        person->individual()->addPhoneNumber(contactMethod);
         contactMethod->setPerson(person);
     }
     const auto vCard = toHashMap(payload);

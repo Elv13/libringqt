@@ -24,6 +24,7 @@
 #include <person.h>
 #include <vcardutils.h>
 #include <contactmethod.h>
+#include <individual.h>
 
 class PeerProfileCollection2Private final
 {
@@ -115,17 +116,17 @@ void PeerProfileCollection2Private::quickMerge(Person* source, Person* target) c
 
     QSet<QString> dedup;
 
-    const auto pn = target->phoneNumbers();
+    const auto pn = target->individual()->phoneNumbers();
 
     for (auto cm : qAsConst(pn))
         dedup.insert(cm->uri());
 
-    const auto pn2 = target->phoneNumbers();
+    const auto pn2 = target->individual()->phoneNumbers();
 
     for (auto cm : qAsConst(pn2)) {
         if (!dedup.contains(cm->uri())) {
             changed = true;
-            target->addPhoneNumber(cm);
+            target->individual()->addPhoneNumber(cm);
         }
     }
 
@@ -174,7 +175,7 @@ bool PeerProfileCollection2::importPayload(ContactMethod* cm, const QByteArray& 
     const bool hasPerson = cm->contact();
 
     if (!hasPerson) {
-        person->addPhoneNumber(cm);
+        person->individual()->addPhoneNumber(cm);
         cm->setPerson(person);
         add(person);
         person->save();
@@ -186,13 +187,13 @@ bool PeerProfileCollection2::importPayload(ContactMethod* cm, const QByteArray& 
     //TODO const bool isPeer = cm->contact()->collection() == this;
 
     // Check if one of the phone number matches
-    const auto iter = std::find_if(cm->contact()->phoneNumbers().constBegin(), cm->contact()->phoneNumbers().constEnd(), [cm](ContactMethod* cm2) {
+    const auto iter = std::find_if(cm->contact()->individual()->phoneNumbers().constBegin(), cm->contact()->individual()->phoneNumbers().constEnd(), [cm](ContactMethod* cm2) {
         return (*cm2) == cm;
     });
 
     // Always assume the user wants Ring to do this for her/him
-    if (iter == cm->contact()->phoneNumbers().constEnd())
-        cm->contact()->addPhoneNumber(cm);
+    if (iter == cm->contact()->individual()->phoneNumbers().constEnd())
+        cm->contact()->individual()->addPhoneNumber(cm);
 
     d_ptr->mergePersons(person, cm);
 

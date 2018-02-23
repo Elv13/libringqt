@@ -34,6 +34,7 @@
 #include "uri.h"
 #include "mime.h"
 #include "personmodel.h"
+#include "individual.h"
 #include "private/sortproxies.h"
 
 class ContactTreeNode;
@@ -123,8 +124,8 @@ ContactTreeNode::ContactTreeNode(const Person* ct, CategorizedContactModel* pare
 {
    m_Visible = m_pContact->isActive() && ((!parent->d_ptr->m_UnreachableHidden) || m_pContact->isReachable());
    m_lConections << QObject::connect(m_pContact,&Person::changed                  ,[this](){ slotChanged                    (); });
-   m_lConections << QObject::connect(m_pContact,&Person::phoneNumbersChanged      ,[this](){ slotContactMethodsChanged      (); });
-   m_lConections << QObject::connect(m_pContact,&Person::phoneNumbersAboutToChange,[this](){ slotContactMethodsAboutToChange(); });
+   m_lConections << QObject::connect(m_pContact->individual().data(),&Individual::phoneNumbersChanged      ,[this](){ slotContactMethodsChanged      (); });
+   m_lConections << QObject::connect(m_pContact->individual().data(),&Individual::phoneNumbersAboutToChange,[this](){ slotContactMethodsAboutToChange(); });
 }
 
 ContactTreeNode::ContactTreeNode(ContactMethod* cm, CategorizedContactModel* parent) :
@@ -184,7 +185,7 @@ void ContactTreeNode::slotContactMethodsChanged()
 {
    const QModelIndex idx = m_pModel->d_ptr->getIndex(m_Index,0,this);
 
-   const auto cms = m_pContact->phoneNumbers();
+   const auto cms = m_pContact->individual()->phoneNumbers();
 
    //After discussion, it was decided that contacts with only 1 phone number should
    //be handled differently and the additional complexity isn't worth it
@@ -359,12 +360,12 @@ void CategorizedContactModelPrivate::slotContactAdded(const Person* c)
 
    reloadTreeVisibility(item);
 
-   if (c->phoneNumbers().size() > 1) {
+   if (c->individual()->phoneNumbers().size() > 1) {
       const auto parentIdx = q_ptr->createIndex(contactNode->m_Index,0,contactNode);
-      const int first(contactNode->m_lChildren.size()), last(contactNode->m_lChildren.size() + c->phoneNumbers().size() - 1);
+      const int first(contactNode->m_lChildren.size()), last(contactNode->m_lChildren.size() + c->individual()->phoneNumbers().size() - 1);
       q_ptr->beginInsertRows(parentIdx, first, last);
 
-      const auto cms = c->phoneNumbers();
+      const auto cms = c->individual()->phoneNumbers();
       for (auto m : qAsConst(cms)) {
          //TODO check if this can be merged with slotContactMethodCountChanged
          ContactTreeNode* n2 = new ContactTreeNode(m,q_ptr);
@@ -442,11 +443,11 @@ bool CategorizedContactModel::dropMimeData(const QMimeData *data, Qt::DropAction
             case ContactTreeNode::NodeType::PERSON: {
                const Person* ct = modelItem->m_pContact;
                if (ct) {
-                  switch(ct->phoneNumbers().size()) {
+                  switch(ct->individual()->phoneNumbers().size()) {
                      case 0: //Do nothing when there is no phone numbers
                         return false;
                      case 1: //Call when there is one
-                        CallModel::instance().transfer(call,ct->phoneNumbers().first());
+                        CallModel::instance().transfer(call,ct->individual()->phoneNumbers().first());
                         break;
                      default:
                         //TODO
@@ -548,8 +549,8 @@ QMimeData* CategorizedContactModel::mimeData(const QModelIndexList &indexes) con
                //Contact
                const Person* ct = modelItem->m_pContact;
                if (ct) {
-                  if (ct->phoneNumbers().size() == 1) {
-                     mimeData->setData(RingMimes::PHONENUMBER , ct->phoneNumbers().first()->toHash().toUtf8());
+                  if (ct->individual()->phoneNumbers().size() == 1) {
+                     mimeData->setData(RingMimes::PHONENUMBER , ct->individual()->phoneNumbers().first()->toHash().toUtf8());
                   }
                   mimeData->setData(RingMimes::CONTACT , ct->uid());
                }

@@ -63,7 +63,7 @@ public:
    QVector<Media::TextRecording*> m_lAltTR;
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
-   QWeakPointer<PeerTimelineModel>  m_TimelineModel;
+   QWeakPointer<Individual> m_pIndividual;
 
    //Parents
    QSet<ContactMethod*> m_lParents;

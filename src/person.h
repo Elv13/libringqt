@@ -34,6 +34,7 @@ class CollectionInterface;
 class PersonPlaceHolderPrivate;
 class UsageStatistics;
 class Address;
+class Individual;
 
 #include "typedefs.h"
 
@@ -76,7 +77,6 @@ public:
    typedef QVector<ContactMethod*> ContactMethods;
 
    //Properties
-   Q_PROPERTY( ContactMethods        phoneNumbers   READ phoneNumbers   WRITE setContactMethods )
    Q_PROPERTY( QString               nickName       READ nickName       WRITE setNickName       )
    Q_PROPERTY( QString               firstName      READ firstName      WRITE setFirstName      )
    Q_PROPERTY( QString               secondName     READ secondName     WRITE setFamilyName     )
@@ -95,15 +95,12 @@ public:
 
    Q_PROPERTY( ContactMethod*        lastUsedContactMethod READ lastUsedContactMethod)
 
-   Q_PROPERTY( QSharedPointer<QAbstractItemModel> phoneNumbersModel READ phoneNumbersModel CONSTANT)
+   Q_PROPERTY( QSharedPointer<Individual> individual READ individual CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
 
    //Mutator
    Q_INVOKABLE void addAddress(Address* addr);
-   Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
-   Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
-   Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
    Q_INVOKABLE void addCustomField(const QByteArray& key, const QByteArray& value);
    Q_INVOKABLE bool removeCustomField(const QByteArray& key, const QByteArray& value);
    Q_INVOKABLE int  removeAllCustomFields(const QByteArray& key);
@@ -126,8 +123,6 @@ public:
    virtual ~Person();
 
    //Getters
-   ContactMethods phoneNumbers() const;
-   ContactMethods relatedContactMethods() const;
    QString nickName         () const;
    QString firstName        () const;
    QString secondName       () const;
@@ -144,7 +139,8 @@ public:
    ContactMethod* lastUsedContactMethod() const;
    QList<Address*> addresses        () const;
    QMultiMap<QByteArray, QByteArray> otherFields() const;
-   QSharedPointer<QAbstractItemModel> phoneNumbersModel() const;
+
+   QSharedPointer<Individual>  individual() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;
 
@@ -167,7 +163,6 @@ public:
    bool hasRecording(Media::Media::Type type, Media::Media::Direction direction) const;
 
    //Setters
-   void setContactMethods ( const ContactMethods&    );
    void setFormattedName  ( const QString&    name   );
    void setNickName       ( const QString&    name   );
    void setFirstName      ( const QString&    name   );
@@ -196,10 +191,6 @@ Q_SIGNALS:
    void statusChanged             ( bool           );
    ///The person properties changed
    void changed                   (                );
-   ///The number of and/or the contact methods themselves have changed
-   void phoneNumbersChanged       (                );
-   ///The number of and/or the contact methods themselvesd are about to change
-   void phoneNumbersAboutToChange (                );
    ///The address themselves have changed
    void addressesChanged          (                );
    ///The address themselvesd are about to change
@@ -210,8 +201,6 @@ Q_SIGNALS:
    void lastUsedTimeChanged       ( long long      ) const;
    ///A new call used a ContactMethod associated with this Person
    void callAdded                 ( Call* call     );
-   void relatedContactMethodsAdded( ContactMethod* cm );
-   void relatedContactMethodsRemoved( ContactMethod* cm );
    ///When the photo changed
    void photoChanged();
 };

@@ -20,6 +20,7 @@
 #include <usagestatistics.h>
 #include <person.h>
 #include <contactmethod.h>
+#include <individual.h>
 
 class PersonStatistics : public UsageStatistics
 {
@@ -53,12 +54,12 @@ private:
     template<typename T> T sum(T(UsageStatistics::*M)(void)const) const {
         T ret {};
 
-        const auto cms = m_pPerson->phoneNumbers();
+        const auto cms = m_pPerson->individual()->phoneNumbers();
         for (auto cm : qAsConst(cms)) {
             ret += (cm->usageStatistics()->*M)();
         }
 
-        const auto cms2 = m_pPerson->relatedContactMethods();
+        const auto cms2 = m_pPerson->individual()->relatedContactMethods();
 
         for (auto cm : qAsConst(cms2)) {
             ret += (cm->usageStatistics()->*M)();

@@ -171,6 +171,7 @@ SET( libringqt_LIB_SRCS
   src/audio/settings.cpp
   src/media/recordingmodel.cpp
   src/bannedcontactmodel.cpp
+  src/individual.cpp
 
   #Data collections
   src/transitionalpersonbackend.cpp
@@ -217,7 +218,6 @@ SET( libringqt_LIB_SRCS
   src/private/sortproxies.cpp
   src/private/threadworker.cpp
   src/private/cmcallsmodel.cpp
-  src/private/personcmmodel.cpp
   src/private/addressmodel.cpp
   src/mime.cpp
   src/smartinfohub.cpp
@@ -245,6 +245,7 @@ SET( libringqt_LIB_HDRS
   src/credential.h
   src/accountmodel.h
   src/availableaccountmodel.h
+  src/individual.h
   src/call.h
   src/call.hpp
   src/callmodel.h

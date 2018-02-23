@@ -27,6 +27,7 @@
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
 #include "personmodel.h"
+#include "individual.h"
 #include "contactmethod.h"
 #include "uri.h"
 
@@ -54,7 +55,7 @@ QVariant PendingContactRequestModel::data( const QModelIndex& index, int role ) 
       case Columns::PEER_ID:
          switch(role) {
             case Qt::DisplayRole:
-            return d_ptr->m_lRequests[index.row()]->peer()->phoneNumbers().first()->bestId();
+            return d_ptr->m_lRequests[index.row()]->peer()->individual()->phoneNumbers().first()->bestId();
          }
          break;
       case Columns::TIME:

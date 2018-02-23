@@ -22,25 +22,27 @@
 
 // Ring
 #include <contactmethod.h>
+#include <typedefs.h>
 class Person;
 
-// Private
-struct FutureCMData;
+class IndividualPrivate;
 
 /**
- * Simple class to access the phone numbers of a Person object as a model.
+ * There is often more than one way to reach someone.
  *
- * This simplify the code where model binding is an option.
+ * This model help to track those ways from both a Person and ContactMethod
+ * point of view.
  */
-class PersonCMModel final : public QAbstractListModel
+class LIB_EXPORT Individual final : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
     Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
 
-    explicit PersonCMModel(const Person* parent);
-    virtual ~PersonCMModel();
+    explicit Individual(Person* parent);
+    Individual(ContactMethod* parent);
+    virtual ~Individual();
 
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
     virtual bool setData( const QModelIndex& index, const QVariant &value, int role) override;
@@ -52,14 +54,56 @@ public:
     bool hasEditRow() const;
     void setEditRow(bool v);
 
+    time_t lastUsedTime() const;
+
+    bool hasHiddenContactMethods() const;
+
+    QSharedPointer<QAbstractItemModel> timelineModel() const;
+    ContactMethod* lastUsedContactMethod() const;
+
+    Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
+    Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
+    Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
+
+    QVector<ContactMethod*> phoneNumbers() const;
+    QVector<ContactMethod*> relatedContactMethods() const;
+
+    /// Reverse map the boolean cardinality from N to 1
+    template<bool (ContactMethod :: *prop)() const>
+    bool hasProperty() {
+        for (const auto l : {phoneNumbers(), relatedContactMethods()}) {
+            for (const auto cm : qAsConst(l))
+                if ((cm->*prop)())
+                    return true;
+        }
+
+        return false;
+    }
+
+    /// Helpers
+    bool matchExpression(const std::function<bool(ContactMethod*)>& functor);
+    void forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden = true);
+
+   //TODO make private
+    void phoneNumbersChanged2      (                );
+    void phoneNumbersAboutToChange2(                );
+    void setPhoneNumbers(const QVector<ContactMethod*>& cms);
+
+    //Helper
+    void registerContactMethod(ContactMethod* m);
+
 Q_SIGNALS:
     void hasEditRowChanged(bool v);
-
+    ///The number of and/or the contact methods themselves have changed
+    void phoneNumbersChanged       (                );
+    ///The number of and/or the contact methods themselvesd are about to change
+    void phoneNumbersAboutToChange (                );
+    void relatedContactMethodsAdded( ContactMethod* cm );
+    void relatedContactMethodsRemoved( ContactMethod* cm );
+    void unreadCountChanged(int count);
+    void callAdded(Call* call);
+    void lastUsedTimeChanged(time_t time);
 
 private:
-    // This is a private class, no need for d_ptr
-    Person* m_pPerson;
-    QMetaObject::Connection m_cBeginCB;
-    QMetaObject::Connection m_cEndCB;
-    TemporaryContactMethod* m_pTmpCM {nullptr};
+    IndividualPrivate* d_ptr;
 };

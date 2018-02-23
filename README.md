@@ -14,13 +14,13 @@ track them automatically.
 
 ## Main concepts
 
+Here are the main concepts of LibRingQt from the most abstract network entity
+down to an actual human. Each layer of abstract exists to cleanly handle any
+ambiguous obstacle, changes of cardinality or synchronization issues.
+
 ### Call
 
 An audio, video or historical call.
-
-### Person
-
-Either a contact, a peer or the user itself.
 
 ### URI
 
@@ -28,8 +28,27 @@ Either a phone number, a SIP URI or an unique Ring account identifier.
 
 ### ContactMethod
 
-An object capable to reaching a `person` or a known `URI`. It is a lower level
-version of a contact, but without an actual tracked contact entity.
+How to reach someone and the associated metadata for that specific way of
+reaching him/her/it.
+
+### Individual
+
+Either a contact, a peer or the user itself. This is a very abstract view of
+someone. They always exists whether or not anything about the person is known.
+It is a set of `ContactMethod` and the concatenation of their metadata.
+
+*This object tracks the metadata associated with someone*
+
+### Person
+
+In concrete version of the individual. It has an undefined set of attributes.
+
+*This object tracks the information associated with someone*
+
+
+## Main interfaces
+
+TODO (callable, schedulable, present/tracked, collectable)
 
 ## Supported platforms
 

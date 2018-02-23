@@ -36,7 +36,7 @@
 #include "phonedirectorymodel.h"
 #include "numbercategorymodel.h"
 #include "numbercategory.h"
-#include "personcmmodel.h"
+#include "individual.h"
 #include "addressmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
@@ -56,9 +56,10 @@ QString PersonPrivate::filterString()
         return m_CachedFilterString;
 
     //Also filter by phone numbers, accents are negligible
-    for (const ContactMethod* n : qAsConst(m_Numbers)) {
-        m_CachedFilterString += n->uri();
-    }
+    q_ptr->individual()->forAllNumbers([this](ContactMethod* cm) {
+        m_CachedFilterString += cm->uri();
+        m_CachedFilterString += cm->registeredName();
+    }, false);
 
     //Strip non essential characters like accents from the filter string
     foreach(const QChar& char2,(m_FormattedName+'\n'+m_Organization+'\n'+m_Group+'\n'+
@@ -102,31 +103,17 @@ void PersonPrivate::statusChanged  ( bool s )
         emit c->statusChanged(s);
 }
 
-void PersonPrivate::phoneNumbersChanged()
-{
-    for (Person* c : qAsConst(m_lParents))
-        emit c->phoneNumbersChanged();
-}
+// void PersonPrivate::phoneNumbersChanged()
+// {
+//     for (Person* c : qAsConst(m_lParents))
+//         emit c->phoneNumbersChanged();
+// }
 
-void PersonPrivate::phoneNumbersAboutToChange()
-{
-    for (Person* c : qAsConst(m_lParents))
-        emit c->phoneNumbersAboutToChange();
-}
-
-void PersonPrivate::registerContactMethod(ContactMethod* m)
-{
-    m_HiddenContactMethods << m;
-
-    for (Person* c : qAsConst(m_lParents))
-        emit c->relatedContactMethodsAdded(m);
-
-    connect(m, &ContactMethod::lastUsedChanged, this, &PersonPrivate::slotLastUsedTimeChanged);
-    connect(m, &ContactMethod::callAdded, this, &PersonPrivate::slotCallAdded);
-
-    if ((!m_LastUsedCM) || m->lastUsed() > m_LastUsedCM->lastUsed())
-        slotLastContactMethod(m);
-}
+// void PersonPrivate::phoneNumbersAboutToChange()
+// {
+//     for (Person* c : qAsConst(m_lParents))
+//         emit c->phoneNumbersAboutToChange();
+// }
 
 PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
    q_ptr(contact)
@@ -193,19 +180,18 @@ d_ptr(new PersonPrivate(this))
    d_ptr->m_Group                = other.d_ptr->m_Group               ;
    d_ptr->m_Department           = other.d_ptr->m_Department          ;
    d_ptr->m_DisplayPhoto         = other.d_ptr->m_DisplayPhoto        ;
-   d_ptr->m_Numbers              = other.d_ptr->m_Numbers             ;
+   d_ptr->m_pIndividual   = other.d_ptr->m_pIndividual  ;
    d_ptr->m_isPlaceHolder        = other.d_ptr->m_isPlaceHolder       ;
    d_ptr->m_lAddresses           = other.d_ptr->m_lAddresses          ;
    d_ptr->m_lCustomAttributes    = other.d_ptr->m_lCustomAttributes   ;
-   d_ptr->m_LastUsedCM           = other.d_ptr->m_LastUsedCM          ;
-   d_ptr->m_HiddenContactMethods = other.d_ptr->m_HiddenContactMethods;
 }
 
 ///Updates an existing contact from vCard info
 void Person::updateFromVCard(const QByteArray& content)
 {
-   // empty existing contact methods first
-   setContactMethods(ContactMethods());
+    // Make sure nothing leaks form the old one
+    d_ptr->m_pIndividual = nullptr;
+
    if (!VCardUtils::mapToPerson(this, content)) {
       qWarning() << "Updating person failed";
    }
@@ -221,24 +207,6 @@ Person::~Person()
       d_ptr->setParent(nullptr);
       delete d_ptr;
    }
-}
-
-///Get the phone number list
-Person::ContactMethods Person::phoneNumbers() const
-{
-   return d_ptr->m_Numbers;
-}
-
-/**
- * Over time, more ContactMethods are associated with a Person. For example,
- * if the person move and get a new phone number (and lose the old one) or
- * change country. Other example could be losing the Ring account private
- * key and having to create a new one. There is other accidental instances
- * caused by various race conditions.
- */
-Person::ContactMethods Person::relatedContactMethods() const
-{
-    return d_ptr->m_HiddenContactMethods;
 }
 
 ///Get the nickname
@@ -300,12 +268,6 @@ QString Person::department() const
    return d_ptr->m_Department;
 }
 
-/// Get the last ContactMethod used with that person.
-ContactMethod* Person::lastUsedContactMethod() const
-{
-    return d_ptr->m_LastUsedCM;
-}
-
 UsageStatistics* Person::usageStatistics() const
 {
     if (!d_ptr->m_pStats) {
@@ -315,19 +277,18 @@ UsageStatistics* Person::usageStatistics() const
     return d_ptr->m_pStats;
 }
 
-QSharedPointer<QAbstractItemModel> Person::phoneNumbersModel() const
+QSharedPointer<Individual> Person::individual() const
 {
-    if (!d_ptr->m_pPhoneNumbersModel) {
-        auto p = QSharedPointer<QAbstractItemModel>(new PersonCMModel(this));
+    if (!d_ptr->m_pIndividual)
+        d_ptr->m_pIndividual = QSharedPointer<Individual>
+            (new Individual(const_cast<Person*>(this)));
 
-        // Delete all children will otherwise silently delete the object
-        p.data()->setParent(nullptr);
+    return d_ptr->m_pIndividual;
+}
 
-        d_ptr->m_pPhoneNumbersModel = p;
-        return p;
-    }
-
-    return d_ptr->m_pPhoneNumbersModel;
+ContactMethod* Person::lastUsedContactMethod() const
+{
+    return individual()->lastUsedContactMethod();
 }
 
 QSharedPointer<QAbstractItemModel> Person::addressesModel() const
@@ -353,70 +314,7 @@ QSharedPointer<QAbstractItemModel> Person::addressesModel() const
  */
 QSharedPointer<QAbstractItemModel> Person::timelineModel() const
 {
-    // See if one of the contact methods already built one
-    auto begin(d_ptr->m_Numbers.constBegin()), end(d_ptr->m_Numbers.constEnd());
-
-    auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
-        return cm->d_ptr->m_TimelineModel;
-    });
-
-    if (cmi != end)
-        return (*cmi)->timelineModel();
-
-    // Too bad, build one
-    if (!d_ptr->m_Numbers.isEmpty())
-        return  d_ptr->m_Numbers.constFirst()->timelineModel();
-
-    // This person was never contacted
-    return QSharedPointer<QAbstractItemModel>();
-}
-
-///Set the phone number (type and number)
-void Person::setContactMethods(const ContactMethods& numbers)
-{
-   //TODO make a diff instead of full reload
-   const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
-
-   d_ptr->phoneNumbersAboutToChange();
-
-   for (ContactMethod* n : d_ptr->m_Numbers) {
-      disconnect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-      disconnect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-      disconnect(n, &ContactMethod::lastUsedChanged, d_ptr, &PersonPrivate::slotLastUsedTimeChanged);
-      disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &PersonPrivate::changed);
-      disconnect(n, &ContactMethod::callAdded, d_ptr, &PersonPrivate::slotCallAdded);
-   }
-
-   d_ptr->m_Numbers = ContactMethods::fromList(dedup.toList());
-
-   for (ContactMethod* n : d_ptr->m_Numbers) {
-      connect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-      connect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-      connect(n, &ContactMethod::lastUsedChanged, d_ptr, &PersonPrivate::slotLastUsedTimeChanged);
-      connect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &PersonPrivate::changed);
-      connect(n, &ContactMethod::callAdded, d_ptr, &PersonPrivate::slotCallAdded);
-   }
-
-   d_ptr->phoneNumbersChanged();
-   d_ptr->changed();
-
-   //Allow incoming calls from those numbers
-   const QList<Account*> ringAccounts = AccountModel::instance().getAccountsByProtocol(Account::Protocol::RING);
-   QStringList certIds;
-   for (ContactMethod* n : d_ptr->m_Numbers) {
-      if (n->uri().protocolHint() == URI::ProtocolHint::RING)
-         certIds << n->uri().userinfo(); // certid must only contain the hash, no scheme
-   }
-
-   for (const QString& hash : qAsConst(certIds)) {
-      Certificate* cert = CertificateModel::instance().getCertificateFromId(hash);
-      if (cert) {
-         for (Account* a : ringAccounts) {
-            if (a->allowIncomingFromContact())
-               a->allowCertificate(cert);
-         }
-      }
-   }
+    return individual()->timelineModel();
 }
 
 ///Set the nickname
@@ -496,15 +394,7 @@ void Person::setDepartment(const QString& name)
 ///Return if one of the ContactMethod is present
 bool Person::isPresent() const
 {
-    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        if (n->isPresent())
-            return true;
-    }
-    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
-        if (n->isPresent())
-            return true;
-    }
-    return false;
+    return individual()->hasProperty<&ContactMethod::isPresent>();
 }
 
 /** Return if this Person is currently used as a profile.
@@ -514,33 +404,18 @@ bool Person::isPresent() const
  */
 bool Person::isProfile() const
 {
-    if (d_ptr->m_Numbers.isEmpty() && d_ptr->m_HiddenContactMethods.isEmpty())
+    if (individual()->phoneNumbers().isEmpty() && individual()->hasHiddenContactMethods())
         return false;
 
-    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
-        if (n->isSelf() && n->contact()->d_ptr == d_ptr)
-            return true;
-    }
-    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        if (n->isSelf() && n->contact()->d_ptr == d_ptr)
-            return true;
-    }
-
-    return false;
+    return individual()->matchExpression([this](ContactMethod* cm) {
+        return cm->isSelf() && cm->contact()->d_ptr == d_ptr;
+    });
 }
 
 ///Return if one of the ContactMethod is tracked
 bool Person::isTracked() const
 {
-    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        if (n->isTracked())
-            return true;
-    }
-    for (const ContactMethod* n : qAsConst(d_ptr->m_HiddenContactMethods)) {
-        if (n->isTracked())
-            return true;
-    }
-    return false;
+    return individual()->hasProperty<&ContactMethod::isTracked>();
 }
 
 bool Person::isPlaceHolder() const
@@ -554,87 +429,47 @@ bool Person::isPlaceHolder() const
  */
 time_t Person::lastUsedTime() const
 {
-   if (!d_ptr->m_LastUsedCM)
-      return 0;
-
-   return d_ptr->m_LastUsedCM->lastUsed();
+   return individual()->lastUsedTime();
 }
 
 ///Return if one of the ContactMethod support presence
 bool Person::supportPresence() const
 {
-    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        if (n->supportPresence())
-            return true;
-    }
-    return false;
+    return individual()->hasProperty<&ContactMethod::supportPresence>();
 }
 
 ///Return true if there is a change one if the account can be used to reach that person
 bool Person::isReachable() const
 {
-    if (!d_ptr->m_Numbers.size())
-        return false;
-
-    for (const ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        if (n->isReachable())
-            return true;
-    }
-    return false;
+    return individual()->hasProperty<&ContactMethod::isReachable>();
 }
 
 bool Person::hasBeenCalled() const
 {
-    const auto pn = phoneNumbers();
-
-    for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->callCount())
-            return true;
-    }
-
-   return false;
+    return individual()->matchExpression([this](ContactMethod* cm) {
+        return cm->callCount();
+    });
 }
 
 bool Person::canCall() const
 {
-    if (!d_ptr->m_Numbers.size())
-        return false;
-
-    const auto pn = phoneNumbers();
-    for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
-            return true;
-    }
-
-   return false;
+    return individual()->matchExpression([this](ContactMethod* cm) {
+        return cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
 }
 
 bool Person::canVideoCall() const
 {
-    if (!d_ptr->m_Numbers.size())
-        return false;
-
-    const auto pn = phoneNumbers();
-    for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
-            return true;
-    }
-
-   return false;
+    return individual()->matchExpression([this](ContactMethod* cm) {
+        return cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
 }
 
 bool Person::canSendTexts() const
 {
-    if (!d_ptr->m_Numbers.size())
-        return false;
-
-    const auto pn = phoneNumbers();
-    for (ContactMethod* cm : qAsConst(pn)) {
-        if (cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
-            return true;
-    }
-
-   return false;
+    return individual()->matchExpression([this](ContactMethod* cm) {
+        return cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
 }
 
 /**
@@ -654,7 +489,7 @@ bool Person::hasRecording(Media::Media::Type type, Media::Media::Direction direc
         case Media::Media::Type::VIDEO:
             return false; //TODO implement
         case Media::Media::Type::TEXT: {
-            const auto pn = phoneNumbers();
+            const auto pn = individual()->phoneNumbers();
             for (ContactMethod* cm : qAsConst(pn)) {
                 if (cm->textRecording() && !cm->textRecording()->isEmpty())
                     return true;
@@ -731,10 +566,10 @@ QVariant Person::roleData(int role) const
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):
          {
             int unread = 0;
-            for (int i = 0; i < d_ptr->m_Numbers.size(); ++i) {
-               if (auto rec = d_ptr->m_Numbers.at(i)->textRecording())
-                  unread += rec->unreadCount();
-            }
+            individual()->forAllNumbers([&unread](ContactMethod* cm) {
+                if (auto rec = cm->textRecording())
+                    unread += rec->unreadCount();
+            });
             return unread;
          }
          break;
@@ -793,9 +628,8 @@ bool PersonPlaceHolder::merge(Person* contact)
 void Person::replaceDPointer(Person* c)
 {
 
-   if (d_ptr->m_LastUsedCM && lastUsedTime() > c->lastUsedTime()) {
-      c->d_ptr->m_LastUsedCM = d_ptr->m_LastUsedCM;
-      emit c->lastUsedTimeChanged(d_ptr->m_LastUsedCM->lastUsed());
+   if (individual()->lastUsedContactMethod() && lastUsedTime() > c->lastUsedTime()) {
+      emit c->lastUsedTimeChanged(individual()->lastUsedContactMethod()->lastUsed());
    }
 
    this->d_ptr = c->d_ptr;
@@ -820,100 +654,6 @@ void Person::addAddress(Address* addr)
    emit addressesAboutToChange();
    d_ptr->m_lAddresses << addr;
    emit addressesChanged();
-}
-
-ContactMethod* Person::addPhoneNumber(ContactMethod* cm)
-{
-    if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
-        return nullptr;
-
-    if (Q_UNLIKELY(d_ptr->m_Numbers.indexOf(cm) != -1)) {
-        qWarning() << this << "already has the phone number" << cm;
-        return cm;
-    }
-
-    if (cm->type() == ContactMethod::Type::TEMPORARY)
-        cm = PhoneDirectoryModel::instance().fromTemporary(
-            static_cast<TemporaryContactMethod*>(cm)
-        );
-
-    if (Q_UNLIKELY(cm->contact() && cm->contact()->d_ptr != d_ptr)) {
-        qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
-    }
-
-    d_ptr->m_Numbers << cm;
-
-    d_ptr->phoneNumbersChanged();
-
-    if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
-        d_ptr->m_HiddenContactMethods.removeAll(cm);
-        for (Person* c : qAsConst(d_ptr->m_lParents))
-            emit c->relatedContactMethodsRemoved(cm);
-    }
-
-    return cm;
-}
-
-ContactMethod* Person::removePhoneNumber(ContactMethod* cm)
-{
-    if (Q_UNLIKELY(!cm)) {
-        return nullptr;
-    }
-
-    const int idx = d_ptr->m_Numbers.indexOf(cm);
-
-    if (Q_UNLIKELY(idx == -1)) {
-        qWarning() << this << "trying to replace a phone number that doesn't exist";
-        return nullptr;
-    }
-
-    d_ptr->phoneNumbersAboutToChange();
-    d_ptr->m_Numbers.remove(idx);
-    d_ptr->phoneNumbersChanged();
-
-    d_ptr->m_HiddenContactMethods << cm;
-
-    emit relatedContactMethodsAdded(cm);
-
-    return cm;
-}
-
-/// ContactMethods URI are immutable, they need to be replaced when edited
-ContactMethod* Person::replacePhoneNumber(ContactMethod* old, ContactMethod* newCm)
-{
-    if (Q_UNLIKELY(!newCm)) {
-        qWarning() << this << "trying to replace a phone number with nothing";
-        return nullptr;
-    }
-
-    const int idx = d_ptr->m_Numbers.indexOf(old);
-
-    if (Q_UNLIKELY((!old) || idx == -1)) {
-        qWarning() << this << "trying to replace a phone number that doesn't exist";
-        return nullptr;
-    }
-
-    if (old == newCm) {
-        qWarning() << "Trying to replace a phone number with itself";
-        return old;
-    }
-
-    if (newCm->type() == ContactMethod::Type::TEMPORARY)
-        newCm = PhoneDirectoryModel::instance().fromTemporary(
-            static_cast<TemporaryContactMethod*>(newCm)
-        );
-
-    d_ptr->phoneNumbersAboutToChange();
-
-    d_ptr->m_Numbers.replace(idx, newCm);
-
-    d_ptr->m_HiddenContactMethods << newCm;
-
-    emit relatedContactMethodsAdded(old);
-
-    d_ptr->phoneNumbersChanged();
-
-    return newCm;
 }
 
 /// Returns the addresses associated with the person.
@@ -973,7 +713,7 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
 
     maker.addEmail(QStringLiteral("PREF"), preferredEmail());
 
-    const auto pn = phoneNumbers();
+    const auto pn = individual()->phoneNumbers();
 
     for (ContactMethod* phone : qAsConst(pn)) {
         QString uri = phone->uri();
@@ -998,36 +738,6 @@ const QByteArray Person::toVCard(QList<Account*> accounts) const
 
     maker.addPhoto(GlobalInstances::pixmapManipulator().toByteArray(photo()));
     return maker.endVCard();
-}
-
-void PersonPrivate::slotLastUsedTimeChanged(::time_t t)
-{
-   Q_UNUSED(t)
-
-   auto cm = qobject_cast<ContactMethod*>(sender());
-
-   // This function should always be called by a contactmethod signal. Otherwise
-   // the timestamp comes from an unknown source and cannot be traced.
-   Q_ASSERT(cm);
-
-   slotLastContactMethod(cm);
-}
-
-void PersonPrivate::slotLastContactMethod(ContactMethod* cm)
-{
-    if (cm && q_ptr->lastUsedTime() > cm->lastUsed())
-        return;
-
-    m_LastUsedCM = cm;
-
-    for (Person* c : qAsConst(m_lParents))
-        emit c->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
-}
-
-void PersonPrivate::slotCallAdded(Call *call)
-{
-    for (Person* c : qAsConst(m_lParents))
-        emit c->callAdded(call);
 }
 
 /**

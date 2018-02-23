@@ -473,6 +473,8 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
 Media::TextRecording* Media::TextRecording::fromPath(const QString& path, const Metadata& metadata, CollectionInterface* backend)
 {
+    Q_UNUSED(metadata)
+
     QString content;
 
     QFile file(path);

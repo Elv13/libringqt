@@ -25,6 +25,7 @@
 // LRC
 #include <categorizedbookmarkmodel.h>
 #include <categorizedhistorymodel.h>
+#include <individual.h>
 #include <personmodel.h>
 #include <media/textrecording.h>
 #include <interfaces/actionextenderi.h>
@@ -417,7 +418,7 @@ bool addPerson(ContactMethod* cm, CollectionInterface* col)
    Person* p = new Person();
 
    p->setFormattedName(cm->primaryName());
-   p->setContactMethods({cm});
+   p->individual()->addPhoneNumber(cm);
 
    cm->setPerson(p);
 
@@ -445,7 +446,7 @@ bool addToPerson(ContactMethod* cm)
    if (!p || !(p->collection()->supportedFeatures() & CollectionInterface::SupportedFeatures::EDIT))
       return false;
 
-   p->addPhoneNumber(cm);
+   p->individual()->addPhoneNumber(cm);
 
    return p->save();
 }
@@ -463,7 +464,7 @@ bool addToPerson(Person* p)
    if (!cm)
       return false;
 
-   p->addPhoneNumber(cm);
+   p->individual()->addPhoneNumber(cm);
 
    return p->save();
 }

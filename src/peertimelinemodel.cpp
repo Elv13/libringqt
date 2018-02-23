@@ -31,6 +31,7 @@
 #include "media/textrecording.h"
 #include "contactmethod.h"
 #include "person.h"
+#include "individual.h"
 #include "call.h"
 #include "historytimecategorymodel.h"
 #include "private/textrecording_p.h"
@@ -172,14 +173,14 @@ void PeerTimelineModelPrivate::init()
         connect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
 
-        connect(m_pPerson, &Person::relatedContactMethodsAdded,
+        connect(m_pPerson->individual().data(), &Individual::relatedContactMethodsAdded,
             this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
-        connect(m_pPerson, &Person::phoneNumbersChanged,
+        connect(m_pPerson->individual().data(), &Individual::phoneNumbersChanged,
             this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
-        auto cms = m_pPerson->relatedContactMethods();
-        cms.append(m_pPerson->phoneNumbers());
+        auto cms = m_pPerson->individual()->relatedContactMethods();
+        cms.append(m_pPerson->individual()->phoneNumbers());
 
         for (auto cm : qAsConst(cms))
             q_ptr->addContactMethod(cm);
@@ -666,8 +667,8 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
 
 void PeerTimelineModelPrivate::slotPhoneNumberChanged()
 {
-    auto cms = m_pPerson->relatedContactMethods();
-    cms.append(m_pPerson->phoneNumbers());
+    auto cms = m_pPerson->individual()->relatedContactMethods();
+    cms.append(m_pPerson->individual()->phoneNumbers());
 
     for (auto cm : qAsConst(cms))
         q_ptr->addContactMethod(cm);
@@ -745,15 +746,15 @@ void PeerTimelineModelPrivate::disconnectOldCms()
         disconnect(m_pPerson, &Person::callAdded,
             this, &PeerTimelineModelPrivate::slotCallAdded);
 
-        disconnect(m_pPerson, &Person::relatedContactMethodsAdded,
+        disconnect(m_pPerson->individual().data(), &Individual::relatedContactMethodsAdded,
             this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
-        disconnect(m_pPerson, &Person::phoneNumbersChanged,
+        disconnect(m_pPerson->individual().data(), &Individual::phoneNumbersChanged,
             this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
 
         // Add both phone number and whatever links to this person
-        auto cms = m_pPerson->relatedContactMethods();
-        cms.append(m_pPerson->phoneNumbers());
+        auto cms = m_pPerson->individual()->relatedContactMethods();
+        cms.append(m_pPerson->individual()->phoneNumbers());
 
         for (auto cm : qAsConst(cms)) {
             disconnect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,

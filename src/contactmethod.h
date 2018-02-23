@@ -41,6 +41,7 @@ class NumberCategory;
 class TemporaryContactMethodPrivate;
 class Certificate;
 class UsageStatistics;
+class Individual;
 
 namespace Media {
    class TextRecording;
@@ -223,8 +224,9 @@ public:
    bool isAvailable() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
-   QSharedPointer<QAbstractItemModel> callsModel() const;
-   QSharedPointer<QAbstractItemModel> timelineModel() const;
+   QSharedPointer<QAbstractItemModel> callsModel       () const;
+   QSharedPointer<QAbstractItemModel> timelineModel    () const;
+   QSharedPointer<Individual>  individual() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles

@@ -25,6 +25,7 @@
 //LRC
 #include <call.h>
 #include <person.h>
+#include <individual.h>
 #include <contactmethod.h>
 #include <numbercategory.h>
 
@@ -52,8 +53,8 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
    if (c && !cm)
       cm = c->peerContactMethod();
 
-   if (!cm && p && p->phoneNumbers().size() == 1)
-      cm = p->phoneNumbers().first();
+   if (!cm && p && p->individual()->phoneNumbers().size() == 1)
+      cm = p->individual()->phoneNumbers().first();
 
    if (!p && cm->contact())
       p  = cm->contact();
@@ -87,7 +88,7 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
       QString     uriList;
       QTextStream stream(&uriList);
 
-      foreach (const ContactMethod* number, p->phoneNumbers()) {
+      foreach (const ContactMethod* number, p->individual()->phoneNumbers()) {
          stream << number->uri().format(
             URI::Section::SCHEME    |
             URI::Section::USER_INFO |
@@ -148,7 +149,7 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
       "    <b>%1</b><br />\n").arg(p->formattedName());
 
       // Phone numbers (as saved in the contacts)
-      foreach (const ContactMethod* number, p->phoneNumbers()) {
+      foreach (const ContactMethod* number, p->individual()->phoneNumbers()) {
 
          htmlStream << number->uri()
             << QStringLiteral(" (")

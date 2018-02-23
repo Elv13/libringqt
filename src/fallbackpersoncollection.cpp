@@ -34,6 +34,7 @@
 #include "contactmethod.h"
 #include "collectioneditor.h"
 #include "globalinstances.h"
+#include "individual.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "interfaces/actionextenderi.h"
 #include "interfaces/itemmodelstateserializeri.h"
@@ -110,7 +111,7 @@ bool FallbackPersonBackendEditor::save(const Person* item)
    //An UID is required
    if (item->uid().isEmpty()) {
       QCryptographicHash hash(QCryptographicHash::Sha1);
-      const auto cms = item->phoneNumbers();
+      const auto cms = item->individual()->phoneNumbers();
       for (ContactMethod* n : qAsConst(cms))
          hash.addData(n->uri().toLatin1());
       hash.addData(item->formattedName().toLatin1());
