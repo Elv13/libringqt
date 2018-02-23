@@ -180,7 +180,7 @@ d_ptr(new PersonPrivate(this))
    d_ptr->m_Group                = other.d_ptr->m_Group               ;
    d_ptr->m_Department           = other.d_ptr->m_Department          ;
    d_ptr->m_DisplayPhoto         = other.d_ptr->m_DisplayPhoto        ;
-   d_ptr->m_pIndividual   = other.d_ptr->m_pIndividual  ;
+   d_ptr->m_pIndividual          = other.d_ptr->m_pIndividual         ;
    d_ptr->m_isPlaceHolder        = other.d_ptr->m_isPlaceHolder       ;
    d_ptr->m_lAddresses           = other.d_ptr->m_lAddresses          ;
    d_ptr->m_lCustomAttributes    = other.d_ptr->m_lCustomAttributes   ;
@@ -280,8 +280,7 @@ UsageStatistics* Person::usageStatistics() const
 QSharedPointer<Individual> Person::individual() const
 {
     if (!d_ptr->m_pIndividual)
-        d_ptr->m_pIndividual = QSharedPointer<Individual>
-            (new Individual(const_cast<Person*>(this)));
+        d_ptr->m_pIndividual = Individual::getIndividual(const_cast<Person*>(this));
 
     return d_ptr->m_pIndividual;
 }
@@ -508,81 +507,81 @@ bool Person::hasRecording(Media::Media::Type type, Media::Media::Direction direc
 ///Recomputing the filter string is heavy, cache it
 QString Person::filterString() const
 {
-   return d_ptr->filterString();
+    return d_ptr->filterString();
 }
 
 ///Get the role value
 QVariant Person::roleData(int role) const
 {
-   switch (role) {
-      case Qt::DisplayRole:
-      case Qt::EditRole:
-      case static_cast<int>(Ring::Role::Name):
-      case static_cast<int>(Person::Role::FormattedName):
-         return QVariant(formattedName());
-      case static_cast<int>(Ring::Role::Number):
-         {
-            auto cm = lastUsedContactMethod();
-            return cm ? cm->bestId() : QString();
-         }
-      case Qt::DecorationRole:
-         return GlobalInstances::pixmapManipulator().decorationRole(this);
-      case static_cast<int>(Person::Role::Organization):
-         return QVariant(organization());
-      case static_cast<int>(Person::Role::Group):
-         return QVariant(group());
-      case static_cast<int>(Person::Role::Department):
-         return QVariant(department());
-      case static_cast<int>(Person::Role::PreferredEmail):
-         return QVariant(preferredEmail());
-      case static_cast<int>(Ring::Role::FormattedLastUsed):
-      case static_cast<int>(Person::Role::FormattedLastUsed):
-         return QVariant(HistoryTimeCategoryModel::timeToHistoryCategory(lastUsedTime()));
-      case static_cast<int>(Ring::Role::IndexedLastUsed):
-      case static_cast<int>(Person::Role::IndexedLastUsed):
-         return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(lastUsedTime())));
-      case static_cast<int>(Ring::Role::Object):
-         return QVariant::fromValue(const_cast<Person*>(this));
-      case static_cast<int>(Ring::Role::ObjectType):
-         return QVariant::fromValue(Ring::ObjectType::Person);
-      case static_cast<int>(Ring::Role::LastUsed):
-      case static_cast<int>(Person::Role::DatedLastUsed):
-         return QVariant(QDateTime::fromTime_t( lastUsedTime()));
-      case static_cast<int>(Person::Role::Filter):
-         return filterString();
-      case static_cast<int>(Ring::Role::IsPresent):
-         return isPresent();
-      case static_cast<int>(Person::Role::LastName):
-          return secondName();
-      case static_cast<int>(Person::Role::PrimaryName):
-          return firstName();
-      case static_cast<int>(Person::Role::NickName):
-          return nickName();
-      case static_cast<int>(Person::Role::IdOfLastCMUsed):
-         {
-            auto cm = lastUsedContactMethod();
-            return cm ? cm->bestId() : QString();
-         }
-      case static_cast<int>(Ring::Role::UnreadTextMessageCount):
-         {
-            int unread = 0;
-            individual()->forAllNumbers([&unread](ContactMethod* cm) {
-                if (auto rec = cm->textRecording())
-                    unread += rec->unreadCount();
-            });
-            return unread;
-         }
-         break;
-      default:
-         break;
-   }
+    switch (role) {
+        case Qt::DisplayRole:
+        case Qt::EditRole:
+        case static_cast<int>(Ring::Role::Name):
+        case static_cast<int>(Person::Role::FormattedName):
+            return QVariant(formattedName());
+        case static_cast<int>(Ring::Role::Number):
+            {
+                auto cm = lastUsedContactMethod();
+                return cm ? cm->bestId() : QString();
+            }
+        case Qt::DecorationRole:
+            return GlobalInstances::pixmapManipulator().decorationRole(this);
+        case static_cast<int>(Person::Role::Organization):
+            return QVariant(organization());
+        case static_cast<int>(Person::Role::Group):
+            return QVariant(group());
+        case static_cast<int>(Person::Role::Department):
+            return QVariant(department());
+        case static_cast<int>(Person::Role::PreferredEmail):
+            return QVariant(preferredEmail());
+        case static_cast<int>(Ring::Role::FormattedLastUsed):
+        case static_cast<int>(Person::Role::FormattedLastUsed):
+            return QVariant(HistoryTimeCategoryModel::timeToHistoryCategory(lastUsedTime()));
+        case static_cast<int>(Ring::Role::IndexedLastUsed):
+        case static_cast<int>(Person::Role::IndexedLastUsed):
+            return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(lastUsedTime())));
+        case static_cast<int>(Ring::Role::Object):
+            return QVariant::fromValue(const_cast<Person*>(this));
+        case static_cast<int>(Ring::Role::ObjectType):
+            return QVariant::fromValue(Ring::ObjectType::Person);
+        case static_cast<int>(Ring::Role::LastUsed):
+        case static_cast<int>(Person::Role::DatedLastUsed):
+            return QVariant(QDateTime::fromTime_t( lastUsedTime()));
+        case static_cast<int>(Person::Role::Filter):
+            return filterString();
+        case static_cast<int>(Ring::Role::IsPresent):
+            return isPresent();
+        case static_cast<int>(Person::Role::LastName):
+            return secondName();
+        case static_cast<int>(Person::Role::PrimaryName):
+            return firstName();
+        case static_cast<int>(Person::Role::NickName):
+            return nickName();
+        case static_cast<int>(Person::Role::IdOfLastCMUsed):
+            {
+                auto cm = lastUsedContactMethod();
+                return cm ? cm->bestId() : QString();
+            }
+        case static_cast<int>(Ring::Role::UnreadTextMessageCount):
+            {
+                int unread = 0;
+                individual()->forAllNumbers([&unread](ContactMethod* cm) {
+                    if (auto rec = cm->textRecording())
+                        unread += rec->unreadCount();
+                });
+                return unread;
+            }
+            break;
+        default:
+            break;
+    }
 
-   return QVariant();
+    return QVariant();
 }
 
 QMimeData* Person::mimePayload() const
 {
-   return RingMimes::payload(nullptr, nullptr, this);
+    return RingMimes::payload(nullptr, nullptr, this);
 }
 
 ///Callback when one of the phone number presence change
@@ -602,8 +601,8 @@ void PersonPrivate::slotTrackedChanged()
 ///Create a placeholder contact, it will eventually be replaced when the real one is loaded
 PersonPlaceHolder::PersonPlaceHolder(const QByteArray& uid):d_ptr(nullptr)
 {
-   setUid(uid);
-   Person::d_ptr->m_isPlaceHolder = true;
+    setUid(uid);
+    Person::d_ptr->m_isPlaceHolder = true;
 }
 
 /**
@@ -613,47 +612,47 @@ PersonPlaceHolder::PersonPlaceHolder(const QByteArray& uid):d_ptr(nullptr)
  */
 bool PersonPlaceHolder::merge(Person* contact)
 {
-   if ((!contact) || ((*contact) == this))
-      return false;
+    if ((!contact) || ((*contact) == this))
+        return false;
 
-   PersonPrivate* currentD = Person::d_ptr;
-   replaceDPointer(contact);
-   currentD->m_lParents.removeAll(this);
+    PersonPrivate* currentD = Person::d_ptr;
+    replaceDPointer(contact);
+    currentD->m_lParents.removeAll(this);
 
-   if (!currentD->m_lParents.size())
-      delete currentD;
-   return true;
+    if (!currentD->m_lParents.size())
+        delete currentD;
+    return true;
 }
 
 void Person::replaceDPointer(Person* c)
 {
 
-   if (individual()->lastUsedContactMethod() && lastUsedTime() > c->lastUsedTime()) {
-      emit c->lastUsedTimeChanged(individual()->lastUsedContactMethod()->lastUsed());
-   }
+    if (individual()->lastUsedContactMethod() && lastUsedTime() > c->lastUsedTime()) {
+        emit c->lastUsedTimeChanged(individual()->lastUsedContactMethod()->lastUsed());
+    }
 
-   this->d_ptr = c->d_ptr;
-   d_ptr->m_lParents << this;
-   emit changed();
-   emit rebased(c);
+    this->d_ptr = c->d_ptr;
+    d_ptr->m_lParents << this;
+    emit changed();
+    emit rebased(c);
 }
 
 bool Person::operator==(const Person* other) const
 {
-   return other && this->d_ptr == other->d_ptr;
+    return other && this->d_ptr == other->d_ptr;
 }
 
 bool Person::operator==(const Person& other) const
 {
-   return this->d_ptr == other.d_ptr;
+    return this->d_ptr == other.d_ptr;
 }
 
 ///Add a new address to this contact
 void Person::addAddress(Address* addr)
 {
-   emit addressesAboutToChange();
-   d_ptr->m_lAddresses << addr;
-   emit addressesChanged();
+    emit addressesAboutToChange();
+    d_ptr->m_lAddresses << addr;
+    emit addressesChanged();
 }
 
 /// Returns the addresses associated with the person.
@@ -683,7 +682,7 @@ bool Person::hasCustomField(const QByteArray& name) const
 ///Add custom fields for contact profiles
 void Person::addCustomField(const QByteArray& key, const QByteArray& value)
 {
-   d_ptr->m_lCustomAttributes.insert(key, value);
+    d_ptr->m_lCustomAttributes.insert(key, value);
 }
 
 /// Remove a specific instance of a custom field

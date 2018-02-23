@@ -40,8 +40,6 @@ class LIB_EXPORT Individual final : public QAbstractListModel
 public:
     Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
 
-    explicit Individual(Person* parent);
-    Individual(ContactMethod* parent);
     virtual ~Individual();
 
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
@@ -84,13 +82,16 @@ public:
     bool matchExpression(const std::function<bool(ContactMethod*)>& functor);
     void forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden = true);
 
-   //TODO make private
-    void phoneNumbersChanged2      (                );
-    void phoneNumbersAboutToChange2(                );
+    //TODO make private
     void setPhoneNumbers(const QVector<ContactMethod*>& cms);
 
     //Helper
     void registerContactMethod(ContactMethod* m);
+
+    // Factory
+    static QSharedPointer<Individual> getIndividual(ContactMethod* cm);
+    static QSharedPointer<Individual> getIndividual(Person* cm);
+    static QSharedPointer<Individual> getIndividual(const QList<ContactMethod*>& cms);
 
 Q_SIGNALS:
     void hasEditRowChanged(bool v);
@@ -105,5 +106,8 @@ Q_SIGNALS:
     void lastUsedTimeChanged(time_t time);
 
 private:
+    explicit Individual();
+    Individual(Person* parent);
+
     IndividualPrivate* d_ptr;
 };

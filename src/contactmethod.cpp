@@ -841,12 +841,8 @@ QSharedPointer<Individual> ContactMethod::individual() const
     if (contact())
         return contact()->individual();
 
-Q_ASSERT(false); // try to find an existing one first
-
     if (!d_ptr->m_pIndividual) {
-        auto p = QSharedPointer<Individual>(
-            new Individual(const_cast<ContactMethod*>(this))
-        );
+        auto p = Individual::getIndividual(const_cast<ContactMethod*>(this));
         d_ptr->m_pIndividual = p;
         return p;
     }
@@ -855,34 +851,16 @@ Q_ASSERT(false); // try to find an existing one first
 }
 
 QSharedPointer<QAbstractItemModel> ContactMethod::timelineModel() const
-{
-//    if (d_ptr->m_TimelineModel)
-//       return d_ptr->m_TimelineModel;
-//
-//    // Check if a sibling contact method already build a timeline model
-//    if (contact()) {
-//       auto begin(contact()->d_ptr->m_Numbers.constBegin()), end(contact()->d_ptr->m_Numbers.constEnd());
-//
-//       auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
-//          return cm->d_ptr->m_TimelineModel;
-//       });
-//
-//       if (cmi != end) {
-//          auto tml = (*cmi)->d_ptr->m_TimelineModel;
-//
-//          tml.data()->addContactMethod(const_cast<ContactMethod*>(this));
-//          d_ptr->m_TimelineModel = tml;
-//
-//          return tml;
-//       }
-//    }
-// Q_ASSERT(false);
-//    auto p = QSharedPointer<PeerTimelineModel>(
-//       new PeerTimelineModel(const_cast<ContactMethod*>(this))
-//    );
-//    d_ptr->m_TimelineModel = p;
-//    return p;
-    return individual()->timelineModel();
+ {
+    QSharedPointer<Individual> i = individual();
+
+    qDebug() << "ABOUT" << this << contact() << i << individual();
+    auto t = i->timelineModel();
+
+    qDebug() << "\n\nGET HERE" << i << i->phoneNumbers().size() << t;
+
+
+    return i->timelineModel();
 }
 
 QMimeData* ContactMethod::mimePayload() const

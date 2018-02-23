@@ -28,6 +28,8 @@
 #include <accountmodel.h>
 #include <certificatemodel.h>
 #include <peertimelinemodel.h>
+#include "contactmethod_p.h"
+#include "person_p.h"
 
 class IndividualPrivate final : public QObject
 {
@@ -35,7 +37,7 @@ class IndividualPrivate final : public QObject
 public:
 
     // This is a private class, no need for d_ptr
-    Person* m_pPerson;
+    Person* m_pPerson {nullptr};
     QMetaObject::Connection m_cBeginCB;
     QMetaObject::Connection m_cEndCB;
     TemporaryContactMethod* m_pTmpCM {nullptr};
@@ -45,6 +47,8 @@ public:
     Person::ContactMethods   m_Numbers             ;
 
     QWeakPointer<PeerTimelineModel> m_TimelineModel;
+
+    QWeakPointer<Individual> m_pWeakRef;
 
     Individual* q_ptr;
 
@@ -58,17 +62,18 @@ public Q_SLOTS:
 Individual::Individual(Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), d_ptr(new IndividualPrivate)
 {
-    d_ptr->m_pPerson = parent;
-    d_ptr->q_ptr = this;
+    d_ptr->m_pPerson  = parent;
+    d_ptr->q_ptr      = this;
 
     // Row inserted/deleted can be implemented later
     d_ptr->m_cBeginCB = connect(this, &Individual::phoneNumbersAboutToChange, this, [this](){beginResetModel();});
     d_ptr->m_cEndCB   = connect(this, &Individual::phoneNumbersChanged      , this, [this](){endResetModel  ();});
 }
 
-Individual::Individual(ContactMethod* parent)
+Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
 {
-    Q_ASSERT(false);
+    d_ptr->q_ptr = this;
+
 }
 
 Individual::~Individual()
@@ -235,48 +240,49 @@ QVector<ContactMethod*> Individual::relatedContactMethods() const
 ///Set the phone number (type and number)
 void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
 {
+    Q_ASSERT(false);
    //TODO make a diff instead of full reload
-   const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
+    const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
 
-   emit phoneNumbersAboutToChange();
+    emit phoneNumbersAboutToChange();
 
-   for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-      disconnect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-      disconnect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-      disconnect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-      disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
-      disconnect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
-   }
+    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        disconnect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+        disconnect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
+        disconnect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
+        disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
+        disconnect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
+    }
 
-   d_ptr->m_Numbers = QVector<ContactMethod*>::fromList(dedup.toList());
+    d_ptr->m_Numbers = QVector<ContactMethod*>::fromList(dedup.toList());
 
-   for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-      connect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-      connect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-      connect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-      connect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
-      connect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
-   }
+    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        connect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+        connect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
+        connect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
+        connect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
+        connect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
+    }
 
-   emit phoneNumbersChanged();
+    emit phoneNumbersChanged();
 
-   //Allow incoming calls from those numbers
-   const QList<Account*> ringAccounts = AccountModel::instance().getAccountsByProtocol(Account::Protocol::RING);
-   QStringList certIds;
-   for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-      if (n->uri().protocolHint() == URI::ProtocolHint::RING)
-         certIds << n->uri().userinfo(); // certid must only contain the hash, no scheme
-   }
+    //Allow incoming calls from those numbers
+    const QList<Account*> ringAccounts = AccountModel::instance().getAccountsByProtocol(Account::Protocol::RING);
+    QStringList certIds;
+    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
+        if (n->uri().protocolHint() == URI::ProtocolHint::RING)
+            certIds << n->uri().userinfo(); // certid must only contain the hash, no scheme
+    }
 
-   for (const QString& hash : qAsConst(certIds)) {
-      Certificate* cert = CertificateModel::instance().getCertificateFromId(hash);
-      if (cert) {
-         for (Account* a : ringAccounts) {
-            if (a->allowIncomingFromContact())
-               a->allowCertificate(cert);
-         }
-      }
-   }
+    for (const QString& hash : qAsConst(certIds)) {
+        Certificate* cert = CertificateModel::instance().getCertificateFromId(hash);
+        if (cert) {
+            for (Account* a : ringAccounts) {
+                if (a->allowIncomingFromContact())
+                a->allowCertificate(cert);
+            }
+        }
+    }
 }
 
 ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
@@ -294,9 +300,16 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
             static_cast<TemporaryContactMethod*>(cm)
         );
 
-    if (Q_UNLIKELY(cm->contact() && *cm->contact() == *d_ptr->m_pPerson)) {
+    if (Q_UNLIKELY(cm->contact() && !(*cm->contact() == *d_ptr->m_pPerson))) {
         qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
+        Q_ASSERT(false);
     }
+
+    connect(cm, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
+    connect(cm, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
+
+    if ((!d_ptr->m_LastUsedCM) || cm->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
+        d_ptr->slotLastContactMethod(cm);
 
     d_ptr->m_Numbers << cm;
 
@@ -306,6 +319,15 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         d_ptr->m_HiddenContactMethods.removeAll(cm);
         emit relatedContactMethodsRemoved(cm);
     }
+
+    if (Q_UNLIKELY(cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual.data()->d_ptr != d_ptr)) {
+        qWarning() << cm << "already has an individual attached" << cm->d_ptr->m_pIndividual <<
+            "cannot set" << this;
+    }
+    else if (!cm->d_ptr->m_pIndividual)
+        cm->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
+    else if (cm->d_ptr->m_pIndividual != d_ptr->m_pWeakRef)
+        Q_ASSERT(false);
 
     return cm;
 }
@@ -391,26 +413,17 @@ bool Individual::hasHiddenContactMethods() const
  */
 QSharedPointer<QAbstractItemModel> Individual::timelineModel() const
 {
-//     // See if one of the contact methods already built one
-//     auto begin(d_ptr->m_Numbers.constBegin()), end(d_ptr->m_Numbers.constEnd());
-//
-//     auto cmi = std::find_if(begin, end, [](ContactMethod* cm) {
-//         return cm->d_ptr->m_TimelineModel;
-//     });
-//
-//     if (cmi != end)
-//         return (*cmi)->timelineModel();
-//
-//     // Too bad, build one
-//     if (!d_ptr->m_Numbers.isEmpty())
-//         return  d_ptr->m_Numbers.constFirst()->timelineModel();
-//
-//     // This person was never contacted
-//     return QSharedPointer<QAbstractItemModel>();
     if (!d_ptr->m_TimelineModel) {
-        auto p = QSharedPointer<PeerTimelineModel>(new PeerTimelineModel(d_ptr->m_pPerson));
-        d_ptr->m_TimelineModel = p;
-        return p;
+        if (d_ptr->m_pPerson) {//FIXME
+            auto p = QSharedPointer<PeerTimelineModel>(new PeerTimelineModel(d_ptr->m_pPerson));
+            d_ptr->m_TimelineModel = p;
+            return p;
+        }
+        else if (!d_ptr->m_Numbers.isEmpty()) {
+            auto p = QSharedPointer<PeerTimelineModel>(new PeerTimelineModel(d_ptr->m_Numbers.constFirst()));
+            d_ptr->m_TimelineModel = p;
+            return p;
+        }
     }
 
     return d_ptr->m_TimelineModel;
@@ -485,6 +498,109 @@ time_t Individual::lastUsedTime() const
         return 0;
 
     return lastUsedContactMethod()->lastUsed();
+}
+
+QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
+{
+    if (auto i = cm->d_ptr->m_pIndividual)
+        return i;
+
+    if (cm->contact())
+        return getIndividual(cm->contact());
+
+    auto i = QSharedPointer<Individual>(
+        new Individual()
+    );
+    i->d_ptr->m_pWeakRef = i;
+
+    // need to be done after WeakRef is set, do not move to constructor
+    i->addPhoneNumber(cm);
+
+    return i;
+}
+
+QSharedPointer<Individual> Individual::getIndividual(Person* p)
+{
+    if (auto i = p->d_ptr->m_pIndividual)
+        return i;
+
+    // strong ref
+    p->d_ptr->m_pIndividual = QSharedPointer<Individual>(
+        new Individual(p)
+    );
+    p->d_ptr->m_pIndividual->d_ptr->m_pWeakRef = p->d_ptr->m_pIndividual;
+
+    return p->d_ptr->m_pIndividual;
+}
+
+QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>& cms)
+{
+    if (cms.isEmpty())
+        return {};
+
+    QSharedPointer<Individual> ind;
+
+    QSet<Account*> accs;
+    QHash<QSharedPointer<Individual>, int> existing;
+    QSet<Person*> persons;
+
+    // Find the most common Individual for deduplication purpose
+    for (auto cm : qAsConst(cms)) {
+        if(auto i = cm->d_ptr->m_pIndividual)
+            existing[i]++;
+
+        if (auto a = cm->account())
+            accs << a;
+
+        if (auto p = cm->contact())
+            persons << p;
+    }
+
+    int max = 0;
+    for(auto i = existing.constBegin(); i != existing.constEnd();i++) {
+        if (i.key() && i.value() > max) {
+            max = i.value();
+            ind = i.key();
+        }
+    }
+
+    if (existing.size() > 1) {
+        qWarning() << "getIndividual was called with a set containing more"
+            "than 1 existing individual, this will produce undefined hehavior";
+        Q_ASSERT(false);
+    }
+
+    if (persons.size() > 1) {
+        qWarning() << "getIndividual was called with a set containing more"
+            "than 1 person, this will produce undefined hehavior";
+        Q_ASSERT(false);
+    }
+
+    // Create one is none was found
+    if (!ind) {
+        ind = (!persons.isEmpty()) ?
+            getIndividual(*persons.constBegin()) : getIndividual(cms.first());
+    }
+
+    // Set the Individual to each empty CM
+    for (auto cm : qAsConst(cms)) {
+        if (!cm->d_ptr->m_pIndividual)
+            cm->d_ptr->m_pIndividual = ind;
+    }
+
+    // If there is person with different individual, print a warning, it's a bug
+    for (auto p : qAsConst(persons)) {
+        if (!p->d_ptr->m_pIndividual) {
+            p->d_ptr->m_pIndividual = ind;
+            Q_ASSERT(false);
+        }
+        else if (p->d_ptr->m_pIndividual->d_ptr != ind->d_ptr) {
+            qWarning() << p << "has a more than one individual identity, this is a bug";
+            Q_ASSERT(false);
+        }
+    }
+
+    return ind;
 }
 
 #include <individual.moc>

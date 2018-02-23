@@ -98,6 +98,8 @@ public:
     ContactMethod*        m_pCM        {nullptr};
     Person*               m_pPerson    {nullptr};
 
+    QSharedPointer<Individual> m_pIndividual;
+
     std::vector<PeerTimelineNode*> m_lTimeCategories;
     QHash<int, PeerTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
     int m_TotalEntries {0};
@@ -217,6 +219,7 @@ void PeerTimelineModelPrivate::init()
 PeerTimelineModel::PeerTimelineModel(Person* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
 {
     d_ptr->m_pPerson = cm;
+    d_ptr->m_pIndividual = cm->individual();
     d_ptr->init();
 }
 
@@ -224,11 +227,13 @@ PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm)
 {
     if (cm->contact()) {
         d_ptr->m_pPerson = cm->contact();
+        d_ptr->m_pIndividual = cm->contact()->individual();
         connect(d_ptr->m_pPerson, &QObject::destroyed,
             d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
     }
     else {
         d_ptr->m_pCM = cm;
+        d_ptr->m_pIndividual = cm->individual();
         connect(cm, &QObject::destroyed,
             d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
     }

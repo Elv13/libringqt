@@ -48,6 +48,7 @@ class LIB_EXPORT Person : public ItemBase
 
    // To check if a sibling phone numbers already build a timeline model
    friend class ContactMethod;
+   friend class Individual;
 
 public:
 

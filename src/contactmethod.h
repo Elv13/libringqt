@@ -85,6 +85,7 @@ public:
    friend class LocalTextRecordingCollection;
    friend class CallPrivate;
    friend class AccountPrivate;
+   friend class Individual;
 
     // To synchronize the timeline weak pointers
     friend class Person;
