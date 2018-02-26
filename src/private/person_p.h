@@ -26,7 +26,7 @@
 //Ring
 #include "person.h"
 class ContactMethod;
-class PeerTimelineModel;
+class IndividualTimelineModel;
 class PersonStatistics;
 
 class PersonPrivate final : public QObject

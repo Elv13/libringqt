@@ -43,6 +43,8 @@ class Certificate;
 class UsageStatistics;
 class Individual;
 
+using IndividualPointer = QSharedPointer<Individual>;
+
 namespace Media {
    class TextRecording;
 }
@@ -146,7 +148,7 @@ public:
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
-   Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineModel READ timelineModel NOTIFY timelineMerged)
+   Q_PROPERTY(IndividualPointer individual READ individual)
 
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
 
@@ -226,8 +228,7 @@ public:
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel       () const;
-   QSharedPointer<QAbstractItemModel> timelineModel    () const;
-   QSharedPointer<Individual>  individual() const;
+   IndividualPointer  individual() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles

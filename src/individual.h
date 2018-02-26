@@ -24,8 +24,11 @@
 #include <contactmethod.h>
 #include <typedefs.h>
 class Person;
-
+class Call;
 class IndividualPrivate;
+namespace Media {
+    class TextRecording;
+};
 
 /**
  * There is often more than one way to reach someone.
@@ -39,6 +42,7 @@ class LIB_EXPORT Individual final : public QAbstractListModel
 
 public:
     Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineModel READ timelineModel)
 
     virtual ~Individual();
 
@@ -65,6 +69,7 @@ public:
 
     QVector<ContactMethod*> phoneNumbers() const;
     QVector<ContactMethod*> relatedContactMethods() const;
+    QVector<Media::TextRecording*> textRecordings() const;
 
     /// Reverse map the boolean cardinality from N to 1
     template<bool (ContactMethod :: *prop)() const>
@@ -80,7 +85,7 @@ public:
 
     /// Helpers
     bool matchExpression(const std::function<bool(ContactMethod*)>& functor);
-    void forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden = true);
+    void forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden = true) const;
 
     //TODO make private
     void setPhoneNumbers(const QVector<ContactMethod*>& cms);
@@ -105,9 +110,22 @@ Q_SIGNALS:
     void callAdded(Call* call);
     void lastUsedTimeChanged(time_t time);
 
+    void textRecordingAdded(Media::TextRecording* r);
+
+    // Forward some relevant contactMethods signals
+    void childrenContactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
+    void childrenRebased(ContactMethod* cm,  ContactMethod* other  );
+
 private:
     explicit Individual();
     Individual(Person* parent);
 
     IndividualPrivate* d_ptr;
 };
+
+Q_DECLARE_METATYPE(Individual*)
+
+using IndividualPointer = QSharedPointer<Individual>;
+
+Q_DECLARE_METATYPE(IndividualPointer)
+

@@ -25,12 +25,12 @@
 
 // Ring
 class ContactMethod;
-class Person;
+class Individual;
 
-class PeerTimelineModelPrivate;
+class IndividualTimelineModelPrivate;
 
 /**
- * Merge everything related to a person in a single tree model. This is the
+ * Merge everything related to an individual in a single tree model. This is the
  * central model of the "timeline" user experience. This entity track just
  * about everything happening in LibRingClient.
  *
@@ -43,13 +43,14 @@ class PeerTimelineModelPrivate;
  * themselves.
  *
  */
-class LIB_EXPORT PeerTimelineModel final : public QAbstractItemModel
+class LIB_EXPORT IndividualTimelineModel final : public QAbstractItemModel
 {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
     Q_OBJECT
     #pragma GCC diagnostic pop
 
+    friend class Individual; //factory
 public:
 
     /// The different types of element included in the timeline.
@@ -75,10 +76,7 @@ public:
         EndAt,
     };
 
-    //Constructor
-    explicit PeerTimelineModel(Person* cm);
-    PeerTimelineModel(ContactMethod* cm);
-    virtual ~PeerTimelineModel();
+    virtual ~IndividualTimelineModel();
 
     //Abstract model function
     virtual QVariant      data     ( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
@@ -91,12 +89,15 @@ public:
 
     virtual QHash<int,QByteArray> roleNames() const override;
 
+
+private:
+    explicit IndividualTimelineModel(QSharedPointer<Individual> ind);
+
     // Mutator
     void addContactMethod(ContactMethod* cm);
 
-private:
-    PeerTimelineModelPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(PeerTimelineModel)
+    IndividualTimelineModelPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(IndividualTimelineModel)
 };
 
-Q_DECLARE_METATYPE(PeerTimelineModel::NodeType)
+Q_DECLARE_METATYPE(IndividualTimelineModel::NodeType)

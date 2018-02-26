@@ -35,6 +35,7 @@ class PersonPlaceHolderPrivate;
 class UsageStatistics;
 class Address;
 class Individual;
+using IndividualPointer = QSharedPointer<Individual>;
 
 #include "typedefs.h"
 
@@ -96,7 +97,7 @@ public:
 
    Q_PROPERTY( ContactMethod*        lastUsedContactMethod READ lastUsedContactMethod)
 
-   Q_PROPERTY( QSharedPointer<Individual> individual READ individual CONSTANT)
+   Q_PROPERTY( IndividualPointer individual READ individual CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
 
@@ -141,7 +142,7 @@ public:
    QList<Address*> addresses        () const;
    QMultiMap<QByteArray, QByteArray> otherFields() const;
 
-   QSharedPointer<Individual>  individual() const;
+   IndividualPointer  individual() const;
    QSharedPointer<QAbstractItemModel> addressesModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;
 

@@ -27,7 +27,8 @@
 #include <account.h>
 #include <accountmodel.h>
 #include <certificatemodel.h>
-#include <peertimelinemodel.h>
+#include <individualtimelinemodel.h>
+#include "media/textrecording.h"
 #include "contactmethod_p.h"
 #include "person_p.h"
 
@@ -38,6 +39,7 @@ public:
 
     // This is a private class, no need for d_ptr
     Person* m_pPerson {nullptr};
+    bool m_RecordingsInit {false};
     QMetaObject::Connection m_cBeginCB;
     QMetaObject::Connection m_cEndCB;
     TemporaryContactMethod* m_pTmpCM {nullptr};
@@ -46,9 +48,15 @@ public:
     QVector<ContactMethod*>  m_HiddenContactMethods;
     Person::ContactMethods   m_Numbers             ;
 
-    QWeakPointer<PeerTimelineModel> m_TimelineModel;
+    QVector<Media::TextRecording*> m_lRecordings;
+
+    QWeakPointer<IndividualTimelineModel> m_TimelineModel;
 
     QWeakPointer<Individual> m_pWeakRef;
+
+    // Helpers
+    void connectContactMethod(ContactMethod* cm);
+    void disconnectContactMethod(ContactMethod* cm);
 
     Individual* q_ptr;
 
@@ -57,6 +65,10 @@ public Q_SLOTS:
     void slotLastContactMethod  (ContactMethod* cm);
     void slotCallAdded          (Call *call       );
     void slotUnreadCountChanged (                 );
+
+    void slotChildrenContactChanged(Person* newContact, Person* oldContact);
+    void slotChildrenTextRecordingAdded(Media::TextRecording* t);
+    void slotChildrenRebased(ContactMethod* other  );
 };
 
 Individual::Individual(Person* parent) :
@@ -65,7 +77,7 @@ Individual::Individual(Person* parent) :
     d_ptr->m_pPerson  = parent;
     d_ptr->q_ptr      = this;
 
-    // Row inserted/deleted can be implemented later
+    // Row inserted/deleted can be implemented later //FIXME
     d_ptr->m_cBeginCB = connect(this, &Individual::phoneNumbersAboutToChange, this, [this](){beginResetModel();});
     d_ptr->m_cEndCB   = connect(this, &Individual::phoneNumbersChanged      , this, [this](){endResetModel  ();});
 }
@@ -82,6 +94,8 @@ Individual::~Individual()
     disconnect( d_ptr->m_cBeginCB );
 
     setEditRow(false);
+
+    delete d_ptr;
 }
 
 QVariant Individual::data( const QModelIndex& index, int role ) const
@@ -206,14 +220,61 @@ void Individual::setEditRow(bool v)
     emit layoutChanged();
 }
 
+void IndividualPrivate::connectContactMethod(ContactMethod* m)
+{
+    connect(m, &ContactMethod::lastUsedChanged, this,
+        &IndividualPrivate::slotLastUsedTimeChanged);
+
+    connect(m, &ContactMethod::callAdded, this,
+        &IndividualPrivate::slotCallAdded);
+
+    connect(m, &ContactMethod::contactChanged, this,
+        &IndividualPrivate::slotChildrenContactChanged);
+
+    connect(m, &ContactMethod::alternativeTextRecordingAdded, this,
+        &IndividualPrivate::slotChildrenTextRecordingAdded);
+
+    connect(m, &ContactMethod::rebased, this,
+        &IndividualPrivate::slotChildrenRebased);
+
+    connect(m, &ContactMethod::unreadTextMessageCountChanged, this,
+        &IndividualPrivate::slotUnreadCountChanged);
+
+//     connect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+//     connect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
+}
+
+void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
+{
+    disconnect(m, &ContactMethod::lastUsedChanged, this,
+        &IndividualPrivate::slotLastUsedTimeChanged);
+
+    disconnect(m, &ContactMethod::callAdded, this,
+        &IndividualPrivate::slotCallAdded);
+
+    disconnect(m, &ContactMethod::contactChanged, this,
+        &IndividualPrivate::slotChildrenContactChanged);
+
+    disconnect(m, &ContactMethod::alternativeTextRecordingAdded, this,
+        &IndividualPrivate::slotChildrenTextRecordingAdded);
+
+    disconnect(m, &ContactMethod::rebased, this,
+        &IndividualPrivate::slotChildrenRebased);
+
+    disconnect(m, &ContactMethod::unreadTextMessageCountChanged, this,
+        &IndividualPrivate::slotUnreadCountChanged);
+
+//     disconnect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
+//     disconnect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
+}
+
 void Individual::registerContactMethod(ContactMethod* m)
 {
     d_ptr->m_HiddenContactMethods << m;
 
     emit relatedContactMethodsAdded(m);
 
-    connect(m, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-    connect(m, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
+    d_ptr->connectContactMethod(m);
 
     if ((!d_ptr->m_LastUsedCM) || m->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
         d_ptr->slotLastContactMethod(m);
@@ -223,6 +284,26 @@ void Individual::registerContactMethod(ContactMethod* m)
 QVector<ContactMethod*> Individual::phoneNumbers() const
 {
    return d_ptr->m_Numbers;
+}
+
+QVector<Media::TextRecording*> Individual::textRecordings() const
+{
+    // Avoid initializing in constructor, it causes deadlocks
+    if (!d_ptr->m_RecordingsInit) {
+        d_ptr->m_RecordingsInit = true;
+
+        forAllNumbers([this](ContactMethod* cm) {
+            if (auto r = cm->textRecording())
+                d_ptr->slotChildrenTextRecordingAdded(r);
+
+            const auto trs = cm->alternativeTextRecordings();
+
+            for (auto t : qAsConst(trs))
+                d_ptr->slotChildrenTextRecordingAdded(t);
+        });
+    }
+
+    return d_ptr->m_lRecordings;
 }
 
 /**
@@ -246,23 +327,13 @@ void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
 
     emit phoneNumbersAboutToChange();
 
-    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        disconnect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-        disconnect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-        disconnect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-        disconnect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
-        disconnect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
-    }
+    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers))
+        d_ptr->disconnectContactMethod(n);
 
     d_ptr->m_Numbers = QVector<ContactMethod*>::fromList(dedup.toList());
 
-    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
-        connect(n,SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
-        connect(n,SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
-        connect(n, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-        connect(n, &ContactMethod::unreadTextMessageCountChanged, d_ptr, &IndividualPrivate::slotUnreadCountChanged);
-        connect(n, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
-    }
+    for (ContactMethod* n : qAsConst(d_ptr->m_Numbers))
+        d_ptr->connectContactMethod(n);
 
     emit phoneNumbersChanged();
 
@@ -305,8 +376,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         Q_ASSERT(false);
     }
 
-    connect(cm, &ContactMethod::lastUsedChanged, d_ptr, &IndividualPrivate::slotLastUsedTimeChanged);
-    connect(cm, &ContactMethod::callAdded, d_ptr, &IndividualPrivate::slotCallAdded);
+    d_ptr->connectContactMethod(cm);
 
     if ((!d_ptr->m_LastUsedCM) || cm->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
         d_ptr->slotLastContactMethod(cm);
@@ -414,16 +484,9 @@ bool Individual::hasHiddenContactMethods() const
 QSharedPointer<QAbstractItemModel> Individual::timelineModel() const
 {
     if (!d_ptr->m_TimelineModel) {
-        if (d_ptr->m_pPerson) {//FIXME
-            auto p = QSharedPointer<PeerTimelineModel>(new PeerTimelineModel(d_ptr->m_pPerson));
-            d_ptr->m_TimelineModel = p;
-            return p;
-        }
-        else if (!d_ptr->m_Numbers.isEmpty()) {
-            auto p = QSharedPointer<PeerTimelineModel>(new PeerTimelineModel(d_ptr->m_Numbers.constFirst()));
-            d_ptr->m_TimelineModel = p;
-            return p;
-        }
+        auto p = QSharedPointer<IndividualTimelineModel>(new IndividualTimelineModel(d_ptr->m_pWeakRef));
+        d_ptr->m_TimelineModel = p;
+        return p;
     }
 
     return d_ptr->m_TimelineModel;
@@ -462,6 +525,27 @@ void IndividualPrivate::slotUnreadCountChanged()
     emit q_ptr->unreadCountChanged(0);
 }
 
+
+void IndividualPrivate::slotChildrenContactChanged(Person* newContact, Person* oldContact)
+{
+    auto cm = qobject_cast<ContactMethod*>(sender());
+    emit q_ptr->childrenContactChanged(cm, newContact, oldContact);
+}
+
+void IndividualPrivate::slotChildrenTextRecordingAdded(Media::TextRecording* t)
+{
+    if (!m_lRecordings.contains(t))
+        m_lRecordings << t;
+
+    emit q_ptr->textRecordingAdded(t);
+}
+
+void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
+{
+    auto cm = qobject_cast<ContactMethod*>(sender());
+    emit q_ptr->childrenRebased(cm, other);
+}
+
 /// Like std::any_of
 bool Individual::matchExpression(const std::function<bool(ContactMethod*)>& functor)
 {
@@ -474,7 +558,7 @@ bool Individual::matchExpression(const std::function<bool(ContactMethod*)>& func
     return false;
 }
 
-void Individual::forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden)
+void Individual::forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden) const
 {
     const auto nbs = phoneNumbers();
     for (const auto cm : qAsConst(nbs))

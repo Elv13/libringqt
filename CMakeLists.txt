@@ -157,7 +157,7 @@ SET( libringqt_LIB_SRCS
   src/chainoftrustmodel.cpp
   src/pendingcontactrequestmodel.cpp
   src/peerstimelinemodel.cpp
-  src/peertimelinemodel.cpp
+  src/individualtimelinemodel.cpp
   src/video/devicemodel.cpp
   src/video/sourcemodel.cpp
   src/video/channel.cpp
@@ -316,7 +316,7 @@ SET( libringqt_LIB_HDRS
   src/collectioncreationinterface.h
   src/collectionconfigurationinterface.h
   src/peerstimelinemodel.h
-  src/peertimelinemodel.h
+  src/individualtimelinemodel.h
   src/chainoftrustmodel.h
   src/pendingcontactrequestmodel.h
   src/contactrequest.h

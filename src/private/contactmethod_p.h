@@ -30,7 +30,7 @@ namespace Media {
     class TextRecording;
 }
 
-class PeerTimelineModel;
+class IndividualTimelineModel;
 
 class ContactMethodPrivate final: public QObject
 {

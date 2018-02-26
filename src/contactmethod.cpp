@@ -48,7 +48,6 @@
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/cmcallsmodel.h"
-#include "peertimelinemodel.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -197,12 +196,6 @@ d_ptr(new ContactMethodPrivate(number,cat,st,this))
 
 ContactMethod::~ContactMethod()
 {
-   // This means there's still something connected to the timeline, but it
-   // will crash if it tries to access it, so it has to go.
-//    if (d_ptr->m_TimelineModel) {
-//       qWarning() << "Deleting a timeline with active references";
-//       delete d_ptr->m_TimelineModel.data();
-//    }
 
    d_ptr->m_lParents.remove(this);
 
@@ -848,19 +841,6 @@ QSharedPointer<Individual> ContactMethod::individual() const
     }
 
     return d_ptr->m_pIndividual;
-}
-
-QSharedPointer<QAbstractItemModel> ContactMethod::timelineModel() const
- {
-    QSharedPointer<Individual> i = individual();
-
-    qDebug() << "ABOUT" << this << contact() << i << individual();
-    auto t = i->timelineModel();
-
-    qDebug() << "\n\nGET HERE" << i << i->phoneNumbers().size() << t;
-
-
-    return i->timelineModel();
 }
 
 QMimeData* ContactMethod::mimePayload() const

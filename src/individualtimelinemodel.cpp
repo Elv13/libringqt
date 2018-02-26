@@ -16,7 +16,7 @@
  *   License along with this library; if not, write to the Free Software            *
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
  ***********************************************************************************/
-#include "peertimelinemodel.h"
+#include "individualtimelinemodel.h"
 
 // LibStdC++
 #include <chrono>
@@ -43,14 +43,14 @@ struct TimeCategoryData
     int m_Entries {0};
 };
 
-struct PeerTimelineNode final {
-    std::vector<PeerTimelineNode*> m_lChildren;
-    Media::Media::Direction        m_Direction;
-    PeerTimelineNode*              m_pParent {nullptr};
-    PeerTimelineModel::NodeType    m_Type;
-    time_t                         m_StartTime {0}; //Also used for generic sorting duties
-    time_t                         m_EndTime   {0};
-    int                            m_Index;
+struct IndividualTimelineNode final {
+    std::vector<IndividualTimelineNode*> m_lChildren;
+    Media::Media::Direction              m_Direction;
+    IndividualTimelineNode*              m_pParent {nullptr};
+    IndividualTimelineModel::NodeType    m_Type;
+    time_t                               m_StartTime {0}; //Also used for generic sorting duties
+    time_t                               m_EndTime   {0};
+    int                                  m_Index;
 
     enum SumaryEntries {
         INCOMING  ,
@@ -82,76 +82,73 @@ struct PeerTimelineNode final {
         TextMessageNode* m_pMessage;
     };
 
-    ~PeerTimelineNode() {
-        if (m_Type == PeerTimelineModel::NodeType::TIME_CATEGORY)
+    ~IndividualTimelineNode() {
+        if (m_Type == IndividualTimelineModel::NodeType::TIME_CATEGORY)
             delete m_pTimeCat;
     }
 };
 
-class PeerTimelineModelPrivate : public QObject
+class IndividualTimelineModelPrivate : public QObject
 {
     Q_OBJECT
 public:
-    explicit PeerTimelineModelPrivate(PeerTimelineModel* parent);
+    explicit IndividualTimelineModelPrivate(IndividualTimelineModel* parent);
 
     // Attributes
-    ContactMethod*        m_pCM        {nullptr};
-    Person*               m_pPerson    {nullptr};
-
     QSharedPointer<Individual> m_pIndividual;
 
-    std::vector<PeerTimelineNode*> m_lTimeCategories;
-    QHash<int, PeerTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
+    std::vector<IndividualTimelineNode*> m_lTimeCategories;
+    QHash<int, IndividualTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
     int m_TotalEntries {0};
 
     // Keep track of the current group to simplify the lookup. It also allows
     // to split upstream (Serializable::Group) in multiple logical groups in
     // case different media need to be inserted in the middle of a group.
-    PeerTimelineNode* m_pCurrentTextGroup {nullptr};
-    PeerTimelineNode* m_pCurrentCallGroup {nullptr};
+    IndividualTimelineNode* m_pCurrentTextGroup {nullptr};
+    IndividualTimelineNode* m_pCurrentCallGroup {nullptr};
 
-    QHash<Serializable::Group*, PeerTimelineNode*> m_hTextGroups;
+    QHash<Serializable::Group*, IndividualTimelineNode*> m_hTextGroups;
     QSet<Media::TextRecording*> m_hTrackedTRs;
     QSet<ContactMethod*> m_hTrackedCMs;
 
     // Constants
-    static const Matrix1D<PeerTimelineModel::NodeType ,QString> peerTimelineNodeName;
+    static const Matrix1D<IndividualTimelineModel::NodeType ,QString> peerTimelineNodeName;
 
     // Helpers
-    QVariant groupRoleData(PeerTimelineNode* group, int role);
-    PeerTimelineNode* getCategory(time_t t);
-    PeerTimelineNode* getGroup(TextMessageNode* message);
-    void insert(PeerTimelineNode* n, time_t t, std::vector<PeerTimelineNode*>& in, const QModelIndex& parent = {});
-    void incrementCounter(PeerTimelineNode* n);
+    QVariant groupRoleData(IndividualTimelineNode* group, int role);
+    IndividualTimelineNode* getCategory(time_t t);
+    IndividualTimelineNode* getGroup(TextMessageNode* message);
+    void insert(IndividualTimelineNode* n, time_t t, std::vector<IndividualTimelineNode*>& in, const QModelIndex& parent = {});
+    void incrementCounter(IndividualTimelineNode* n);
     void init();
     void disconnectOldCms();
 
-    PeerTimelineModel* q_ptr;
+    IndividualTimelineModel* q_ptr;
 public Q_SLOTS:
     void slotMessageAdded(TextMessageNode* message);
     void slotCallAdded(Call* call);
     void slotReload();
-    void slotClear(PeerTimelineNode* root = nullptr);
-    void slotContactChanged(Person* newContact, Person* oldContact);
+    void slotClear(IndividualTimelineNode* root = nullptr);
+    void slotContactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
     void slotTextRecordingAdded(Media::TextRecording* r);
-    void slotRebased(ContactMethod* other);
+    void slotRebased(ContactMethod* cm, ContactMethod* other);
     void slotPhoneNumberChanged();
     void slotPersonDestroyed();
 };
 
-const Matrix1D<PeerTimelineModel::NodeType, QString> PeerTimelineModelPrivate::peerTimelineNodeName = {
-    { PeerTimelineModel::NodeType::SECTION_DELIMITER , QStringLiteral( "sectionDelimiter" )},
-    { PeerTimelineModel::NodeType::TEXT_MESSAGE      , QStringLiteral( "textMessage"      )},
-    { PeerTimelineModel::NodeType::TIME_CATEGORY     , QStringLiteral( "timeCategory"     )},
-    { PeerTimelineModel::NodeType::CALL_GROUP        , QStringLiteral( "callGroup"        )},
-    { PeerTimelineModel::NodeType::CALL              , QStringLiteral( "call"             )},
-    { PeerTimelineModel::NodeType::AUDIO_RECORDING   , QStringLiteral( "audioRecording"   )},
-    { PeerTimelineModel::NodeType::SNAPSHOT_GROUP    , QStringLiteral( "snapshotGroup"    )},
-    { PeerTimelineModel::NodeType::SNAPSHOT          , QStringLiteral( "snapshot"         )},
-    { PeerTimelineModel::NodeType::EMAIL             , QStringLiteral( "email"            )},
+const Matrix1D<IndividualTimelineModel::NodeType, QString> IndividualTimelineModelPrivate::peerTimelineNodeName = {
+    { IndividualTimelineModel::NodeType::SECTION_DELIMITER , QStringLiteral( "sectionDelimiter" )},
+    { IndividualTimelineModel::NodeType::TEXT_MESSAGE      , QStringLiteral( "textMessage"      )},
+    { IndividualTimelineModel::NodeType::TIME_CATEGORY     , QStringLiteral( "timeCategory"     )},
+    { IndividualTimelineModel::NodeType::CALL_GROUP        , QStringLiteral( "callGroup"        )},
+    { IndividualTimelineModel::NodeType::CALL              , QStringLiteral( "call"             )},
+    { IndividualTimelineModel::NodeType::AUDIO_RECORDING   , QStringLiteral( "audioRecording"   )},
+    { IndividualTimelineModel::NodeType::SNAPSHOT_GROUP    , QStringLiteral( "snapshotGroup"    )},
+    { IndividualTimelineModel::NodeType::SNAPSHOT          , QStringLiteral( "snapshot"         )},
+    { IndividualTimelineModel::NodeType::EMAIL             , QStringLiteral( "email"            )},
 };
 
-PeerTimelineModelPrivate::PeerTimelineModelPrivate(PeerTimelineModel* parent) : q_ptr(parent)
+IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelineModel* parent) : q_ptr(parent)
 {
     auto t = new QTimer(this);
 
@@ -162,86 +159,47 @@ PeerTimelineModelPrivate::PeerTimelineModelPrivate(PeerTimelineModel* parent) : 
     );
     t->start();
 
-    connect(t, &QTimer::timeout, this, &PeerTimelineModelPrivate::slotReload);
-
-    //TODO
-    // * Detect new person contact method
-    // * Merge the timeline when the contact is set
+    connect(t, &QTimer::timeout, this, &IndividualTimelineModelPrivate::slotReload);
 }
 
-void PeerTimelineModelPrivate::init()
+void IndividualTimelineModelPrivate::init()
 {
-    if (m_pPerson) {
-        connect(m_pPerson, &Person::callAdded,
-            this, &PeerTimelineModelPrivate::slotCallAdded);
+    connect(m_pIndividual.data(), &Individual::callAdded,
+        this, &IndividualTimelineModelPrivate::slotCallAdded);
 
-        connect(m_pPerson->individual().data(), &Individual::relatedContactMethodsAdded,
-            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+    connect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
+        this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-        connect(m_pPerson->individual().data(), &Individual::phoneNumbersChanged,
-            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+    connect(m_pIndividual.data(), &Individual::phoneNumbersChanged,
+        this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-        auto cms = m_pPerson->individual()->relatedContactMethods();
-        cms.append(m_pPerson->individual()->phoneNumbers());
+    connect(m_pIndividual.data(), &Individual::childrenContactChanged,
+        this, &IndividualTimelineModelPrivate::slotContactChanged);
 
-        for (auto cm : qAsConst(cms))
-            q_ptr->addContactMethod(cm);
-    }
-    else {
-        m_hTrackedCMs.insert(m_pCM);
+    connect(m_pIndividual.data(), &Individual::childrenRebased,
+        this, &IndividualTimelineModelPrivate::slotRebased);
 
-        slotTextRecordingAdded(m_pCM->textRecording());
+    connect(m_pIndividual.data(), &Individual::textRecordingAdded,
+        this, &IndividualTimelineModelPrivate::slotTextRecordingAdded);
 
-        connect(m_pCM, &ContactMethod::callAdded,
-            this, &PeerTimelineModelPrivate::slotCallAdded);
+    auto cms = m_pIndividual.data()->relatedContactMethods();
+    cms.append(m_pIndividual.data()->phoneNumbers());
 
-        connect(m_pCM, &ContactMethod::contactChanged,
-            this, &PeerTimelineModelPrivate::slotContactChanged);
+    for (auto cm : qAsConst(cms))
+        q_ptr->addContactMethod(cm);
 
-        connect(m_pCM, &ContactMethod::rebased,
-            this, &PeerTimelineModelPrivate::slotRebased);
-
-        connect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
-            this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
-
-        const auto calls = m_pCM->calls();
-
-        for (auto c : qAsConst(calls))
-            slotCallAdded(c);
-
-        const auto trs = m_pCM->alternativeTextRecordings();
-
-        for (auto t : qAsConst(trs))
-            slotTextRecordingAdded(t);
-    }
+    const auto trs = m_pIndividual->textRecordings();
+    for (auto t : qAsConst(trs))
+        slotTextRecordingAdded(t);
 }
 
-PeerTimelineModel::PeerTimelineModel(Person* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
+IndividualTimelineModel::IndividualTimelineModel(QSharedPointer<Individual> ind) : QAbstractItemModel(ind.data()), d_ptr(new IndividualTimelineModelPrivate(this))
 {
-    d_ptr->m_pPerson = cm;
-    d_ptr->m_pIndividual = cm->individual();
+    d_ptr->m_pIndividual = ind;
     d_ptr->init();
 }
 
-PeerTimelineModel::PeerTimelineModel(ContactMethod* cm) : QAbstractItemModel(cm), d_ptr(new PeerTimelineModelPrivate(this))
-{
-    if (cm->contact()) {
-        d_ptr->m_pPerson = cm->contact();
-        d_ptr->m_pIndividual = cm->contact()->individual();
-        connect(d_ptr->m_pPerson, &QObject::destroyed,
-            d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
-    }
-    else {
-        d_ptr->m_pCM = cm;
-        d_ptr->m_pIndividual = cm->individual();
-        connect(cm, &QObject::destroyed,
-            d_ptr, &PeerTimelineModelPrivate::slotPersonDestroyed);
-    }
-
-    d_ptr->init();
-}
-
-PeerTimelineModel::~PeerTimelineModel()
+IndividualTimelineModel::~IndividualTimelineModel()
 {
     d_ptr->disconnectOldCms();
 
@@ -252,7 +210,7 @@ PeerTimelineModel::~PeerTimelineModel()
     delete d_ptr;
 }
 
-QHash<int,QByteArray> PeerTimelineModel::roleNames() const
+QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
     static bool initRoles = false;
@@ -276,25 +234,25 @@ QHash<int,QByteArray> PeerTimelineModel::roleNames() const
         roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
         roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
 
-        roles.insert((int)PeerTimelineModel::Role::NodeType               , "nodeType"            );
-        roles.insert((int)PeerTimelineModel::Role::CategoryEntries        , "categoryEntries"     );
-        roles.insert((int)PeerTimelineModel::Role::TotalEntries           , "totalEntries"        );
-        roles.insert((int)PeerTimelineModel::Role::ActiveCategories       , "activeCategories"    );
-        roles.insert((int)PeerTimelineModel::Role::EndAt                  , "endAt"               );
+        roles.insert((int)IndividualTimelineModel::Role::NodeType         , "nodeType"            );
+        roles.insert((int)IndividualTimelineModel::Role::CategoryEntries  , "categoryEntries"     );
+        roles.insert((int)IndividualTimelineModel::Role::TotalEntries     , "totalEntries"        );
+        roles.insert((int)IndividualTimelineModel::Role::ActiveCategories , "activeCategories"    );
+        roles.insert((int)IndividualTimelineModel::Role::EndAt            , "endAt"               );
     }
     return roles;
 }
 
-QVariant PeerTimelineModelPrivate::groupRoleData(PeerTimelineNode* group, int role)
+QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* group, int role)
 {
-    if (role == Qt::DisplayRole && group->m_Type == PeerTimelineModel::NodeType::CALL_GROUP)
+    if (role == Qt::DisplayRole && group->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP)
         return QStringLiteral("%1 (%2 incoming, %3 outgoing, %4 missed)")
             .arg(QDateTime::fromTime_t(group->m_StartTime).toString())
-            .arg(group->m_lSummary[PeerTimelineNode::SumaryEntries::INCOMING])
-            .arg(group->m_lSummary[PeerTimelineNode::SumaryEntries::OUTGOING])
+            .arg(group->m_lSummary[IndividualTimelineNode::SumaryEntries::INCOMING])
+            .arg(group->m_lSummary[IndividualTimelineNode::SumaryEntries::OUTGOING])
             .arg(
-                group->m_lSummary[PeerTimelineNode::SumaryEntries::MISSED_IN] +
-                group->m_lSummary[PeerTimelineNode::SumaryEntries::MISSED_OUT]
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_IN] +
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_OUT]
             );
 
     switch(role) {
@@ -306,18 +264,18 @@ QVariant PeerTimelineModelPrivate::groupRoleData(PeerTimelineNode* group, int ro
 }
 
 ///Get data from the model
-QVariant PeerTimelineModel::data( const QModelIndex& idx, int role) const
+QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
 {
     if ((!idx.isValid()) || idx.column())
         return {};
 
-    auto n = static_cast<PeerTimelineNode*>(idx.internalPointer());
+    auto n = static_cast<IndividualTimelineNode*>(idx.internalPointer());
 
     switch(role) {
         case (int) Role::NodeType:
             return QVariant::fromValue(n->m_Type);
         case (int) Role::CategoryEntries:
-            return n->m_Type == PeerTimelineModel::NodeType::TIME_CATEGORY ?
+            return n->m_Type == IndividualTimelineModel::NodeType::TIME_CATEGORY ?
                 n->m_pTimeCat->m_Entries : -1;
         case (int) Role::TotalEntries:
             return d_ptr->m_TotalEntries;
@@ -328,21 +286,21 @@ QVariant PeerTimelineModel::data( const QModelIndex& idx, int role) const
     }
 
     switch(n->m_Type) {
-        case PeerTimelineModel::NodeType::SECTION_DELIMITER:
-        case PeerTimelineModel::NodeType::CALL_GROUP:
+        case IndividualTimelineModel::NodeType::SECTION_DELIMITER:
+        case IndividualTimelineModel::NodeType::CALL_GROUP:
             return d_ptr->groupRoleData(n, role);
-        case PeerTimelineModel::NodeType::SNAPSHOT:
-        case PeerTimelineModel::NodeType::TEXT_MESSAGE:
+        case IndividualTimelineModel::NodeType::SNAPSHOT:
+        case IndividualTimelineModel::NodeType::TEXT_MESSAGE:
             return n->m_pMessage->roleData(role);
-        case PeerTimelineModel::NodeType::TIME_CATEGORY:
+        case IndividualTimelineModel::NodeType::TIME_CATEGORY:
             return role == Qt::DisplayRole ?
                 HistoryTimeCategoryModel::indexToName((int)n->m_pTimeCat->m_Cat) : QVariant();
-        case PeerTimelineModel::NodeType::CALL:
+        case IndividualTimelineModel::NodeType::CALL:
             return n->m_pCall->roleData(role);
-        case PeerTimelineModel::NodeType::AUDIO_RECORDING:
-        case PeerTimelineModel::NodeType::SNAPSHOT_GROUP:
-        case PeerTimelineModel::NodeType::EMAIL:
-        case PeerTimelineModel::NodeType::COUNT__:
+        case IndividualTimelineModel::NodeType::AUDIO_RECORDING:
+        case IndividualTimelineModel::NodeType::SNAPSHOT_GROUP:
+        case IndividualTimelineModel::NodeType::EMAIL:
+        case IndividualTimelineModel::NodeType::COUNT__:
             break;
     }
 
@@ -350,39 +308,39 @@ QVariant PeerTimelineModel::data( const QModelIndex& idx, int role) const
 }
 
 ///Number of row
-int PeerTimelineModel::rowCount(const QModelIndex& par) const
+int IndividualTimelineModel::rowCount(const QModelIndex& par) const
 {
     if (!par.isValid())
         return d_ptr->m_lTimeCategories.size();
 
-    const auto n = static_cast<PeerTimelineNode*>(par.internalPointer());
+    const auto n = static_cast<IndividualTimelineNode*>(par.internalPointer());
 
     return n->m_lChildren.size();
 }
 
-int PeerTimelineModel::columnCount(const QModelIndex& par) const
+int IndividualTimelineModel::columnCount(const QModelIndex& par) const
 {
     if (!par.isValid())
         return 1;
 
-    const auto n = static_cast<PeerTimelineNode*>(par.internalPointer());
+    const auto n = static_cast<IndividualTimelineNode*>(par.internalPointer());
 
     return n->m_lChildren.empty() ? 0 : 1;
 }
 
 ///Model flags
-Qt::ItemFlags PeerTimelineModel::flags(const QModelIndex& idx) const
+Qt::ItemFlags IndividualTimelineModel::flags(const QModelIndex& idx) const
 {
     Q_UNUSED(idx)
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-QModelIndex PeerTimelineModel::parent(const QModelIndex& index) const
+QModelIndex IndividualTimelineModel::parent(const QModelIndex& index) const
 {
     if (!index.isValid())
         return {};
 
-    auto n = static_cast<PeerTimelineNode*>(index.internalPointer());
+    auto n = static_cast<IndividualTimelineNode*>(index.internalPointer());
 
     if (!n->m_pParent)
         return {};
@@ -390,7 +348,7 @@ QModelIndex PeerTimelineModel::parent(const QModelIndex& index) const
     return createIndex(n->m_pParent->m_Index, 0, n->m_pParent);
 }
 
-QModelIndex PeerTimelineModel::index(int row, int column, const QModelIndex& parent) const
+QModelIndex IndividualTimelineModel::index(int row, int column, const QModelIndex& parent) const
 {
     if (column || row < 0)
         return {};
@@ -401,7 +359,7 @@ QModelIndex PeerTimelineModel::index(int row, int column, const QModelIndex& par
     if (!parent.isValid())
         return {};
 
-    auto n = static_cast<PeerTimelineNode*>(parent.internalPointer());
+    auto n = static_cast<IndividualTimelineNode*>(parent.internalPointer());
 
     if (row >= (int)n->m_lChildren.size())
         return {};
@@ -410,16 +368,16 @@ QModelIndex PeerTimelineModel::index(int row, int column, const QModelIndex& par
 }
 
 ///Set model data
-bool PeerTimelineModel::setData(const QModelIndex& idx, const QVariant &value, int role)
+bool IndividualTimelineModel::setData(const QModelIndex& idx, const QVariant &value, int role)
 {
     if (!idx.isValid())
         return false;
 
-    auto n = static_cast<PeerTimelineNode*>(idx.internalPointer());
+    auto n = static_cast<IndividualTimelineNode*>(idx.internalPointer());
 
     switch(role) {
         case (int)Media::TextRecording::Role::IsRead: {
-            if (n->m_Type != PeerTimelineModel::NodeType::TEXT_MESSAGE)
+            if (n->m_Type != IndividualTimelineModel::NodeType::TEXT_MESSAGE)
                 return false;
 
             if (!n->m_pMessage)
@@ -443,12 +401,12 @@ bool PeerTimelineModel::setData(const QModelIndex& idx, const QVariant &value, i
 }
 
 /// To create the summary scollbar, all entries need to be counted.
-void PeerTimelineModelPrivate::incrementCounter(PeerTimelineNode* n)
+void IndividualTimelineModelPrivate::incrementCounter(IndividualTimelineNode* n)
 {
     while(n->m_pParent)
         n = n->m_pParent;
 
-    Q_ASSERT(n->m_Type == PeerTimelineModel::NodeType::TIME_CATEGORY);
+    Q_ASSERT(n->m_Type == IndividualTimelineModel::NodeType::TIME_CATEGORY);
 
     n->m_pTimeCat->m_Entries++;
 
@@ -459,8 +417,8 @@ void PeerTimelineModelPrivate::incrementCounter(PeerTimelineNode* n)
 }
 
 /// Generic modern C++ function to insert entries
-void PeerTimelineModelPrivate::insert(PeerTimelineNode* n, time_t t,
-    std::vector<PeerTimelineNode*>& in, const QModelIndex& parent)
+void IndividualTimelineModelPrivate::insert(IndividualTimelineNode* n, time_t t,
+    std::vector<IndividualTimelineNode*>& in, const QModelIndex& parent)
 {
     // Many, if not most, elements are already sorted, speedup this case
     if (in.size() > 0 && in[in.size()-1]->m_StartTime < t) {
@@ -471,17 +429,17 @@ void PeerTimelineModelPrivate::insert(PeerTimelineNode* n, time_t t,
         return;
     }
 
-    static PeerTimelineNode fake;
+    static IndividualTimelineNode fake;
     fake.m_StartTime = t;
 
     auto it = std::upper_bound(in.begin(), in.end(), &fake,
-        [](const PeerTimelineNode* a, const PeerTimelineNode* t2) -> bool {
+        [](const IndividualTimelineNode* a, const IndividualTimelineNode* t2) -> bool {
             return (int)a->m_StartTime < (int)t2->m_StartTime;
     });
 
     n->m_Index = std::distance(in.begin(), it);
 
-    std::for_each(it, in.end(), [](PeerTimelineNode* n) {n->m_Index++;});
+    std::for_each(it, in.end(), [](IndividualTimelineNode* n) {n->m_Index++;});
 
     q_ptr->beginInsertRows(parent, n->m_Index, n->m_Index);
     in.insert(it, n);
@@ -491,15 +449,15 @@ void PeerTimelineModelPrivate::insert(PeerTimelineNode* n, time_t t,
 }
 
 /// Return or create a time category
-PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
+IndividualTimelineNode* IndividualTimelineModelPrivate::getCategory(time_t t)
 {
     const auto cat = HistoryTimeCategoryModel::timeToHistoryConst(t);
 
     if (m_hCats.contains((int) cat))
         return m_hCats[(int) cat];
 
-    auto n               = new PeerTimelineNode;
-    n->m_Type            = PeerTimelineModel::NodeType::TIME_CATEGORY;
+    auto n               = new IndividualTimelineNode;
+    n->m_Type            = IndividualTimelineModel::NodeType::TIME_CATEGORY;
     n->m_pTimeCat        = new TimeCategoryData;
     n->m_pTimeCat->m_Cat = cat;
     n->m_StartTime       = -(time_t) cat; //HACK
@@ -514,7 +472,7 @@ PeerTimelineNode* PeerTimelineModelPrivate::getCategory(time_t t)
     return n;
 }
 
-PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
+IndividualTimelineNode* IndividualTimelineModelPrivate::getGroup(TextMessageNode* message)
 {
     const auto g = message->m_pGroup;
     Q_ASSERT(g);
@@ -523,54 +481,50 @@ PeerTimelineNode* PeerTimelineModelPrivate::getGroup(TextMessageNode* message)
         // The most simple case, no lookup required and nearly 100% probability
         return m_pCurrentTextGroup;
     }
-    else if (m_hTextGroups.contains(g)) {
-        return m_hTextGroups[g];
-    }
-    else {
-        auto cat = getCategory(message->m_pMessage->timestamp());
-
-        // Snapshot have their own look and feel
-        const auto type = g->type == MimeMessage::Type::SNAPSHOT ?
-            PeerTimelineModel::NodeType::SNAPSHOT_GROUP :
-            PeerTimelineModel::NodeType::SECTION_DELIMITER;
-
-        // Create a new entry
-        auto ret       = new PeerTimelineNode;
-        ret->m_Type    = type;
-        ret->m_pGroup  = g;
-        ret->m_pParent = cat;
-
-        // Take the oldest message (for consistency)
-        ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp();
-
-        Q_ASSERT(g->messages.isEmpty() == false);
-
-        insert(ret, ret->m_StartTime, cat->m_lChildren, q_ptr->createIndex(cat->m_Index, 0, cat));
-
-        m_hTextGroups[g] = ret;
-
-        return ret;
+    else if (auto n = m_hTextGroups.value(g)) {
+        return n;
     }
 
-    // Can't happen, but trigger a warning when missing
-    return nullptr;
+    auto cat = getCategory(message->m_pMessage->timestamp());
+
+    // Snapshot have their own look and feel
+    const auto type = g->type == MimeMessage::Type::SNAPSHOT ?
+        IndividualTimelineModel::NodeType::SNAPSHOT_GROUP :
+        IndividualTimelineModel::NodeType::SECTION_DELIMITER;
+
+    // Create a new entry
+    auto ret       = new IndividualTimelineNode;
+    ret->m_Type    = type;
+    ret->m_pGroup  = g;
+    ret->m_pParent = cat;
+
+    // Take the oldest message (for consistency)
+    ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp();
+
+    Q_ASSERT(g->messages.isEmpty() == false);
+
+    insert(ret, ret->m_StartTime, cat->m_lChildren, q_ptr->createIndex(cat->m_Index, 0, cat));
+
+    m_hTextGroups[g] = ret;
+
+    return ret;
 }
 
-void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
+void IndividualTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 {
     const auto messageType = message->m_pMessage->type() == MimeMessage::Type::SNAPSHOT ?
-        PeerTimelineModel::NodeType::SNAPSHOT :
-        PeerTimelineModel::NodeType::TEXT_MESSAGE;
+        IndividualTimelineModel::NodeType::SNAPSHOT :
+        IndividualTimelineModel::NodeType::TEXT_MESSAGE;
 
     // Do not show empty messages
-    if (message->m_pMessage->plainText().isEmpty() && messageType != PeerTimelineModel::NodeType::SNAPSHOT)
+    if (message->m_pMessage->plainText().isEmpty() && messageType != IndividualTimelineModel::NodeType::SNAPSHOT)
         return;
 
     auto group = getGroup(message);
     m_pCurrentTextGroup = group;
     m_pCurrentCallGroup = nullptr;
 
-    auto ret         = new PeerTimelineNode;
+    auto ret         = new IndividualTimelineNode;
     ret->m_pMessage  = message;
     ret->m_StartTime = message->m_pMessage->timestamp();
     ret->m_pParent   = group;
@@ -584,7 +538,7 @@ void PeerTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
     emit q_ptr->dataChanged(idx, idx);
 }
 
-void PeerTimelineModelPrivate::slotCallAdded(Call* call)
+void IndividualTimelineModelPrivate::slotCallAdded(Call* call)
 {
     auto cat = getCategory(call->startTimeStamp());
 
@@ -593,10 +547,10 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
     // little shortcut and skip proper lookup. If this is to ever become a false
     // assumption, then this code will need to be updated.
     if ((!m_pCurrentCallGroup) || (m_pCurrentCallGroup->m_pParent != cat)) {
-        m_pCurrentCallGroup = new PeerTimelineNode;
+        m_pCurrentCallGroup = new IndividualTimelineNode;
         m_pCurrentTextGroup = nullptr;
 
-        m_pCurrentCallGroup->m_Type      = PeerTimelineModel::NodeType::CALL_GROUP;
+        m_pCurrentCallGroup->m_Type      = IndividualTimelineModel::NodeType::CALL_GROUP;
         m_pCurrentCallGroup->m_StartTime = call->startTimeStamp();
         m_pCurrentCallGroup->m_EndTime   = call->stopTimeStamp ();
 
@@ -610,9 +564,9 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
         );
     }
 
-    auto ret         = new PeerTimelineNode;
+    auto ret         = new IndividualTimelineNode;
     ret->m_pCall     = call;
-    ret->m_Type      = PeerTimelineModel::NodeType::CALL;
+    ret->m_Type      = IndividualTimelineModel::NodeType::CALL;
     ret->m_StartTime = call->startTimeStamp();
     ret->m_EndTime   = call->stopTimeStamp();
     ret->m_pParent   = m_pCurrentCallGroup;
@@ -638,7 +592,7 @@ void PeerTimelineModelPrivate::slotCallAdded(Call* call)
 }
 
 /// To use with extreme restrict, this isn't really intended to be used directly
-void PeerTimelineModel::addContactMethod(ContactMethod* cm)
+void IndividualTimelineModel::addContactMethod(ContactMethod* cm)
 {
 
     // Only add new content, also check for potential aliases
@@ -652,28 +606,13 @@ void PeerTimelineModel::addContactMethod(ContactMethod* cm)
     for (auto c : qAsConst(calls))
         d_ptr->slotCallAdded(c);
 
-    d_ptr->slotTextRecordingAdded(cm->textRecording());
-
-    connect(cm, &ContactMethod::contactChanged,
-        d_ptr, &PeerTimelineModelPrivate::slotContactChanged);
-
-    connect(cm, &ContactMethod::rebased,
-        d_ptr, &PeerTimelineModelPrivate::slotRebased);
-
-    connect(cm, &ContactMethod::alternativeTextRecordingAdded,
-        d_ptr, &PeerTimelineModelPrivate::slotTextRecordingAdded);
-
-    const auto trs = cm->alternativeTextRecordings();
-    for (auto t : qAsConst(trs))
-        d_ptr->slotTextRecordingAdded(t);
-
     d_ptr->m_hTrackedCMs.insert(cm);
 }
 
-void PeerTimelineModelPrivate::slotPhoneNumberChanged()
+void IndividualTimelineModelPrivate::slotPhoneNumberChanged()
 {
-    auto cms = m_pPerson->individual()->relatedContactMethods();
-    cms.append(m_pPerson->individual()->phoneNumbers());
+    auto cms = m_pIndividual->relatedContactMethods();
+    cms.append(m_pIndividual->phoneNumbers());
 
     for (auto cm : qAsConst(cms))
         q_ptr->addContactMethod(cm);
@@ -684,15 +623,14 @@ void PeerTimelineModelPrivate::slotPhoneNumberChanged()
 // It can happen if something hold a smart pointer for too long. This is a bug
 // elsewhere, but given I can't fix Qt5::Quick internal GC race conditions, it
 // mitigates potential crashes.
-void PeerTimelineModelPrivate::slotPersonDestroyed()
+void IndividualTimelineModelPrivate::slotPersonDestroyed()
 {
     // The slots will be disconnected by QObject
-    m_pPerson = nullptr;
-    m_pCM     = nullptr;
+    m_pIndividual = nullptr;
     qWarning() << "A contact was destroyed while its timeline is referenced" << this;
 }
 
-void PeerTimelineModelPrivate::slotReload()
+void IndividualTimelineModelPrivate::slotReload()
 {
     // Eventually, this could be optimized to detect if `reset` is more efficient
     // than individual `move` operation and pick the "right" mode. For now,
@@ -701,7 +639,7 @@ void PeerTimelineModelPrivate::slotReload()
     q_ptr->beginResetModel();
 
     // Keep the old sub-trees, there is no point in re-generating them
-    std::list< std::vector<PeerTimelineNode*> > entries;
+    std::list< std::vector<IndividualTimelineNode*> > entries;
 
     for (auto n : m_lTimeCategories) {
         entries.push_back(std::move(n->m_lChildren));
@@ -723,7 +661,7 @@ void PeerTimelineModelPrivate::slotReload()
     q_ptr->endResetModel();
 }
 
-void PeerTimelineModelPrivate::slotClear(PeerTimelineNode* root)
+void IndividualTimelineModelPrivate::slotClear(IndividualTimelineNode* root)
 {
     for (auto n : root ? root->m_lChildren : m_lTimeCategories)
         slotClear(n);
@@ -742,77 +680,53 @@ void PeerTimelineModelPrivate::slotClear(PeerTimelineNode* root)
     }
 }
 
-void PeerTimelineModelPrivate::disconnectOldCms()
+void IndividualTimelineModelPrivate::disconnectOldCms()
 {
     // Both m_pPerson and m_pCM can be null if the smart pointer race condition
     // inside of Qt5::Quick happens
 
-    if (m_pPerson) {
-        disconnect(m_pPerson, &Person::callAdded,
-            this, &PeerTimelineModelPrivate::slotCallAdded);
+    disconnect(m_pIndividual.data(), &Individual::callAdded,
+        this, &IndividualTimelineModelPrivate::slotCallAdded);
 
-        disconnect(m_pPerson->individual().data(), &Individual::relatedContactMethodsAdded,
-            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+    disconnect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
+        this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-        disconnect(m_pPerson->individual().data(), &Individual::phoneNumbersChanged,
-            this, &PeerTimelineModelPrivate::slotPhoneNumberChanged);
+    disconnect(m_pIndividual.data(), &Individual::phoneNumbersChanged,
+        this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-        // Add both phone number and whatever links to this person
-        auto cms = m_pPerson->individual()->relatedContactMethods();
-        cms.append(m_pPerson->individual()->phoneNumbers());
+    disconnect(m_pIndividual.data(), &Individual::childrenContactChanged,
+        this, &IndividualTimelineModelPrivate::slotContactChanged);
 
-        for (auto cm : qAsConst(cms)) {
-            disconnect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-                this, &PeerTimelineModelPrivate::slotMessageAdded);
+    disconnect(m_pIndividual.data(), &Individual::textRecordingAdded,
+        this, &IndividualTimelineModelPrivate::slotTextRecordingAdded);
 
-            disconnect(cm, &ContactMethod::contactChanged,
-                this, &PeerTimelineModelPrivate::slotContactChanged);
+    disconnect(m_pIndividual.data(), &Individual::childrenRebased,
+        this, &IndividualTimelineModelPrivate::slotRebased);
 
-            disconnect(cm, &ContactMethod::alternativeTextRecordingAdded,
-                this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
+    // Add both phone number and whatever links to this person
+    auto cms = m_pIndividual->relatedContactMethods();
+    cms.append(m_pIndividual->phoneNumbers());
 
-            disconnect(cm, &ContactMethod::rebased,
-                this, &PeerTimelineModelPrivate::slotRebased);
-        }
-    }
-    else if (m_pCM) {
-        if (auto textRec = m_pCM->textRecording())
-            disconnect(textRec->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-            this, &PeerTimelineModelPrivate::slotMessageAdded);
-
-        disconnect(m_pCM, &ContactMethod::alternativeTextRecordingAdded,
-            this, &PeerTimelineModelPrivate::slotTextRecordingAdded);
-
-        disconnect(m_pCM, &ContactMethod::callAdded,
-            this, &PeerTimelineModelPrivate::slotCallAdded);
-
-        disconnect(m_pCM, &ContactMethod::rebased,
-            this, &PeerTimelineModelPrivate::slotRebased);
-
-        disconnect(m_pCM, &ContactMethod::contactChanged,
-            this, &PeerTimelineModelPrivate::slotContactChanged);
+    for (auto cm : qAsConst(cms)) {
+        disconnect(cm->textRecording()->d_ptr, &Media::TextRecordingPrivate::messageAdded,
+            this, &IndividualTimelineModelPrivate::slotMessageAdded);
     }
 }
 
 /// Avoid showing mismatching data during/after merges to contact changes
-void PeerTimelineModelPrivate::
-slotContactChanged(Person* newContact, Person* oldContact)
+void IndividualTimelineModelPrivate::
+slotContactChanged(ContactMethod* cm, Person* newContact, Person* oldContact)
 {
+    Q_UNUSED(cm)
+    //TODO if the contact changed, it probably doesn't belong to this individual
+    // anymore. Handle it.
+
     if ((!newContact) || newContact == oldContact)
         return;
 
     // Will happen if the original contact was a placeholder
     if (oldContact && newContact->uid() == oldContact->uid())
         return;
-
-    if (m_pPerson)
-        disconnect(m_pPerson, &QObject::destroyed,
-            this, &PeerTimelineModelPrivate::slotPersonDestroyed);
-
-    m_pPerson = newContact;
-
-    connect(m_pPerson, &QObject::destroyed,
-        this, &PeerTimelineModelPrivate::slotPersonDestroyed);
 
     // Tracking what can and cannot be salvaged isn't worth it
     disconnectOldCms();
@@ -825,15 +739,15 @@ slotContactChanged(Person* newContact, Person* oldContact)
 }
 
 /// Reload everything if the new and old CM base is incompatible.
-void PeerTimelineModelPrivate::slotRebased(ContactMethod* other)
+void IndividualTimelineModelPrivate::slotRebased(ContactMethod* cm, ContactMethod* other)
 {
-    if (other == sender())
+    if (other == cm)
         return;
 
     slotReload();
 }
 
-void PeerTimelineModelPrivate::
+void IndividualTimelineModelPrivate::
 slotTextRecordingAdded(Media::TextRecording* r)
 {
     // This will happen when ContactMethods are merged
@@ -846,9 +760,9 @@ slotTextRecordingAdded(Media::TextRecording* r)
         slotMessageAdded(m);
 
     connect(r->d_ptr, &Media::TextRecordingPrivate::messageAdded,
-        this, &PeerTimelineModelPrivate::slotMessageAdded);
+        this, &IndividualTimelineModelPrivate::slotMessageAdded);
 }
 
-#include <peertimelinemodel.moc>
+#include <individualtimelinemodel.moc>
 
 // kate: space-indent on; indent-width 4; replace-tabs on;
