@@ -320,7 +320,7 @@ const QByteArray VCardUtils::endVCard()
    return result.toUtf8();
 }
 
-QList< Person* > VCardUtils::loadDir (const QUrl& path, bool& ok, QHash<const Person*,QString>& paths)
+QList< Person* > VCardUtils::loadDir(const QUrl& path, bool& ok, QHash<const Person*,QString>& paths)
 {
    QList< Person* > ret;
 
@@ -329,7 +329,7 @@ QList< Person* > VCardUtils::loadDir (const QUrl& path, bool& ok, QHash<const Pe
       ok = false;
    else {
       ok = true;
-      for (const QString& file : dir.entryList({"*.vcf"},QDir::Files)) {
+      for (const QString& file : dir.entryList({"*.vcf"}, QDir::Files)) {
          Person* p = new Person();
          mapToPerson(p,QUrl(dir.absoluteFilePath(file)));
          ret << p;
@@ -340,55 +340,74 @@ QList< Person* > VCardUtils::loadDir (const QUrl& path, bool& ok, QHash<const Pe
    return ret;
 }
 
+QList<QPair< QByteArray, QByteArray> > VCardUtils::
+parseFields(const QByteArray& all)
+{
+    QList<QPair< QByteArray, QByteArray> > l;
+
+    QByteArray previousKey,previousValue;
+    const QList<QByteArray> lines = all.split('\n');
+
+    // Each property can be spread over multiple lines, but it is not known
+    // until those lines are processed, hence the weirdness.
+    for (const QByteArray& property : qAsConst(lines)) {
+        //Ignore empty lines
+        if (property.size()) {
+            //Some properties are over multiple lines
+            if (property[0] == ' ' && previousKey.size() > 1) {
+                // To avoid a deep copy as QByteArray::right() produces, use a the
+                // data directly.
+                previousValue.append(
+                    QByteArray::fromRawData(property.data()+1, property.size()-1)
+                );
+            }
+            else {
+                if (previousKey.size())
+                    l << QPair< QByteArray, QByteArray> {previousKey, previousValue.trimmed()};
+
+                //Do not use split, URIs can have : in them
+                const int dblptPos = property.indexOf(':');
+                const QByteArray k(property.left(dblptPos)),v(property.right(property.size()-dblptPos-1));
+
+
+                previousKey   = k;
+                previousValue = v;
+            }
+        }
+    }
+
+    if (previousKey.size())
+        l << QPair< QByteArray, QByteArray> {previousKey, previousValue.trimmed()};
+
+    return l;
+}
+
 //TODO use QStringRef
 bool VCardUtils::mapToPerson(Person* p, const QByteArray& all, QList<Account*>* accounts)
 {
-   QByteArray previousKey,previousValue;
-   const QList<QByteArray> lines = all.split('\n');
+    const auto fields = parseFields(all);
 
-   foreach (const QByteArray& property, lines) {
-      //Ignore empty lines
-      if (property.size()) {
-         //Some properties are over multiple lines
-         if (property[0] == ' ' && previousKey.size() > 1) {
-            // To avoid a deep copy as QByteArray::right() produces, use a the
-            // data directly.
-            previousValue.append(
-                QByteArray::fromRawData(property.data()+1, property.size()-1)
-            );
-         }
-         else {
-            if (previousKey.size())
-               vc_mapper->metacall(p,previousKey,previousValue.trimmed());
+    for (const auto& pair : qAsConst(fields)) {
+        if (pair.first.size())
+            vc_mapper->metacall(p, pair.first, pair.second);
 
-            //Do not use split, URIs can have : in them
-            const int dblptPos = property.indexOf(':');
-            const QByteArray k(property.left(dblptPos)),v(property.right(property.size()-dblptPos-1));
+        //Link with accounts
+        if(pair.first == VCardUtils::Property::X_RINGACCOUNT) {
+            if (accounts) {
+                Account* a = AccountModel::instance().getById(pair.second,true);
+                if(!a) {
+                    qDebug() << "Could not find account: " << pair.second;
+                    continue;
+                }
 
-            //Link with accounts
-            if(k == VCardUtils::Property::X_RINGACCOUNT) {
-                  if (accounts) {
-                  Account* a = AccountModel::instance().getById(v.trimmed(),true);
-                  if(!a) {
-                     qDebug() << "Could not find account: " << v.trimmed();
-                     continue;
-                  }
-
-                  (*accounts) << a;
-               }
+                (*accounts) << a;
             }
+        }
+    }
 
-            previousKey   = k;
-            previousValue = v;
-         }
+    vc_mapper->apply();
 
-      }
-
-   }
-
-   vc_mapper->apply();
-
-   return true;
+    return true;
 }
 
 bool VCardUtils::mapToPerson(Person* p, const QUrl& path, QList<Account*>* accounts)

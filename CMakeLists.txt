@@ -109,6 +109,7 @@ SET( libringqt_LIB_SRCS
   src/certificate.cpp
   src/securityflaw.cpp
   src/ringtone.cpp
+  src/infotemplate.cpp
   src/contactrequest.cpp
   src/presencestatus.cpp
   src/media/media.cpp
@@ -123,6 +124,7 @@ SET( libringqt_LIB_SRCS
 
   #Models
   src/bootstrapmodel.cpp
+  src/individualeditor.cpp
   src/ringdevicemodel.cpp
   src/accountmodel.cpp
   src/availableaccountmodel.cpp
@@ -143,6 +145,7 @@ SET( libringqt_LIB_SRCS
   src/numbercompletionmodel.cpp
   src/profilemodel.cpp
   src/ringtonemodel.cpp
+  src/infotemplatemanager.cpp
   src/lastusednumbermodel.cpp
   src/securityevaluationmodel.cpp
   src/personmodel.cpp
@@ -188,6 +191,7 @@ SET( libringqt_LIB_SRCS
   src/localbookmarkcollection.cpp
   src/localnameservicecache.cpp
   src/localringtonecollection.cpp
+  src/localinfotemplatecollection.cpp
   src/peerprofilecollection2.cpp
 
   #Communication
@@ -252,6 +256,7 @@ SET( libringqt_LIB_HDRS
   src/categorizedhistorymodel.h
   src/person.h
   src/bootstrapmodel.h
+  src/individualeditor.h
   src/ringdevicemodel.h
   src/collectioninterface.h
   src/collectioninterface.hpp
@@ -273,9 +278,11 @@ SET( libringqt_LIB_HDRS
   src/profilemodel.h
   src/numbercategory.h
   src/ringtonemodel.h
+  src/infotemplatemanager.h
   src/localrecordingcollection.h
   src/localbookmarkcollection.h
   src/localringtonecollection.h
+  src/localinfotemplatecollection.h
   src/localmacrocollection.h
   src/localhistorycollection.h
   src/localprofilecollection.h
@@ -295,6 +302,7 @@ SET( libringqt_LIB_HDRS
   src/uri.h
   src/macro.h
   src/ringtone.h
+  src/infotemplate.h
   src/itembase.h
   src/itembase.hpp
   src/mime.h

@@ -25,6 +25,7 @@
 #include <typedefs.h>
 class Person;
 class Call;
+class IndividualEditor;
 class IndividualPrivate;
 namespace Media {
     class TextRecording;
@@ -62,6 +63,8 @@ public:
 
     QSharedPointer<QAbstractItemModel> timelineModel() const;
     ContactMethod* lastUsedContactMethod() const;
+
+    QSharedPointer<IndividualEditor> createEditor() const;
 
     Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
     Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);

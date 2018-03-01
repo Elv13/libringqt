@@ -25,7 +25,10 @@
 #include <phonedirectorymodel.h>
 #include <person.h>
 #include <account.h>
+#include <infotemplatemanager.h>
+#include <infotemplate.h>
 #include <accountmodel.h>
+#include <individualeditor.h>
 #include <certificatemodel.h>
 #include <individualtimelinemodel.h>
 #include "media/textrecording.h"
@@ -57,6 +60,7 @@ public:
     // Helpers
     void connectContactMethod(ContactMethod* cm);
     void disconnectContactMethod(ContactMethod* cm);
+    InfoTemplate* infoTemplate();
 
     Individual* q_ptr;
 
@@ -685,6 +689,25 @@ QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>
     }
 
     return ind;
+}
+
+InfoTemplate* IndividualPrivate::infoTemplate()
+{
+    return InfoTemplateManager::instance().defaultInfoTemplate();
+}
+
+/**
+ * Volatile editor object the user interface can use to encapsulate the logic
+ * behind modifying an individual, creating contacts and so on.
+ */
+QSharedPointer<IndividualEditor> Individual::createEditor() const
+{
+    return QSharedPointer<IndividualEditor>(
+        new IndividualEditor(
+            const_cast<Individual*>(this),
+            d_ptr->infoTemplate()
+        )
+    );
 }
 
 #include <individual.moc>

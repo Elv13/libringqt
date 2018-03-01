@@ -87,6 +87,8 @@ public:
    static Person* mapToPersonFromReceivedProfile(ContactMethod *contactMethod, const QByteArray& payload);
    static Person* mapToPerson(const QByteArray& payload, bool purgeUntrusted = false);
    static QHash<QByteArray, QByteArray> toHashMap(const QByteArray& content);
+   static QList<QPair< QByteArray, QByteArray> > parseFields(const QByteArray& content);
+
 
    //Serialization
    static QByteArray wrapInMime(const QString& mimeType, const QByteArray& payload);
