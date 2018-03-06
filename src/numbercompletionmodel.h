@@ -51,6 +51,20 @@ public:
    };
    Q_ENUMS(LookupStatus)
 
+   /**
+    * Define where the completion entry is coming from.
+    *
+    * The order represent the priority in case it's available from multiple
+    * sources.
+    */
+   enum class EntrySource {
+       FROM_BOOKMARKS,
+       FROM_HISTORY,
+       FROM_CONTACTS,
+       FROM_WEB,
+   };
+   Q_ENUMS(EntrySource)
+
    enum Role {
       ALTERNATE_ACCOUNT = (int)ContactMethod::Role::UserData,
       FORCE_ACCOUNT      ,
@@ -61,6 +75,7 @@ public:
       NAME_STATUS        ,
       NAME_STATUS_SRING  ,
       SUPPORTS_REGISTRY  ,
+      ENTRY_SOURCE       ,
    };
 
    explicit NumberCompletionModel();
@@ -101,4 +116,5 @@ Q_SIGNALS:
 
 Q_DECLARE_METATYPE(NumberCompletionModel*)
 Q_DECLARE_METATYPE(NumberCompletionModel::LookupStatus)
+Q_DECLARE_METATYPE(NumberCompletionModel::EntrySource)
 

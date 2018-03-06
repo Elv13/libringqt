@@ -87,6 +87,7 @@ public:
    QPair<bool, bool> matchSipAndRing(const URI& uri) const;
    NumberCompletionModel::LookupStatus entryStatus(const ContactMethod* cm) const;
    QString entryStatusName(const ContactMethod* cm) const;
+   NumberCompletionModel::EntrySource entrySource(const ContactMethod* cm) const;
 
 public Q_SLOTS:
    void setPrefix(const QString& str);
@@ -184,6 +185,7 @@ QHash<int,QByteArray> NumberCompletionModel::roleNames() const
       roles[Role::NAME_STATUS      ]= "nameStatus"      ;
       roles[Role::NAME_STATUS_SRING]= "nameStatusString";
       roles[Role::SUPPORTS_REGISTRY]= "supportsRegistry";
+      roles[Role::ENTRY_SOURCE     ]= "entrySource"     ;
    }
 
    return roles;
@@ -235,6 +237,8 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
             case static_cast<int>(Role::SUPPORTS_REGISTRY):
                return n->type() == ContactMethod::Type::TEMPORARY &&
                   n->account() && n->account()->protocol() == Account::Protocol::RING;
+            case static_cast<int>(Role::ENTRY_SOURCE):
+                return QVariant::fromValue(d_ptr->entrySource(n));
          };
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:
@@ -770,6 +774,22 @@ QString NumberCompletionModelPrivate::entryStatusName(const ContactMethod* cm) c
     };
 
     return names[entryStatus(cm)];
+}
+
+NumberCompletionModel::EntrySource NumberCompletionModelPrivate::entrySource(const ContactMethod* cm) const
+{
+    if (cm->isBookmarked())
+        return NumberCompletionModel::EntrySource::FROM_BOOKMARKS;
+
+    if (cm->lastUsed())
+        return NumberCompletionModel::EntrySource::FROM_HISTORY;
+
+    if (cm->contact())
+        return NumberCompletionModel::EntrySource::FROM_CONTACTS;
+
+    // Technically it can also be a random value on a SIP account, but for Ring
+    // accounts it's good enough.
+    return NumberCompletionModel::EntrySource::FROM_WEB;
 }
 
 #include <numbercompletionmodel.moc>
