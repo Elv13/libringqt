@@ -49,16 +49,18 @@ public:
    virtual bool addNew     ( Call*       item ) override;
    virtual bool addExisting( const Call* item ) override;
 
+   //Attributes
+   QVector<Call*> m_lItems;
+   QVector< std::function< void(LocalHistoryCollection*) > > m_lCallbacks;
+   bool m_IsLoaded {false};
+   LocalHistoryCollection* m_pCollection;
+
 private:
    virtual QVector<Call*> items() const override;
 
    //Helpers
    void saveCall(QTextStream& stream, const Call* call);
    bool regenFile(const Call* toIgnore);
-
-   //Attributes
-   QVector<Call*> m_lItems;
-   LocalHistoryCollection* m_pCollection;
 };
 
 LocalHistoryEditor::LocalHistoryEditor(CollectionMediator<Call>* m, LocalHistoryCollection* parent) :
@@ -260,6 +262,13 @@ bool LocalHistoryCollection::load()
                hc[line.left(idx)] = line.right(line.size()-idx-1);
          }
       }
+
+      for (auto cb :  static_cast<LocalHistoryEditor*>(editor<Call>())->m_lCallbacks) {
+          cb(this);
+      }
+
+      static_cast<LocalHistoryEditor*>(editor<Call>())->m_IsLoaded = true;
+
       return true;
    }
    else
@@ -292,4 +301,12 @@ bool LocalHistoryCollection::clear()
 QByteArray LocalHistoryCollection::id() const
 {
    return "mhb";
+}
+
+void LocalHistoryCollection::addCompletionCallback(std::function<void(LocalHistoryCollection*)> cb)
+{
+    if (static_cast<LocalHistoryEditor*>(editor<Call>())->m_IsLoaded)
+        cb(this);
+    else
+        static_cast<LocalHistoryEditor*>(editor<Call>())->m_lCallbacks << cb;
 }

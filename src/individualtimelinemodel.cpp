@@ -35,7 +35,7 @@
 #include "call.h"
 #include "historytimecategorymodel.h"
 #include "private/textrecording_p.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 struct TimeCategoryData
 {

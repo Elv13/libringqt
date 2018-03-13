@@ -21,6 +21,7 @@
 #include <QtCore/QVariant>
 
 #include <typedefs.h>
+#include <libcard/flagutils.h>
 
 class Account;
 class Person;

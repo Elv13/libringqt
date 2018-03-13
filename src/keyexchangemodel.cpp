@@ -27,7 +27,7 @@
 //Ring
 #include "account.h"
 #include "account_p.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 class KeyExchangeModelPrivate final : public QObject
 {

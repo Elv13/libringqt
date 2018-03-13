@@ -17,7 +17,7 @@
  ***************************************************************************/
 #pragma once
 
-#include "matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "certificate.h"
 
 #include <QtCore/QMutex>

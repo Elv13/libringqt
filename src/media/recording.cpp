@@ -18,7 +18,7 @@
 #include "recording.h"
 
 #include "recordingmodel.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 namespace Media {
 typedef void (Recording::*RedFct)();

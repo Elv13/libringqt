@@ -27,7 +27,7 @@ class QTimer;
 
 // Ring
 #include "call.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 class Account;
 class ContactMethod;
 class UserActionModel;

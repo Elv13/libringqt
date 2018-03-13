@@ -33,7 +33,7 @@ template<
 EnumClass EnumIterator<EnumClass, from, to>::EnumClassIter::operator* () const
 {
    const int size = enum_class_size<EnumClass, from, to>();
-   Q_ASSERT(pos_ < size);
+   assert(pos_ < size);
    return static_cast<EnumClass>(pos_);
 }
 
@@ -115,26 +115,26 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::initializer_l
    }
 
    // FIXME C++14, use static_assert and make the ctor constexpr
-   Q_ASSERT(std::begin(s)->size() == enum_class_size<Row>());//,"Matrix row have to match the enum class size");
+   assert(std::begin(s)->size() == enum_class_size<Row>());//,"Matrix row have to match the enum class size");
 }
 
 template<typename Enum>
 EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
 {
    static_assert(std::is_enum<Enum>(),"Row has to be an enum class");
-   Q_ASSERT(s.size() == enum_class_size<Enum>());
+   assert(s.size() == enum_class_size<Enum>());
 
    //FIXME the code below isn't correct, this isn't a problem until the limit
    //is reached. This is private API, so it can wait
    static const int longSize = sizeof(unsigned long long)*8;
-   Q_ASSERT(enum_class_size<Enum>() < longSize -1);
+   assert(enum_class_size<Enum>() < longSize -1);
 
    unsigned long long usedElements[enum_class_size<Enum>()] = {};
 
    int i=0;
    for (auto& p : s) {
       const int val = static_cast<int>(p);
-      Q_ASSERT(!(usedElements[val/longSize] & (0x1 << (val%longSize)))); // isNotPresent
+      assert(!(usedElements[val/longSize] & (0x1 << (val%longSize)))); // isNotPresent
       usedElements[val/longSize] |= (0x1 << (val%longSize));
       m_lData[i++] = p;
    }
@@ -145,11 +145,11 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
 : m_lData{} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
-      Q_ASSERT(s.size() == 1);
+      assert(s.size() == 1);
 
    for (const Matrix1D<Row,Value,Accessor>::Order& p : s) {
       // FIXME C++14, use static_assert and make the ctor constexpr
-      Q_ASSERT(p.vs.size() == enum_class_size<Row>());
+      assert(p.vs.size() == enum_class_size<Row>());
 
       int reOredered[enum_class_size<Row>()],i(0);
       for (const Row r : p.order.m_lData)
@@ -177,7 +177,7 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
 
    //FIXME the code below isn't correct, this isn't a problem until the limit
    //is reached. This is private API, so it can wait
-   Q_ASSERT(enum_class_size<Row>() < longSize -1);
+   assert(enum_class_size<Row>() < longSize -1);
 
    unsigned long long usedElements[enum_class_size<Row>()] = {};
 
@@ -185,7 +185,7 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
    for (auto& pair : s) {
       //Avoid a value being here twice
       const int val = static_cast<int>(pair.key);
-      Q_ASSERT(!(usedElements[val/longSize] & (0x1 << (val%longSize)))); // isNotPresent
+      assert(!(usedElements[val/longSize] & (0x1 << (val%longSize)))); // isNotPresent
 
       usedElements[val/longSize] |= (0x1 << (val%longSize));
 
@@ -195,15 +195,15 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
    }
 
    // FIXME C++14, use static_assert and make the ctor constexpr
-   Q_ASSERT(counter == enum_class_size<Row>());//,"Matrix row have to match the enum class size");
+   assert(counter == enum_class_size<Row>());//,"Matrix row have to match the enum class size");
 }
 
 template<class Row, typename Value, typename Accessor>
 Value Matrix1D<Row,Value,Accessor>::operator[](Row v) {
    //ASSERT(size_t(v) >= size_t(Row::COUNT__),"State Machine Out of Bounds\n");
    if (size_t(v) >= enum_class_size<Row>() || static_cast<int>(v) < 0) {
-      qWarning() << "State Machine Out of Bounds" << size_t(v);
-      Q_ASSERT(false);
+//       qWarning() << "State Machine Out of Bounds" << size_t(v);
+      assert(false);
       throw v;
    }
    return *m_lData[static_cast<int>(v)];
@@ -211,13 +211,13 @@ Value Matrix1D<Row,Value,Accessor>::operator[](Row v) {
 
 template<class Row, typename Value, typename Accessor>
 const Value Matrix1D<Row,Value,Accessor>::operator[](Row v) const {
-   Q_ASSERT(size_t(v) <= enum_class_size<Row>()+1 && size_t(v)>=0); //COUNT__ is also valid
+   assert(size_t(v) <= enum_class_size<Row>()+1 && size_t(v)>=0); //COUNT__ is also valid
    if (size_t(v) >= enum_class_size<Row>()) {
-      qWarning() << "State Machine Out of Bounds" << size_t(v);
-      Q_ASSERT(false);
+//       qWarning() << "State Machine Out of Bounds" << size_t(v);
+      assert(false);
       throw v;
    }
-   Q_ASSERT(m_lData[static_cast<int>(v)]);
+   assert(m_lData[static_cast<int>(v)]);
 
    return *(m_lData[static_cast<int>(v)]);
 }
@@ -237,29 +237,29 @@ void Matrix1D<Row,Value,Accessor>::operator=(std::initializer_list< Pairs > s)
    (*this) = m;
 }
 
-template <class E, class T, class A> QMap<A,E> Matrix1D<E,T,A>::m_hReverseMapping;
+// template <class E, class T, class A> QMap<A,E> Matrix1D<E,T,A>::m_hReverseMapping;
 
 template<class Row, typename Value, typename Accessor>
 void Matrix1D<Row,Value,Accessor>::setReverseMapping(Matrix1D<Row,const char*> names)
 {
-   for ( const Row row : EnumIterator<Row>() )
-      m_hReverseMapping[names[row]] = row;
+//    for ( const Row row : EnumIterator<Row>() )
+//       m_hReverseMapping[names[row]] = row;
 }
 
-template<class Row, typename Value, typename Accessor>
-Row Matrix1D<Row,Value,Accessor>::fromValue(const Value& value) const {
-    if (!m_hReverseMapping.empty()) {
-         for (int i = 0; i < enum_class_size<Row>();i++) {
-            const_cast<Matrix1D*>(this)->m_hReverseMapping[(*const_cast<Matrix1D*>(this))[(Row)i]]
-               = static_cast<Row>(i);
-         }
-         Q_ASSERT(m_hReverseMapping.empty() == enum_class_size<Row>());
-    }
-    if (m_hReverseMapping.count(value) == 0) {
-      throw value;
-    }
-    return m_hReverseMapping[value];
-}
+// template<class Row, typename Value, typename Accessor>
+// Row Matrix1D<Row,Value,Accessor>::fromValue(const Value& value) const {
+//     if (!m_hReverseMapping.empty()) {
+//          for (int i = 0; i < enum_class_size<Row>();i++) {
+//             const_cast<Matrix1D*>(this)->m_hReverseMapping[(*const_cast<Matrix1D*>(this))[(Row)i]]
+//                = static_cast<Row>(i);
+//          }
+//          assert(m_hReverseMapping.empty() == enum_class_size<Row>());
+//     }
+//     if (m_hReverseMapping.count(value) == 0) {
+//       throw value;
+//     }
+//     return m_hReverseMapping[value];
+// }
 
 template<class Row, typename Value, typename Accessor>
 bool Matrix1D<Row,Value,Accessor>::Matrix1DEnumClassIter::operator!= (const Matrix1DEnumClassIter& other) const

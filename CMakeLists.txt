@@ -146,6 +146,7 @@ SET( libringqt_LIB_SRCS
   src/profilemodel.cpp
   src/ringtonemodel.cpp
   src/infotemplatemanager.cpp
+  src/eventmodel.cpp
   src/lastusednumbermodel.cpp
   src/securityevaluationmodel.cpp
   src/personmodel.cpp
@@ -175,6 +176,13 @@ SET( libringqt_LIB_SRCS
   src/media/recordingmodel.cpp
   src/bannedcontactmodel.cpp
   src/individual.cpp
+
+  # iCal/vCard/WebDav collections
+  src/libcard/event.cpp
+  src/libcard/calendar.cpp
+  src/libcard/historyimporter.cpp
+  src/libcard/private/icsloader.cpp
+  src/libcard/private/icsbuilder.cpp
 
   #Data collections
   src/transitionalpersonbackend.cpp
@@ -279,6 +287,7 @@ SET( libringqt_LIB_HDRS
   src/numbercategory.h
   src/ringtonemodel.h
   src/infotemplatemanager.h
+  src/eventmodel.h
   src/localrecordingcollection.h
   src/localbookmarkcollection.h
   src/localringtonecollection.h
@@ -377,6 +386,13 @@ SET(libringqt_media_LIB_HDRS
   src/media/avrecording.h
   src/media/textrecording.h
   src/media/recordingmodel.h
+)
+
+SET(libringqt_card_LIB_HDRS
+  src/libcard/flagutils.h
+  src/libcard/event.h
+  src/libcard/calendar.h
+  src/libcard/historyimporter.h
 )
 
 SET(libringqt_interface_LIB_HDRS
@@ -640,6 +656,11 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
 
     INSTALL( FILES ${libringqt_media_LIB_HDRS}
     DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/media
+    COMPONENT Devel
+    )
+
+    INSTALL( FILES ${libringqt_card_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/libcard
     COMPONENT Devel
     )
 

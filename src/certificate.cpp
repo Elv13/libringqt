@@ -31,7 +31,7 @@
 //Ring
 #include "dbus/configurationmanager.h"
 #include <certificatemodel.h>
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "private/certificatemodel_p.h"
 #include "private/certificate_p.h"
 #include <account.h>

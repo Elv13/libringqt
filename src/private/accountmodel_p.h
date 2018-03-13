@@ -26,7 +26,7 @@
 #include <account.h>
 #include <mime.h>
 #include <accountmodel.h>
-#include "matrixutils.h"
+#include "libcard/matrixutils.h"
 class AccountModel;
 class ProtocolModel;
 class PendingContactRequestModel;

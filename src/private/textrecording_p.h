@@ -26,7 +26,7 @@
 //Ring
 #include "media/media.h"
 #include "media/textrecording.h"
-#include "matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "media/mimemessage.h"
 #include "textrecordingcache.h"
 

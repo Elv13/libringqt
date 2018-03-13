@@ -1,6 +1,6 @@
 /************************************************************************************
- *   Copyright (C) 2014-2016 by Savoir-faire Linux                                  *
- *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com>         *
+ *   Copyright (C) 2018 by BlueSystems GmbH                                         *
+ *   Author : Emmanuel Lepage Vallee <elv1313@gmail.com>                            *
  *                                                                                  *
  *   This library is free software; you can redistribute it and/or                  *
  *   modify it under the terms of the GNU Lesser General Public                     *
@@ -16,36 +16,22 @@
  *   License along with this library; if not, write to the Free Software            *
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
  ***********************************************************************************/
-#pragma once
+#include "historyimporter.h"
+#include "../localhistorycollection.h"
 
-#include "collectioninterface.h"
-#include "collectioneditor.h"
+#include <QtCore/QDebug>
 
-class Call;
-
-template<typename T> class CollectionMediator;
-
-class LIB_EXPORT LocalHistoryCollection : public CollectionInterface
+namespace HistoryImporter
 {
-public:
-   explicit LocalHistoryCollection(CollectionMediator<Call>* mediator);
-   virtual ~LocalHistoryCollection();
 
-   virtual bool load () override;
-   virtual bool reload() override;
-   virtual bool clear () override;
+void importHistory(LocalHistoryCollection* col, std::function<void (const QVector<Calendar*>&)> callback)
+{
+    col->addCompletionCallback([](LocalHistoryCollection* c) {
+        if (c->size() == 0)
+            return;
 
-   virtual QString    name     () const override;
-   virtual QString    category () const override;
-   virtual QVariant   icon     () const override;
-   virtual bool       isEnabled() const override;
-   virtual QByteArray id       () const override;
+        qDebug() << "\n\n\nIMPORT!!!" << c->size();
+    });
+}
 
-   void addCompletionCallback(std::function<void(LocalHistoryCollection*)> cb);
-
-   virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
-
-private:
-   CollectionMediator<Call>*  m_pMediator;
-};
-
+}

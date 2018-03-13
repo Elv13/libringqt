@@ -18,7 +18,7 @@
 #pragma once
 
 #include <media/media.h>
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 
 namespace Media {

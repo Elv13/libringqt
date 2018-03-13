@@ -40,7 +40,7 @@
 #include "numbercategorymodel.h"
 #include "namedirectory.h"
 #include "person.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"

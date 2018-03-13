@@ -53,18 +53,6 @@ struct DataTransferInfo
 };
 Q_DECLARE_METATYPE(DataTransferInfo)
 
-/**
- * This function add a safe way to get an enum class size.
- * @note it cannot be "const" due to some compiler issues
- * @note it cannot be unsigned to avoid some compiler warnings
- * @note The 2 optional parameters should not be used directly. They are used
- *  internally for the enum_iterator
- */
-template<typename A, A from = static_cast<A>(0), A to = A::COUNT__ >
-constexpr int enum_class_size() {
-   return static_cast<int>(to) - static_cast<int>(from);
-}
-
 #define LIB_EXPORT Q_DECL_EXPORT
 
 //Doesn't work
@@ -76,113 +64,6 @@ constexpr int enum_class_size() {
 #else
    #define IGNORE_NULL(content) content
 #endif //ENABLE_IGNORE_NULL
-
-/**
- * Create a safe pack of flags from an enum class.
- *
- * This class exist to ensure all sources come from the same enum and that it is
- * never accidentally accidentally into an integer.
- *
- * This assume that the enum has been setup as flags.
- */
-template<class T>
-class LIB_EXPORT FlagPack
-{
-public:
-   FlagPack() : m_Flags(0) {}
-   FlagPack(const T& base) : m_Flags(static_cast<uint>(base)) {}
-   FlagPack(const FlagPack<T>& other) : m_Flags(other.m_Flags) {}
-
-   //Operator
-   FlagPack<T>& operator|(const T& other) {
-      m_Flags |= static_cast<uint>(other);
-      return *this;
-   }
-
-   FlagPack<T>& operator|(const FlagPack<T>& other) {
-      m_Flags |= other.m_Flags;
-      return *this;
-   }
-
-   FlagPack<T>& operator|=(const T& other) {
-      m_Flags |= static_cast<uint>(other);
-      return *this;
-   }
-
-   FlagPack<T>& operator|=(const FlagPack<T>& other) {
-      m_Flags |= other.m_Flags;
-      return *this;
-   }
-
-   FlagPack<T>& operator^=(const T& other) {
-      m_Flags ^= static_cast<uint>(other);
-      return *this;
-   }
-
-   FlagPack<T>& operator^=(const FlagPack<T>& other) {
-      m_Flags ^= other.m_Flags;
-      return *this;
-   }
-
-   FlagPack<T> operator&(const T& other) const {
-      return FlagPack<T>(m_Flags & static_cast<uint>(other));
-   }
-
-   FlagPack<T> operator&(const FlagPack<T>& other) const {
-      return FlagPack<T>(m_Flags & other.m_Flags);
-   }
-
-   FlagPack<T>&operator=(const FlagPack<T>& other) {
-      m_Flags = other.m_Flags;
-      return *this;
-   }
-
-   bool operator!=(const T& other) const {
-      return  m_Flags != static_cast<uint>(other);
-   }
-
-   bool operator==(const T& other) const {
-      return  m_Flags == static_cast<uint>(other);
-   }
-
-   bool operator==(const FlagPack<T>& other) const {
-      return  m_Flags == other.m_Flags;
-   }
-
-   bool operator!() const {
-      return !m_Flags;
-   }
-
-   operator bool() const {
-      return m_Flags != 0;
-   }
-
-   uint value() const {
-      return m_Flags;
-   }
-
-private:
-   FlagPack(uint base) : m_Flags(base) {}
-   uint m_Flags;
-};
-
-#define DO_PRAGMA(x) _Pragma (#x)
-
-//Globally disable the "-Wunused-function" warning for GCC
-//refs: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55578
-#if ((__GNUC_MINOR__ > 8) || (__GNUC_MINOR__ == 8))
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
-
-
-#define DECLARE_ENUM_FLAGS(T)\
-DO_PRAGMA(GCC diagnostic push)\
-DO_PRAGMA(GCC diagnostic ignored "-Wunused-function")\
-__attribute__ ((unused)) static FlagPack<T> operator|(const T& first, const T& second) { \
-   FlagPack<T> p (first); \
-   return p | second; \
-} \
-DO_PRAGMA(GCC diagnostic pop)
 
 #if QT_VERSION < 0x050700
 // Keep the code compatible with Qt < 5.7. Also, once C++17 becomes mandatory,

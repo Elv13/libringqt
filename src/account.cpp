@@ -64,6 +64,8 @@
 #include "uri.h"
 #include "private/vcardutils.h"
 #include "mime.h"
+#include "eventmodel.h"
+#include "libcard/calendar.h"
 #include "namedirectory.h"
 #include "securityevaluationmodel.h"
 #include "daemoncertificatecollection.h"
@@ -563,6 +565,17 @@ RingDeviceModel* Account::ringDeviceModel() const
         );
 
     return d_ptr->m_pRingDeviceModel;
+}
+
+Calendar* Account::calendar() const
+{
+    if (!d_ptr->m_pCalendar) {
+        d_ptr->m_pCalendar = EventModel::instance().addCollection<Calendar, Account*>(
+            const_cast<Account*>(this)
+        );
+    }
+
+    return d_ptr->m_pCalendar;
 }
 
 QAbstractItemModel* Account::knownCertificateModel() const

@@ -914,6 +914,34 @@ QString ContactMethod::toHash() const
       );
 }
 
+QByteArray ContactMethod::toAttendee(const QString& name) const
+{
+    const auto hash = toHash();
+
+    QByteArray ret;
+
+    QTextStream s(&ret);
+
+    s << "ATTENDEE";
+
+    s << ";CN=" << (name.isEmpty() ? bestName() : name);
+
+    if (account())
+        s << ";X_RING_ACCOUNT=" << account()->id();
+
+    if (contact())
+        s << ";CONTACT=" << contact()->uid();
+
+    if (account())
+        s << ";X_RING_HASH=" << hash;
+
+    s << ':' << uri() << '\n';
+
+    //TODO make sure the line is no more than 75 chars
+
+    return ret;
+}
+
 ///Increment name counter and update indexes
 void ContactMethod::incrementAlternativeName(const QString& name, const time_t lastUsed)
 {

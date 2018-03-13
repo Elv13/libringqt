@@ -1,6 +1,6 @@
 /************************************************************************************
- *   Copyright (C) 2014-2016 by Savoir-faire Linux                                  *
- *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com>         *
+ *   Copyright (C) 2018 by BlueSystems GmbH                                         *
+ *   Author : Emmanuel Lepage Vallee <elv1313@gmail.com>                            *
  *                                                                                  *
  *   This library is free software; you can redistribute it and/or                  *
  *   modify it under the terms of the GNU Lesser General Public                     *
@@ -18,34 +18,25 @@
  ***********************************************************************************/
 #pragma once
 
-#include "collectioninterface.h"
-#include "collectioneditor.h"
+// Qt
+#include <QtCore/QVector>
 
-class Call;
+// StdC++
+#include <functional>
 
-template<typename T> class CollectionMediator;
+#include <typedefs.h>
 
-class LIB_EXPORT LocalHistoryCollection : public CollectionInterface
+class LocalHistoryCollection;
+class Calendar;
+
+namespace HistoryImporter
 {
-public:
-   explicit LocalHistoryCollection(CollectionMediator<Call>* mediator);
-   virtual ~LocalHistoryCollection();
 
-   virtual bool load () override;
-   virtual bool reload() override;
-   virtual bool clear () override;
+/**
+    * Wait for the old history to be loaded, then create and save the files.
+    *
+    * The `callback` is executed once saving is completed.
+    */
+void LIB_EXPORT importHistory(LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
 
-   virtual QString    name     () const override;
-   virtual QString    category () const override;
-   virtual QVariant   icon     () const override;
-   virtual bool       isEnabled() const override;
-   virtual QByteArray id       () const override;
-
-   void addCompletionCallback(std::function<void(LocalHistoryCollection*)> cb);
-
-   virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
-
-private:
-   CollectionMediator<Call>*  m_pMediator;
-};
-
+}

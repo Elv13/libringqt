@@ -24,6 +24,7 @@
 #include <QtCore/QAbstractItemModel>
 
 #include "typedefs.h"
+#include <libcard/flagutils.h>
 
 //Libstdc++
 #include <functional>

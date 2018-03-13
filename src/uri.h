@@ -21,6 +21,8 @@
 
 #include <QStringList>
 
+#include <libcard/flagutils.h>
+
 class URIPrivate;
 class QDataStream;
 

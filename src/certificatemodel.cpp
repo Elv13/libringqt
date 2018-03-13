@@ -39,7 +39,7 @@
 #include "account.h"
 #include "foldercertificatecollection.h"
 #include "daemoncertificatecollection.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "private/certificatemodel_p.h"
 #include "accountmodel.h"
 

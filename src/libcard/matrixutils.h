@@ -17,12 +17,12 @@
  ***************************************************************************/
 #pragma once
 
+#include "flagutils.h"
+
 //libSTDC++
 #include <initializer_list>
 #include <type_traits>
-
-//Ring
-#include <typedefs.h>
+#include <cassert>
 
 template<class T, class E>
 struct TypedStateMachine
@@ -32,8 +32,8 @@ struct TypedStateMachine
 
    T& operator[](E v) {
    if (size_t(v) >= size_t(E::COUNT__)) {
-      Q_ASSERT(false);
-      qDebug() << "State Machine Out of Bound" << size_t(v);
+      assert(false);
+//       qDebug() << "State Machine Out of Bound" << size_t(v);
       throw v;
    }
    return _data[size_t(v)];
@@ -41,8 +41,8 @@ struct TypedStateMachine
 
    const T& operator[](E v) const {
    if (size_t(v) >= size_t(E::COUNT__)) {
-      Q_ASSERT(false);
-      qDebug() << "State Machine Out of Bound" << size_t(v);
+      assert(false);
+//       qDebug() << "State Machine Out of Bound" << size_t(v);
       throw v;
    }
    return _data[size_t(v)];
@@ -130,7 +130,7 @@ struct Matrix1D
    Matrix1DEnumClassIter end();
 
    // Only use for single reverse mappable arrays, will ASSERT otherwise
-   Row fromValue(const Value& value) const;
+//    Row fromValue(const Value& value) const;
 
    static void setReverseMapping(Matrix1D<Row,const char *> names);
 
@@ -142,7 +142,7 @@ struct Matrix1D
 
 private:
    Value* m_lData[enum_class_size<Row>()];
-   static QMap<A, Row> m_hReverseMapping;
+//    static QMap<A, Row> m_hReverseMapping;
 };
 
 /**

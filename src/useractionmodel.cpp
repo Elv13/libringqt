@@ -34,7 +34,7 @@
 #include "interfaces/pixmapmanipulatori.h"
 #include "interfaces/actionextenderi.h"
 #include "private/useractions.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "media/textrecording.h"
 
 #define UAM UserActionModel

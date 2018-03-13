@@ -52,6 +52,7 @@ class ContactRequest;
 class BannedContactModel;
 class RingDevice;
 class Person;
+class Calendar;
 
 //Private
 class AccountPrivate;
@@ -477,6 +478,7 @@ class LIB_EXPORT Account : public ItemBase {
       bool    needsMigration               () const;
       uint    internalId                   () const;
       QString lastSipRegistrationStatus    () const;
+      Calendar* calendar                   () const;
 
       Q_INVOKABLE bool exportOnRing (const QString& password) const;
       Q_INVOKABLE bool registerName (const QString& password, const QString& name) const;

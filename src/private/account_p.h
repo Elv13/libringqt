@@ -23,7 +23,7 @@
 
 //Ring
 #include <account.h>
-#include <private/matrixutils.h>
+#include <libcard/matrixutils.h>
 
 class AccountPrivate;
 class ContactMethod;
@@ -35,6 +35,7 @@ class NetworkInterfaceModel;
 class BootstrapModel;
 class DaemonCertificateCollection;
 class PendingContactRequestModel;
+class Calendar;
 
 typedef void (AccountPrivate::*account_function)();
 
@@ -128,6 +129,7 @@ public:
     DaemonCertificateCollection* m_pBannedCerts                {nullptr};
     BannedContactModel*          m_pBannedContactModel         {nullptr};
     PendingContactRequestModel*  m_pPendingContactRequestModel {nullptr};
+    Calendar*                    m_pCalendar                   {nullptr};
 
     QHash<int, Account::RoleStatus> m_hRoleStatus;
 

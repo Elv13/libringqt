@@ -29,7 +29,7 @@
 
 // Ring
 #include "mime.h"
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 #include "account_const.h"
 
 

@@ -260,6 +260,12 @@ public:
    //Helper
    QString toHash() const;
 
+   /**
+    * Convert to the rfc5545 attendee format.
+    * @param QString name The `CN` name (default = bestName()).
+    */
+   QByteArray toAttendee(const QString& name) const;
+
    //Operator
    bool operator==(ContactMethod* other);
    bool operator==(const ContactMethod* other) const;

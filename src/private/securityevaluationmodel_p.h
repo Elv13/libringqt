@@ -23,7 +23,7 @@ class Certificate;
 class AccountChecksModel;
 
 #include <certificate.h>
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 #include <securityevaluationmodel.h>
 
 class SecurityEvaluationModelPrivate final : public QObject

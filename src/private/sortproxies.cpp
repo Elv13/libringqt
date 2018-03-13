@@ -26,7 +26,7 @@
 #include <QtCore/QSortFilterProxyModel>
 
 //Ring
-#include "matrixutils.h"
+#include "libcard/matrixutils.h"
 #include <categorizedcontactmodel.h>
 #include <categorizedhistorymodel.h>
 #include <globalinstances.h>

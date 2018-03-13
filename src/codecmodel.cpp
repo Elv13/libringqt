@@ -32,7 +32,7 @@
 #include "dbus/configurationmanager.h"
 #include "mime.h"
 #include "callmodel.h"
-#include <private/matrixutils.h>
+#include <libcard/matrixutils.h>
 
 typedef void (CodecModelPrivate::*CodecModelFct)();
 

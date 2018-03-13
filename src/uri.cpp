@@ -17,7 +17,7 @@
  ***************************************************************************/
 #include "uri.h"
 
-#include "private/matrixutils.h"
+#include "libcard/matrixutils.h"
 
 class URIPrivate
 {

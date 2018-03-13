@@ -19,6 +19,7 @@
 
 #include <QtCore/QObject>
 #include <typedefs.h>
+#include <libcard/flagutils.h>
 
 struct CredentialPrivate;
 
