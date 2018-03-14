@@ -19,6 +19,11 @@
 #include "historyimporter.h"
 #include "../localhistorycollection.h"
 
+#include <call.h>
+#include <account.h>
+#include <libcard/calendar.h>
+#include <libcard/event.h>
+
 #include <QtCore/QDebug>
 
 namespace HistoryImporter
@@ -30,7 +35,20 @@ void importHistory(LocalHistoryCollection* col, std::function<void (const QVecto
         if (c->size() == 0)
             return;
 
-        qDebug() << "\n\n\nIMPORT!!!" << c->size();
+        // Create the events for all calls
+        const auto calls = c->items<Call>();
+
+        for (auto c : qAsConst(calls)) {
+            // The account may have been deleted
+            if (!c->account())
+                continue;
+
+            auto cal = c->account()->calendar();
+
+            Q_ASSERT(cal);
+
+            cal->addFromCall(c);
+        }
     });
 }
 

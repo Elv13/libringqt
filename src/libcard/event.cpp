@@ -18,14 +18,22 @@
  ***********************************************************************************/
 #include "event.h"
 
-class EventPrivate
-{
-public:
-    QByteArray m_UID;
-};
+// Std
+#include <ctime>
 
-Event::Event(QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
+// Ring
+#include <call.h>
+#include "libcard/private/event_p.h"
+
+Event::Event(Event::EventBean attrs, QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
 {
+    if (attrs.startTimeStamp)
+        d_ptr->m_StartTimeStamp = attrs.startTimeStamp;
+
+    if (attrs.stopTimeStamp)
+        d_ptr->m_StopTimeStamp = attrs.stopTimeStamp;
+
+    d_ptr->m_Direction = attrs.direction;
 }
 
 Event::~Event()
@@ -35,27 +43,23 @@ Event::~Event()
 
 time_t Event::startTimeStamp() const
 {
-    return 0;
+    return d_ptr->m_StartTimeStamp;
 }
 
 time_t Event::stopTimeStamp() const
 {
-    return 0;
+    return d_ptr->m_StopTimeStamp;
 }
 
 time_t Event::revTimeStamp() const
 {
-    return 0;
+    return d_ptr->m_RevTimeStamp;
 }
 
 QTimeZone* Event::timezone() const
 {
-    return nullptr;
-}
-
-QVector<ContactMethod*> Event::attendees() const
-{
-    return {};
+    static auto tz = QTimeZone::systemTimeZone();
+    return &tz;
 }
 
 Call* Event::toHistoryCall() const
@@ -66,7 +70,16 @@ Call* Event::toHistoryCall() const
 QByteArray Event::uid() const
 {
     if (d_ptr->m_UID.isEmpty()) {
+        // The UID cannot be generated yet, so the event CANNOT exist
+        Q_ASSERT(startTimeStamp());
 
+        QString seed = QString::number( std::abs(0x11111111 * rand()), 16).toUpper();
+
+
+        d_ptr->m_UID = QString("%1-%2-%3@ring.cx")
+            .arg(startTimeStamp())
+            .arg(stopTimeStamp() - startTimeStamp())
+            .arg(seed.left(std::min(seed.size(), 8))).toLatin1();
     }
 
     return d_ptr->m_UID;
@@ -85,4 +98,39 @@ QVariant Event::getCustomProperty(Event::CustomProperties property) const
 void Event::setCustomProperty(Event::CustomProperties property, const QVariant& value)
 {
     //
+}
+
+bool Event::isSaved() const
+{
+    return d_ptr->m_IsSaved;
+}
+
+QString Event::displayName() const
+{
+    return d_ptr->m_CN;
+}
+
+void Event::setDisplayName(const QString& cn)
+{
+    d_ptr->m_CN = cn;
+}
+
+Event::Direction Event::direction() const
+{
+    return d_ptr->m_Direction;
+}
+
+Event::Status Event::status() const
+{
+    return d_ptr->m_Status;
+}
+
+QList< QPair<ContactMethod*, QString> > Event::attendees() const
+{
+    return d_ptr->m_lAttendees;
+}
+
+Account* Event::account() const
+{
+    return d_ptr->m_pAccount;
 }

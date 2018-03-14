@@ -97,14 +97,8 @@ public:
     FlagPack<Call::HoldFlags> m_fHoldFlags;
     QString                   m_FormattedDate;
     Call::State               m_CurrentState       {Call::State::ERROR       };
-    Call::Direction           m_Direction          {Call::Direction::OUTGOING};
     Call::Type                m_Type               {Call::Type::CALL         };
-    time_t                    m_pStartTimeStamp    {            0            };
-    time_t                    m_pStopTimeStamp     {            0            };
     bool                      m_History            {          false          };
-    bool                      m_Missed             {          false          };
-    Account*                  m_Account            {          nullptr        };
-    ContactMethod*            m_pPeerContactMethod {          nullptr        };
     QTimer*                   m_pTimer             {          nullptr        };
     UserActionModel*          m_pUserActionModel   {          nullptr        };
     Certificate*              m_pCertificate       {          nullptr        };
@@ -112,6 +106,20 @@ public:
     QDateTime*                m_pDateTime          {          nullptr        };
     QDate*                    m_pDateOnly          {          nullptr        };
     int                       m_LastErrorCode      {            200          };
+
+    /**
+     * The event/calendar APIs move the time keeping responsability away from
+     * the call object. To make the transition progressive, these fields are
+     * kept for now, but should be removed ASAP.
+     */
+    struct {
+        time_t          m_pStartTimeStamp    {            0            };
+        time_t          m_pStopTimeStamp     {            0            };
+        bool            m_Missed             {          false          };
+        Call::Direction m_Direction          {Call::Direction::OUTGOING};
+        Account*        m_Account            {          nullptr        };
+        ContactMethod*  m_pPeerContactMethod {          nullptr        };
+    } m_LegacyFields;
 
     //Cache
     HistoryTimeCategoryModel::HistoryConst m_HistoryConst {HistoryTimeCategoryModel::HistoryConst::Never};

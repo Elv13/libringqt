@@ -306,9 +306,9 @@ Call::Call(Call::State startState, const QString& peerName, ContactMethod* numbe
 {
    d_ptr->m_CurrentState     = startState;
    d_ptr->m_Type             = Call::Type::CALL;
-   d_ptr->m_Account          = account;
+   d_ptr->m_LegacyFields.m_Account          = account;
    d_ptr->m_PeerName         = peerName;
-   d_ptr->m_pPeerContactMethod = number;
+   d_ptr->m_LegacyFields.m_pPeerContactMethod = number;
 
    emit changed();
 }
@@ -319,7 +319,7 @@ Call::Call(const QString& confId, const QString& account)
    , d_ptr(new CallPrivate(this))
 {
    d_ptr->m_CurrentState = Call::State::CONFERENCE;
-   d_ptr->m_Account      = AccountModel::instance().getById(account.toLatin1());
+   d_ptr->m_LegacyFields.m_Account      = AccountModel::instance().getById(account.toLatin1());
    d_ptr->m_Type         = (!confId.isEmpty())?Call::Type::CONFERENCE:Call::Type::CALL;
    d_ptr->m_DringId      = confId;
 
@@ -466,7 +466,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
     call->d_ptr->updateOutgoingMedia(details);
 
     call->d_ptr->m_DringId      = callId;
-    call->d_ptr->m_Direction    = callDirection;
+    call->d_ptr->m_LegacyFields.m_Direction    = callDirection;
     call->d_ptr->m_pParentCall  = nullptr;
 
     //Set the recording state
@@ -519,7 +519,7 @@ Call* CallPrivate::buildDialingCall(const QString& peerName, Account* account, C
     auto call = std::unique_ptr<Call, decltype(deleteCall)&>( new Call(Call::State::NEW,
                                                                       peerName, nullptr, account),
                                                              deleteCall );
-    call->d_ptr->m_Direction = Call::Direction::OUTGOING;
+    call->d_ptr->m_LegacyFields.m_Direction = Call::Direction::OUTGOING;
     call->d_ptr->m_pParentCall = parent;
     if (Audio::Settings::instance().isRoomToneEnabled()) {
         Audio::Settings::instance().playRoomTone();
@@ -583,25 +583,25 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
    Call*           call           = new Call(Call::State::OVER, (name == QLatin1String("empty"))?QString():name.toString(), nb, acc );
    call->d_ptr->m_DringId         = callId.toString();
 
-   call->d_ptr->m_pStopTimeStamp  = stopTimeStamp ;
+   call->d_ptr->m_LegacyFields.m_pStopTimeStamp  = stopTimeStamp ;
    call->d_ptr->setStartTimeStamp(startTimeStamp);
    call->d_ptr->setRecordingPath (rec_path.toString());
    call->d_ptr->m_History         = true;
-   call->d_ptr->m_Account         = AccountModel::instance().getById(accId);
+   call->d_ptr->m_LegacyFields.m_Account         = AccountModel::instance().getById(accId);
 
    if (missed) {
-      call->d_ptr->m_Missed = true;
+      call->d_ptr->m_LegacyFields.m_Missed = true;
    }
    if (!direction.isEmpty()) {
       if (direction == Call::HistoryStateName::INCOMING) {
-         call->d_ptr->m_Direction    = Call::Direction::INCOMING         ;
+         call->d_ptr->m_LegacyFields.m_Direction    = Call::Direction::INCOMING         ;
       }
       else if (direction == Call::HistoryStateName::OUTGOING) {
-         call->d_ptr->m_Direction    = Call::Direction::OUTGOING         ;
+         call->d_ptr->m_LegacyFields.m_Direction    = Call::Direction::OUTGOING         ;
       }
    }
    else //Getting there is a bug. Pick one, even if it is the wrong one
-      call->d_ptr->m_Direction    = Call::Direction::OUTGOING            ;
+      call->d_ptr->m_LegacyFields.m_Direction    = Call::Direction::OUTGOING            ;
 
    call->setObjectName("History:"+call->d_ptr->m_DringId);
 
@@ -784,13 +784,13 @@ QString Call::toHumanStateName() const
 ///Get the time (second from 1 jan 1970) when the call ended
 time_t Call::stopTimeStamp() const
 {
-   return d_ptr->m_pStopTimeStamp;
+   return d_ptr->m_LegacyFields.m_pStopTimeStamp;
 }
 
 ///Get the time (second from 1 jan 1970) when the call started
 time_t Call::startTimeStamp() const
 {
-   return d_ptr->m_pStartTimeStamp;
+   return d_ptr->m_LegacyFields.m_pStartTimeStamp;
 }
 
 ///Get the call date and time
@@ -842,8 +842,8 @@ const QString Call::dringId() const
 
 ContactMethod* Call::peerContactMethod() const
 {
-    if (d_ptr->m_pPeerContactMethod)
-        return d_ptr->m_pPeerContactMethod;
+    if (d_ptr->m_LegacyFields.m_pPeerContactMethod)
+        return d_ptr->m_LegacyFields.m_pPeerContactMethod;
 
     if (d_ptr->m_pDialNumber)
         return d_ptr->m_pDialNumber;
@@ -881,6 +881,11 @@ Video::SourceModel* Call::sourceModel() const
     return nullptr;
 }
 
+QSharedPointer<Event> Call::calendarEvent() const
+{
+    return {};
+}
+
 ///If this call is encrypted, return the certificate associated with it
 Certificate* Call::certificate() const
 {
@@ -896,16 +901,16 @@ FlagPack<Call::HoldFlags> Call::holdFlags() const
 ///Generate an human readable string from the difference between StartTimeStamp and StopTimeStamp (or 'now')
 QString Call::length() const
 {
-   if (d_ptr->m_pStartTimeStamp == d_ptr->m_pStopTimeStamp)
+   if (d_ptr->m_LegacyFields.m_pStartTimeStamp == d_ptr->m_LegacyFields.m_pStopTimeStamp)
       return QString(); //Invalid
 
    int nsec =0;
-   if (d_ptr->m_pStopTimeStamp)
+   if (d_ptr->m_LegacyFields.m_pStopTimeStamp)
       nsec = stopTimeStamp() - startTimeStamp();//If the call is over
    else { //Time to now
       time_t curTime;
       ::time(&curTime);
-      nsec = curTime - d_ptr->m_pStartTimeStamp;
+      nsec = curTime - d_ptr->m_LegacyFields.m_pStartTimeStamp;
    }
    if (nsec/3600)
       return QStringLiteral("%1:%2:%3 ").arg((nsec%(3600*24))/3600).arg(((nsec%(3600*24))%3600)/60,2,10,QChar('0')).arg(((nsec%(3600*24))%3600)%60,2,10,QChar('0'));
@@ -924,13 +929,13 @@ bool Call::isHistory() const
 ///Is this call missed
 bool Call::isMissed() const
 {
-   return d_ptr->m_Missed;
+   return d_ptr->m_LegacyFields.m_Missed;
 }
 
 ///Is the call incoming or outgoing
 Call::Direction Call::direction() const
 {
-   return d_ptr->m_Direction;
+   return d_ptr->m_LegacyFields.m_Direction;
 }
 
 ///Is the call a conference or something else
@@ -983,19 +988,19 @@ bool Call::isAVRecording() const
 ///Get the call account id
 Account* Call::account() const
 {
-   return d_ptr->m_Account;
+   return d_ptr->m_LegacyFields.m_Account;
 }
 
 ///This function could also be called mayBeSecure or haveChancesToBeEncryptedButWeCantTell.
 bool Call::isSecure() const
 {
 
-   /*if (!d_ptr->m_Account) {
+   /*if (!d_ptr->m_LegacyFields.m_Account) {
       qDebug() << "Account not set, can't check security";
       return false;
    }
    //BUG this doesn't work
-   return d_ptr->m_Account && ((d_ptr->m_Account->isTlsEnabled()) || (d_ptr->m_Account->tlsMethod() != TlsMethodModel::Type::DEFAULT));*/
+   return d_ptr->m_LegacyFields.m_Account && ((d_ptr->m_LegacyFields.m_Account->isTlsEnabled()) || (d_ptr->m_LegacyFields.m_Account->tlsMethod() != TlsMethodModel::Type::DEFAULT));*/
 
    return false; //No, it is not and cannot be
 } //isSecure
@@ -1217,7 +1222,7 @@ void Call::setPeerContactMethod(ContactMethod* cm)
       qDebug() << "Trying to change the contact method on a non-dialing call";
       return;
    }
-   d_ptr->m_pPeerContactMethod = cm;
+   d_ptr->m_LegacyFields.m_pPeerContactMethod = cm;
    setDialNumber(cm->uri());
 }
 
@@ -1252,7 +1257,7 @@ void Call::setPeerName(const QString& name)
 void Call::setAccount( Account* account)
 {
    if (lifeCycleState() == Call::LifeCycleState::CREATION)
-       d_ptr->m_Account = account;
+       d_ptr->m_LegacyFields.m_Account = account;
 }
 
 void Call::setParentCall(Call* call)
@@ -1367,8 +1372,8 @@ Call::State CallPrivate::stateChanged(const QString& newStateName)
 
    }
    if (q_ptr->lifeCycleState() != Call::LifeCycleState::CREATION && m_pDialNumber) {
-      if (!m_pPeerContactMethod) {
-          m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
+      if (!m_LegacyFields.m_pPeerContactMethod) {
+          m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
       }
       m_pDialNumber->deleteLater();
       m_pDialNumber = nullptr;
@@ -1519,10 +1524,10 @@ void CallPrivate::terminateMedia()
 ///Set the start timestamp and update the cache
 void CallPrivate::setStartTimeStamp(time_t stamp)
 {
-   m_pStartTimeStamp = stamp;
+   m_LegacyFields.m_pStartTimeStamp = stamp;
    //While the HistoryConst is not directly related to the call concept,
    //It is called to often to ignore
-   m_HistoryConst = HistoryTimeCategoryModel::timeToHistoryConst(m_pStartTimeStamp);
+   m_HistoryConst = HistoryTimeCategoryModel::timeToHistoryConst(m_LegacyFields.m_pStartTimeStamp);
 }
 
 void CallPrivate::setStartTimeStamp()
@@ -1590,7 +1595,7 @@ void CallPrivate::error()
 ///Change history state to failure
 void CallPrivate::failure()
 {
-   m_Missed = true;
+   m_LegacyFields.m_Missed = true;
    //This is how it always was done
    //The main point is to leave the call in the CallList
    start();
@@ -1607,7 +1612,7 @@ void CallPrivate::accept()
    qDebug() << "Accepting call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    Q_NOREPLY callManager.accept(m_DringId);
    setStartTimeStamp();
-   m_Direction = Call::Direction::INCOMING;
+   m_LegacyFields.m_Direction = Call::Direction::INCOMING;
 }
 
 ///Refuse the call
@@ -1617,7 +1622,7 @@ void CallPrivate::refuse()
    qDebug() << "Refusing call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    const bool ret = callManager.refuse(m_DringId);
    setStartTimeStamp();
-   m_Missed = true;
+   m_LegacyFields.m_Missed = true;
 
    //If the daemon crashed then re-spawned when a call is ringing, this happen.
    if (!ret)
@@ -1653,7 +1658,7 @@ void CallPrivate::acceptHold()
    qDebug() << "Accepting call and holding it. callId : " << q_ptr  << "ConfId:" << q_ptr;
    callManager.accept(m_DringId);
    Q_NOREPLY callManager.hold(m_DringId);
-   m_Direction = Call::Direction::INCOMING;
+   m_LegacyFields.m_Direction = Call::Direction::INCOMING;
 }
 
 ///Hang up
@@ -1664,7 +1669,7 @@ void CallPrivate::hangUp()
    CallManagerInterface & callManager = CallManager::instance();
    time_t curTime;
    ::time(&curTime);
-   m_pStopTimeStamp = curTime;
+   m_LegacyFields.m_pStopTimeStamp = curTime;
    qDebug() << "Hanging up call. callId : " << q_ptr << "ConfId:" << q_ptr;
    bool ret;
    if (q_ptr->type() != Call::Type::CONFERENCE)
@@ -1715,7 +1720,7 @@ void CallPrivate::abort()
  */
 void CallPrivate::sendProfile()
 {
-    auto profile = m_Account->profile();
+    auto profile = m_LegacyFields.m_Account->profile();
 
     if (not profile)
         return;
@@ -1812,14 +1817,14 @@ void CallPrivate::call()
         // make sure account exist in the model and that it's READY
         if (AccountModel::instance().getById(tryingAcc->id()) &&
             (tryingAcc->registrationState() == Account::RegistrationState::READY))
-            m_Account = tryingAcc;
+            m_LegacyFields.m_Account = tryingAcc;
     }
 
     // Otherwise set default account
-    if (!m_Account) {
+    if (!m_LegacyFields.m_Account) {
         qDebug() << "Account is not set, taking the first registered.";
-        m_Account = AvailableAccountModel::instance().currentDefaultAccount(peerCM);
-        if (!m_Account) {
+        m_LegacyFields.m_Account = AvailableAccountModel::instance().currentDefaultAccount(peerCM);
+        if (!m_LegacyFields.m_Account) {
             qDebug() << "Trying to call "
                      << (m_pTransferNumber ? static_cast<QString>(m_pTransferNumber->uri()) : QStringLiteral("ERROR"))
                      << " with no account registered . callId : " << q_ptr  << "ConfId:" << q_ptr;
@@ -1828,23 +1833,24 @@ void CallPrivate::call()
     }
 
     // Normal case
-    qDebug() << "Calling " << peerCM->uri() << " with account " << m_Account
+    qDebug() << "Calling " << peerCM->uri() << " with account " << m_LegacyFields.m_Account
              << ", CallId: " << q_ptr
              << ", ConfId: " << q_ptr;
-    m_Direction = Call::Direction::OUTGOING;
+
+    m_LegacyFields.m_Direction = Call::Direction::OUTGOING;
 
     // Warning: m_pDialNumber can become nullptr when linking directly
     URI uri {peerCM->uri()};
 
     // Better late than never. Set the scheme.
-    if (m_Account && m_Account->protocol() == Account::Protocol::RING &&
+    if (m_LegacyFields.m_Account && m_LegacyFields.m_Account->protocol() == Account::Protocol::RING &&
       uri.schemeType() == URI::SchemeType::NONE &&
       uri.protocolHint() != URI::ProtocolHint::RING) {
        uri.setSchemeType(URI::SchemeType::RING);
     }
 
-    if (!m_pPeerContactMethod) {
-        m_pPeerContactMethod = PhoneDirectoryModel::instance().getNumber(uri, q_ptr->account());
+    if (!m_LegacyFields.m_pPeerContactMethod) {
+        m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().getNumber(uri, q_ptr->account());
     }
 
     // m_pDialNumber is now discarded
@@ -1861,11 +1867,11 @@ void CallPrivate::call()
 
     // dring can print "No suitable account to create outgoing call" if the
     // URI isn't properly formatted (like sip:foobar).
-    if (m_Account && m_Account->protocol() == Account::Protocol::RING && uri.protocolHint() != URI::ProtocolHint::RING) {
+    if (m_LegacyFields.m_Account && m_LegacyFields.m_Account->protocol() == Account::Protocol::RING && uri.protocolHint() != URI::ProtocolHint::RING) {
        qWarning() << "The URI isn't a RingId. It is possible the call wont work" << uri.full();
     }
 
-    m_DringId = CallManager::instance().placeCall(m_Account->id(), uri.full());
+    m_DringId = CallManager::instance().placeCall(m_LegacyFields.m_Account->id(), uri.full());
 
     // This can happen when the daemon cannot allocate memory
     if (m_DringId.isEmpty()) {
@@ -1895,7 +1901,7 @@ void CallPrivate::transfer()
     Q_NOREPLY callManager.transfer(m_DringId, m_pTransferNumber->uri());
     time_t curTime;
     ::time(&curTime);
-    m_pStopTimeStamp = curTime;
+    m_LegacyFields.m_pStopTimeStamp = curTime;
 }
 
 ///Unhold the call
@@ -1968,8 +1974,8 @@ void CallPrivate::start()
    qDebug() << "Starting call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    emit q_ptr->changed();
    if (m_pDialNumber) {
-      if (!m_pPeerContactMethod) {
-          m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
+      if (!m_LegacyFields.m_pPeerContactMethod) {
+          m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
       }
       m_pDialNumber->deleteLater();
       m_pDialNumber = nullptr;
@@ -1986,8 +1992,8 @@ void CallPrivate::startStop()
 {
    qDebug() << "Starting and stoping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    setStartTimeStamp();
-   m_pStopTimeStamp  = m_pStartTimeStamp;
-   m_Missed = true;
+   m_LegacyFields.m_pStopTimeStamp  = m_LegacyFields.m_pStartTimeStamp;
+   m_LegacyFields.m_Missed = true;
 }
 
 ///Stop the timer
@@ -1996,7 +2002,7 @@ void CallPrivate::stop()
    qDebug() << "Stoping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    time_t curTime;
    ::time(&curTime);
-   m_pStopTimeStamp = curTime;
+   m_LegacyFields.m_pStopTimeStamp = curTime;
 }
 
 ///Handle error instead of crashing
@@ -2253,7 +2259,7 @@ QVariant Call::roleData(int role) const
       case Qt::DecorationRole:
          return GlobalInstances::pixmapManipulator().decorationRole(this);
       case static_cast<int>(Call::Role::Direction):
-         return QVariant::fromValue(d_ptr->m_Direction);
+         return QVariant::fromValue(d_ptr->m_LegacyFields.m_Direction);
       case static_cast<int>(Call::Role::Date):
          return (int)startTimeStamp();
       case static_cast<int>(Ring::Role::Length):
@@ -2307,9 +2313,9 @@ QVariant Call::roleData(int role) const
       case static_cast<int>(Call::Role::State):
          return QVariant::fromValue(state());
       case static_cast<int>(Call::Role::StartTime):
-         return (int) d_ptr->m_pStartTimeStamp;
+         return (int) d_ptr->m_LegacyFields.m_pStartTimeStamp;
       case static_cast<int>(Call::Role::StopTime):
-         return (int) d_ptr->m_pStopTimeStamp;
+         return (int) d_ptr->m_LegacyFields.m_pStopTimeStamp;
       case static_cast<int>(Call::Role::IsPresent):
       case static_cast<int>(Ring::Role::IsPresent):
          return peerContactMethod()->isPresent();

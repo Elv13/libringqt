@@ -20,6 +20,7 @@
 
 // qt
 #include <QtCore/QTimeZone>
+#include <QtCore/QSharedPointer>
 
 #include <typedefs.h>
 #include <itembase.h>
@@ -27,6 +28,7 @@
 class EventPrivate;
 class ContactMethod;
 class Call;
+class Account;
 
 /**
  * This class represent an event as defined by rfc5545.
@@ -55,6 +57,9 @@ class Call;
 class LIB_EXPORT Event : public ItemBase
 {
     Q_OBJECT
+    friend class Calendar; // factory
+    friend class CalendarEditor; // serialization
+
 public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)
     Q_PROPERTY(time_t stopTimeStamp  READ stopTimeStamp  CONSTANT)
@@ -111,10 +116,17 @@ public:
 
     time_t startTimeStamp() const;
     time_t stopTimeStamp () const;
+    bool isSaved() const;
 
     QVariant getCustomProperty(CustomProperties property) const;
 
     void setCustomProperty(CustomProperties property, const QVariant& value);
+
+    /**
+     * The display name (CN).
+     */
+    QString displayName() const;
+    void setDisplayName(const QString& cn);
 
     /**
      * When the element was last revised.
@@ -127,7 +139,15 @@ public:
 
     QTimeZone* timezone() const; // section 3.2.19
 
-    QVector<ContactMethod*> attendees() const;
+    Direction direction() const;
+    Status status() const;
+
+    Account* account() const;
+
+    /**
+     * Each attendees with the name they used for that event
+     */
+    QList< QPair<ContactMethod*, QString> > attendees() const;
 
     /**
      * Contain the startTimeStamp + '-' + (stopTimeStamp-startTimeStamp) + '-' (8 random ASCII chars)
@@ -143,13 +163,22 @@ public:
 
     QByteArray categoryName(EventCategory cat) const;
 
-
-
 private:
-    explicit Event(QObject* parent = nullptr);
+    // To avoid a large number of arguments in the constructor, add all
+    // immutable attributes in a temporary structure
+    struct EventBean {
+        time_t startTimeStamp;
+        time_t stopTimeStamp;
+        Direction direction { Direction::OUTGOING };
+        Status    status    {  Status::CANCELLED  };
+    };
+
+    explicit Event(EventBean attrs, QObject* parent = nullptr);
 
     EventPrivate* d_ptr;
     Q_DECLARE_PRIVATE(Event)
 };
 
+Q_DECLARE_METATYPE(Event*)
+Q_DECLARE_METATYPE(QSharedPointer<Event>)
 Q_DECLARE_METATYPE(Event::Direction)

@@ -18,54 +18,20 @@
  ***********************************************************************************/
 #pragma once
 
-#include "collectioninterface.h"
-#include "collectioneditor.h"
+#include <libcard/event.h>
 
-class QTimeZone;
-
-class Event;
-class Account;
-class Call;
-
-class CalendarPrivate;
-
-/**
- * This class provide a calendar as defined in rfc5545.
- *
- * Calendars are collections of events and the various associated metadatas.
- *
- */
-class LIB_EXPORT Calendar : public CollectionInterface
+class EventPrivate
 {
 public:
-    explicit Calendar(CollectionMediator<Event>* mediator, Account* a);
-    virtual ~Calendar();
+    QByteArray m_UID;
+    time_t m_StartTimeStamp {0};
+    time_t m_StopTimeStamp  {0};
+    time_t m_RevTimeStamp   {0};
+    QString m_CN;
+    bool m_IsSaved {false};
+    Account* m_pAccount {nullptr};
+    Event::Direction m_Direction {Event::Direction::OUTGOING};
+    Event::Status m_Status {Event::Status::CANCELLED};
+    QList< QPair<ContactMethod*, QString> > m_lAttendees;
 
-    virtual bool load  () override;
-    virtual bool reload() override;
-    virtual bool clear () override;
-
-    virtual QString    name     () const override;
-    virtual bool       isEnabled() const override;
-    virtual QString    category () const override;
-    virtual QByteArray id       () const override;
-
-    Account* account() const;
-
-    QString path() const;
-
-    QSharedPointer<Event> addFromCall(Call* c);
-
-    /**
-     * All timezone used by this calendar.
-     */
-    QList<QTimeZone*> timezones() const;
-
-    Event* eventAt(int position) const;
-
-    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
-
-private:
-    CalendarPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(Calendar)
 };

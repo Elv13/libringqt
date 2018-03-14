@@ -23,19 +23,34 @@
 // Qt
 class QTextStream;
 class QTimeZone;
+#include <QtCore/QSharedPointer>
 
 // Ring
 class Event;
 class Calendar;
+class Account;
+class ContactMethod;
+
+// StdC++
+#include <functional>
+
+namespace std {
+    template<typename T> class basic_iostream<T>;
+}
 
 /**
  * Convert an event into a serialized VCALENDAR:VEVENT or a full VCALENDAR
  */
 class ICSBuilder
 {
-    static bool toStream(Event* e, QTextStream* device);
-    static bool toStream(const QTimeZone* tz, QTextStream* device);
-    static bool toStream(Calendar* cal, QTextStream* device);
+public:
+    static bool toStream(Event* e, std::basic_iostream<char>* device);
+    static bool toStream(const QTimeZone* tz, std::basic_iostream<char>* device);
+    static bool toStream(Calendar* cal, std::basic_iostream<char>* device);
+    static bool toStream(ContactMethod* cm, const QString& name, std::basic_iostream<char>* device);
+    static bool toStream(Account* a, std::basic_iostream<char>* device);
 
-    static bool save(Calendar* cal);
+    static bool save(Calendar* cal, std::function<void(bool)> cb);
+
+    static void appendToCalendar(Calendar* cal, Event* event, std::function<void(bool)> cb);
 };

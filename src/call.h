@@ -38,6 +38,7 @@ class TemporaryContactMethod;
 class CollectionInterface   ;
 class Certificate           ;
 class Person                ;
+class Event                 ;
 
 namespace Video {
    class Manager;
@@ -171,7 +172,7 @@ public:
    };
    Q_ENUMS(State)
 
-   ///@enum Direction If the user have been called or have called
+   ///DEPRECATED @enum Direction If the user have been called or have called
    enum class Direction : int {
       INCOMING, /*!< Someone has called      */
       OUTGOING, /*!< The user called someone */
@@ -279,6 +280,7 @@ public:
    Q_PROPERTY( int                lastErrorCode      READ lastErrorCode     NOTIFY errorChanged     )
    Q_PROPERTY( QString            lastErrorMessage   READ lastErrorMessage  NOTIFY errorChanged     )
    Q_PROPERTY( Video::SourceModel* sourceModel       READ sourceModel       NOTIFY mediaAdded       )
+   Q_PROPERTY( QSharedPointer<Event> calendarEvent   READ calendarEvent     CONSTANT                )
 
    //Read/write properties
    Q_PROPERTY( ContactMethod*     peerContactMethod  READ peerContactMethod WRITE setPeerContactMethod)
@@ -324,6 +326,7 @@ public:
    QDateTime                dateTime         () const;
    QDate                    date             () const;
    Video::SourceModel*      sourceModel      () const;
+   QSharedPointer<Event>    calendarEvent    () const;
 
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;
