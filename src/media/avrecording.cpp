@@ -134,6 +134,23 @@ QUrl Media::AVRecording::path() const
    return d_ptr->m_Path;
 }
 
+QMimeType* Media::AVRecording::mimeType() const
+{
+    // They are always .wav
+    static QMimeType* t = nullptr;
+    if (!t) {
+        QMimeDatabase db;
+        t = new QMimeType(db.mimeTypeForFile("foo.wav"));
+    }
+
+    return t;
+}
+
+QByteArray Media::AVRecording::role() const
+{
+    return "recording";
+}
+
 ///Get the current playback position (0.0 if not playing)
 double Media::AVRecording::position() const
 {

@@ -30,6 +30,8 @@ public:
     QString m_CN;
     bool m_IsSaved {false};
     Account* m_pAccount {nullptr};
+    QList<Media::Attachment*> m_lAttachedFiles;
+    Event::EventCategory  m_EventCategory {Event::EventCategory::CALL};
     Event::Direction m_Direction {Event::Direction::OUTGOING};
     Event::Status m_Status {Event::Status::CANCELLED};
     QList< QPair<ContactMethod*, QString> > m_lAttendees;

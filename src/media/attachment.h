@@ -17,37 +17,35 @@
  ***************************************************************************/
 #pragma once
 
-#include <media/media.h>
-#include <media/attachment.h>
 #include <typedefs.h>
 
-class MediaFilePrivate;
-class Call;
-class CallPrivate;
+class QMimeType;
 
 namespace Media {
 
 /**
- * A file transfer event.
+ * This interface defines the basic methods and properties necessary to record
+ * the existence of the object during serialization.
+ *
+ * This should be implemented by all classes that represent a single file such
+ * as Media::File or Media::AVRecording.
  */
-class LIB_EXPORT File : public ::Media::Media, public ::Media::Attachment
+class LIB_EXPORT Attachment
 {
-   friend class ::CallPrivate;
 public:
 
-   virtual Media::Type type() override;
+    virtual QMimeType* mimeType() const = 0;
 
-   // The attachment properties
-   virtual QMimeType* mimeType() const override;
-   virtual QUrl path          () const override;
-   virtual QByteArray role    () const override;
+    virtual QUrl path() const = 0;
 
+    /**
+     * The role of this file within the ::Event it is serialized in.
+     *
+     * This is a custom concept used to create the right kind of asset when
+     * parsing the serialized events.
+     */
+    virtual QByteArray role() const = 0;
 
-private:
-   File(Call* parent, const Media::Direction direction);
-   virtual ~File();
-
-   MediaFilePrivate* d_ptr;
 };
 
 }

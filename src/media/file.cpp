@@ -42,3 +42,18 @@ Media::File::~File()
 {
    delete d_ptr;
 }
+
+QMimeType* Media::File::mimeType() const
+{
+    return nullptr;
+}
+
+QUrl Media::File::path() const
+{
+    return {};
+}
+
+QByteArray Media::File::role() const
+{
+    return {};
+}

@@ -382,6 +382,7 @@ SET(libringqt_media_LIB_HDRS
   src/media/video.h
   src/media/text.h
   src/media/file.h
+  src/media/attachment.h
   src/media/recording.h
   src/media/avrecording.h
   src/media/textrecording.h

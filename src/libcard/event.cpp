@@ -85,19 +85,26 @@ QByteArray Event::uid() const
     return d_ptr->m_UID;
 }
 
-QByteArray Event::categoryName(EventCategory cat) const
+QByteArray Event::categoryName(EventCategory cat)
 {
-    //
+    switch(cat) {
+        case EventCategory::CALL:
+            return "PHONE CALL";
+        case EventCategory::DATA_TRANSFER:
+            return "DATA TRANSFER";
+        case EventCategory::MESSAGE_GOUP:
+            return "TEXT MESSAGES";
+    }
 }
 
 QVariant Event::getCustomProperty(Event::CustomProperties property) const
 {
-    //
+    //TODO
 }
 
 void Event::setCustomProperty(Event::CustomProperties property, const QVariant& value)
 {
-    //
+    //TODO
 }
 
 bool Event::isSaved() const
@@ -113,6 +120,11 @@ QString Event::displayName() const
 void Event::setDisplayName(const QString& cn)
 {
     d_ptr->m_CN = cn;
+}
+
+Event::EventCategory Event::eventCategory() const
+{
+    return d_ptr->m_EventCategory;
 }
 
 Event::Direction Event::direction() const
@@ -133,4 +145,19 @@ QList< QPair<ContactMethod*, QString> > Event::attendees() const
 Account* Event::account() const
 {
     return d_ptr->m_pAccount;
+}
+
+QList<Media::Attachment*> Event::attachedFiles() const
+{
+    return d_ptr->m_lAttachedFiles;
+}
+
+void Event::attachFile(Media::Attachment* file)
+{
+    d_ptr->m_lAttachedFiles << file;
+}
+
+void Event::detachFile(Media::Attachment* file)
+{
+    d_ptr->m_lAttachedFiles.removeAll(file);
 }

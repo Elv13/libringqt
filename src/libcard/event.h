@@ -30,6 +30,10 @@ class ContactMethod;
 class Call;
 class Account;
 
+namespace Media {
+    class Attachment;
+}
+
 /**
  * This class represent an event as defined by rfc5545.
  *
@@ -74,7 +78,7 @@ public:
     enum class EventCategory {
         CALL         , /*!< rfc5545 section 5 recommends the "PHONE CALL" name */
         DATA_TRANSFER, /*!< Either a download or upload                        */
-        MESSAGE      , /*!<   */
+        MESSAGE_GOUP , /*!<   */
     };
 
     /**
@@ -116,6 +120,9 @@ public:
 
     time_t startTimeStamp() const;
     time_t stopTimeStamp () const;
+
+    EventCategory eventCategory() const;
+
     bool isSaved() const;
 
     QVariant getCustomProperty(CustomProperties property) const;
@@ -145,12 +152,24 @@ public:
     Account* account() const;
 
     /**
+     * Allow local files to be attached to an even such as a transcript,
+     * screenshots or recordings.
+     */
+    QList<Media::Attachment*> attachedFiles() const; // section-3.8.1.1 //TODO use Media::File?
+    void attachFile(Media::Attachment* file);
+    void detachFile(Media::Attachment* file);
+
+    /**
      * Each attendees with the name they used for that event
      */
     QList< QPair<ContactMethod*, QString> > attendees() const;
 
     /**
-     * Contain the startTimeStamp + '-' + (stopTimeStamp-startTimeStamp) + '-' (8 random ASCII chars)
+     * Define an truly unique identifier for the event that encompass some
+     * useful metadata.
+     *
+     * Contain the startTimeStamp + '-' + (stopTimeStamp-startTimeStamp) + \
+     * '-' accountId + '-' (8 random ASCII chars) @ring.cx
      */
     QByteArray uid() const;
 
@@ -161,7 +180,7 @@ public:
      */
     Call* toHistoryCall() const;
 
-    QByteArray categoryName(EventCategory cat) const;
+    static QByteArray categoryName(EventCategory cat);
 
 private:
     // To avoid a large number of arguments in the constructor, add all
@@ -169,8 +188,9 @@ private:
     struct EventBean {
         time_t startTimeStamp;
         time_t stopTimeStamp;
-        Direction direction { Direction::OUTGOING };
-        Status    status    {  Status::CANCELLED  };
+        Direction direction    { Direction::OUTGOING };
+        Status    status       {  Status::CANCELLED  };
+        EventCategory category { EventCategory::CALL };
     };
 
     explicit Event(EventBean attrs, QObject* parent = nullptr);

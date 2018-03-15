@@ -31,6 +31,10 @@ class Calendar;
 class Account;
 class ContactMethod;
 
+namespace Media {
+    class Attachment;
+}
+
 // StdC++
 #include <functional>
 
@@ -44,11 +48,24 @@ namespace std {
 class ICSBuilder
 {
 public:
+
+    /**
+     * Some operations, such as MIME attachments are differed, therefor keeping
+     * a context is necessary.
+     *
+     * Some modes, such as synchronization versus local storage also affect
+     * the output.
+     */
+    class Context {
+
+    };
+
     static bool toStream(Event* e, std::basic_iostream<char>* device);
     static bool toStream(const QTimeZone* tz, std::basic_iostream<char>* device);
     static bool toStream(Calendar* cal, std::basic_iostream<char>* device);
     static bool toStream(ContactMethod* cm, const QString& name, std::basic_iostream<char>* device);
     static bool toStream(Account* a, std::basic_iostream<char>* device);
+    static bool toStream(Media::Attachment* file, std::basic_iostream<char>* device);
 
     static bool save(Calendar* cal, std::function<void(bool)> cb);
 

@@ -26,6 +26,7 @@
 #include "event.h"
 #include <call.h>
 #include <account.h>
+#include <media/avrecording.h>
 #include "libcard/private/event_p.h"
 #include "libcard/private/icsbuilder.h"
 
@@ -221,6 +222,15 @@ QSharedPointer<Event> Calendar::addFromCall(Call* c)
     e->d_ptr->m_lAttendees << QPair<ContactMethod*, QString> {
         c->peerContactMethod(), c->peerName()
     };
+
+    // Add the audio recordings
+    if (c->hasRecording(Media::Media::Type::AUDIO, Media::Media::Direction::IN)) {
+        qDebug() << "\n\n\nHAS RECORD!";
+        const auto rec = static_cast<Media::AVRecording*> (
+            c->recordings(Media::Media::Type::AUDIO, Media::Media::Direction::IN).first()
+        );
+        e->attachFile(rec);
+    }
 
     editor<Event>()->addNew(e);
 

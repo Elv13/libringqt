@@ -18,6 +18,7 @@
 #pragma once
 
 #include <media/recording.h>
+#include <media/attachment.h>
 
 #include <QtCore/QUrl>
 
@@ -25,7 +26,7 @@ namespace Media {
 
 class AVRecordingPrivate;
 
-class LIB_EXPORT AVRecording : public Recording
+class LIB_EXPORT AVRecording : public Recording, public Attachment
 {
    Q_OBJECT
 
@@ -49,7 +50,6 @@ public:
    virtual ~AVRecording();
 
    //Getter
-   QUrl       path                () const;
    double     position            () const;
    int        duration            () const;
    QString    formattedTimeElapsed() const;
@@ -57,6 +57,11 @@ public:
    QString    formattedTimeLeft   () const;
    bool       isCurrent           () const;
    bool       isPlaying           () const;
+
+   // Attachment properties
+   virtual QUrl path          () const override;
+   virtual QMimeType* mimeType() const override;
+   virtual QByteArray role    () const override;
 
    virtual QVariant roleData(int role) const override;
 
