@@ -21,7 +21,7 @@
 #include <thread>
 #include <iostream>
 
-#include <libcard/matrixutils.h>
+#include <matrixutils.h>
 
 namespace VParser {
 
@@ -221,6 +221,9 @@ struct VProperty
 
     std::list<VParameters*> parameters;
 
+    std::basic_string<char> m_Name;
+    std::basic_string<char> m_Value;
+
     typedef char (VProperty::*function)();
     State m_State {State::EMPTY};
     char applyEvent(const char content[4]);
@@ -304,18 +307,18 @@ struct VObject
     ICSLoader::ObjectType type;
 
     // Keep track of the parent so the global context can push/pop elements.
-    VObject* parent {nullptr};
+    VObject* m_pParent {nullptr};
 
     /**
      *
      */
     enum class State {
         EMPTY     , /*!< Nothing parsed yet              */
-        HEADER    , /*!< BEGIN:OBJECT_TYPE               */
+        HEADER    , /*!< BEGIN:OBJECT_TYPE               */ //FIXME remove (handled as a property)
         PROPERTIES, /*!< Normal key / value properties   */
-        SUB_OBJECT, /*!< Objects within objects          */
-        FOOTER    , /*!< END:OBJECT_TYPE                 */
-        DONE      , /*!< Once the footer is fully parsed */
+        SUB_OBJECT, /*!< Objects within objects          */ //FIXME remove (moved to context)
+        FOOTER    , /*!< END:OBJECT_TYPE                 */ //FIXME remove (handled as a property)
+        DONE      , /*!< Once the footer is fully parsed */ //FIXME remove (no longer needed)
         ERROR     , /*!< Parsing failed                  */
         COUNT__
     };
@@ -337,6 +340,7 @@ struct VObject
     VContext* m_pContext;
     VProperty* m_pCurrentProperty {nullptr};
     std::list<VProperty*> properties;
+    std::list<VObject*> children;
 
 
     /**
@@ -416,13 +420,13 @@ VObject::Event VObject::charToEvent(const char content[4])
 
 struct VContext
 {
-    VObject* currentObject {nullptr};
 
     std::basic_string<char> m_Buffer;
 
     char* m_pContent { nullptr };
     int   m_Position {    0    };
     bool  m_IsActive {  true   };
+    VObject* m_pCurrentObject {nullptr};
 
     char* currentWindow() {
         if (!m_Position)
@@ -436,9 +440,13 @@ struct VContext
         return m_pContent + m_Position - 1;
     }
 
+    char currentChar() {
+        return currentWindow()[1];
+    }
+
     void push(char count) {
         for (int i =0; i < count; i++) {
-            m_Buffer.push_back(m_pContent[m_Position++]);
+            m_Buffer.push_back(m_pContent[m_Position++]); //FIXME use a slice list, not a copy
             if (!m_pContent[m_Position])
                 m_IsActive = false;
         }
@@ -453,6 +461,45 @@ struct VContext
 
     bool isActive() {
         return m_IsActive;
+    }
+
+    VObject* currentObject() {
+        return m_pCurrentObject;
+    }
+
+    /**
+     * The context can get deeper and deeper into the object tree
+     */
+    void stashObject() {
+        assert(m_pCurrentObject);
+        assert(m_pCurrentObject->m_State == VObject::State::PROPERTIES);
+        assert(m_pCurrentObject->m_pCurrentProperty);
+        assert(m_pCurrentObject->m_pCurrentProperty->m_Name.size() > 0);
+        m_pCurrentObject->m_pCurrentProperty;
+
+        std::cout << "\n\n\nPUSH!!!!!" << m_pCurrentObject << std::endl;
+
+        auto newO = new VObject(this);
+        newO->m_State == VObject::State::PROPERTIES;
+        newO->m_pParent = m_pCurrentObject;
+
+        m_pCurrentObject = newO;
+    }
+
+    void popObject() {
+
+        std::cout << "\n\n\nPOP!!!!!" << m_pCurrentObject << std::endl;
+
+        auto oldO = m_pCurrentObject;
+
+        m_pCurrentObject = m_pCurrentObject->m_pParent;
+
+        if (!m_pCurrentObject)
+            m_IsActive = false;
+        else {
+            m_pCurrentObject->children.push_back(oldO);
+            m_pCurrentObject->m_State == VObject::State::PROPERTIES;
+        }
     }
 
     std::basic_string<char> flush() {
@@ -492,49 +539,60 @@ char VParameters::error()
 
 char VParameters::nothing()
 {
-    std::cout << "not\n";
+//     std::cout << "not\n";
     return 1;
 }
 
 char VProperty::pushName()
 {
-    std::cout << "name\n";
+    m_Name = m_pContext->flush();
+    m_pContext->skip(1);
+    std::cout << "name2: " << m_Name <<" === ";
     return 1;
 }
 
 char VProperty::increment()
 {
-    std::cout << "inc\n";
+//     std::cout << "inc\n";
     m_pContext->push(1);
     return 1;
 }
 
 char VProperty::parameter()
 {
-    std::cout << "param\n";
+//     std::cout << "param\n";
     return 1;
 }
 
 char VProperty::pushParameter()
 {
-    std::cout << "pparam\n";
+//     std::cout << "pparam\n";
+    assert(false);
     return 1;
 }
 
 char VProperty::pushProperty()
 {
-    std::cout << "pprop\n";
+    m_Value = m_pContext->flush();
+//     std::cout << "\n\nHERE2!!! " << m_pContext->currentChar() << std::endl;
+    m_pContext->skip(m_pContext->currentChar() == '\r' ? 2 : 1);
+    std::cout << "pprop " << m_Value << "\n";
+//     assert(false);
     return 1;
 }
 
 char VProperty::finishParameters()
 {
-    std::cout << "finish\n";
+// //     std::cout << "finish\n";
+
+    m_pContext->push(1);
     return 1;
 }
 
 char VProperty::pushLine()
 {
+//     std::cout << "\n\nHERE!!! " << m_pContext->currentChar() << std::endl;
+    m_pContext->push(m_pContext->currentChar() == '\r' ? 2 : 1);
     return 1;
 }
 
@@ -566,7 +624,7 @@ char VObject::increment()
 
 char VObject::childEvent()
 {
-    std::cout << "child\n";
+//     std::cout << "child\n";
     return 1;
 }
 
@@ -575,7 +633,7 @@ char VObject::propertyEvent()
     if (!m_pCurrentProperty)
         m_pCurrentProperty = new VProperty(m_pContext);
 
-    std::cout << "propEv\n";
+//     std::cout << "propEv\n";
     m_pCurrentProperty->applyEvent(m_pContext->currentWindow());
     return 1;
 }
@@ -584,14 +642,16 @@ char VObject::selectObject()
 {
     m_pCurrentProperty = new VProperty(m_pContext);
 
-    std::cout << "SELECT OBJECT_TYPE\n";
-    m_pContext->push(2);
+    std::cout << "SELECT OBJECT_TYPE" << m_pContext->flush() << "foo\n";
+    m_pContext->skip(m_pContext->currentChar() == '\r' ? 2 : 1);
 
     return 1;
 }
 
 char VObject::finish()
 {
+    m_pContext->flush();
+    m_pContext->popObject();
     return 1;
 }
 
@@ -606,7 +666,15 @@ char VObject::pushProperty()
 {
     assert(m_pCurrentProperty);
 
-    properties.push_back(m_pCurrentProperty);
+    /// Detect when the property is an object
+    if (m_pCurrentProperty->m_Name.substr(0, 5) == "BEGIN")
+        m_pContext->stashObject();
+    else if (m_pCurrentProperty->m_Name.substr(0, 3) == "END")
+        m_pContext->popObject();
+    else
+        properties.push_back(m_pCurrentProperty);
+
+    std::cout << "PUSH PROP: " << m_pCurrentProperty->m_Name << std::endl;
 
     m_pCurrentProperty = nullptr;
 }
@@ -618,6 +686,8 @@ char VParameters::applyEvent(const char content[4])
     auto event = charToEvent(content);
 
     m_State = m_StateMap[s][event];
+
+    assert(m_State != VParameters::State::ERROR);
 
     if (m_State == State::ERROR) {
         std::cout << "Parsing failed\n";
@@ -633,17 +703,23 @@ char VProperty::applyEvent(const char content[4])
 
     Event event = Event::COUNT__;
 
-    if (s == State::PARAMETERS || s == State::LINE_BREAK_P)
+    if (s == State::PARAMETERS || s == State::LINE_BREAK_P) //FIXME can be incorporated
         event = m_ParamToEvent[m_Parameters.m_State];
     else
         event = charToEvent(content);
 
     m_State = m_StateMap[s][event];
 
+    //TODO remove For debug
+    assert(m_State != VProperty::State::EMPTY);
+    assert(m_State != VProperty::State::ERROR);
+
     if (m_State == State::ERROR) {
         std::cout << "Parsing failed\n";
         return 0;
     }
+//     else
+//         std::cout << this << "LINE: " << content[0] << content[1] << content[2] <<content[3] << '\t' << (int) s << (int) event << std::endl;
 
     return (this->*(m_StateFunctor[s][event]))();
 }
@@ -654,15 +730,29 @@ char VObject::applyEvent(const char content[4])
 
     Event event = Event::COUNT__;
 
-    if (s == State::PROPERTIES)
+    if (s == State::PROPERTIES) {
+        if (!m_pCurrentProperty) {
+            m_pCurrentProperty = new VProperty(m_pContext);
+            assert(m_pCurrentProperty->m_State != VProperty::State::ERROR);
+        }
+        assert(m_pCurrentProperty->m_State != VProperty::State::ERROR);
+
         event = m_PropertyToEvent[m_pCurrentProperty->m_State];
-    else
+
+
+        if (event == Event::ERROR)
+            assert(false);
+    }
+    else {
         event = charToEvent(content);
+        if (event == Event::ERROR)
+            assert(false);
+    }
 
     m_State = m_StateMap[s][event];
 
     if (m_State == State::ERROR) {
-        std::cout << "Parsing failed\n";
+        std::cout << "Parsing failed" << (int) s << (int) event << std::endl;
         return 0;
     }
 
@@ -674,7 +764,8 @@ char VObject::applyEvent(const char content[4])
 ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
 {
     m_pContent = (char*) content;
-    VObject* o = new VObject(this);
+
+    m_pCurrentObject = new VObject(this);
 
     char first[] = {
         0x00,
@@ -682,13 +773,20 @@ ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
         content[1],
         content[2]
     };
-    o->applyEvent(first);
+    currentObject()->applyEvent(first);
 
-    while (isActive()) {
-        std::cout << m_Position << "\tS=" << content[m_Position] << '\n';
-        o->applyEvent(currentWindow());
-        if (o->m_State == VObject::State::ERROR) {
+    while (true) {
+//         std::cout << m_Position << "\tS=" << content[m_Position] << '\n';
+        currentObject()->applyEvent(currentWindow());
+
+
+        if (currentObject()->m_State == VObject::State::ERROR) {
             assert(false);
+        }
+
+        if ((!currentObject()) || (!isActive())) {
+            std::cout << "COMPLETE!\n";
+            return nullptr;
         }
     }
 }
