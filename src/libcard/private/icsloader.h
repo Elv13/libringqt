@@ -24,11 +24,73 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <functional>
 
-class ICSLoaderPrivate;
+class VContext;
+
+class AbstractVObjectAdaptorPrivate;
+
+// pimpl
+namespace VParser
+{
+    class VContext;
+}
 
 /**
- * Raw C++14 iCalendar and vCard file parser implemented as a finite state
+ * This is the type independant API and should not be used directly.
+ *
+ * Use `VObjectAdapter` for everything as it takes care of the casting.
+ */
+class AbstractVObjectAdaptor
+{
+    friend class VParser::VContext;
+public:
+    using Parameters = std::list< std::pair<std::basic_string<char>, std::basic_string<char> > >;
+    //
+
+protected:
+    explicit AbstractVObjectAdaptor();
+
+    void setAbstractFactory(std::function<void*()> f);
+    void setAbstractPropertyHandler(char* name, std::function<void(const std::basic_string<char>& value, const Parameters& params)> handler);
+    void setAbstractFallbackPropertyHandler(std::function<
+        void(const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)
+    > handler);
+
+private:
+    AbstractVObjectAdaptorPrivate* d_ptr;
+};
+
+/**
+ * Instead of storing temporary copies of everything, the ICSLoader will
+ * delegate copying to the VObjectAdapter. This is both more efficient and
+ * more flexible.
+ */
+template<typename T>
+class VObjectAdapter : public AbstractVObjectAdaptor
+{
+public:
+    /**
+     * Set the function that will be called after BEGIN.
+     *
+     * About the design. Not having a context or a parent is intentional. Even
+     * if you "real" object is more complex, the structure used to reflect
+     * should be kept simple and stateless. The main object can act as a proxy
+     * to that object.
+     */
+    void setObjectFactory(std::function<T*()> factory);
+
+    void addPropertyHandler(char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler);
+    void setFallbackPropertyHandler(std::function<void(T* self, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)> handler);
+
+    template<typename T2>
+    void addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const;
+    template<typename T2>
+    void setFallbackObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const;
+};
+
+/**
+ * Raw C++14 iCalendar and vCard stream parser implemented as a finite state
  * machine. This subsystems aims at being able to support local assets loading
  * and eventually remote assets synchronization. It also aims at being easy to
  * unit test.
@@ -113,7 +175,7 @@ public:
         std::list<Property*> properties;
     };
 
-    explicit ICSLoader(const char* path, bool recursive = false);
+    explicit ICSLoader(const char* path);
 
     /**
      * @warning This blocks until the thread quits
@@ -162,8 +224,16 @@ public:
      */
     std::unique_ptr< std::list< AbstractObject* > > acquireTrasferQueue() const;
 
+    /**
+     * For each object name (VCARD, VCALENDAR, VEVENT, etc), set an adaptor
+     * to map external object to the serialized representation.
+     */
+    void registerVObjectAdaptor(char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor);
+
     AbstractObject* _test_CharToObj(const char* data);
 
 private:
-    ICSLoaderPrivate* d_ptr;
+    VParser::VContext* d_ptr;
 };
+
+#include <icsloader.hpp>
