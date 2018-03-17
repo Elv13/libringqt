@@ -22,20 +22,6 @@
 #include <cassert>
 
 /**
- * This test the ',' ';' and ':' escaping
- */
-static constexpr const char fromRfc2[] = \
-"BEGIN:VCALENDAR\r\n"
-"PRODID:-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN\r\n"
-"VERSION:2.0\r\n"
-"BEGIN:VEVENT\r\n"
-"DESCRIPTION;foo=bar;foo2=\"bar\";foo3=b\\;\\:ar:Networld+Interop-\r\n"
-" -and Exhibit\\nAtlanta World Congress Center\\n\r\n"
-" Atlanta\\, Georgia\r\n"
-"END:VEVENT\r\n"
-"END:VCALENDAR\r\n";
-
-/**
  * This test the windows and macOS9 line ending
  */
 static constexpr const char fromRfc3[] = \
@@ -49,7 +35,12 @@ static constexpr const char fromRfc3[] = \
 "END:VEVENT/r"
 "END:VCALENDAR/r";
 
-
+/**
+ * A simple string collection that maps well into the VObject representation.
+ *
+ * This is intended to perform 1:1 comparison between the expected tree and
+ * the parsed one.
+ */
 struct TestObj
 {
     struct Property {
@@ -59,11 +50,11 @@ struct TestObj
         };
         std::string name;
         std::string value;
-        std::list<Parameter> parameters;
+        std::vector<Parameter> parameters;
     };
     std::string name;
-    std::list<TestObj> children;
-    std::list<Property> properties;
+    std::vector<TestObj> children;
+    std::vector<Property> properties;
 
     static ICSLoader* isEqual(const char* content, const TestObj& other);
 };
@@ -71,8 +62,18 @@ struct TestObj
 ICSLoader* TestObj::isEqual(const char* content, const TestObj& other)
 {
     auto genericAdapter = std::shared_ptr<VObjectAdapter<TestObj>>(new  VObjectAdapter<TestObj>);
-    genericAdapter->setObjectFactory([]() -> TestObj* {
-        return new TestObj;
+
+    TestObj* root = nullptr;
+
+    genericAdapter->setObjectFactory([&root](const std::basic_string<char>& object_type) -> TestObj* {
+        auto ret = new TestObj;
+
+        ret->name = object_type;
+
+        if (!root)
+            root = ret;
+
+        return ret;
     });
 
     genericAdapter->setFallbackPropertyHandler(
@@ -82,9 +83,24 @@ ICSLoader* TestObj::isEqual(const char* content, const TestObj& other)
            const std::basic_string<char>& value,
            const AbstractVObjectAdaptor::Parameters& params
         ) {
+            std::vector<TestObj::Property::Parameter> parameters;
+
+            for (const auto& p : params)
+                parameters.push_back({p.first, p.second});
+
             self->properties.push_back({
-                name, value, {}
+                name, value, parameters
             });
+    });
+
+    genericAdapter->setFallbackObjectHandler<TestObj>(
+        [](
+           TestObj* self,
+           TestObj* child,
+           const std::basic_string<char>& name
+        ) {
+
+            self->children.push_back(*child);
     });
 
     // Add for all types used by the test
@@ -95,8 +111,37 @@ ICSLoader* TestObj::isEqual(const char* content, const TestObj& other)
     loader.registerVObjectAdaptor("VJOURNAL" , genericAdapter );
     loader.registerVObjectAdaptor("VCARD"    , genericAdapter );
 
+    loader.registerFallbackVObjectAdaptor(genericAdapter);
 
     loader._test_CharToObj(content);
+
+    assert(root);
+
+    std::function<void(const TestObj* parsed, const TestObj* expected)> digger;
+
+    digger = [&digger](const TestObj* parsed, const TestObj* expected) {
+        // Check the properties
+        assert(parsed->properties.size() == expected->properties.size());
+        for (int i = 0; i < parsed->properties.size(); i++) {
+            auto pp(parsed->properties[i]), pe(expected->properties[i]);
+
+            assert(pp.name  == pe.name );
+            assert(pp.value == pe.value);
+
+            // Check the properties
+            assert(pp.parameters.size() == pe.parameters.size());
+            for (int j = 0; j < pp.parameters.size(); j++) {
+                assert(pp.parameters[j].name == pe.parameters[j].name);
+            }
+        }
+
+        // Check the children object
+        assert(parsed->children.size() == expected->children.size());
+        for (int i = 0; i < parsed->children.size(); i++)
+            digger(&parsed->children[i], &expected->children[i]);
+    };
+
+    digger(root, &other);
 }
 
 /**
@@ -118,10 +163,11 @@ void testQuoting()
     int objectCount = 0;
     bool hasVersion = false;
     auto calAdapter = std::shared_ptr<VObjectAdapter<TestObj>>(new  VObjectAdapter<TestObj>);
-    calAdapter->setObjectFactory([&objectCount]() -> TestObj* {
+    calAdapter->setObjectFactory([&objectCount](const std::basic_string<char>& object_type) -> TestObj* {
         objectCount++;
         return new TestObj;
     });
+
     calAdapter->addPropertyHandler("VERSION", [&hasVersion](TestObj* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
         hasVersion = true;
         assert(value == "2.0");
@@ -129,7 +175,7 @@ void testQuoting()
 
 
     auto evAdapter = std::shared_ptr<VObjectAdapter<TestObj>>(new  VObjectAdapter<TestObj>);
-    evAdapter->setObjectFactory([&objectCount]() -> TestObj* {
+    evAdapter->setObjectFactory([&objectCount](const std::basic_string<char>& object_type) -> TestObj* {
         //objectCount++;
         return new TestObj;
     });
@@ -188,7 +234,7 @@ void testBasicEvent()
                     {"STATUS", "CONFIRMED", {}},
                     {"CATEGORIES", "CONFERENCE", {}},
                     {"SUMMARY", "Networld+Interop Conference", {}},
-                    {"DESCRIPTION", "Networld+Interop  and Exhibit\\nAtlanta World Congress Center\\nAtlanta\\, Georgia", {}},
+                    {"DESCRIPTION", "Networld+Interop Conference and Exhibit\\nAtlanta World Congress Center\\nAtlanta\\, Georgia", {}},
                 }
             }
         },
@@ -202,6 +248,104 @@ void testBasicEvent()
 }
 
 /**
+ * This test the ',' ';' and ':' escaping
+ */
+void testParametersQuoting()
+{
+    static constexpr const char fromRfc2[] = \
+        "BEGIN:VCALENDAR\r\n"
+        "PRODID:-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN\r\n"
+        "VERSION:2.0\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DESCRIPTION;foo=bar;foo2=\"bar\";foo3=b\\;\\:ar:Networld+Interop Conference\r\n"
+        "  and Exhibit\\nAtlanta World Cong;;;ress Center\\n\r\n"
+        " Atlanta\\, Georgia\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n";
+
+        TestObj expected {
+        "VCALENDAR",
+        {
+            {
+                "VEVENT",
+                {},
+                {
+                    {
+                        "DESCRIPTION",
+                        "Networld+Interop Conference and Exhibit\\nAtlanta World"
+                        " Cong;;;ress Center\\nAtlanta\\, Georgia",
+                        {
+                            { "foo" , "bar"   },
+                            { "foo2", "bar"   },
+                            { "foo3", "b;:ar" },
+                        }
+                    },
+                }
+            }
+        },
+        {
+            {"PRODID", "-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN", {}},
+            {"VERSION", "2.0", {}},
+        }
+    };
+
+    TestObj::isEqual(fromRfc2, expected);
+}
+
+void testMultipleChildreb()
+{
+    static constexpr const char fromRfc2[] = \
+        "BEGIN:VCALENDAR\r\n"
+        "PRODID:-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN\r\n"
+        "VERSION:2.0\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DESCRIPTION:event1\r\n"
+        "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DESCRIPTION:event2\r\n"
+        "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DESCRIPTION:event3\r\n"
+        "END:VEVENT\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DESCRIPTION:event4\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR\r\n";
+
+        TestObj expected {
+        "VCALENDAR",
+        {
+            {
+                "VEVENT",
+                {},
+                { { "DESCRIPTION", "event1", { } }, }
+            },
+            {
+                "VEVENT",
+                {},
+                { { "DESCRIPTION", "event2", { } }, }
+            },
+            {
+                "VEVENT",
+                {},
+                { { "DESCRIPTION", "event3", { } }, }
+            },
+            {
+                "VEVENT",
+                {},
+                { { "DESCRIPTION", "event4", { } }, }
+            }
+        },
+        {
+            {"PRODID", "-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN", {}},
+            {"VERSION", "2.0", {}},
+        }
+    };
+
+    TestObj::isEqual(fromRfc2, expected);
+}
+
+/**
  * Early batch of tests for the ICS loader and builder.
  *
  * They are not yet real unit tests, that will come later.
@@ -211,6 +355,10 @@ int main()
     testQuoting();
 
     testBasicEvent();
+
+    testParametersQuoting();
+
+    testMultipleChildreb();
 
     return 0;
 }

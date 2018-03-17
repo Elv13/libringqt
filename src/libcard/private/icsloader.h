@@ -49,13 +49,24 @@ public:
     //
 
 protected:
-    explicit AbstractVObjectAdaptor();
+    explicit AbstractVObjectAdaptor(int typeId);
 
-    void setAbstractFactory(std::function<void*()> f);
-    void setAbstractPropertyHandler(char* name, std::function<void(const std::basic_string<char>& value, const Parameters& params)> handler);
+    void setAbstractFactory(std::function<void*(const std::basic_string<char>& object_type)> f);
+    void setAbstractPropertyHandler(char* name, std::function<void(void* p, const std::basic_string<char>& value, const Parameters& params)> handler);
+
     void setAbstractFallbackPropertyHandler(std::function<
-        void(const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)
+        void(void* p, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)
     > handler);
+
+    void setAbstractFallbackObjectHandler(int typeId, std::function<
+        void(
+            void* p,
+            void* p2,
+            const std::basic_string<char>& name
+        )
+    > handler);
+
+    static int getNewTypeId();
 
 private:
     AbstractVObjectAdaptorPrivate* d_ptr;
@@ -70,6 +81,8 @@ template<typename T>
 class VObjectAdapter : public AbstractVObjectAdaptor
 {
 public:
+    VObjectAdapter() : AbstractVObjectAdaptor(getTypeId()){}
+
     /**
      * Set the function that will be called after BEGIN.
      *
@@ -78,15 +91,20 @@ public:
      * should be kept simple and stateless. The main object can act as a proxy
      * to that object.
      */
-    void setObjectFactory(std::function<T*()> factory);
+    void setObjectFactory(std::function<T*(const std::basic_string<char>& object_type)> factory);
 
     void addPropertyHandler(char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler);
     void setFallbackPropertyHandler(std::function<void(T* self, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)> handler);
 
-    template<typename T2>
-    void addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const;
-    template<typename T2>
-    void setFallbackObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const;
+    template<typename T2 = T>
+    void addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler);
+
+    template<typename T2 = T>
+    void setFallbackObjectHandler(std::function<void(T* self, T2* object, const std::basic_string<char>& name)> handler);
+
+private:
+    ///@warning Do **not** rely this in a symbol exported in a shared library
+    static int getTypeId();
 };
 
 /**
@@ -229,6 +247,11 @@ public:
      * to map external object to the serialized representation.
      */
     void registerVObjectAdaptor(char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor);
+
+    /**
+     * When an object name isn't registered, this handler will be used.
+     */
+    void registerFallbackVObjectAdaptor(std::shared_ptr<AbstractVObjectAdaptor> adaptor);
 
     AbstractObject* _test_CharToObj(const char* data);
 

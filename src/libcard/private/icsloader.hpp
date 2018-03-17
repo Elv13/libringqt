@@ -18,18 +18,18 @@
  ***********************************************************************************/
 
 template<typename T>
-void VObjectAdapter<T>::setObjectFactory(std::function<T*()> factory)
+void VObjectAdapter<T>::setObjectFactory(std::function<T*(const std::basic_string<char>& object_type)> factory)
 {
-    setAbstractFactory([factory]() {
-        return factory();
+    setAbstractFactory([factory](const std::basic_string<char>& object_type) {
+        return factory(object_type);
     });
 }
 
 template<typename T>
 void VObjectAdapter<T>::addPropertyHandler(char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler)
 {
-    setAbstractPropertyHandler(name, [handler, this](const std::basic_string<char>& value, const Parameters& params) {
-        auto self = nullptr;
+    setAbstractPropertyHandler(name, [handler, this](void* p, const std::basic_string<char>& value, const Parameters& params) {
+        auto self = static_cast<T*>(p);
         handler(self, value, params);
     });
 }
@@ -37,22 +37,34 @@ void VObjectAdapter<T>::addPropertyHandler(char* name, std::function<void(T* sel
 template<typename T>
 void VObjectAdapter<T>::setFallbackPropertyHandler(std::function<void(T* self, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)> handler)
 {
-    setAbstractFallbackPropertyHandler([this, handler](const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params) {
-        auto self = nullptr;
+    setAbstractFallbackPropertyHandler([this, handler](void* p, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params) {
+        auto self = static_cast<T*>(p);
         handler(self, name, value, params);
     });
 }
 
 template<typename T>
 template<typename T2>
-void VObjectAdapter<T>::addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const
+void VObjectAdapter<T>::addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler)
 {
-
+    //
 }
 
 template<typename T>
 template<typename T2>
-void VObjectAdapter<T>::setFallbackObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler) const
+void VObjectAdapter<T>::setFallbackObjectHandler(std::function<void(T* self, T2* object, const std::basic_string<char>& name)> handler)
 {
+    setAbstractFallbackObjectHandler(VObjectAdapter<T2>::getTypeId(), [this, handler](void* p, void* p2, const std::basic_string<char>& name) {
+        auto self = static_cast<T*>(p);
+        auto obj  = static_cast<T2*>(p2);
+        handler(self, obj, name);
+    });
+}
 
+template<typename T>
+int VObjectAdapter<T>::getTypeId()
+{
+    static int id = getNewTypeId();
+
+    return id;
 }
