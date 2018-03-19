@@ -62,11 +62,22 @@ QHash<int,QByteArray> EventModel::roleNames() const
     static std::atomic_flag initRoles {ATOMIC_FLAG_INIT};
 
     if (!initRoles.test_and_set()) {
+        QHash<int, QByteArray>::const_iterator i;
+        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
+            roles[i.key()] = i.value();
 
+        roles[Event::Roles::REVISION_COUNT  ] = "revisionCount";
+        roles[Event::Roles::UID             ] = "uid";
+        roles[Event::Roles::BEGIN_TIMESTAMP ] = "beginTimestamp";
+        roles[Event::Roles::END_TIMESTAMP   ] = "endTimestamp";
+        roles[Event::Roles::UPDATE_TIMESTAMP] = "updateTimestamp";
+        roles[Event::Roles::EVENT_CATEGORY  ] = "eventCategory";
+        roles[Event::Roles::DIRECTION       ] = "direction";
     }
 
     return roles;
 }
+
 
 QVariant EventModel::data( const QModelIndex& index, int role ) const
 {
@@ -75,12 +86,7 @@ QVariant EventModel::data( const QModelIndex& index, int role ) const
 
     const Event* info = d_ptr->m_lEvent[index.row()];
 
-    switch (role) {
-//         case Qt::DisplayRole:
-//             return info->name();
-    };
-
-    return {};
+    return info->roleData(role);
 }
 
 int EventModel::rowCount( const QModelIndex& parent ) const

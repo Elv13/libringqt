@@ -24,6 +24,7 @@
 
 #include <typedefs.h>
 #include <itembase.h>
+#include <itemdataroles.h>
 
 class EventPrivate;
 class ContactMethod;
@@ -68,6 +69,15 @@ public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)
     Q_PROPERTY(time_t stopTimeStamp  READ stopTimeStamp  CONSTANT)
 
+    enum Roles {
+        REVISION_COUNT = static_cast<int>(Ring::Role::UserRole) + 1,
+        UID             ,
+        BEGIN_TIMESTAMP ,
+        END_TIMESTAMP   ,
+        UPDATE_TIMESTAMP,
+        EVENT_CATEGORY  ,
+        DIRECTION       ,
+    };
 
     /**
      * List the supported event types.
@@ -81,6 +91,7 @@ public:
         DATA_TRANSFER, /*!< Either a download or upload                        */
         MESSAGE_GOUP , /*!<   */
     };
+    Q_ENUM(Event::EventCategory)
 
     /**
      * A finite number of supported attachments for an event.
@@ -175,6 +186,20 @@ public:
     QByteArray uid() const;
 
     /**
+     * It is possible to update events by using the same UID and a newer
+     * DTSTAMP. This is useful to prevent rewriting the complete database
+     * everytime something needs to be updated.
+     *
+     * The calendar keeps track of the number of updated entries and can
+     * squash / garbage collect the data when it judge beneficial.
+     *
+     * This is also a very important aspect of the future cross device
+     * synchronization where contact UIDs (vCard) could be added later to
+     * past events.
+     */
+    int revisionCount() const;
+
+    /**
      * Convert the event into a Call object.
      *
      * It can return nullptr if the event is not a call.
@@ -182,6 +207,8 @@ public:
     Call* toHistoryCall() const;
 
     static QByteArray categoryName(EventCategory cat);
+
+    QVariant roleData(int role) const;
 
 private:
     // To avoid a large number of arguments in the constructor, add all

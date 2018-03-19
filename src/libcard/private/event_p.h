@@ -27,6 +27,7 @@ public:
     time_t m_StartTimeStamp {0};
     time_t m_StopTimeStamp  {0};
     time_t m_RevTimeStamp   {0};
+    uint   m_RevCounter     {0};
     QString m_CN;
     bool m_IsSaved {false};
     Account* m_pAccount {nullptr};

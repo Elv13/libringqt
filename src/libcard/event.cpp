@@ -161,3 +161,31 @@ void Event::detachFile(Media::Attachment* file)
 {
     d_ptr->m_lAttachedFiles.removeAll(file);
 }
+
+int Event::revisionCount() const
+{
+    return d_ptr->m_RevCounter;
+}
+
+QVariant Event::roleData(int role) const
+{
+    switch(role) {
+        case Qt::DisplayRole:
+        case Event::Roles::UID             :
+            return uid();
+        case Event::Roles::REVISION_COUNT  :
+            return QVariant::fromValue(revisionCount());
+        case Event::Roles::BEGIN_TIMESTAMP :
+            return QVariant::fromValue(startTimeStamp());
+        case Event::Roles::END_TIMESTAMP   :
+            return QVariant::fromValue(stopTimeStamp());
+        case Event::Roles::UPDATE_TIMESTAMP:
+            return QVariant::fromValue(revTimeStamp());
+        case Event::Roles::EVENT_CATEGORY  :
+            return QVariant::fromValue(eventCategory());
+        case Event::Roles::DIRECTION       :
+            return QVariant::fromValue(direction());
+    }
+
+    return {};
+}
