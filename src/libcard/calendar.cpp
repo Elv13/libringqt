@@ -29,6 +29,7 @@
 #include <media/avrecording.h>
 #include "libcard/private/event_p.h"
 #include "libcard/private/icsbuilder.h"
+#include "libcard/private/icsloader.h"
 
 class CalendarEditor final : public CollectionEditor<Event>
 {
@@ -73,6 +74,82 @@ Calendar::~Calendar()
 
 bool Calendar::load()
 {
+    ICSLoader l;
+    auto calendarAdapter = std::shared_ptr<VObjectAdapter<Calendar>>(
+        new VObjectAdapter<Calendar>
+    );
+
+    auto eventAdapter = std::shared_ptr<VObjectAdapter<Event::EventBean>>(
+        new  VObjectAdapter<Event::EventBean>
+    );
+
+    static const QHash<QByteArray, Event::EventCategory> m_hCategoriesMapper {
+        {"PHONE_CALL", Event::EventCategory::CALL},
+    };
+
+    /*
+    UID:1507286415-0-294D8D29@ring.cx
+    DTSTART;TZID=America/Toronto:1507286415
+    DTEND;TZID=America/Toronto:1507286415
+    DTSTAMP;TZID=America/Toronto:1521092836
+    X_RING_DIRECTION;VALUE=STRING:OUTGOING
+    ORGANIZER;CN="elv13withappimage3";X_RING_ACCOUNTID=545895f087fbd23b:ring:c569cd72626800fec17a14ca5d962fcd59f4af8f@bootstrap.ring.cx
+    ATTENDEE;CN="4444444444444444444444444444444444444444":ring:4444444444444444444444444444444444444444
+    */
+
+    eventAdapter->addPropertyHandler("DTSTART", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        self->startTimeStamp = QString(value.data()).toInt();
+    });
+
+    eventAdapter->addPropertyHandler("DTEND", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        self->stopTimeStamp = QString(value.data()).toInt();
+    });
+
+    eventAdapter->addPropertyHandler("DTSTAMP", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        self->revTimeStamp = QString(value.data()).toInt();
+    });
+
+    eventAdapter->addPropertyHandler("CATEGORIES", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        const QByteArray val = QByteArray::fromRawData(value.data(), value.size()+1);
+
+        self->category = m_hCategoriesMapper.value(val);
+    });
+
+    eventAdapter->addPropertyHandler("X_RING_DIRECTION", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        self->direction = value == "OUTGOING" ?
+            Event::Direction::OUTGOING : Event::Direction::INCOMING;
+    });
+
+    eventAdapter->addPropertyHandler("UID", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
+        self->uid = value.data();
+    });
+
+    calendarAdapter->setObjectFactory([this](const std::basic_string<char>& object_type) -> Calendar* {
+        return this;
+    });
+
+    Event::EventBean e;
+
+    eventAdapter->setObjectFactory([this, &e](const std::basic_string<char>& object_type) -> Event::EventBean* {
+        e = {};
+        return &e;
+    });
+
+    calendarAdapter->setFallbackObjectHandler<Event::EventBean>(
+        [this](
+           Calendar* self,
+           Event::EventBean* child,
+           const std::basic_string<char>& name
+        ) {
+            editor<Event>()->addExisting(new Event(*child));
+    });
+
+
+    l.registerVObjectAdaptor("VCALENDAR", calendarAdapter);
+    l.registerVObjectAdaptor("VEVENT"   , eventAdapter   );
+
+    l.loadFile(path().toLatin1().data());
+
     return true;
 }
 
@@ -134,7 +211,6 @@ bool CalendarEditor::save( const Event* item )
     }
 
     ICSBuilder::appendToCalendar(m_pCal, const_cast<Event*>(item), [item](bool success) {
-        qDebug() << "CB!" << success;
         item->d_ptr->m_IsSaved = success;
     });
 
@@ -158,6 +234,9 @@ bool CalendarEditor::addNew( Event* item )
 
 bool CalendarEditor::addExisting( const Event* item )
 {
+    qDebug() << "ADD EXISTING!" << item;
+    m_lItems << const_cast<Event*>(item);
+    mediator()->addItem(item);
     return true;
 }
 
@@ -225,7 +304,6 @@ QSharedPointer<Event> Calendar::addFromCall(Call* c)
 
     // Add the audio recordings
     if (c->hasRecording(Media::Media::Type::AUDIO, Media::Media::Direction::IN)) {
-        qDebug() << "\n\n\nHAS RECORD!";
         const auto rec = static_cast<Media::AVRecording*> (
             c->recordings(Media::Media::Type::AUDIO, Media::Media::Direction::IN).first()
         );

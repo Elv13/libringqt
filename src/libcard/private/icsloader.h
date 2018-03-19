@@ -102,9 +102,9 @@ public:
     template<typename T2 = T>
     void setFallbackObjectHandler(std::function<void(T* self, T2* object, const std::basic_string<char>& name)> handler);
 
-private:
     ///@warning Do **not** rely this in a symbol exported in a shared library
     static int getTypeId();
+private:
 };
 
 /**
@@ -193,7 +193,7 @@ public:
         std::list<Property*> properties;
     };
 
-    explicit ICSLoader(const char* path);
+    explicit ICSLoader();
 
     /**
      * @warning This blocks until the thread quits
@@ -253,10 +253,19 @@ public:
      */
     void registerFallbackVObjectAdaptor(std::shared_ptr<AbstractVObjectAdaptor> adaptor);
 
+    /**
+     * Open and parse a local file.
+     *
+     * This function is blocking and should be called from a thread.
+     *
+     * @return If the file was readable and non-empty.
+     */
+    bool loadFile(const char* path);
+
     AbstractObject* _test_CharToObj(const char* data);
 
 private:
     VParser::VContext* d_ptr;
 };
 
-#include <icsloader.hpp>
+#include "icsloader.hpp"

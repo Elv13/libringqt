@@ -76,6 +76,7 @@ public:
      * implemented in conformance with rfc5545 section 3.8.1.2.
      */
     enum class EventCategory {
+        OTHER        , /*!< Default contructor value                           */
         CALL         , /*!< rfc5545 section 5 recommends the "PHONE CALL" name */
         DATA_TRANSFER, /*!< Either a download or upload                        */
         MESSAGE_GOUP , /*!<   */
@@ -188,9 +189,11 @@ private:
     struct EventBean {
         time_t startTimeStamp;
         time_t stopTimeStamp;
+        time_t revTimeStamp;
         Direction direction    { Direction::OUTGOING };
         Status    status       {  Status::CANCELLED  };
         EventCategory category { EventCategory::CALL };
+        QString uid;
     };
 
     explicit Event(EventBean attrs, QObject* parent = nullptr);

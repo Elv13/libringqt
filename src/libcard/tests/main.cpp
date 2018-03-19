@@ -20,6 +20,7 @@
 #include <icsloader.h>
 
 #include <cassert>
+#include <iostream>
 
 /**
  * This test the windows and macOS9 line ending
@@ -104,7 +105,7 @@ ICSLoader* TestObj::isEqual(const char* content, const TestObj& other)
     });
 
     // Add for all types used by the test
-    ICSLoader loader("");
+    ICSLoader loader;
     loader.registerVObjectAdaptor("VCALENDAR", genericAdapter );
     loader.registerVObjectAdaptor("VEVENT"   , genericAdapter );
     loader.registerVObjectAdaptor("VTODO"    , genericAdapter );
@@ -184,7 +185,7 @@ void testQuoting()
         assert(value == "Networld+Interop  and Exhibit\\nAtlanta World Congress Center\\nAtlanta\\, Georgia");
     });
 
-    ICSLoader loader("");
+    ICSLoader loader;
 
     loader.registerVObjectAdaptor("VCALENDAR", calAdapter);
     loader.registerVObjectAdaptor("VEVENT"   , evAdapter );

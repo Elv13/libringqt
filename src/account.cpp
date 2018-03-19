@@ -571,7 +571,7 @@ Calendar* Account::calendar() const
 {
     if (!d_ptr->m_pCalendar) {
         d_ptr->m_pCalendar = EventModel::instance().addCollection<Calendar, Account*>(
-            const_cast<Account*>(this)
+            const_cast<Account*>(this), LoadOptions::FORCE_ENABLED
         );
     }
 

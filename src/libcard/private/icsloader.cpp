@@ -22,7 +22,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include <matrixutils.h>
+#include "../matrixutils.h"
 
 using PropertyHandler = std::function<
     void(void* p, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params)
@@ -151,7 +151,7 @@ struct VParameters {
      * The current char is at position **1** ([0] being the previous one to
      * help detect escaping)
      */
-    VParameters::Event charToEvent(const char content[4]);
+    VParameters::Event charToEvent();
 
     // Actions
     void increment();
@@ -163,7 +163,7 @@ struct VParameters {
 
     typedef void (VParameters::*function)();
     State m_State {State::EMPTY};
-    void applyEvent(const char content[4]);
+    void applyEvent();
     static const Matrix2D<VParameters::State, VParameters::Event, VParameters::State> m_StateMap;
     static const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> m_StateFunctor;
 };
@@ -198,26 +198,6 @@ const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> VP
 #undef ST
 #undef VPF
 #undef VPE
-
-VParameters::Event VParameters::charToEvent(const char content[4])
-{
-    if (content[0] == '\\')
-        return Event::READ;
-
-    switch(content[1]) {
-        case ';':
-        case '=':
-            return Event::SPLIT;
-        case ':':
-            return Event::FINISH;
-        case '"':
-            return Event::QUOTE;
-        case '\\':
-            return Event::SKIP;
-    };
-
-    return Event::READ;
-}
 
 /**
  * An object property.
@@ -285,7 +265,7 @@ struct VProperty
     /**
      *
      */
-    Event charToEvent(const char c[4]);
+    Event charToEvent();
 
     // Actions, return the number of bytes the cursor has to be incremented with
     void pushName();
@@ -303,7 +283,7 @@ struct VProperty
 
     typedef void (VProperty::*function)();
     State m_State {State::EMPTY};
-    void applyEvent(const char content[4]);
+    void applyEvent();
     static const Matrix2D<VProperty::State , VProperty::Event, VProperty::State> m_StateMap;
     static const Matrix2D<VProperty::State , VProperty::Event, VProperty::function> m_StateFunctor;
     static const Matrix1D<VParameters::State, VProperty::Event> m_ParamToEvent;
@@ -349,30 +329,6 @@ const Matrix1D<VParameters::State, VProperty::Event> VProperty::m_ParamToEvent =
     { VParameters::State::DONE       , VProperty::Event::SPLIT },
     { VParameters::State::ERROR      , VProperty::Event::ERROR },
 };
-
-/**
- * It needs the next 3 bytes to properly detect line breaks on all OSes.
- */
-VProperty::Event VProperty::charToEvent(const char c[4])
-{
-    // Check the simple case
-    switch(c[1]) {
-        case ':':
-            return Event::SPLIT;
-        case ';':
-            return Event::SPLIT_PARAM;
-    };
-
-    // Detect all kind of "continue on the next line"
-    if ((c[1] == '\n' || c[1] == '\r') && ((c[2] == '\n' && c[3] == ' ') || c[2] == ' '))
-        return Event::LINE_BREAK;
-
-    // If the above failed, then the property is completed
-    if (c[1] == '\n' || c[1] == '\r')
-        return Event::FINISH;
-
-    return Event::READ;
-}
 
 /**
  * Everything between a BEGIN:OBJECT_TYPE and it's matching END:OBJECT_TYPE.
@@ -431,7 +387,7 @@ struct VObject
     /**
      *
      */
-    Event charToEvent(const char c[4]);
+    Event charToEvent();
 
     static const Matrix1D<VProperty::State, VObject::Event> m_PropertyToEvent;
 
@@ -444,7 +400,7 @@ struct VObject
 
     typedef void (VObject::*function)();
     State m_State {State::EMPTY};
-    void applyEvent(const char content[4]);
+    void applyEvent();
     static const Matrix2D<VObject::State, VObject::Event, VObject::State> m_StateMap;
     static const Matrix2D<VObject::State, VObject::Event, VObject::function> m_StateFunctor;
 };
@@ -486,73 +442,141 @@ const Matrix1D<VProperty::State, VObject::Event> VObject::m_PropertyToEvent = {
     { VProperty::State::ERROR       , VObject::Event::ERROR        },
 };
 
-VObject::Event VObject::charToEvent(const char c[4])
+/**
+ * This is a 4 byte circular buffer to hold the current state.
+ *
+ * There is little point in reading more than that beside maybe some underlying
+ * OS I/O frame size.
+ *
+ * This makes zero dynamic allocation and can be extended later for micro
+ * optimization without side effects. Eventually the whole line should be kept
+ * until it is flushed, so a 78 byte buffer (previous + 75 + /r/n). But for now
+ * the line beffer is copied to an std::vector to avoid useless complexity.
+ *
+ *                next
+ *                  |
+ *   current -----+ |
+ *  previous ---+ | | +-- last
+ *              | | | |
+ *            B E G I N : V C A R D
+ *              \-----/
+ *                 |
+ *                 + The sliding window
+ *
+ * Note that the position of the writing cursor is always ahead of the reading
+ * cursor. Given the window size is fixed, this is a "simplified" circular
+ * buffer as the offset between the reading cursor and the writing one is
+ * static (always 3 bytes).
+ */
+class VBuffer
 {
-    if (c[0] == '\\')
-        return Event::READ;
-
-    // Detect multi-line props
-    if ((c[1] == '\n' || c[1] == '\r') && ((c[2] == '\n' && c[3] == ' ') || c[2] == ' ')) {
-        assert(false);
-        return Event::READ;
+public:
+    inline void insert(char c, char rawPos) {
+        m_lContent[rawPos] = c;
     }
 
-    switch(c[1]) {
-        case '\n':
-        case '\r':
-        case '=':
-            return Event::NEW_LINE;
-    };
+    inline void put(char c) {
+        m_Room--;
+        assert(m_Room+1);
+        m_IsInactive = m_IsInactive || !c; //BUG lose the last 2 bytes, ignore for now
+        assert(c || m_IsInactive == true);
+        m_Pos = (m_Pos+1)%4;
 
-    return Event::READ;
-}
+        m_lContent[m_Pos] = c;
+    }
+
+    inline void pop(char count) {
+        assert(count <= 3);
+//         m_Pos = (m_Pos+count)%4;
+        m_Room += count;
+        assert(m_Room <= 4);
+    }
+
+    inline char get(char pos) const {
+        assert(pos < 4 && pos >= 0);
+        return m_lContent[(m_Pos+pos) % 4];
+    }
+
+    // Create validated access for each chars. When compiled in release mode
+    // it will inline nicely.
+    inline char current() const {
+        return get(2);
+    }
+
+    inline char previous() const {
+        return get(1);
+    }
+
+    inline char next() const {
+        assert(m_Room <= 2);
+        return get(3);
+    }
+
+    inline char last() const {
+        assert(m_Room <= 1);
+        return get(0);
+    }
+
+    inline bool isActive() const {
+        return !m_IsInactive;
+    }
+
+    inline char room() const
+    {
+        return m_Room;
+    }
+
+private:
+    char m_lContent[4] = {0x00,0x00,0x00,0x00};
+    char m_Pos {3}; /*!< The previous byte is always necessary, so start at 1*/
+    bool m_IsInactive {false};
+    char m_Room {0};
+
+//     m_Pos == 1 and p == 0 --> 1  | 1 % 4 | 1
+//     m_Pos == 1 and p == 1 --> 2  | 2 % 4 | 2
+//     m_Pos == 1 and p == 2 --> 3  | 3 % 4 | 3
+//     m_Pos == 1 and p == 3 --> 0  | 4 % 4 | 0
+//                                  |       |
+//     m_Pos == 2 and p == 0 --> 2  | 2 % 4 | 2
+//     m_Pos == 2 and p == 1 --> 3  | 3 % 4 | 3
+//     m_Pos == 2 and p == 2 --> 0  | 4 % 4 | 0
+//     m_Pos == 2 and p == 3 --> 1  | 5 % 4 | 1
+//                                  |       |
+//     m_Pos == 3 and p == 0 --> 3  | 3 % 4 | 3
+//     m_Pos == 3 and p == 1 --> 0  | 4 % 4 | 0
+//     m_Pos == 3 and p == 2 --> 1  | 5 % 4 | 1
+//     m_Pos == 3 and p == 3 --> 2  | 6 % 4 | 2
+};
 
 struct VContext
 {
 
     std::basic_string<char> m_Buffer;
 
-    char*    m_pContent       { nullptr };
-    int      m_Position       {    0    };
     bool     m_IsActive       {  true   };
     VObject* m_pCurrentObject { nullptr };
+    int      m_ToGet {0};
 
     std::unordered_map<std::basic_string<char>, std::shared_ptr<AbstractVObjectAdaptor> > m_Adaptors;
     std::shared_ptr<AbstractVObjectAdaptor> m_FallbackAdaptors;
 
-    char* currentWindow() {
-        if (!m_Position)
-            return new char[4] { //FIXME leak
-                0x00,
-                m_pContent[0],
-                m_pContent[1],
-                m_pContent[2]
-            };
-
-        return m_pContent + m_Position - 1;
-    }
-
-    char currentChar() {
-        return currentWindow()[1];
-    }
+    VBuffer m_Window;
 
     void push(char count) {
+        assert(count < 4);
         for (int i =0; i < count; i++) {
-            m_Buffer.push_back(m_pContent[m_Position++]); //FIXME use a slice list, not a copy
-            if (!m_pContent[m_Position])
-                m_IsActive = false;
+            m_Buffer.push_back(m_Window.current()); //FIXME use a slice list, not a copy
+            m_Window.pop(1);
         }
     }
 
     void skip(char count) {
-        for (int i =0; i < count; i++) {
-            if (!m_pContent[++m_Position])
-                m_IsActive = false;
-        }
+        assert(count < 4);
+        m_Window.pop(count);
     }
 
-    bool isActive() {
-        return m_IsActive;
+    bool isActive() const {
+        return m_Window.isActive() && m_IsActive;
     }
 
     VObject* currentObject() {
@@ -626,6 +650,13 @@ struct VContext
         newO->m_State == VObject::State::PROPERTIES;
         newO->m_pParent = m_pCurrentObject;
 
+        newO->name = m_pCurrentObject->m_pCurrentProperty->m_Value;
+
+        if (auto factory = factoryForType(newO->name)) {
+            newO->m_pReflected = (*factory)(newO->name);
+            newO->m_pAdaptor   = adapter(newO->name);
+        }
+
         m_pCurrentObject = newO;
     }
 
@@ -655,7 +686,82 @@ struct VContext
     }
 
     ICSLoader::AbstractObject* _test_raw(const char* content);
+
+    bool readFile(const char* path);
 };
+
+VParameters::Event VParameters::charToEvent()
+{
+    if (m_pContext->m_Window.previous() == '\\')
+        return Event::READ;
+
+    switch(m_pContext->m_Window.current()) {
+        case ';':
+        case '=':
+            return Event::SPLIT;
+        case ':':
+            return Event::FINISH;
+        case '"':
+            return Event::QUOTE;
+        case '\\':
+            return Event::SKIP;
+    };
+
+    return Event::READ;
+}
+
+/**
+ * It needs the next 3 bytes to properly detect line breaks on all OSes.
+ */
+VProperty::Event VProperty::charToEvent()
+{
+    // Check the simple case
+    switch(m_pContext->m_Window.current()) {
+        case ':':
+            return Event::SPLIT;
+        case ';':
+            return Event::SPLIT_PARAM;
+    };
+
+    // Detect all kind of "continue on the next line"
+    if ((m_pContext->m_Window.current() == '\n' || m_pContext->m_Window.current() == '\r') && ((m_pContext->m_Window.next() == '\n' && m_pContext->m_Window.last() == ' ') || m_pContext->m_Window.next() == ' '))
+        return Event::LINE_BREAK;
+
+    // If the above failed, then the property is completed
+    if (m_pContext->m_Window.current() == '\n' || m_pContext->m_Window.current() == '\r')
+        return Event::FINISH;
+
+    return Event::READ;
+}
+
+
+VObject::Event VObject::charToEvent()
+{
+    if (m_pContext->m_Window.previous() == '\\')
+        return Event::READ;
+
+    // Detect multi-line props
+    if (
+      (
+        m_pContext->m_Window.current() == '\n' || m_pContext->m_Window.current() == '\r'
+      ) && (
+        (m_pContext->m_Window.next() == '\n' && m_pContext->m_Window.last() == ' ')
+        || m_pContext->m_Window.next() == ' '
+      )
+    ) {
+        assert(false);
+        return Event::READ;
+    }
+
+    switch(m_pContext->m_Window.current()) {
+        case '\n':
+        case '\r':
+        case '=':
+            return Event::NEW_LINE;
+    };
+
+    return Event::READ;
+}
 
 void VParameters::increment()
 {
@@ -706,18 +812,18 @@ void VProperty::increment()
 
 void VProperty::parameter()
 {
-    m_Parameters.applyEvent(m_pContext->currentWindow());
+    m_Parameters.applyEvent();
 }
 
 void VProperty::push()
 {
     m_Value = m_pContext->flush();
-    m_pContext->skip(m_pContext->currentChar() == '\r' ? 2 : 1);
+    m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 2 : 1);
 }
 
 void VProperty::pushLine()
 {
-    m_pContext->skip(m_pContext->currentChar() == '\r' ? 3 : 2);
+    m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 3 : 2);
 }
 
 void VProperty::nothing()
@@ -744,7 +850,7 @@ void VObject::propertyEvent()
     if (!m_pCurrentProperty)
         m_pCurrentProperty = new VProperty(m_pContext);
 
-    m_pCurrentProperty->applyEvent(m_pContext->currentWindow());
+    m_pCurrentProperty->applyEvent();
 }
 
 void VObject::finish()
@@ -765,13 +871,8 @@ void VObject::pushProperty()
 
     /// Detect when the property is an object
     if (m_pCurrentProperty->m_Name.substr(0, 5) == "BEGIN") {
-        m_pContext->stashObject();
-        m_pContext->currentObject()->name = m_pCurrentProperty->m_Value;
 
-        if (auto factory = m_pContext->factoryForType(m_pCurrentProperty->m_Value)) {
-            m_pContext->currentObject()->m_pReflected = (*factory)(m_pCurrentProperty->m_Value);
-            m_pContext->currentObject()->m_pAdaptor   = m_pContext->adapter(m_pCurrentProperty->m_Value);
-        }
+        m_pContext->stashObject();
     }
     else if (m_pCurrentProperty->m_Name.substr(0, 3) == "END") {
         m_pContext->popObject();
@@ -783,11 +884,11 @@ void VObject::pushProperty()
     m_pCurrentProperty = nullptr;
 }
 
-void VParameters::applyEvent(const char content[4])
+void VParameters::applyEvent()
 {
     auto s = m_State;
 
-    auto event = charToEvent(content);
+    auto event = charToEvent();
 
     m_State = m_StateMap[s][event];
 
@@ -801,7 +902,7 @@ void VParameters::applyEvent(const char content[4])
     (this->*(m_StateFunctor[s][event]))();
 }
 
-void VProperty::applyEvent(const char content[4])
+void VProperty::applyEvent()
 {
     auto s = m_State;
 
@@ -810,7 +911,7 @@ void VProperty::applyEvent(const char content[4])
     if (s == State::PARAMETERS || s == State::LINE_BREAK_P) //FIXME can be incorporated
         event = m_ParamToEvent[m_Parameters.m_State];
     else
-        event = charToEvent(content);
+        event = charToEvent();
 
     m_State = m_StateMap[s][event];
 
@@ -823,7 +924,7 @@ void VProperty::applyEvent(const char content[4])
     return (this->*(m_StateFunctor[s][event]))();
 }
 
-void VObject::applyEvent(const char content[4])
+void VObject::applyEvent()
 {
     auto s = m_State;
 
@@ -843,7 +944,7 @@ void VObject::applyEvent(const char content[4])
             assert(false);
     }
     else {
-        event = charToEvent(content);
+        event = charToEvent();
         if (event == Event::ERROR)
             assert(false);
     }
@@ -858,23 +959,23 @@ void VObject::applyEvent(const char content[4])
     return (this->*(m_StateFunctor[s][event]))();
 }
 
+
+// For unit testing without reading from the disk
 ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
 {
-    m_pContent = (char*) content;
-
+    int pos = 3;
     m_pCurrentObject = new VObject(this);
 
-    char first[] = {
-        0x00,
-        content[0],
-        content[1],
-        content[2]
-    };
-    currentObject()->applyEvent(first);
+    m_Window.insert(content[0], 1);
+    m_Window.insert(content[1], 2);
+    m_Window.insert(content[2], 3);
+    currentObject()->applyEvent();
 
     while (true) {
-        currentObject()->applyEvent(currentWindow());
+        while (m_Window.room())
+            m_Window.put(content[pos++]);
 
+        currentObject()->applyEvent();
 
         if (currentObject()->m_State == VObject::State::ERROR) {
             assert(false);
@@ -887,11 +988,62 @@ ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
     }
 }
 
+bool VContext::readFile(const char* path)
+{
+    int c;
+    FILE *file;
+    file = fopen(path, "r");
+
+    if (file) {
+        m_pCurrentObject = new VObject(this);
+
+        // Init the sling window
+        for (int i = 1; i < 4; i++) {
+            if ((c = getc(file)) != EOF)
+                m_Window.insert(c, i);
+            else {
+                fclose(file);
+                return false;
+            }
+        }
+
+        while (isActive()) {
+
+            while (m_Window.room() && (c = getc(file)) != EOF) {
+                m_Window.put(c);
+            }
+
+            if (c == EOF || !c)
+                m_IsActive = false;
+
+            if (!isActive())
+                break;
+
+            currentObject()->applyEvent();
+
+        }
+
+        fclose(file);
+
+        if ((!currentObject()) || (!isActive())) {
+            std::cout << "COMPLETE!\n";
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
-ICSLoader::ICSLoader(const char* path) : d_ptr(new VParser::VContext)
+}
+
+bool ICSLoader::loadFile(const char* path)
 {
-    //
+    d_ptr->readFile(path);
+}
+
+ICSLoader::ICSLoader() : d_ptr(new VParser::VContext)
+{
 }
 
 ICSLoader::~ICSLoader()
