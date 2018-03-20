@@ -25,15 +25,9 @@
 #include <call.h>
 #include "libcard/private/event_p.h"
 
-Event::Event(Event::EventBean attrs, QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
+Event::Event(const EventPrivate& attrs, QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
 {
-    if (attrs.startTimeStamp)
-        d_ptr->m_StartTimeStamp = attrs.startTimeStamp;
-
-    if (attrs.stopTimeStamp)
-        d_ptr->m_StopTimeStamp = attrs.stopTimeStamp;
-
-    d_ptr->m_Direction = attrs.direction;
+    (*d_ptr) = attrs;
 }
 
 Event::~Event()
@@ -95,7 +89,56 @@ QByteArray Event::categoryName(EventCategory cat)
         case EventCategory::MESSAGE_GOUP:
             return "TEXT MESSAGES";
     }
+
+    // Memory corruption, it's already game over
+    Q_ASSERT(false);
+    return {};
 }
+
+QByteArray Event::statusName(Status st)
+{
+    switch(st) {
+        case Event::Status::TENTATIVE:
+            return "TENTATIVE";
+        case Event::Status::IN_PROCESS:
+            return "IN-PROCESS";
+        case Event::Status::CANCELLED:
+            return "CANCELLED";
+        case Event::Status::FINAL:
+            return "FINAL";
+        case Event::Status::X_MISSED:
+            return "X_MISSED";
+    }
+
+    // Memory corruption, it's already game over
+    Q_ASSERT(false);
+    return {};
+}
+
+Event::EventCategory Event::categoryFromName(const QByteArray& name)
+{
+    static QHash<QByteArray, Event::EventCategory> vals {
+        { "PHONE CALL"   , EventCategory::CALL          },
+        { "DATA TRANSFER", EventCategory::DATA_TRANSFER },
+        { "TEXT MESSAGES", EventCategory::MESSAGE_GOUP  },
+    };
+
+    return vals[name];
+}
+
+Event::Status Event::statusFromName(const QByteArray& name)
+{
+    static QHash<QByteArray, Event::Status> vals  {
+        { "TENTATIVE" , Event::Status::TENTATIVE  },
+        { "IN-PROCESS", Event::Status::IN_PROCESS },
+        { "CANCELLED" , Event::Status::CANCELLED  },
+        { "FINAL"     , Event::Status::FINAL      },
+        { "X_MISSED"  , Event::Status::X_MISSED   },
+    };
+
+    return vals[name];
+}
+
 
 QVariant Event::getCustomProperty(Event::CustomProperties property) const
 {

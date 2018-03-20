@@ -131,6 +131,8 @@ bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
             "INCOMING" : "OUTGOING"
     ) << '\n';
 
+    (*device) << "STATUS:" << e->statusName(e->status()).data() << '\n';
+
     toStream(e->account(), device);
 
     const auto attendees = e->attendees();

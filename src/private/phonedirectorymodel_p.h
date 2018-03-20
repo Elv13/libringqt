@@ -34,7 +34,7 @@ struct NumberWrapper final {
    QVector<ContactMethod*> numbers;
 };
 
-class MostPopularNumberModel final : public QAbstractListModel
+class MostPopularNumberModel final : public QAbstractListModel //TODO remove
 {
    Q_OBJECT
 public:
@@ -99,6 +99,7 @@ public:
    bool                          m_CallWithAccount  ;
    MostPopularNumberModel*       m_pPopularModel    ;
    LocalNameServiceCache*        m_pNameServiceCache {nullptr};
+   QMutex                        m_DirectoryAccess;
 
    Q_DECLARE_PUBLIC(PhoneDirectoryModel)
 

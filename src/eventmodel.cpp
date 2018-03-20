@@ -78,7 +78,6 @@ QHash<int,QByteArray> EventModel::roleNames() const
     return roles;
 }
 
-
 QVariant EventModel::data( const QModelIndex& index, int role ) const
 {
     if (!index.isValid())

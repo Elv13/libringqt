@@ -26,6 +26,9 @@
 #include "event.h"
 #include <call.h>
 #include <account.h>
+#include <accountmodel.h>
+#include <personmodel.h>
+#include <phonedirectorymodel.h>
 #include <media/avrecording.h>
 #include "libcard/private/event_p.h"
 #include "libcard/private/icsbuilder.h"
@@ -79,13 +82,9 @@ bool Calendar::load()
         new VObjectAdapter<Calendar>
     );
 
-    auto eventAdapter = std::shared_ptr<VObjectAdapter<Event::EventBean>>(
-        new  VObjectAdapter<Event::EventBean>
+    auto eventAdapter = std::shared_ptr<VObjectAdapter<EventPrivate>>(
+        new  VObjectAdapter<EventPrivate>
     );
-
-    static const QHash<QByteArray, Event::EventCategory> m_hCategoriesMapper {
-        {"PHONE_CALL", Event::EventCategory::CALL},
-    };
 
     /*
     UID:1507286415-0-294D8D29@ring.cx
@@ -97,48 +96,81 @@ bool Calendar::load()
     ATTENDEE;CN="4444444444444444444444444444444444444444":ring:4444444444444444444444444444444444444444
     */
 
-    eventAdapter->addPropertyHandler("DTSTART", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        self->startTimeStamp = QString(value.data()).toInt();
+    // It was very unreadable without it
+#define ARGS (EventPrivate* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params)
+
+    eventAdapter->addPropertyHandler("DTSTART", []ARGS {
+        self->m_StartTimeStamp = QString(value.data()).toInt();
     });
 
-    eventAdapter->addPropertyHandler("DTEND", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        self->stopTimeStamp = QString(value.data()).toInt();
+    eventAdapter->addPropertyHandler("DTEND", []ARGS {
+        self->m_StopTimeStamp = QString(value.data()).toInt();
     });
 
-    eventAdapter->addPropertyHandler("DTSTAMP", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        self->revTimeStamp = QString(value.data()).toInt();
+    eventAdapter->addPropertyHandler("DTSTAMP", []ARGS {
+        self->m_RevTimeStamp = QString(value.data()).toInt();
     });
 
-    eventAdapter->addPropertyHandler("CATEGORIES", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        const QByteArray val = QByteArray::fromRawData(value.data(), value.size()+1);
+    eventAdapter->addPropertyHandler("ATTENDEE", [this]ARGS {
+        const QByteArray val = QByteArray::fromRawData(value.data(), value.size());
 
-        self->category = m_hCategoriesMapper.value(val);
+        Account* a = nullptr;
+        Person*  p = nullptr;
+
+        for (auto param : params) {
+            const QByteArray pKey = QByteArray::fromRawData(param.first.data (), param.first.size ());
+            const QByteArray pVal = QByteArray::fromRawData(param.second.data(), param.second.size());
+
+            if (pKey == "CN")
+                self->m_CN = pVal;
+            else if (pKey == "UID")
+                p = PersonModel::instance().getPlaceHolder(pVal);
+            else if (pKey == "X_RING_ACCOUNTID")
+                a = AccountModel::instance().getById(pVal);
+        }
+
+        self->m_lAttendees << QPair<ContactMethod*, QString> {
+            PhoneDirectoryModel::instance().getNumber(val, p, a ? a : account()),
+            self->m_CN
+        };
     });
 
-    eventAdapter->addPropertyHandler("X_RING_DIRECTION", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        self->direction = value == "OUTGOING" ?
+    eventAdapter->addPropertyHandler("CATEGORIES", []ARGS {
+        const QByteArray val = QByteArray::fromRawData(value.data(), value.size());
+
+        self->m_EventCategory = Event::categoryFromName(val);
+    });
+
+    eventAdapter->addPropertyHandler("STATUS", []ARGS {
+        const QByteArray val = QByteArray::fromRawData(value.data(), value.size());
+
+        self->m_Status = Event::statusFromName(val);
+    });
+
+    eventAdapter->addPropertyHandler("X_RING_DIRECTION", []ARGS {
+        self->m_Direction = value == "OUTGOING" ?
             Event::Direction::OUTGOING : Event::Direction::INCOMING;
     });
 
-    eventAdapter->addPropertyHandler("UID", [](Event::EventBean* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params) {
-        self->uid = value.data();
+    eventAdapter->addPropertyHandler("UID", []ARGS {
+        self->m_UID = value.data();
     });
 
     calendarAdapter->setObjectFactory([this](const std::basic_string<char>& object_type) -> Calendar* {
         return this;
     });
 
-    Event::EventBean e;
+    EventPrivate e;
 
-    eventAdapter->setObjectFactory([this, &e](const std::basic_string<char>& object_type) -> Event::EventBean* {
+    eventAdapter->setObjectFactory([this, &e](const std::basic_string<char>& object_type) -> EventPrivate* {
         e = {};
         return &e;
     });
 
-    calendarAdapter->setFallbackObjectHandler<Event::EventBean>(
+    calendarAdapter->setFallbackObjectHandler<EventPrivate>(
         [this](
            Calendar* self,
-           Event::EventBean* child,
+           EventPrivate* child,
            const std::basic_string<char>& name
         ) {
             editor<Event>()->addExisting(new Event(*child));
@@ -149,6 +181,8 @@ bool Calendar::load()
     l.registerVObjectAdaptor("VEVENT"   , eventAdapter   );
 
     l.loadFile(path().toLatin1().data());
+
+#undef ARGS
 
     return true;
 }
@@ -234,7 +268,6 @@ bool CalendarEditor::addNew( Event* item )
 
 bool CalendarEditor::addExisting( const Event* item )
 {
-    qDebug() << "ADD EXISTING!" << item;
     m_lItems << const_cast<Event*>(item);
     mediator()->addItem(item);
     return true;
@@ -281,10 +314,10 @@ QSharedPointer<Event> Calendar::addFromCall(Call* c)
         return c->calendarEvent();
     }
 
-    Event::EventBean b;
-    b.startTimeStamp = c->startTimeStamp();
-    b.stopTimeStamp  = c->stopTimeStamp ();
-    b.direction      = c->direction() == Call::Direction::OUTGOING ?
+    EventPrivate b;
+    b.m_StartTimeStamp = c->startTimeStamp();
+    b.m_StopTimeStamp  = c->stopTimeStamp ();
+    b.m_Direction      = c->direction() == Call::Direction::OUTGOING ?
         Event::Direction::OUTGOING : Event::Direction::INCOMING;
 
     auto e = new Event(b, c);

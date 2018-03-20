@@ -123,9 +123,19 @@ public:
     };
     Q_ENUM(Direction)
 
+    /**
+     * The status of the entry.
+     *
+     * The RFC allow custom values to be specified. Here, only X_MISSED is
+     * necessary because otherwise the standard values map well into the data
+     * model.
+     */
     enum class Status {
-        CANCELLED, // 3.8.1.11
-        X_MISSED , // non-standard
+        TENTATIVE , // 3.8.1.11
+        IN_PROCESS, // 3.8.1.11 "IN-PROCESS"
+        CANCELLED , // 3.8.1.11
+        FINAL     , // 3.8.1.11
+        X_MISSED  , // non-standard
     };
 
     virtual ~Event();
@@ -207,23 +217,19 @@ public:
     Call* toHistoryCall() const;
 
     static QByteArray categoryName(EventCategory cat);
+    static QByteArray statusName(Status st);
+    static EventCategory categoryFromName(const QByteArray& name);
+    static Status statusFromName(const QByteArray& name);
 
     QVariant roleData(int role) const;
 
 private:
-    // To avoid a large number of arguments in the constructor, add all
-    // immutable attributes in a temporary structure
-    struct EventBean {
-        time_t startTimeStamp;
-        time_t stopTimeStamp;
-        time_t revTimeStamp;
-        Direction direction    { Direction::OUTGOING };
-        Status    status       {  Status::CANCELLED  };
-        EventCategory category { EventCategory::CALL };
-        QString uid;
-    };
-
-    explicit Event(EventBean attrs, QObject* parent = nullptr);
+    /**
+     * The `attrs` are read only and used to load the initial (and often
+     * immutable) properties. This class is intended to be managed/created by
+     * the Calendars, so there is no point in making any of this public.
+     */
+    explicit Event(const EventPrivate& attrs, QObject* parent = nullptr);
 
     EventPrivate* d_ptr;
     Q_DECLARE_PRIVATE(Event)

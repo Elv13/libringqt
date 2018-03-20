@@ -580,6 +580,8 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, 
 ///Return/create a number when no information is available
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& type)
 {
+   QMutexLocker locker(&d_ptr->m_DirectoryAccess);
+
    if (const auto wrap = d_ptr->m_hDirectory.value(uri)) {
       ContactMethod* nb = wrap->numbers[0];
       if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
@@ -676,6 +678,8 @@ void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, A
 ///Create a number when a more information is available duplicated ones
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
+   QMutexLocker locker(&d_ptr->m_DirectoryAccess);
+
    //One cause of duplicate is when something like ring:foo happen on SIP accounts.
    ensureValidity(uri, account);
 
