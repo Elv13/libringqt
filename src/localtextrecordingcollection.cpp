@@ -214,7 +214,7 @@ QString LocalTextRecordingEditor::fetch(const QByteArray& sha1)
     QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/" + sha1 + ".json");
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return QByteArray();
+        return {};
     }
 
     return QString::fromUtf8(file.readAll());
@@ -263,7 +263,7 @@ bool LocalTextRecordingCollection::load()
 
     for (const auto& fileInfo : qAsConst(list)) {
         if (auto r = Media::TextRecording::fromPath(fileInfo.absoluteFilePath(), {}, this)) {
-
+qDebug() << "\n\nFULL LOAD!" << fileInfo.absoluteFilePath();
             // get CMs from recording
             const auto peers = r->peers();
 

@@ -282,33 +282,6 @@ AccountModel::selectedAccount() const
    return AccountModel::instance().getAccountByModelIndex(accIdx);
 }
 
-/**
- * Helper method to update the selected index in user selection model
- */
-void
-AccountModel::setUserChosenAccount(Account* account)
-{
-    if (!account) {
-        return;
-    }
-
-    const auto idx = account->index();
-
-    userSelectionModel()->setCurrentIndex(
-        idx, QItemSelectionModel::ClearAndSelect
-    );
-}
-
-/**
- * returns the user chosen account
- */
-Account*
-AccountModel::userChosenAccount() const
-{
-   auto accIdx = AccountModel::instance().userSelectionModel()->currentIndex();
-   return AccountModel::instance().getAccountByModelIndex(accIdx);
-}
-
 QList<Account*> AccountModel::accountsToMigrate() const
 {
     QList<Account*> accounts;

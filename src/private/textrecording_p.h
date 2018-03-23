@@ -85,6 +85,7 @@ public:
     bool updateMessageStatus(MimeMessage* m, DRing::Account::MessageStates status);
     bool performMessageAction(MimeMessage* m, MimeMessage::Actions a);
     bool performMessageAction(MimeMessage* m, DRing::Account::MessageStates a);
+    Event* event();
 
     void clear();
 

@@ -30,6 +30,7 @@
 //Ring
 #include "itemdataroles.h"
 #include "uri.h"
+#include "libcard/event.h"
 class Account;
 class AccountPrivate;
 class Person;
@@ -227,7 +228,7 @@ public:
    bool isAvailable() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
-   QSharedPointer<QAbstractItemModel> callsModel       () const;
+   QSharedPointer<QAbstractItemModel> callsModel() const;
    IndividualPointer  individual() const;
 
    /*

@@ -27,6 +27,7 @@ class Person;
 class Call;
 class IndividualEditor;
 class IndividualPrivate;
+class EventAggregate;
 namespace Media {
     class TextRecording;
 };
@@ -73,6 +74,11 @@ public:
     QVector<ContactMethod*> phoneNumbers() const;
     QVector<ContactMethod*> relatedContactMethods() const;
     QVector<Media::TextRecording*> textRecordings() const;
+
+    /**
+     * Group all events related to this individual.
+     */
+    QSharedPointer<EventAggregate> events(FlagPack<Event::EventCategory> categories = Event::EventCategory::ALL);
 
     /// Reverse map the boolean cardinality from N to 1
     template<bool (ContactMethod :: *prop)() const>

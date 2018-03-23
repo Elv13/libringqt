@@ -181,9 +181,11 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
        tracked_buddy->setPresent(tracked_buddy_present);
    }
 
-    const QString currentUri = QStringLiteral("%1@%2").arg(a->username()).arg(a->d_ptr->m_HostName);
+    const QString currentUri = a->d_ptr->buildUri();
 
     a->d_ptr->m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, a);
+    Q_ASSERT(a->d_ptr->m_pAccountNumber->uri() != '@');
+
     a->d_ptr->m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
 
    return a;
@@ -199,6 +201,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
    a->d_ptr->m_hAccountDetails.clear();
    a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
    a->d_ptr->m_pAccountNumber = const_cast<ContactMethod*>(ContactMethod::BLANK());
+
    MapStringString tmp;
    switch (proto) {
       case Account::Protocol::SIP:
@@ -1011,6 +1014,8 @@ ContactMethod* Account::contactMethod() const
 {
    if (!d_ptr->m_pAccountNumber)
       d_ptr->reload();
+
+   Q_ASSERT(d_ptr->m_pAccountNumber->uri() != '@');
 
    return d_ptr->m_pAccountNumber;
 }
@@ -2463,6 +2468,32 @@ Account::RoleStatus Account::roleStatus(Account::Role role) const
    return d_ptr->m_hRoleStatus[(int)role];
 }
 
+QString AccountPrivate::buildUri()
+{
+    QString currentUri = QStringLiteral("%1@%2").arg(q_ptr->username()).arg(m_HostName);
+
+   // SIP "IP2IP" accounts have empty username and hostname.
+   // That voids the RFC and has to be replaced by something
+    if (q_ptr->username().isEmpty()) {
+
+        // The validation code is supposed to prevent other cases
+        if (q_ptr->protocol() != Account::Protocol::SIP)
+            qWarning() << "An account has an invalid username or hostname,"
+                " there might have been a file corruption."
+                " You should consider to delete account "<< q_ptr->alias();
+
+        static QString name = qgetenv("USER");
+        if (name.isEmpty())
+            name = qgetenv("USERNAME");
+
+        static QString host = qgetenv("HOST");
+
+        currentUri = name + (host.size() ? '@' + host : "");
+    }
+
+    return currentUri;
+}
+
 /**Update the account
  * @return if the state changed
  */
@@ -2608,15 +2639,17 @@ void AccountPrivate::reload()
 
       changeState(Account::EditState::READY);
 
-      //TODO port this to the URI class helpers, this doesn't cover all corner cases
-      const QString currentUri = QStringLiteral("%1@%2").arg(q_ptr->username()).arg(m_HostName);
+      const QString currentUri = buildUri();
 
       if (!m_pAccountNumber || (m_pAccountNumber && m_pAccountNumber->uri() != currentUri)) {
          if (m_pAccountNumber) {
             disconnect(m_pAccountNumber,SIGNAL(presenceMessageChanged(QString)),this,SLOT(slotPresenceMessageChanged(QString)));
             disconnect(m_pAccountNumber,SIGNAL(presentChanged(bool)),this,SLOT(slotPresentChanged(bool)));
          }
-         m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri,q_ptr);
+
+         m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, q_ptr);
+
+         Q_ASSERT(m_pAccountNumber->uri() != '@');
          m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
          connect(m_pAccountNumber,SIGNAL(presenceMessageChanged(QString)),this,SLOT(slotPresenceMessageChanged(QString)));
          connect(m_pAccountNumber,SIGNAL(presentChanged(bool)),this,SLOT(slotPresentChanged(bool)));

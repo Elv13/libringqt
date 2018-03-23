@@ -381,6 +381,15 @@ bool ContactMethod::setType(ContactMethod::Type t)
       return true;
 
    if (account() && t == ContactMethod::Type::ACCOUNT) {
+      // Avoid the possible ambiguity since the correct value is currently know
+      switch(account()->protocol()) {
+         case Account::Protocol::SIP:
+            d_ptr->m_Uri.setSchemeType(URI::SchemeType::SIP);
+            break;
+         case Account::Protocol::RING:
+            d_ptr->m_Uri.setSchemeType(URI::SchemeType::RING);
+      }
+
       if (account()->supportPresenceSubscribe()) {
          d_ptr->m_Tracked = true; //The daemon will init the tracker itself
          d_ptr->trackedChanged(true);

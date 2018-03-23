@@ -86,16 +86,6 @@ bool Calendar::load()
         new  VObjectAdapter<EventPrivate>
     );
 
-    /*
-    UID:1507286415-0-294D8D29@ring.cx
-    DTSTART;TZID=America/Toronto:1507286415
-    DTEND;TZID=America/Toronto:1507286415
-    DTSTAMP;TZID=America/Toronto:1521092836
-    X_RING_DIRECTION;VALUE=STRING:OUTGOING
-    ORGANIZER;CN="elv13withappimage3";X_RING_ACCOUNTID=545895f087fbd23b:ring:c569cd72626800fec17a14ca5d962fcd59f4af8f@bootstrap.ring.cx
-    ATTENDEE;CN="4444444444444444444444444444444444444444":ring:4444444444444444444444444444444444444444
-    */
-
     // It was very unreadable without it
 #define ARGS (EventPrivate* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params)
 
@@ -156,14 +146,18 @@ bool Calendar::load()
         self->m_UID = value.data();
     });
 
+    // All events are part of this calendar file, so assume it can be ignored
     calendarAdapter->setObjectFactory([this](const std::basic_string<char>& object_type) -> Calendar* {
         return this;
     });
 
+    // No need to allocate anything for each events, it will happen anyway
+    // in Event:: constructor
     EventPrivate e;
 
     eventAdapter->setObjectFactory([this, &e](const std::basic_string<char>& object_type) -> EventPrivate* {
         e = {};
+        e.m_Type = Event::typeFromName(object_type.data());
         return &e;
     });
 
@@ -179,6 +173,9 @@ bool Calendar::load()
 
     l.registerVObjectAdaptor("VCALENDAR", calendarAdapter);
     l.registerVObjectAdaptor("VEVENT"   , eventAdapter   );
+    l.registerVObjectAdaptor("VJOURNAL" , eventAdapter   );
+    l.registerVObjectAdaptor("VTODO"    , eventAdapter   );
+    l.registerVObjectAdaptor("VALARM"   , eventAdapter   );
 
     l.loadFile(path().toLatin1().data());
 
@@ -288,12 +285,12 @@ QList<QTimeZone*> Calendar::timezones() const
     return {};
 }
 
-Event* Calendar::eventAt(int position) const
+QSharedPointer<Event> Calendar::eventAt(int position) const
 {
     if (position < 0 || position >= d_ptr->m_pEditor->m_lItems.size())
         return nullptr;
 
-    return d_ptr->m_pEditor->m_lItems[position];
+    return d_ptr->m_pEditor->m_lItems[position]->d_ptr->m_pStrongRef;
 }
 
 Account* Calendar::account() const
@@ -301,7 +298,7 @@ Account* Calendar::account() const
     return d_ptr->m_pAccount;
 }
 
-QSharedPointer<Event> Calendar::addFromCall(Call* c)
+QSharedPointer<Event> Calendar::addEvent(Call* c)
 {
     if (!c)
         return nullptr;
@@ -345,5 +342,15 @@ QSharedPointer<Event> Calendar::addFromCall(Call* c)
 
     editor<Event>()->addNew(e);
 
-    return QSharedPointer<Event>(e);
+    return e->d_ptr->m_pStrongRef;
+}
+
+QSharedPointer<Event> Calendar::addEvent(const EventPrivate& data)
+{
+    auto e = new Event(data);
+    e->d_ptr->m_pAccount = account();
+
+    editor<Event>()->addNew(e);
+
+    return e->d_ptr->m_pStrongRef;
 }

@@ -180,6 +180,7 @@ SET( libringqt_LIB_SRCS
   # iCal/vCard/WebDav collections
   src/libcard/event.cpp
   src/libcard/calendar.cpp
+  src/libcard/eventaggregate.cpp
   src/libcard/historyimporter.cpp
   src/libcard/private/icsloader.cpp
   src/libcard/private/icsbuilder.cpp
@@ -393,6 +394,7 @@ SET(libringqt_card_LIB_HDRS
   src/libcard/flagutils.h
   src/libcard/event.h
   src/libcard/calendar.h
+  src/libcard/eventaggregate.h
   src/libcard/historyimporter.h
 )
 

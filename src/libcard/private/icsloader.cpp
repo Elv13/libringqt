@@ -623,7 +623,7 @@ struct VContext
                 o->m_pCurrentProperty->m_Value,
                 o->m_pCurrentProperty->m_Parameters.parameters
             );
-        else if (o->m_pAdaptor->d_ptr->m_AbstractPropertyHandler)
+        else if (o->m_pAdaptor && o->m_pAdaptor->d_ptr->m_AbstractPropertyHandler)
             o->m_pAdaptor->d_ptr->m_AbstractPropertyHandler(
                 o->m_pReflected,
                 o->m_pCurrentProperty->m_Name,

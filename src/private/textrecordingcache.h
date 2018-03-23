@@ -25,6 +25,8 @@
 
 // Ring
 class ContactMethod;
+class Event;
+class Account;
 #include <media/mimemessage.h>
 
 /*
@@ -62,22 +64,47 @@ public:
 
 class Group {
 public:
+    Group(Account* a) : m_pAccount(a) {}
     ~Group();
 
     ///The group ID (necessary to untangle the graph
     int id;
-    ///All messages from this chunk
-    QList<MimeMessage*> messages;
     ///If the conversion add new participants, a new file will be created
     QString nextGroupSha1;
     ///The group type
     MimeMessage::Type type {MimeMessage::Type::CHAT};
     ///This is the group identifier in the file described by `nextGroupSha1`
     int nextGroupId;
-    ///The account used for this conversation
+    ///The unique identifier of the event associated with this text message group
+    QByteArray eventUid;
+    ///The timestamp of the first group entry
+    time_t begin {0};
+    ///The timestamp of the last group entry
+    time_t end   {0};
+
+    /// The account that owns this group, ignore the possible cardinality issues
+    Account* m_pAccount {nullptr};
+
+    QSharedPointer<Event> event();
+    void addMessage(MimeMessage* m);
+
+    /// Prevent the list from being modified directly.
+    const QList<MimeMessage*>& messagesRef() const;
+
+    int size() const;
+
+    /// Create an event;
+    Event* buildEvent();
 
     void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s);
     void write(QJsonObject       &json) const;
+
+private:
+    ///All messages from this chunk
+    QList<MimeMessage*> messages;
+
+    ///Due to complex ownership, give no direct access
+    QSharedPointer<Event> m_pEvent;
 };
 
 class Peers {

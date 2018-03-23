@@ -98,6 +98,7 @@ public:
     inline void changeState(Account::EditState state);
     void regenSecurityValidation();
     bool updateState();
+    QString buildUri();
 
     //State actions
     void performAction(Account::EditAction action);

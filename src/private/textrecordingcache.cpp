@@ -26,6 +26,10 @@
 #include "person.h"
 #include "personmodel.h"
 #include "accountmodel.h"
+#include "eventmodel.h"
+#include "libcard/private/event_p.h"
+#include "libcard/calendar.h"
+#include "availableaccountmodel.h"
 #include "phonedirectorymodel.h"
 
 QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;
@@ -141,20 +145,54 @@ Serializable::Group::~Group()
         delete m;
 }
 
+const QList<MimeMessage*>& Serializable::Group::messagesRef() const
+{
+    return messages;
+}
+
+int Serializable::Group::size() const
+{
+    return messages.size();
+}
+
+void Serializable::Group::addMessage(MimeMessage* m)
+{
+    // Brute force back the timestamp. While it wastes a few CPU cycles,
+    // it avoids having to keep track of it internally.
+    auto newBeg = (!begin) ? m->timestamp() : std::min(
+        m->timestamp(), begin
+    );
+
+    // This should really not happen, ever. If it did, there's either a new
+    // race condition that reads the event while it's being created or something
+    // went wrong handling time_t. Some bad timezone handling could also set
+    // this on fire. However that's a bug elsewhere in the code and should be
+    // fixed there.
+    if (newBeg != begin && m_pEvent)
+        qWarning() << "Trying to modify immutable event variables, this is a bug";
+
+    begin = newBeg;
+
+    end = std::max(
+        m->timestamp(), end
+    );
+
+    messages.append(m);
+}
+
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
 {
     Q_UNUSED(sha1s)
     id            = json[QStringLiteral("id")           ].toInt   ();
     nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
     nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
+    eventUid      = json[QStringLiteral("eventUid")     ].toString().toLatin1();
     type          = static_cast<MimeMessage::Type>(json[QStringLiteral("type")].toInt());
 
     QJsonArray a = json[QStringLiteral("messages")].toArray();
     for (int i = 0; i < a.size(); ++i) {
         QJsonObject o = a[i].toObject();
-        auto message = MimeMessage::buildExisting(o);
-
-        messages.append(message);
+        addMessage(MimeMessage::buildExisting(o));
     }
 }
 
@@ -164,6 +202,7 @@ void Serializable::Group::write(QJsonObject &json) const
     json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1         ;
     json[QStringLiteral("nextGroupId")   ] = nextGroupId           ;
     json[QStringLiteral("type")          ] = static_cast<int>(type);
+    json[QStringLiteral("eventUid")      ] = QString(eventUid)     ;
 
     QJsonArray a;
     for (const MimeMessage* m : messages) {
@@ -212,6 +251,8 @@ void Serializable::Peers::read (const QJsonObject &json)
         sha1s.append(as[i].toString());
     }
 
+    Account* a = nullptr;
+
     QJsonArray a2 = json[QStringLiteral("peers")].toArray();
     for (int i = 0; i < a2.size(); ++i) {
         QJsonObject o = a2[i].toObject();
@@ -229,12 +270,29 @@ void Serializable::Peers::read (const QJsonObject &json)
         peer->read(o);
         m_hSha1[peer->sha1] = peer->m_pContactMethod;
         peers.append(peer);
+
+        if (!a && peer->m_pContactMethod)
+            a = peer->m_pContactMethod->account();
     }
 
-    QJsonArray a = json[QStringLiteral("groups")].toArray();
-    for (int i = 0; i < a.size(); ++i) {
-        QJsonObject o = a[i].toObject();
-        Group* group = new Group();
+    // It can happen if the accounts were deleted
+    if (!a) {
+        qWarning() << "Could not find a viable account for existing chat conversation";
+        a = AvailableAccountModel::instance().currentDefaultAccount();
+    }
+
+    // Getting worst, pick something at "random" (the account order is not really random)
+    if ((!a) && AccountModel::instance().size()) {
+        a = AccountModel::instance()[0];
+    }
+    else if (!a) {
+        qWarning() << "There is no accounts for existing assets, this wont end well";
+    }
+
+    QJsonArray arr = json[QStringLiteral("groups")].toArray();
+    for (int i = 0; i < arr.size(); ++i) {
+        QJsonObject o = arr[i].toObject();
+        Group* group = new Group(a);
         group->read(o,m_hSha1);
         groups.append(group);
     }
@@ -271,4 +329,51 @@ void Serializable::Peers::write(QJsonObject &json) const
     json[QStringLiteral("peers")] = a3;
 }
 
+Event* Serializable::Group::buildEvent()
+{
+    //
+}
+
+/**
+ * It is important to keep in mind the events are owned by the calendars, not
+ * the text recordings or its internal data structures.
+ */
+QSharedPointer<Event> Serializable::Group::event()
+{
+    if (m_pEvent)
+        return m_pEvent;
+
+    // In the future, this should work most of the time. However existing data
+    // and some obscure core paths may still handle unregistered events
+    auto e = EventModel::instance().getById(eventUid);
+
+    if (e)
+        return e;
+
+    // Try to fix the errors of the past and fix a suitable account.
+    if (!m_pAccount)
+        m_pAccount = AvailableAccountModel::instance().currentDefaultAccount();
+
+    // This is very, very bad
+    if (!m_pAccount && AccountModel::instance().size())
+        m_pAccount = AccountModel::instance()[0];
+
+    // There is nothing to do, it will probably crash soon in a way or another
+    if (!m_pAccount) {
+        qWarning() << "Deleting all accounts is not supported and will cause crashes. Please create an account";
+        return nullptr;
+    }
+
+    // Build an event;
+    EventPrivate ev;
+
+    ev.m_EventCategory  = Event::EventCategory::MESSAGE_GROUP;
+    ev.m_StartTimeStamp = begin;
+    ev.m_StopTimeStamp  = end;
+    ev.m_RevTimeStamp   = end;
+
+    e = m_pAccount->calendar()->addEvent(ev);
+
+    return e;
+}
 

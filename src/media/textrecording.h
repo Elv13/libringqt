@@ -32,12 +32,24 @@ class ContactMethod;
 class IndividualTimelineModel;
 class IndividualTimelineModelPrivate;
 class MimeMessage;
+class LocalHistoryCollection;
+class Calendar;
+
+namespace HistoryImporter {
+void importHistory(LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
+}
 
 namespace Media {
 
 class TextRecordingPrivate;
 class Text;
 
+/**
+ * The chat message container.
+ *
+ * Note that this class has a very heavy private API. It does not export the
+ * implementation details to keep internal flexibility.
+ */
 class LIB_EXPORT TextRecording : public Recording
 {
    Q_OBJECT
@@ -49,6 +61,7 @@ class LIB_EXPORT TextRecording : public Recording
    friend class ::ContactMethod;
    friend class ::IndividualTimelineModel;
    friend class ::IndividualTimelineModelPrivate;
+   friend void ::HistoryImporter::importHistory(::LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
 
 public:
 

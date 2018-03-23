@@ -20,6 +20,7 @@
 
 //Ring
 #include "account.h"
+#include "libcard/private/event_p.h"
 
 class EventModelPrivate final : public QObject
 {
@@ -27,6 +28,7 @@ class EventModelPrivate final : public QObject
 public:
     //Attributes
     QVector<Event*> m_lEvent;
+    QHash<const QByteArray, Event*> m_hUids;
 //     QHash<QByteArray, Event*> m_hEvents;
 
     EventModel* q_ptr;
@@ -102,7 +104,12 @@ QItemSelectionModel* EventModel::defaultSelectionModel() const
 
 bool EventModel::addItemCallback(const Event* item)
 {
-    Q_UNUSED(item)
+    if (d_ptr->m_hUids.contains(item->uid())) {
+        qWarning() << "An event with the same name was created twice, this is a bug";
+    }
+
+    d_ptr->m_hUids[item->uid()] = const_cast<Event*>(item);
+
     beginInsertRows(QModelIndex(),d_ptr->m_lEvent.size(),d_ptr->m_lEvent.size());
     d_ptr->m_lEvent << const_cast<Event*>(item);
 //     d_ptr->m_hEvents[item->uid()] = const_cast<Event*>(item);
@@ -115,6 +122,14 @@ bool EventModel::removeItemCallback(const Event* item)
 {
     Q_UNUSED(item)
     return true;
+}
+
+QSharedPointer<Event> EventModel::getById(const QByteArray& eventId) const
+{
+    if (auto e = d_ptr->m_hUids.value(eventId))
+        return e->d_ptr->m_pStrongRef;
+
+    return nullptr;
 }
 
 #include <eventmodel.moc>

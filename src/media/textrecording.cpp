@@ -411,7 +411,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
         // get the latest timestamp to set last used
         time_t lastUsed = 0;
         for (auto g : qAsConst(p->groups)) {
-            for (auto m : qAsConst(g->messages)) {
+            for (auto m : qAsConst(g->messagesRef())) {
                 auto n  = new ::TextMessageNode(t);
                 n->m_pGroup    = g;
                 n->m_pMessage  = m;
@@ -466,6 +466,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
         // update the timestamp of the CM
         peerCM->setLastUsed(lastUsed);
+        qDebug() << "DONE PARSING!" << t->size();
     }
 
     return t;
@@ -509,12 +510,14 @@ void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* 
     // * The media type changed
     // * [TODO] Once a timeout is reached
 
-    if ((!m_pCurrentGroup) || (m_pCurrentGroup->messages.size()
-      && m_pCurrentGroup->messages.constLast()->type() != t)) {
-        m_pCurrentGroup = new Serializable::Group();
-        m_pCurrentGroup->type = t;
-
+    if ((!m_pCurrentGroup) || (m_pCurrentGroup->size()
+      && m_pCurrentGroup->messagesRef().constLast()->type() != t)) {
         auto cMethod = q_ptr->call() ? q_ptr->call()->peerContactMethod() : cm;
+
+        Q_ASSERT(cMethod);
+
+        m_pCurrentGroup = new Serializable::Group(cMethod->account());
+        m_pCurrentGroup->type = t;
 
         auto p = SerializableEntityManager::peer(cMethod);
 
@@ -533,7 +536,7 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
 
     // Save the snapshot metadata
 
-    m_pCurrentGroup->messages << m;
+    m_pCurrentGroup->addMessage(m);
 
     // Insert the message
     ::TextMessageNode* n  = new ::TextMessageNode(q_ptr);
@@ -596,7 +599,7 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
             m_lMimeTypes << strippedMimeType;
     }
 
-    m_pCurrentGroup->messages << m;
+    m_pCurrentGroup->addMessage(m);
 
     //Update the reconstructed conversation
     auto n               = new ::TextMessageNode(q_ptr);

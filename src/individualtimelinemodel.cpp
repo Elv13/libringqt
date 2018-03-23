@@ -499,9 +499,9 @@ IndividualTimelineNode* IndividualTimelineModelPrivate::getGroup(TextMessageNode
     ret->m_pParent = cat;
 
     // Take the oldest message (for consistency)
-    ret->m_StartTime = ret->m_pGroup->messages.constFirst()->timestamp();
+    ret->m_StartTime = ret->m_pGroup->begin;
 
-    Q_ASSERT(g->messages.isEmpty() == false);
+    Q_ASSERT(g->size());
 
     insert(ret, ret->m_StartTime, cat->m_lChildren, q_ptr->createIndex(cat->m_Index, 0, cat));
 

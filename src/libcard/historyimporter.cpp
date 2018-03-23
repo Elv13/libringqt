@@ -19,8 +19,16 @@
 #include "historyimporter.h"
 #include "../localhistorycollection.h"
 
+// Qt
+#include <QtCore/QTimer>
+
+// Ring
 #include <call.h>
 #include <account.h>
+#include <media/recordingmodel.h>
+#include <media/recording.h>
+#include <media/textrecording.h>
+#include <private/textrecording_p.h>
 #include <libcard/calendar.h>
 #include <libcard/event.h>
 
@@ -29,9 +37,10 @@
 namespace HistoryImporter
 {
 
-void importHistory(LocalHistoryCollection* col, std::function<void (const QVector<Calendar*>&)> callback)
+void importHistory(LocalHistoryCollection* histo, std::function<void (const QVector<Calendar*>&)> callback)
 {
-    col->addCompletionCallback([](LocalHistoryCollection* c) {
+    // Import the history
+    histo->addCompletionCallback([](LocalHistoryCollection* c) {
         if (c->size() == 0)
             return;
 
@@ -47,7 +56,52 @@ void importHistory(LocalHistoryCollection* col, std::function<void (const QVecto
 
             Q_ASSERT(cal);
 
-            cal->addFromCall(c);
+            cal->addEvent(c);
+
+            //histo->clear();
+        }
+    });
+
+    // Import the text messages after the first event loop (to prevent being
+    // created before the accounts are loaded.
+
+    QTimer::singleShot(0, []() {
+        const auto recordingCollections = Media::RecordingModel::instance().collections();
+        for (CollectionInterface* backend : qAsConst(recordingCollections)) {
+            if (backend->id() == "localtextrecording") {
+                const auto items = backend->items<Media::Recording>();
+                for (auto r : qAsConst(items)) {
+                    if (r->type() == Media::Recording::Type::TEXT) {
+                        const auto tR = static_cast<Media::TextRecording*>(r);
+
+                        qDebug() << "\nHELLO" << tR->size() << tR->d_ptr->m_lNodes;
+                        const auto nodes = tR->d_ptr->m_lNodes;
+
+                        Serializable::Group* g = nullptr;
+
+                        time_t oldest = 0;
+                        time_t newest = 0;
+
+                        for (auto n : qAsConst(nodes)) {
+                            if (!g && !oldest && n->m_pMessage) {
+                                oldest = n->m_pMessage->timestamp();
+                                newest = oldest;
+                            }
+
+                            if (n->m_pGroup && n->m_pGroup != g) {
+                                if (g) {
+                                    g->event();
+                                    qDebug() << "FORCE THE EVENT TO BE IMPORTED!" << g->event();
+                                }
+                                g = n->m_pGroup;
+                            }
+                            if (n->m_pMessage && n->m_pMessage->timestamp() > newest) {
+                                //
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
 }

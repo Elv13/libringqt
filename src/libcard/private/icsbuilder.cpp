@@ -77,11 +77,13 @@ bool ICSBuilder::toStream(Media::Attachment* file, std::basic_iostream<char>* de
  */
 bool ICSBuilder::toStream(ContactMethod* cm, const QString& name, std::basic_iostream<char>* device)
 {
-    (*device) << "ATTENDEE;CN=\"";
+    (*device) << "ATTENDEE";
 
-    (*device) << (
-        name.isEmpty() ? cm->bestName() : name
-    ).toLatin1().data() <<'\"';
+    // Don't waste space with redundant parameters
+    if (name != cm->uri().userinfo())
+        (*device) << ";CN=\"" <<(
+            name.isEmpty() ? cm->bestName() : name
+        ).toLatin1().data() <<'\"';
 
     if (cm->contact() && !cm->contact()->uid().isEmpty())
         (*device) << ";UID=" << cm->contact()->uid().data();
@@ -103,6 +105,9 @@ bool ICSBuilder::toStream(Account* a, std::basic_iostream<char>* device)
     ) <<'\"';
 
     (*device) << ";X_RING_ACCOUNTID=" << a->id().data() << ':';
+    const auto uri = a->contactMethod()->uri().format (
+        URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME
+    );
 
     (*device) << a->contactMethod()->uri().format (
         URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME
@@ -113,8 +118,7 @@ bool ICSBuilder::toStream(Account* a, std::basic_iostream<char>* device)
 
 bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
 {
-
-    (*device) << "BEGIN:VEVENT\n";
+    (*device) << "BEGIN:" << Event::typeName(e->type()).data() <<"\n";
 
     (*device) << "UID:" << e->uid().data() << '\n';
     (*device) << "CATEGORIES:" << Event::categoryName(e->eventCategory()).data() << '\n';
@@ -131,7 +135,7 @@ bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
             "INCOMING" : "OUTGOING"
     ) << '\n';
 
-    (*device) << "STATUS:" << e->statusName(e->status()).data() << '\n';
+    (*device) << "STATUS:" << Event::statusName(e->status()).data() << '\n';
 
     toStream(e->account(), device);
 

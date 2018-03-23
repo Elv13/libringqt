@@ -49,7 +49,6 @@ public:
    Q_PROPERTY(bool           isIP2IPSupported           READ isIP2IPSupported NOTIFY supportedProtocolsChanged)
    Q_PROPERTY(bool           isRingSupported            READ isRingSupported  NOTIFY supportedProtocolsChanged)
    Q_PROPERTY(Account*       selectedAccount            READ selectedAccount                                  )
-   Q_PROPERTY(Account*       userChosenAccount          READ userChosenAccount      WRITE setUserChosenAccount)
    Q_PROPERTY(bool           hasAmbiguousAccounts       READ hasAmbiguousAccounts   NOTIFY accountListUpdated )
    Q_PROPERTY(bool           hasMultipleProtocols       READ hasMultipleProtocols   NOTIFY accountListUpdated )
 
@@ -91,7 +90,6 @@ public:
    QVector<QMap<QString, QString>> getContacts      (const Account* account                ) const;
 
    QItemSelectionModel* selectionModel              (                                      ) const;
-   Account*             userChosenAccount           (                                      ) const;
    QItemSelectionModel* userSelectionModel          (                                      ) const;
    QAbstractItemModel*  incomingContactRequestModel (                                      ) const;
 
@@ -116,7 +114,6 @@ public:
    Q_INVOKABLE void     cancel   (                                                                                );
    int                  exportAccounts(const QStringList& accountIDs, const QString& filePath, const QString& password);
    int                  importAccounts(const QString& filePath, const QString& password);
-   void setUserChosenAccount(Account* account);
 
    //Operators
    Account*       operator[] (int               i)      ;

@@ -35,6 +35,10 @@ namespace Media {
     class Attachment;
 }
 
+namespace Serializable {
+    class Group;
+}
+
 /**
  * This class represent an event as defined by rfc5545.
  *
@@ -64,6 +68,8 @@ class LIB_EXPORT Event : public ItemBase
     Q_OBJECT
     friend class Calendar; // factory
     friend class CalendarEditor; // serialization
+    friend class Serializable::Group; // update the timestamps on new messages
+    friend class EventModel; // manager
 
 public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)
@@ -80,16 +86,37 @@ public:
     };
 
     /**
+     * The object "class".
+     *
+     * Each standard event classes have their own standard properties and
+     * peculiarities.
+     *
+     * VJOURNAL is the most useful to log and synchronize past activities.
+     */
+    enum class Type {
+        VEVENT  , /*!< "Real" events with busy time                          */
+        VTODO   , /*!< Future things that will require future actions        */
+        VALARM  , /*!< Future and (maybe) repeated events with notifications */
+        VJOURNAL, /*!< Logs of past activity (no busy time)                  */
+    };
+    Q_ENUM(Event::Type)
+
+    /**
      * List the supported event types.
      *
      * To avoid unnecessary abstractions, the list is managed manually. This is
      * implemented in conformance with rfc5545 section 3.8.1.2.
+     *
+     * Custom categories are not directly supported and may cause data loss
+     * when saving or synchronizing external events.
      */
     enum class EventCategory {
-        OTHER        , /*!< Default contructor value                           */
-        CALL         , /*!< rfc5545 section 5 recommends the "PHONE CALL" name */
-        DATA_TRANSFER, /*!< Either a download or upload                        */
-        MESSAGE_GOUP , /*!<   */
+        OTHER         = 0x01 << 0, /*!< Default contructor value                           */
+        CALL          = 0x01 << 1, /*!< rfc5545 section 5 recommends the "PHONE CALL" name */
+        DATA_TRANSFER = 0x01 << 2, /*!< Either a download or upload                        */
+        MESSAGE_GROUP = 0x01 << 3, /*!< Messages part of the same conversation             */
+        ALL           = 0xFFFF,
+        COUNT__,
     };
     Q_ENUM(Event::EventCategory)
 
@@ -144,6 +171,7 @@ public:
     time_t stopTimeStamp () const;
 
     EventCategory eventCategory() const;
+    Type type() const;
 
     bool isSaved() const;
 
@@ -171,6 +199,14 @@ public:
     Direction direction() const;
     Status status() const;
 
+    /**
+     * An event can have attendees from multiple accounts, but has to be
+     * owned by a single account.
+     *
+     * Given how unlikely multiple accounts events are and the enormous extra
+     * complexity it would bring, it's wiser to ignore it and have a well
+     * defined ownership model.
+     */
     Account* account() const;
 
     /**
@@ -191,7 +227,13 @@ public:
      * useful metadata.
      *
      * Contain the startTimeStamp + '-' + (stopTimeStamp-startTimeStamp) + \
-     * '-' accountId + '-' (8 random ASCII chars) @ring.cx
+     *  + '-' (8 random ASCII chars) @ accountId + .ring.cx
+     *
+     * Note that stopTimeStamp may change, but not startTimeStamp. So the UID
+     * **CANNOT** be parsed to reconstruct anything other than maybe the
+     * account (but should *not* do that since that would be a mild privilege
+     * escalation where the attacker can cause actions to be associated with
+     * another account).
      */
     QByteArray uid() const;
 
@@ -220,6 +262,8 @@ public:
     static QByteArray statusName(Status st);
     static EventCategory categoryFromName(const QByteArray& name);
     static Status statusFromName(const QByteArray& name);
+    static Type typeFromName(const QByteArray& name);
+    static QByteArray typeName(Type t);
 
     QVariant roleData(int role) const;
 
@@ -238,3 +282,4 @@ private:
 Q_DECLARE_METATYPE(Event*)
 Q_DECLARE_METATYPE(QSharedPointer<Event>)
 Q_DECLARE_METATYPE(Event::Direction)
+DECLARE_ENUM_FLAGS(Event::EventCategory)

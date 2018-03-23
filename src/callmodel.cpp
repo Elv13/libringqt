@@ -41,6 +41,7 @@
 #include "private/imconversationmanagerprivate.h"
 #include "mime.h"
 #include "typedefs.h"
+#include "libcard/calendar.h"
 #include "collectioninterface.h"
 #include "dbus/videomanager.h"
 #include "categorizedhistorymodel.h"
@@ -1428,10 +1429,13 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
     //Add to history
     if (call->lifeCycleState() == Call::LifeCycleState::FINISHED) {
         if (!call->collection()) {
+            /*TODO remove all traces of the old history
             foreach (CollectionInterface* backend, CategorizedHistoryModel::instance().collections(CollectionInterface::SupportedFeatures::ADD)) {
                 if (backend->editor<Call>()->addNew(call))
                 call->setCollection(backend);
             }
+            */
+            call->account()->calendar()->addEvent(call);
         }
     }
 

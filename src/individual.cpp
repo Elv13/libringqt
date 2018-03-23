@@ -691,6 +691,11 @@ QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>
     return ind;
 }
 
+QSharedPointer<EventAggregate> Individual::events(FlagPack<Event::EventCategory> categories)
+{
+    return {};
+}
+
 InfoTemplate* IndividualPrivate::infoTemplate()
 {
     return InfoTemplateManager::instance().defaultInfoTemplate();

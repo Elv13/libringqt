@@ -18,55 +18,18 @@
  ***********************************************************************************/
 #pragma once
 
-#include "typedefs.h"
-
-//Qt
-#include <QtCore/QAbstractTableModel>
-class QTimer;
-class QItemSelectionModel;
-
-//Ring
-#include "collectionmanagerinterface.h"
-class Account;
-class EventModelPrivate;
-#include <libcard/event.h>
+#include <typedefs.h>
+#include <QtCore/QObject>
 
 /**
- * This model holds all the event.
+ * This class creates "virtual" views of the EventModel.
  *
- * Compared to the previous history support. This model is designed to
- * create submodels based around the concept of identity.
- *
- * It supports grouping the similar events and creating models with multiple
- * individuals.
- *
+ * It is possible to add an arbitrary number of ContactMethod, Person or
+ * individual and then arrange the resulting events in various topologies.
  */
-class LIB_EXPORT EventModel : public QAbstractListModel, public CollectionManagerInterface<Event>
+class LIB_EXPORT EventAggregate : public QObject
 {
-   Q_OBJECT
+    Q_OBJECT
 public:
-
-    virtual ~EventModel();
-
-    //Model functions
-    virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    virtual int rowCount( const QModelIndex& parent = {}) const override;
-    virtual QHash<int,QByteArray> roleNames() const override;
-
-    QItemSelectionModel* defaultSelectionModel() const;
-
-    QSharedPointer<Event> getById(const QByteArray& eventId) const;
-
-    static EventModel& instance();
-
-private:
-    explicit EventModel(QObject* parent = nullptr);
-
-    EventModelPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(EventModel)
-
-    //Collection interface
-    virtual bool addItemCallback   (const Event* item) override;
-    virtual bool removeItemCallback(const Event* item) override;
-
+    //
 };

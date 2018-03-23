@@ -26,6 +26,7 @@ class QTimeZone;
 class Event;
 class Account;
 class Call;
+class EventPrivate;
 
 class CalendarPrivate;
 
@@ -54,14 +55,19 @@ public:
 
     QString path() const;
 
-    QSharedPointer<Event> addFromCall(Call* c);
+    QSharedPointer<Event> addEvent(Call* c);
+
+    /**
+     * This version is designed for internal usage only.
+     */
+    QSharedPointer<Event> addEvent(const EventPrivate& data);
 
     /**
      * All timezone used by this calendar.
      */
     QList<QTimeZone*> timezones() const;
 
-    Event* eventAt(int position) const;
+    QSharedPointer<Event> eventAt(int position) const;
 
     virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 

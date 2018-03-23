@@ -35,6 +35,12 @@ public:
     Event::EventCategory  m_EventCategory {Event::EventCategory::CALL};
     Event::Direction m_Direction {Event::Direction::OUTGOING};
     Event::Status m_Status {Event::Status::CANCELLED};
+    Event::Type m_Type {Event::Type::VJOURNAL};
     QList< QPair<ContactMethod*, QString> > m_lAttendees;
 
+    /**
+     * Use a strong ref so event managed by collections don't get accidentally
+     * deleted.
+     */
+    QSharedPointer<Event> m_pStrongRef;
 };

@@ -23,11 +23,13 @@
 
 // Ring
 #include <call.h>
+#include <account.h>
 #include "libcard/private/event_p.h"
 
 Event::Event(const EventPrivate& attrs, QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
 {
     (*d_ptr) = attrs;
+    d_ptr->m_pStrongRef = QSharedPointer<Event>(this);
 }
 
 Event::~Event()
@@ -69,11 +71,13 @@ QByteArray Event::uid() const
 
         QString seed = QString::number( std::abs(0x11111111 * rand()), 16).toUpper();
 
+        const QString accId(account() ? account()->id() : "void");
 
-        d_ptr->m_UID = QString("%1-%2-%3@ring.cx")
+        d_ptr->m_UID = QString("%1-%2-%3@%4.ring.cx")
             .arg(startTimeStamp())
             .arg(stopTimeStamp() - startTimeStamp())
-            .arg(seed.left(std::min(seed.size(), 8))).toLatin1();
+            .arg(seed.left(std::min(seed.size(), 8)))
+            .arg(accId).toLatin1();
     }
 
     return d_ptr->m_UID;
@@ -86,8 +90,11 @@ QByteArray Event::categoryName(EventCategory cat)
             return "PHONE CALL";
         case EventCategory::DATA_TRANSFER:
             return "DATA TRANSFER";
-        case EventCategory::MESSAGE_GOUP:
+        case EventCategory::MESSAGE_GROUP:
             return "TEXT MESSAGES";
+        case EventCategory::ALL:
+        case EventCategory::COUNT__:
+            Q_ASSERT(false);
     }
 
     // Memory corruption, it's already game over
@@ -107,7 +114,7 @@ QByteArray Event::statusName(Status st)
         case Event::Status::FINAL:
             return "FINAL";
         case Event::Status::X_MISSED:
-            return "X_MISSED";
+            return "X-MISSED";
     }
 
     // Memory corruption, it's already game over
@@ -118,9 +125,9 @@ QByteArray Event::statusName(Status st)
 Event::EventCategory Event::categoryFromName(const QByteArray& name)
 {
     static QHash<QByteArray, Event::EventCategory> vals {
-        { "PHONE CALL"   , EventCategory::CALL          },
-        { "DATA TRANSFER", EventCategory::DATA_TRANSFER },
-        { "TEXT MESSAGES", EventCategory::MESSAGE_GOUP  },
+        { "PHONE CALL"   , EventCategory::CALL           },
+        { "DATA TRANSFER", EventCategory::DATA_TRANSFER  },
+        { "TEXT MESSAGES", EventCategory::MESSAGE_GROUP  },
     };
 
     return vals[name];
@@ -133,10 +140,39 @@ Event::Status Event::statusFromName(const QByteArray& name)
         { "IN-PROCESS", Event::Status::IN_PROCESS },
         { "CANCELLED" , Event::Status::CANCELLED  },
         { "FINAL"     , Event::Status::FINAL      },
-        { "X_MISSED"  , Event::Status::X_MISSED   },
+        { "X-MISSED"  , Event::Status::X_MISSED   },
     };
 
     return vals[name];
+}
+
+Event::Type Event::typeFromName(const QByteArray& name)
+{
+    static QHash<QByteArray, Event::Type> vals  {
+        { "VEVENT"  , Event::Type::VEVENT   },
+        { "VTODO"   , Event::Type::VTODO    },
+        { "VALARM"  , Event::Type::VALARM   },
+        { "VJOURNAL", Event::Type::VJOURNAL },
+    };
+
+    return vals[name];
+}
+
+QByteArray Event::typeName(Event::Type t)
+{
+    switch(t) {
+        case Type::VEVENT:
+            return "VEVENT";
+        case Type::VTODO:
+            return "VTODO";
+        case Type::VALARM:
+            return "VALARM";
+        case Type::VJOURNAL:
+            return "VJOURNAL";
+    }
+
+    Q_ASSERT(false);
+    return {};
 }
 
 
@@ -168,6 +204,11 @@ void Event::setDisplayName(const QString& cn)
 Event::EventCategory Event::eventCategory() const
 {
     return d_ptr->m_EventCategory;
+}
+
+Event::Type Event::type() const
+{
+    return d_ptr->m_Type;
 }
 
 Event::Direction Event::direction() const

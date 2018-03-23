@@ -46,7 +46,6 @@
 #include "availableaccountmodel.h"
 #include "private/videorenderermanager.h"
 #include "localrecordingcollection.h"
-#include "categorizedhistorymodel.h"
 #include "useractionmodel.h"
 #include "callmodel.h"
 #include "certificate.h"
