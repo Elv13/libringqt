@@ -149,7 +149,7 @@ bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
     for (const auto file : qAsConst(attachedFiles))
         toStream(file, device);
 
-    (*device) << "END:VEVENT\n";
+    (*device) << "END:" << Event::typeName(e->type()).data() <<"\n";
 
     return true;
 }

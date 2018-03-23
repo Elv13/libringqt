@@ -68,7 +68,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(ContactMetho
     return p;
 }
 
-static QByteArray mashSha1s(QList<QString> sha1s)
+static QByteArray mashSha1s(const QList<QString>& sha1s)
 {
     QCryptographicHash hash(QCryptographicHash::Sha1);
 
@@ -94,13 +94,16 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(const QSet<
 
     const QByteArray sha1 = ::mashSha1s(sha1s);
 
-    QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
+    QSharedPointer<Serializable::Peers> p = m_hPeers.value(sha1);
 
     if (!p) {
         p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
         p->sha1s = sha1s;
+        p->peers = cms;
         m_hPeers[sha1] = p;
     }
+
+    Q_ASSERT(cms.size() == p->peers.size());
 
     return p;
 }
@@ -187,20 +190,38 @@ void Serializable::Group::addMessage(MimeMessage* m, ContactMethod* peer)
     messages.append({m, peer});
 }
 
+void Serializable::Group::reloadAttendees()
+{
+    if (m_pParent && m_pEvent) {
+        m_pEvent->d_ptr->m_lAttendees.clear();
+
+        for (auto peer : qAsConst(m_pParent->peers)) {
+             m_pEvent->d_ptr->m_lAttendees << QPair<ContactMethod*, QString> {
+                 peer, ""
+             };
+        }
+    }
+}
+
 void Serializable::Group::addPeer(ContactMethod* cm)
 {
     if (!cm)
         return;
 
     if (!m_pParent) {
-        m_pParent = SerializableEntityManager::peer(cm);
+        if ((m_pParent = SerializableEntityManager::peer(cm))) {
+            reloadAttendees();
+        }
+
         return;
     }
 
     if (m_pParent->peers.contains(cm))
         return;
 
+
     m_pParent = m_pParent->join(cm);
+    reloadAttendees();
 }
 
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
@@ -262,6 +283,8 @@ void Serializable::Peers::read (const QJsonObject &json)
 
     Account* a = nullptr;
 
+    QSet<ContactMethod*> fallback;
+
     // Note that it is **VERY** important to do this before the groups
     QJsonArray a2 = json[QStringLiteral("peers")].toArray();
     for (int i = 0; i < a2.size(); ++i) {
@@ -272,7 +295,7 @@ void Serializable::Peers::read (const QJsonObject &json)
         // file is resaved. Tracking the problem source is not worth it as the
         // data will be worthless.
         if (o[QStringLiteral("uri")].toString().isEmpty()) {
-            qWarning() << "Corrupted chat history entry: Missing URI";
+            qWarning() << "\n\n\nCorrupted chat history entry: Missing URI" << o;
             continue;
         }
 
@@ -280,6 +303,8 @@ void Serializable::Peers::read (const QJsonObject &json)
 
         m_hSha1[cm->sha1()] = cm;
         peers.insert(cm);
+
+        fallback.insert(cm);
 
         if (!a && cm)
             a = cm->account();
@@ -304,6 +329,16 @@ void Serializable::Peers::read (const QJsonObject &json)
         QJsonObject o = arr[i].toObject();
         Group* group = new Group(a);
         group->read(o,m_hSha1);
+
+        // Work around a bug in older chat conversation where whe authorSha1
+        // wasn't set.
+        if (!group->m_pParent) {
+            group->m_pParent = SerializableEntityManager::peers(fallback);
+
+            Q_ASSERT(fallback.size() == group->m_pParent->peers.size());
+            group->reloadAttendees();
+        }
+
         groups.append(group);
     }
 }
@@ -354,10 +389,12 @@ QSharedPointer<Event> Serializable::Group::event()
 
     // In the future, this should work most of the time. However existing data
     // and some obscure core paths may still handle unregistered events
-    auto e = EventModel::instance().getById(eventUid);
+    m_pEvent = EventModel::instance().getById(eventUid);
 
-    if (e)
-        return e;
+    if (m_pEvent) {
+        reloadAttendees();
+        return m_pEvent;
+    }
 
     // Try to fix the errors of the past and fix a suitable account.
     if (!m_pAccount)
@@ -381,8 +418,18 @@ QSharedPointer<Event> Serializable::Group::event()
     ev.m_StopTimeStamp  = end;
     ev.m_RevTimeStamp   = end;
 
-    e = m_pAccount->calendar()->addEvent(ev);
+    if (m_pParent) {
+        for (auto peer : qAsConst(m_pParent->peers)) {
+             ev.m_lAttendees << QPair<ContactMethod*, QString> {
+                 peer, ""
+             };
+        }
+    }
 
-    return e;
+    m_pEvent = m_pAccount->calendar()->addEvent(ev);
+
+//     Q_ASSERT((!m_pParent) || !m_pEvent->d_ptr->m_lAttendees.size() == m_pParent->peers.size());
+
+    return m_pEvent;
 }
 

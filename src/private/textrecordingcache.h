@@ -91,6 +91,9 @@ public:
     /// Keep the peers in sync
     void addPeer(ContactMethod* cm);
 
+    /// Keep the event in sync
+    void reloadAttendees();
+
     void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s);
     void write(QJsonObject       &json) const;
 
