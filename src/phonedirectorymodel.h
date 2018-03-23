@@ -84,6 +84,7 @@ public:
    Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Person* contact, Account* account = nullptr, const QString& type = {});
    Q_INVOKABLE ContactMethod* fromHash (const QString& hash);
    Q_INVOKABLE ContactMethod* fromTemporary(const TemporaryContactMethod* number);
+   Q_INVOKABLE ContactMethod* fromJson (const QJsonObject& o);
 
    ContactMethod* getExistingNumberIf(const URI& uri, const std::function<bool(const ContactMethod*)>& pred) const;
 

@@ -841,6 +841,26 @@ ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
    return nullptr;
 }
 
+/**
+ * Keep all primary/secondary keys in a Json object.
+ *
+ * This is the only reliable way of loading a serialized ContactMethod
+ */
+ContactMethod* PhoneDirectoryModel::fromJson(const QJsonObject& o)
+{
+    const auto accountId = o[QStringLiteral("accountId")].toString();
+    const auto uri       = o[QStringLiteral("uri")      ].toString();
+    const auto personUID = o[QStringLiteral("personUID")].toString();
+
+    auto a = accountId.isEmpty() ?
+        nullptr: AccountModel::instance().getById(accountId.toLatin1());
+
+    auto c = personUID.isEmpty() ?
+        nullptr: PersonModel::instance().getPlaceHolder(personUID.toLatin1());
+
+    return PhoneDirectoryModel::instance().getNumber(uri, c, a);
+}
+
 
 /** Filter the existing CMs for an URI without flooding the model with merge
  * candidates.

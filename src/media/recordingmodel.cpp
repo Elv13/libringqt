@@ -232,7 +232,7 @@ QVariant Media::RecordingModel::data( const QModelIndex& index, int role) const
             if (tRec) {
                 switch (role) {
                     case Qt::DisplayRole:
-                        return tRec->peers().size() ? tRec->peers().constFirst()->primaryName() : tRec->roleData(-1, role);
+                        return tRec->peers().size() ? (*tRec->peers().constBegin())->primaryName() : tRec->roleData(-1, role);
                     default:
                         return tRec->roleData(-1, role);
                 }

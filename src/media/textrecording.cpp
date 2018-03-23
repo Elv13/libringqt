@@ -237,14 +237,13 @@ QStringList Media::TextRecording::paths() const
     return ret;
 }
 
-QVector<ContactMethod*> Media::TextRecording::peers() const
+QSet<ContactMethod*> Media::TextRecording::peers() const
 {
-    QVector<ContactMethod*> cms;
+    QSet<ContactMethod*> cms;
 
     for (const auto peers : qAsConst(d_ptr->m_lAssociatedPeers)) {
-        for (const Serializable::Peer* peer : qAsConst(peers->peers)) {
-            cms << peer->m_pContactMethod;
-        }
+        for (auto cm : qAsConst(peers->peers))
+            cms.insert(cm);
     }
 
     return cms;
@@ -383,7 +382,7 @@ time_t Media::TextRecording::lastUsed() const
     return d_ptr->m_LastUsed;
 }
 
-Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, const ContactMethod* cm, CollectionInterface* backend)
+Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, ContactMethod* cm, CollectionInterface* backend)
 {
 
     // If it's loaded from a JSON file, assume it's consumed until proven otherwise
@@ -406,15 +405,16 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
         if (p->peers.isEmpty())
             continue;
         // TODO: for now assume the convo is with only 1 CM at a time
-        auto peerCM = p->peers.at(0)->m_pContactMethod;
+        ContactMethod* peerCM = (*p->peers.constBegin());
 
         // get the latest timestamp to set last used
         time_t lastUsed = 0;
         for (auto g : qAsConst(p->groups)) {
-            for (auto m : qAsConst(g->messagesRef())) {
+            for (const auto& m : qAsConst(g->messagesRef())) {
                 auto n  = new ::TextMessageNode(t);
                 n->m_pGroup    = g;
-                n->m_pMessage  = m;
+                n->m_pMessage  = m.first;
+                n->m_pCM       = m.second;
                 if (!n->m_pCM) {
                     if (cm) {
                         n->m_pCM = const_cast<ContactMethod*>(cm); //TODO remove in 2016
@@ -434,7 +434,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                 }
 
                 // Keep track of the number of entries (per state)
-                t->d_ptr->m_mMessageCounter.setAt(m->status(), t->d_ptr->m_mMessageCounter[m->status()]+1);
+                t->d_ptr->m_mMessageCounter.setAt(m.first->status(), t->d_ptr->m_mMessageCounter[m.first->status()]+1);
 
                 n->m_pContactMethod = n->m_pCM; //FIXME deadcode
 
@@ -443,7 +443,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
                 if (lastUsed < n->m_pMessage->timestamp())
                     lastUsed = n->m_pMessage->timestamp();
 
-                t->d_ptr->m_LastUsed = std::max(t->d_ptr->m_LastUsed, m->timestamp());
+                t->d_ptr->m_LastUsed = std::max(t->d_ptr->m_LastUsed, m.first->timestamp());
 
                 //FIXME for now the message status from older sessions is ignored, 99% of time it makes no
                 // sense.
@@ -466,7 +466,6 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
         // update the timestamp of the CM
         peerCM->setLastUsed(lastUsed);
-        qDebug() << "DONE PARSING!" << t->size();
     }
 
     return t;
@@ -511,7 +510,7 @@ void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* 
     // * [TODO] Once a timeout is reached
 
     if ((!m_pCurrentGroup) || (m_pCurrentGroup->size()
-      && m_pCurrentGroup->messagesRef().constLast()->type() != t)) {
+      && m_pCurrentGroup->messagesRef().constLast().first->type() != t)) {
         auto cMethod = q_ptr->call() ? q_ptr->call()->peerContactMethod() : cm;
 
         Q_ASSERT(cMethod);
@@ -524,7 +523,12 @@ void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* 
         if (m_lAssociatedPeers.indexOf(p) == -1)
             m_lAssociatedPeers << p;
 
+        m_pCurrentGroup->m_pParent = SerializableEntityManager::peer(cm);
+
         p->groups << m_pCurrentGroup;
+    }
+    else {
+        m_pCurrentGroup->addPeer(cm);
     }
 }
 
@@ -536,7 +540,7 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
 
     // Save the snapshot metadata
 
-    m_pCurrentGroup->addMessage(m);
+    m_pCurrentGroup->addMessage(m, call->peerContactMethod());
 
     // Insert the message
     ::TextMessageNode* n  = new ::TextMessageNode(q_ptr);
@@ -599,7 +603,7 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
             m_lMimeTypes << strippedMimeType;
     }
 
-    m_pCurrentGroup->addMessage(m);
+    m_pCurrentGroup->addMessage(m, cm);
 
     //Update the reconstructed conversation
     auto n               = new ::TextMessageNode(q_ptr);
@@ -653,7 +657,7 @@ QVariant Media::TextRecording::roleData(int role) const
 {
     switch(role) {
         case Qt::DisplayRole:
-            return peers().size() ? peers().constFirst()->primaryName() : roleData(-1, Qt::DisplayRole);
+            return peers().size() ? (*peers().constBegin())->primaryName() : roleData(-1, Qt::DisplayRole);
         case (int) Ring::Role::Length:
             return QString::number(size()) + tr(" elements");
         case (int) Ring::Role::FormattedLastUsed:

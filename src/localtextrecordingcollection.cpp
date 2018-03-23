@@ -263,7 +263,7 @@ bool LocalTextRecordingCollection::load()
 
     for (const auto& fileInfo : qAsConst(list)) {
         if (auto r = Media::TextRecording::fromPath(fileInfo.absoluteFilePath(), {}, this)) {
-qDebug() << "\n\nFULL LOAD!" << fileInfo.absoluteFilePath();
+
             // get CMs from recording
             const auto peers = r->peers();
 
@@ -371,7 +371,9 @@ Media::TextRecording* LocalTextRecordingCollection::fetchFor(const ContactMethod
         return nullptr;
     }
 
-    Media::TextRecording* r = Media::TextRecording::fromJson({loadDoc.object()}, cm, this);
+    Media::TextRecording* r = Media::TextRecording::fromJson(
+        {loadDoc.object()}, const_cast<ContactMethod*>(cm), this
+    );
 
     editor<Media::Recording>()->addExisting(r);
 

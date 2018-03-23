@@ -34,18 +34,25 @@
 
 QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;
 
-void Serializable::Peers::addPeer(const ContactMethod* cm)
+void Serializable::Peers::addPeer(ContactMethod* cm)
 {
-    Serializable::Peer* peer = new Serializable::Peer();
-    peer->sha1      = cm->sha1();
-    peer->uri       = cm->uri();
-    peer->accountId = cm->account() ? cm->account()->id () : QString();
-    peer->personUID = cm->contact() ? cm->contact()->uid() : QString();
-    peers << peer;
+    peers.insert(cm);
 }
 
-QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(const ContactMethod* cm)
+QSharedPointer<Serializable::Peers> Serializable::Peers::join(ContactMethod* cm)
 {
+    QSet<ContactMethod*> cms = peers;
+
+    peers.insert(cm);
+
+    return SerializableEntityManager::peers(cms);
+}
+
+QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(ContactMethod* cm)
+{
+    if (!cm)
+        return nullptr;
+
     const QByteArray sha1 = cm->sha1();
     QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
 
@@ -77,13 +84,12 @@ static QByteArray mashSha1s(QList<QString> sha1s)
     return hash.result().toHex();
 }
 
-QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(QList<const ContactMethod*> cms)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(const QSet<ContactMethod*>& cms)
 {
     QList<QString> sha1s;
 
-    for(const ContactMethod* cm : cms) {
-        const QByteArray sha1 = cm->sha1();
-        sha1s << sha1;
+    for(const ContactMethod* cm : qAsConst(cms)) {
+        sha1s << cm->sha1();
     }
 
     const QByteArray sha1 = ::mashSha1s(sha1s);
@@ -104,7 +110,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromSha1(const QB
     return m_hPeers[sha1];
 }
 
-QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, const ContactMethod* cm)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, ContactMethod* cm)
 {
     //Check if the object is already loaded
     QStringList sha1List;
@@ -128,7 +134,6 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
     //Load from json
     QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
     p->read(json);
-    m_hPeers[sha1] = p;
 
     //TODO Remove in 2016
     //Some older versions of the file don't store necessary values, fix that
@@ -142,10 +147,10 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
 Serializable::Group::~Group()
 {
     for (auto m : qAsConst(messages))
-        delete m;
+        delete m.first;
 }
 
-const QList<MimeMessage*>& Serializable::Group::messagesRef() const
+const QList< QPair<MimeMessage*, ContactMethod*> >& Serializable::Group::messagesRef() const
 {
     return messages;
 }
@@ -155,7 +160,7 @@ int Serializable::Group::size() const
     return messages.size();
 }
 
-void Serializable::Group::addMessage(MimeMessage* m)
+void Serializable::Group::addMessage(MimeMessage* m, ContactMethod* peer)
 {
     // Brute force back the timestamp. While it wastes a few CPU cycles,
     // it avoids having to keep track of it internally.
@@ -177,12 +182,29 @@ void Serializable::Group::addMessage(MimeMessage* m)
         m->timestamp(), end
     );
 
-    messages.append(m);
+    addPeer(peer);
+
+    messages.append({m, peer});
+}
+
+void Serializable::Group::addPeer(ContactMethod* cm)
+{
+    if (!cm)
+        return;
+
+    if (!m_pParent) {
+        m_pParent = SerializableEntityManager::peer(cm);
+        return;
+    }
+
+    if (m_pParent->peers.contains(cm))
+        return;
+
+    m_pParent = m_pParent->join(cm);
 }
 
 void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
 {
-    Q_UNUSED(sha1s)
     id            = json[QStringLiteral("id")           ].toInt   ();
     nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
     nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
@@ -192,7 +214,16 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
     QJsonArray a = json[QStringLiteral("messages")].toArray();
     for (int i = 0; i < a.size(); ++i) {
         QJsonObject o = a[i].toObject();
-        addMessage(MimeMessage::buildExisting(o));
+
+        ContactMethod* cm = nullptr;
+
+        // The ContactMethod isn't part of the MimeMessage, but a group metadata
+        if (o.contains(QStringLiteral("authorSha1"))) {
+            const QString sha1 = o[QStringLiteral("authorSha1")].toString();
+            cm = sha1s[sha1];
+        }
+
+        addMessage(MimeMessage::buildExisting(o), cm);
     }
 }
 
@@ -205,43 +236,21 @@ void Serializable::Group::write(QJsonObject &json) const
     json[QStringLiteral("eventUid")      ] = QString(eventUid)     ;
 
     QJsonArray a;
-    for (const MimeMessage* m : messages) {
+    for (const auto& m : qAsConst(messages)) {
         QJsonObject o;
-        m->write(o);
+        m.first->write(o);
+        if (m.second)
+            o[QStringLiteral("authorSha1")] = QString(m.second->sha1());
+
         a.append(o);
     }
     json[QStringLiteral("messages")] = a;
-}
-
-void Serializable::Peer::read (const QJsonObject &json)
-{
-    accountId = json[QStringLiteral("accountId")].toString();
-    uri       = json[QStringLiteral("uri")      ].toString();
-    personUID = json[QStringLiteral("personUID")].toString();
-    sha1      = json[QStringLiteral("sha1")     ].toString();
-
-    Account* a     = AccountModel::instance().getById(accountId.toLatin1());
-    Person* person = personUID.isEmpty() ?
-        nullptr : PersonModel::instance().getPersonByUid(personUID.toLatin1());
-
-    m_pContactMethod = PhoneDirectoryModel::instance().getNumber(uri,person,a);
-}
-
-void Serializable::Peer::write(QJsonObject &json) const
-{
-    json[QStringLiteral("accountId")] = accountId ;
-    json[QStringLiteral("uri")      ] = uri       ;
-    json[QStringLiteral("personUID")] = personUID ;
-    json[QStringLiteral("sha1")     ] = sha1      ;
 }
 
 Serializable::Peers::~Peers()
 {
     for (auto g : qAsConst(groups))
         delete g;
-
-    for (auto p : qAsConst(peers))
-        delete p;
 }
 
 void Serializable::Peers::read (const QJsonObject &json)
@@ -253,6 +262,7 @@ void Serializable::Peers::read (const QJsonObject &json)
 
     Account* a = nullptr;
 
+    // Note that it is **VERY** important to do this before the groups
     QJsonArray a2 = json[QStringLiteral("peers")].toArray();
     for (int i = 0; i < a2.size(); ++i) {
         QJsonObject o = a2[i].toObject();
@@ -266,13 +276,13 @@ void Serializable::Peers::read (const QJsonObject &json)
             continue;
         }
 
-        Peer* peer = new Peer();
-        peer->read(o);
-        m_hSha1[peer->sha1] = peer->m_pContactMethod;
-        peers.append(peer);
+        auto cm = PhoneDirectoryModel::instance().fromJson(o);
 
-        if (!a && peer->m_pContactMethod)
-            a = peer->m_pContactMethod->account();
+        m_hSha1[cm->sha1()] = cm;
+        peers.insert(cm);
+
+        if (!a && cm)
+            a = cm->account();
     }
 
     // It can happen if the accounts were deleted
@@ -321,11 +331,10 @@ void Serializable::Peers::write(QJsonObject &json) const
     json[QStringLiteral("groups")] = a;
 
     QJsonArray a3;
-    for (const Peer* p : peers) {
-        QJsonObject o;
-        p->write(o);
-        a3.append(o);
+    for (const ContactMethod* cm : peers) {
+        a3.append(cm->toJson());
     }
+
     json[QStringLiteral("peers")] = a3;
 }
 

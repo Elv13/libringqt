@@ -669,6 +669,22 @@ QByteArray ContactMethod::sha1() const
    return d_ptr->m_Sha1;
 }
 
+QJsonObject ContactMethod::toJson() const
+{
+    QJsonObject o;
+
+    o[QStringLiteral("uri" )] = uri ();
+    o[QStringLiteral("sha1")] = QString(sha1());
+
+    if (account())
+        o[QStringLiteral("accountId")] = QString(account()->id());
+
+    if (contact())
+        o[QStringLiteral("personUID")] = QString(contact()->uid());
+
+    return o;
+}
+
 ///Return all calls from this number
 const QList<Call*> ContactMethod::calls() const
 {

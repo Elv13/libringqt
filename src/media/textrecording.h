@@ -111,7 +111,7 @@ public:
    //Constructor
    explicit TextRecording(const Recording::Status status);
    virtual ~TextRecording();
-   static TextRecording* fromJson(const QList<QJsonObject>& items, const ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
+   static TextRecording* fromJson(const QList<QJsonObject>& items, ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
    static TextRecording* fromPath(const QString& path, const Metadata& metadata, CollectionInterface* backend = nullptr);
 
    //Getter
@@ -133,7 +133,7 @@ public:
    int                 receivedCount            (                         ) const;
    int                 unknownCount             (                         ) const;
    time_t              lastUsed                 (                         ) const;
-   QVector<ContactMethod*> peers                (                         ) const;
+   QSet<ContactMethod*> peers                   (                         ) const;
 
    //Helper
    void setAllRead();

@@ -206,6 +206,7 @@ public:
    QString               uid             () const;
    URI::ProtocolHint     protocolHint    () const;
    QByteArray            sha1            () const;
+   QJsonObject           toJson          () const;
    Media::TextRecording* textRecording   () const;
    bool                  isReachable     () const;
    Certificate*          certificate     () const;

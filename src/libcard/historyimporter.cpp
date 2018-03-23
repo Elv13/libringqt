@@ -73,8 +73,6 @@ void importHistory(LocalHistoryCollection* histo, std::function<void (const QVec
                 for (auto r : qAsConst(items)) {
                     if (r->type() == Media::Recording::Type::TEXT) {
                         const auto tR = static_cast<Media::TextRecording*>(r);
-
-                        qDebug() << "\nHELLO" << tR->size() << tR->d_ptr->m_lNodes;
                         const auto nodes = tR->d_ptr->m_lNodes;
 
                         Serializable::Group* g = nullptr;
@@ -91,7 +89,6 @@ void importHistory(LocalHistoryCollection* histo, std::function<void (const QVec
                             if (n->m_pGroup && n->m_pGroup != g) {
                                 if (g) {
                                     g->event();
-                                    qDebug() << "FORCE THE EVENT TO BE IMPORTED!" << g->event();
                                 }
                                 g = n->m_pGroup;
                             }

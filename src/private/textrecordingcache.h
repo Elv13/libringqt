@@ -45,27 +45,19 @@ class SerializableEntityManager;
 namespace Serializable {
 
 class Group;
-
-class Peer {
-public:
-    QString accountId;
-    ///The peer URI
-    QString uri;
-    ///The peer contact UID
-    QString personUID;
-    ///The ContactMethod hash
-    QString sha1;
-
-    ContactMethod* m_pContactMethod;
-
-    void read (const QJsonObject &json);
-    void write(QJsonObject       &json) const;
-};
+class Peers;
 
 class Group {
 public:
     Group(Account* a) : m_pAccount(a) {}
     ~Group();
+
+    /**Also link upward to avoid duplicating the peers metadata in each group
+     *
+     * This is intended as a copy-on-write reference, so not modify the
+     * original.
+     */
+    QSharedPointer<Peers> m_pParent {nullptr};
 
     ///The group ID (necessary to untangle the graph
     int id;
@@ -86,22 +78,25 @@ public:
     Account* m_pAccount {nullptr};
 
     QSharedPointer<Event> event();
-    void addMessage(MimeMessage* m);
+    void addMessage(MimeMessage* m, ContactMethod* peer);
 
     /// Prevent the list from being modified directly.
-    const QList<MimeMessage*>& messagesRef() const;
+    const QList<QPair<MimeMessage*, ContactMethod*> >& messagesRef() const;
 
     int size() const;
 
     /// Create an event;
     Event* buildEvent();
 
+    /// Keep the peers in sync
+    void addPeer(ContactMethod* cm);
+
     void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s);
     void write(QJsonObject       &json) const;
 
 private:
-    ///All messages from this chunk
-    QList<MimeMessage*> messages;
+    ///All messages from this chunk (the ContactMethod is the author of incoming messages)
+    QList< QPair<MimeMessage*, ContactMethod*> > messages;
 
     ///Due to complex ownership, give no direct access
     QSharedPointer<Event> m_pEvent;
@@ -117,7 +112,7 @@ public:
     ///Every message groups associated with this ContactMethod (or ContactMethodGroup)
     QList<Group*> groups;
     ///Information about every (non self) peer involved in this group
-    QList<Peer*> peers;
+    QSet<ContactMethod*> peers;
 
     ///This attribute store if the file has changed
     bool hasChanged;
@@ -130,7 +125,12 @@ public:
 
     QJsonArray toSha1Array() const;
 
-    void addPeer(const ContactMethod* cm);
+    void addPeer(ContactMethod* cm);
+
+    /**
+     * Return a new set with both the current CMs and the new one;
+     */
+    QSharedPointer<Peers> join(ContactMethod* cm);
 
 private:
     Peers() : hasChanged(false) {}
@@ -146,10 +146,10 @@ private:
 class SerializableEntityManager
 {
 public:
-    static QSharedPointer<Serializable::Peers> peer(const ContactMethod* cm);
-    static QSharedPointer<Serializable::Peers> peers(QList<const ContactMethod*> cms);
+    static QSharedPointer<Serializable::Peers> peer(ContactMethod* cm);
+    static QSharedPointer<Serializable::Peers> peers(const QSet<ContactMethod*>& cms);
     static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
-    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const ContactMethod* cm = nullptr);
+    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, ContactMethod* cm = nullptr);
 private:
     static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
 };
