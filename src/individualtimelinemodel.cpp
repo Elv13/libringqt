@@ -134,6 +134,8 @@ public Q_SLOTS:
     void slotRebased(ContactMethod* cm, ContactMethod* other);
     void slotPhoneNumberChanged();
     void slotPersonDestroyed();
+    void slotCmDestroyed();
+    void slotIndividualDestroyed();
 };
 
 const Matrix1D<IndividualTimelineModel::NodeType, QString> IndividualTimelineModelPrivate::peerTimelineNodeName = {
@@ -196,12 +198,18 @@ void IndividualTimelineModelPrivate::init()
 IndividualTimelineModel::IndividualTimelineModel(QSharedPointer<Individual> ind) : QAbstractItemModel(ind.data()), d_ptr(new IndividualTimelineModelPrivate(this))
 {
     d_ptr->m_pIndividual = ind;
+
+    if (ind)
+        connect(d_ptr->m_pIndividual.data(), &QObject::destroyed, d_ptr,
+            &IndividualTimelineModelPrivate::slotIndividualDestroyed);
+
     d_ptr->init();
 }
 
 IndividualTimelineModel::~IndividualTimelineModel()
 {
-    d_ptr->disconnectOldCms();
+    if (d_ptr->m_pIndividual)
+        d_ptr->disconnectOldCms();
 
     beginResetModel();
     d_ptr->slotClear();
@@ -625,9 +633,46 @@ void IndividualTimelineModelPrivate::slotPhoneNumberChanged()
 // mitigates potential crashes.
 void IndividualTimelineModelPrivate::slotPersonDestroyed()
 {
+    if (m_pIndividual)
+        disconnect(m_pIndividual.data(), &QObject::destroyed, this,
+            &IndividualTimelineModelPrivate::slotIndividualDestroyed);
+
     // The slots will be disconnected by QObject
     m_pIndividual = nullptr;
+
     qWarning() << "A contact was destroyed while its timeline is referenced" << this;
+}
+
+void IndividualTimelineModelPrivate::slotCmDestroyed()
+{
+    //
+}
+
+
+/**
+ * Yay, QML race conditions...
+ */
+void IndividualTimelineModel::clear()
+{
+    d_ptr->slotIndividualDestroyed();
+}
+
+void IndividualTimelineModelPrivate::slotIndividualDestroyed()
+{
+    if (!m_pIndividual) {
+        // If that happens it was connected too many time
+        Q_ASSERT(false);
+        return;
+    }
+
+    disconnectOldCms();
+
+    disconnect(m_pIndividual.data(), &QObject::destroyed, this,
+        &IndividualTimelineModelPrivate::slotIndividualDestroyed);
+
+    m_pIndividual = nullptr;
+
+    qWarning() << "An individual was destroyed while its timeline is referenced" << this;
 }
 
 void IndividualTimelineModelPrivate::slotReload()

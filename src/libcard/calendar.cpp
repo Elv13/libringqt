@@ -28,6 +28,7 @@
 #include <account.h>
 #include <accountmodel.h>
 #include <personmodel.h>
+#include <eventmodel.h>
 #include <phonedirectorymodel.h>
 #include <media/avrecording.h>
 #include "libcard/private/event_p.h"
@@ -58,13 +59,21 @@ private:
 class CalendarPrivate final
 {
 public:
+    // Attributes
     Account* m_pAccount {nullptr};
     CalendarEditor* m_pEditor {nullptr};
+
+    Calendar* q_ptr;
+
+    // Helpers
+    Event* getEvent(const EventPrivate& data, bool isNew);
+    Event* updateEvent(Event* e, const EventPrivate& data);
 };
 
 Calendar::Calendar(CollectionMediator<Event>* mediator, Account* a) : CollectionInterface(new CalendarEditor(mediator)),
 d_ptr(new CalendarPrivate)
 {
+    d_ptr->q_ptr      = this;
     d_ptr->m_pAccount = a;
     d_ptr->m_pEditor  = static_cast<CalendarEditor*>(editor<Event>());
     d_ptr->m_pEditor->m_pCal = this;
@@ -167,9 +176,8 @@ bool Calendar::load()
            EventPrivate* child,
            const std::basic_string<char>& name
         ) {
-            editor<Event>()->addExisting(new Event(*child));
+            d_ptr->getEvent(*child, false);
     });
-
 
     l.registerVObjectAdaptor("VCALENDAR", calendarAdapter);
     l.registerVObjectAdaptor("VEVENT"   , eventAdapter   );
@@ -317,7 +325,7 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     b.m_Direction      = c->direction() == Call::Direction::OUTGOING ?
         Event::Direction::OUTGOING : Event::Direction::INCOMING;
 
-    auto e = new Event(b, c);
+    auto e = new Event(b);
 
     // If this event is newly imported, then "now" is the last time it was
     // modified
@@ -345,12 +353,43 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     return e->d_ptr->m_pStrongRef;
 }
 
+/**
+ * Update an existing event.
+ *
+ * If the revision timestamp is greater than the older one, squash the new
+ * values on top of the old ones.
+ */
+Event* CalendarPrivate::updateEvent(Event* e, const EventPrivate& data)
+{
+    if (e->revTimeStamp() < data.m_RevTimeStamp) {
+        //TODO
+    }
+
+    return e;
+}
+
+/// Ensure no duplicates are created by accident
+Event* CalendarPrivate::getEvent(const EventPrivate& data, bool isNew)
+{
+    if (auto ret = data.m_UID.isEmpty() ? nullptr : EventModel::instance().getById(data.m_UID)) {
+        return updateEvent(ret.data(), data);
+    }
+
+    auto e = new Event(data);
+
+    e->d_ptr->m_pAccount = m_pAccount;
+
+    if (isNew)
+        q_ptr->editor<Event>()->addNew(e);
+    else
+        q_ptr->editor<Event>()->addExisting(e);
+
+    return e;
+}
+
 QSharedPointer<Event> Calendar::addEvent(const EventPrivate& data)
 {
-    auto e = new Event(data);
-    e->d_ptr->m_pAccount = account();
-
-    editor<Event>()->addNew(e);
+    auto e = d_ptr->getEvent(data, true);
 
     return e->d_ptr->m_pStrongRef;
 }

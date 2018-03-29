@@ -16,66 +16,22 @@
  *   License along with this library; if not, write to the Free Software            *
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
  ***********************************************************************************/
-#include "eventaggregate.h"
+#include <QtCore/QObject>
 
-#include <libcard/private/event_p.h>
-#include <eventmodel.h>
+struct EventModelNode;
 
-class EventAggregatePrivate
+class EventModelPrivate final : public QObject
 {
+//     Q_OBJECT
 public:
-
     // Attributes
-    EventAggregateNode* m_pRoot {nullptr};
+    QVector<EventModelNode*> m_lEvent;
+    QHash<const QByteArray, Event*> m_hUids;
+
+    // Helpers
+    void sortContactMethod(ContactMethod* cm);
+    void mergeEvents(ContactMethod* dest, ContactMethod* src);
 
 
-    // Helper
-    void splitGroup(EventAggregateNode* toSplit, EventAggregateNode* splitWith);
+    EventModel* q_ptr;
 };
-
-
-EventAggregate::EventAggregate() : QObject(&EventModel::instance())
-{
-
-}
-
-EventAggregate::~EventAggregate()
-{
-    delete d_ptr;
-}
-
-QSharedPointer<QAbstractItemModel> EventAggregate::groupedView() const
-{
-    return {};
-}
-
-QSharedPointer<QAbstractItemModel> EventAggregate::calendarView() const
-{
-    return {};
-}
-
-QSharedPointer<EventAggregate> EventAggregate::buildFromContactMethod(ContactMethod* cm)
-{
-    auto ret =  QSharedPointer<EventAggregate>(new EventAggregate);
-
-    return ret;
-}
-
-QSharedPointer<EventAggregate> EventAggregate::buildFromIndividual(ContactMethod* cm)
-{
-    auto ret =  QSharedPointer<EventAggregate>(new EventAggregate);
-
-    return ret;
-}
-
-QSharedPointer<EventAggregate> EventAggregate::merge(const QList<QSharedPointer<EventAggregate> >& source)
-{
-    auto ret =  QSharedPointer<EventAggregate>(new EventAggregate);
-
-    return ret;
-}
-
-void EventAggregatePrivate::splitGroup(EventAggregateNode* toSplit, EventAggregateNode* splitWith)
-{
-    //
-}

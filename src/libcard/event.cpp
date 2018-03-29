@@ -24,9 +24,13 @@
 // Ring
 #include <call.h>
 #include <account.h>
+#include <contactmethod.h>
+#include <individual.h>
 #include "libcard/private/event_p.h"
 
-Event::Event(const EventPrivate& attrs, QObject* parent) : ItemBase(parent), d_ptr(new EventPrivate)
+// Note that the nullptr parent is intentional. The events are managed using
+// shared pointers.
+Event::Event(const EventPrivate& attrs) : ItemBase(nullptr), d_ptr(new EventPrivate)
 {
     (*d_ptr) = attrs;
     d_ptr->m_pStrongRef = QSharedPointer<Event>(this);
@@ -34,6 +38,7 @@ Event::Event(const EventPrivate& attrs, QObject* parent) : ItemBase(parent), d_p
 
 Event::~Event()
 {
+    d_ptr->m_pStrongRef = nullptr;
     delete d_ptr;
 }
 
@@ -272,4 +277,27 @@ QVariant Event::roleData(int role) const
     }
 
     return {};
+}
+
+
+bool Event::hasAttendee(ContactMethod* cm) const
+{
+    const auto b(d_ptr->m_lAttendees.constBegin()), e(d_ptr->m_lAttendees.constEnd());
+    return std::find_if(b, e, [cm](const QPair<ContactMethod*, QString>& other) {
+        return cm->d() == other.first->d();
+    }) != e;
+}
+
+bool Event::hasAttendee(Individual* ind) const
+{
+    const auto b(d_ptr->m_lAttendees.constBegin()), e(d_ptr->m_lAttendees.constEnd());
+    return std::find_if(b, e, [ind](const QPair<ContactMethod*, QString>& other) {
+        return ind == other.first->individual();
+    }) != e;
+}
+
+QSharedPointer<Event> Event::ref() const
+{
+    Q_ASSERT(d_ptr->m_pStrongRef);
+    return d_ptr->m_pStrongRef;
 }

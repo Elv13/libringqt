@@ -62,6 +62,23 @@ public:
    UsageStatistics*   m_pUsageStats       {nullptr};
    QVector<Media::TextRecording*> m_lAltTR;
 
+   /**
+    * Cache some relevant events to make insertion and eventually sorting
+    * faster.
+    *
+    * The newest and oldest and kept regardless whether or not all events
+    * are sorted for this CM.
+    *
+    * The unsorted pair are managed by the EventModel to allow it to eventually
+    * run a merge sort on the linked list and generate the aggregates.
+    */
+   struct {
+       Event* m_pNewest       {nullptr}; /*!< Highest stopTimeStamp () */
+       Event* m_pOldest       {nullptr}; /*!< Lowest  startTimeStamp() */
+       Event* m_pUnsortedTail {nullptr}; /*!< Lastest addition         */
+       Event* m_pUnsortedHead {nullptr}; /*!< The first addition       */
+   } m_Events;
+
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<Individual> m_pIndividual;
 

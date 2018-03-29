@@ -42,6 +42,8 @@
 #include "accountmodel.h"
 #include "individual.h"
 #include "certificatemodel.h"
+#include "eventmodel.h"
+#include "libcard/private/eventmodel_p.h"
 #include "media/textrecording.h"
 #include "mime.h"
 #include "usagestatistics.h"
@@ -868,6 +870,37 @@ QSharedPointer<Individual> ContactMethod::individual() const
     return d_ptr->m_pIndividual;
 }
 
+/**
+ * The oldest event this contact method attended.
+ *
+ * It exists to prevent an O(N) lookup everytime there is a need to build
+ * the list of events.
+ *
+ * Once the list is required, it is cached, but that's only done when there is
+ * a need for it.
+ */
+QSharedPointer<Event> ContactMethod::oldestEvent() const
+{
+    if (!d_ptr->m_Events.m_pOldest)
+        return nullptr;
+
+    return d_ptr->m_Events.m_pOldest->ref();
+}
+
+/**
+ * Get the newest event attended by this CM.
+ *
+ * @see oldestEvent
+ */
+QSharedPointer<Event> ContactMethod::newestEvent() const
+{
+
+    if (!d_ptr->m_Events.m_pNewest)
+        return nullptr;
+
+    return d_ptr->m_Events.m_pNewest->ref();
+}
+
 QMimeData* ContactMethod::mimePayload() const
 {
    return RingMimes::payload(nullptr, this, nullptr);
@@ -1036,6 +1069,9 @@ bool ContactMethod::merge(ContactMethod* other)
 
    if (d_ptr->m_Present)
       other->d_ptr->m_Present = true;
+
+   // Merge the events
+   EventModel::instance().d_ptr->mergeEvents(other, this);
 
    if (contact() && !other->contact())
       other->setPerson(contact());

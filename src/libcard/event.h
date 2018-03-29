@@ -30,6 +30,7 @@ class EventPrivate;
 class ContactMethod;
 class Call;
 class Account;
+class Individual;
 
 namespace Media {
     class Attachment;
@@ -67,9 +68,11 @@ class LIB_EXPORT Event : public ItemBase
 {
     Q_OBJECT
     friend class Calendar; // factory
+    friend class CalendarPrivate; // factory
     friend class CalendarEditor; // serialization
     friend class Serializable::Group; // update the timestamps on new messages
     friend class EventModel; // manager
+    friend class EventModelPrivate; // manager
 
 public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)
@@ -223,6 +226,16 @@ public:
     QList< QPair<ContactMethod*, QString> > attendees() const;
 
     /**
+     * Convenience method to determine if someone attended this event.
+     */
+    bool hasAttendee(ContactMethod* cm) const;
+
+    /**
+     * Convenience method to determine if someone attended this event.
+     */
+    bool hasAttendee(Individual* cm) const;
+
+    /**
      * Define an truly unique identifier for the event that encompass some
      * useful metadata.
      *
@@ -258,6 +271,11 @@ public:
      */
     Call* toHistoryCall() const;
 
+    /**
+     * Return a strong reference.
+     */
+    QSharedPointer<Event> ref() const;
+
     static QByteArray categoryName(EventCategory cat);
     static QByteArray statusName(Status st);
     static EventCategory categoryFromName(const QByteArray& name);
@@ -273,7 +291,7 @@ private:
      * immutable) properties. This class is intended to be managed/created by
      * the Calendars, so there is no point in making any of this public.
      */
-    explicit Event(const EventPrivate& attrs, QObject* parent = nullptr);
+    explicit Event(const EventPrivate& attrs);
 
     EventPrivate* d_ptr;
     Q_DECLARE_PRIVATE(Event)

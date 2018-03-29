@@ -69,6 +69,7 @@ public Q_SLOTS:
     void slotLastContactMethod  (ContactMethod* cm);
     void slotCallAdded          (Call *call       );
     void slotUnreadCountChanged (                 );
+    void slotCmDestroyed        (                 );
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -94,6 +95,15 @@ Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()),
 
 Individual::~Individual()
 {
+    // If anything is still listening, make sure at least is gets a proper cleanup
+    d_ptr->m_Numbers.clear();
+    d_ptr->m_HiddenContactMethods.clear();
+
+    if (QSharedPointer<IndividualTimelineModel> tl = d_ptr->m_TimelineModel)
+        tl->clear();
+
+    d_ptr->m_TimelineModel = nullptr;
+
     disconnect( d_ptr->m_cEndCB   );
     disconnect( d_ptr->m_cBeginCB );
 
@@ -226,6 +236,9 @@ void Individual::setEditRow(bool v)
 
 void IndividualPrivate::connectContactMethod(ContactMethod* m)
 {
+    connect(m, &ContactMethod::destroyed, this,
+        &IndividualPrivate::slotCmDestroyed);
+
     connect(m, &ContactMethod::lastUsedChanged, this,
         &IndividualPrivate::slotLastUsedTimeChanged);
 
@@ -250,6 +263,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
 
 void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 {
+    disconnect(m, &ContactMethod::destroyed, this,
+        &IndividualPrivate::slotCmDestroyed);
+
     disconnect(m, &ContactMethod::lastUsedChanged, this,
         &IndividualPrivate::slotLastUsedTimeChanged);
 
@@ -529,6 +545,16 @@ void IndividualPrivate::slotUnreadCountChanged()
     emit q_ptr->unreadCountChanged(0);
 }
 
+void IndividualPrivate::slotCmDestroyed()
+{
+    auto cm = qobject_cast<ContactMethod*>(sender());
+    Q_ASSERT(cm);
+
+    disconnectContactMethod(cm);
+
+    m_HiddenContactMethods.removeAll(cm);
+    m_Numbers.removeAll(cm);
+}
 
 void IndividualPrivate::slotChildrenContactChanged(Person* newContact, Person* oldContact)
 {

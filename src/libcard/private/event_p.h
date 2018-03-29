@@ -20,6 +20,44 @@
 
 #include <libcard/event.h>
 
+// Defined in EventModel and used to keep track of the attendees
+struct EventModelNode;
+
+/**
+ * As used by the event aggregate.
+ *
+ * It allows the same event to be tracked in different ways, including by
+ * individual, groups of individual or time categories.
+ */
+struct EventAggregateNode
+{
+    using EAN = EventAggregateNode;
+
+    enum class Type {
+        EVENT, /*!< A single event                     */
+        GROUP, /*!< A group of similar events          */
+        DAY  , /*!< A group of event from the same 24h */
+    } m_Type {Type::EVENT};
+
+    Event*        m_pEvent    {nullptr};
+    EAN*          m_pParent   {nullptr};
+    int           m_Index     {   0   };
+    QVector<EAN*> m_lChildren {       };
+};
+
+/**
+ * Low level wrapping to track listeners.
+ *
+ * The EventModel expose a private interface to be notified of changes
+ */
+struct EventWrapperNode
+{
+    QVector<EventAggregateNode*> m_lListeners;
+};
+
+/**
+ * The event private data
+ */
 class EventPrivate
 {
 public:
@@ -37,6 +75,8 @@ public:
     Event::Status m_Status {Event::Status::CANCELLED};
     Event::Type m_Type {Event::Type::VJOURNAL};
     QList< QPair<ContactMethod*, QString> > m_lAttendees;
+
+    EventModelNode* m_pTracker {nullptr};
 
     /**
      * Use a strong ref so event managed by collections don't get accidentally

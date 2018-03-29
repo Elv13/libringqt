@@ -43,6 +43,7 @@ class TemporaryContactMethodPrivate;
 class Certificate;
 class UsageStatistics;
 class Individual;
+class EventAggregate;
 
 using IndividualPointer = QSharedPointer<Individual>;
 
@@ -64,7 +65,7 @@ namespace Media {
  *
  * There CM are created by the PhoneDirectoryModel. Only 1 instance per
  * primary+secondary keys can exists at any time. The PhoneDirectoryModel
- * ensure implicitly. Note that these objects are proxies and can be merged
+ * ensure that implicitly. Note that these objects are proxies and can be merged
  * and split transparently by the PhoneDirectoryModel. The URI is immutable
  * while the account and contact can go from nullptr to a value (but not the
  * other way around).
@@ -78,17 +79,25 @@ namespace Media {
  * To edit an URI of a ContactMethod, a new one needs to be created everytime.
  * Note that the CM are only freed if they are duplicates. It is not recommended
  * to create too many temporary ones.
+ *
+ * An "human" or entity can have multiple way to contact them and thus multiple
+ * ContactMethod objects. They are linked using the `Individual` object. The
+ * individual is the abstract version of the Person just as ContactMethod is the
+ * abstract version of an URI. Their job is to gather metadata regardless of
+ * what they are in the GUI.
  */
 class LIB_EXPORT ContactMethod : public ItemBase
 {
    Q_OBJECT
 public:
-   friend class PhoneDirectoryModel;
-   friend class PhoneDirectoryModelPrivate;
-   friend class LocalTextRecordingCollection;
-   friend class CallPrivate;
-   friend class AccountPrivate;
+   friend class PhoneDirectoryModel; // factory
+   friend class PhoneDirectoryModelPrivate; // owner
+   friend class LocalTextRecordingCollection; // Manage the CM own text recording
+   friend class CallPrivate; //TODO remove, this is a legacy of the pre-Event separation of concerns
+   friend class AccountPrivate; // An account is a ContactMethod and share some internals
    friend class Individual;
+   friend class EventModelPrivate; // manage the CM Events, emit signals and so on
+   friend class EventModel; // manage the CM Events, emit signals and so on
 
     // To synchronize the timeline weak pointers
     friend class Person;
@@ -230,6 +239,10 @@ public:
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
    QSharedPointer<QAbstractItemModel> callsModel() const;
+
+
+   QSharedPointer<Event>              oldestEvent() const;
+   QSharedPointer<Event>              newestEvent() const;
    IndividualPointer  individual() const;
 
    /*

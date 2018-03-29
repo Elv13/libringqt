@@ -20,6 +20,7 @@
 
 #include <thread>
 #include <iostream>
+#include <fstream>
 #include <unordered_map>
 
 #include "../matrixutils.h"
@@ -163,7 +164,7 @@ struct VParameters {
 
     typedef void (VParameters::*function)();
     State m_State {State::EMPTY};
-    void applyEvent();
+    void applyEvent() __attribute__((always_inline));
     static const Matrix2D<VParameters::State, VParameters::Event, VParameters::State> m_StateMap;
     static const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> m_StateFunctor;
 };
@@ -283,7 +284,7 @@ struct VProperty
 
     typedef void (VProperty::*function)();
     State m_State {State::EMPTY};
-    void applyEvent();
+    void applyEvent() __attribute__((always_inline));
     static const Matrix2D<VProperty::State , VProperty::Event, VProperty::State> m_StateMap;
     static const Matrix2D<VProperty::State , VProperty::Event, VProperty::function> m_StateFunctor;
     static const Matrix1D<VParameters::State, VProperty::Event> m_ParamToEvent;
@@ -400,7 +401,7 @@ struct VObject
 
     typedef void (VObject::*function)();
     State m_State {State::EMPTY};
-    void applyEvent();
+    void applyEvent() __attribute__((always_inline));
     static const Matrix2D<VObject::State, VObject::Event, VObject::State> m_StateMap;
     static const Matrix2D<VObject::State, VObject::Event, VObject::function> m_StateFunctor;
 };
@@ -991,26 +992,44 @@ ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
 bool VContext::readFile(const char* path)
 {
     int c;
-    FILE *file;
-    file = fopen(path, "r");
+//     FILE *file;
+//     file = fopen(path, "r");
+    std::ifstream file2(path, std::ios::binary);
 
-    if (file) {
+    if (file2) {
+
+        // Implement an inlined buffer along with __attribute__((always_inline))
+        //
+        // The first implementation had serious issues with using iostream
+        // own buffer due to the overhead of the function call not being
+        // inlined reliably (100x too slow, not ~5%). The proper inlining of
+        // this type of state machine is absolutely necessary to get any
+        // performance out of state machine based parsers.
+        char buf[4096];
+        file2.read(buf, sizeof(buf) / sizeof(*buf));
+        int pos = 0;
+
         m_pCurrentObject = new VObject(this);
 
         // Init the sling window
-        for (int i = 1; i < 4; i++) {
-            if ((c = getc(file)) != EOF)
-                m_Window.insert(c, i);
+        for (pos = 1; pos < 4; pos++) {
+            if ((c = buf[pos]) != EOF)
+                m_Window.insert(c, pos+1);
             else {
-                fclose(file);
+                file2.close();
                 return false;
             }
         }
 
         while (isActive()) {
 
-            while (m_Window.room() && (c = getc(file)) != EOF) {
+            while (m_Window.room() && (c = buf[pos]) != EOF) {
                 m_Window.put(c);
+                pos++;
+                if (pos == sizeof(buf) / sizeof(*buf)) {
+                    file2.read(buf, sizeof(buf) / sizeof(*buf));
+                    pos = 0;
+                }
             }
 
             if (c == EOF || !c)
@@ -1020,10 +1039,9 @@ bool VContext::readFile(const char* path)
                 break;
 
             currentObject()->applyEvent();
-
         }
 
-        fclose(file);
+        file2.close();
 
         if ((!currentObject()) || (!isActive())) {
             std::cout << "COMPLETE!\n";

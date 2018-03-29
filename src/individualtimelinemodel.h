@@ -95,6 +95,7 @@ private:
 
     // Mutator
     void addContactMethod(ContactMethod* cm);
+    void clear();
 
     IndividualTimelineModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(IndividualTimelineModel)

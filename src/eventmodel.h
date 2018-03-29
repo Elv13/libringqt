@@ -44,6 +44,8 @@ class EventModelPrivate;
 class LIB_EXPORT EventModel : public QAbstractListModel, public CollectionManagerInterface<Event>
 {
    Q_OBJECT
+
+   friend class ContactMethod; // calls into the private API when deduplicating itself
 public:
 
     virtual ~EventModel();
