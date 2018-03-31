@@ -177,18 +177,6 @@ public:
         Parameters parameters;
     };
 
-    /**
-     * The object type this parser cares about.
-     *
-     * For now, other objects such as timeline, todo or alarms are ignored.
-     */
-    enum class ObjectType {
-        V_CALENDAR, /*!< A calendar with multiple event/todo/journal */
-        V_CARD    , /*!< A contact card                              */
-        V_EVENT   , /*!< An active event (**WITH** busy time)        */
-        V_JOURNAL , /*!< An passive event (**WITHOUT** busy time)    */
-    };
-
     class AbstractObject {
         std::list<Property*> properties;
     };
@@ -228,21 +216,6 @@ public:
     };
 
     /**
-     * Get the size without blocking the parser.
-     */
-    std::atomic<unsigned> transerQueueSize() const;
-
-    /**
-     * Get the transfer queue.
-     *
-     * Note that holding the point prevent the parser from adding elements
-     * to the queue, but it has it's own buffer, so accessing this in a
-     * `while (transerQueueSize()) { auto q = p->acquireTrasferQueue();}` is a
-     * good idea.
-     */
-    std::unique_ptr< std::list< AbstractObject* > > acquireTrasferQueue() const;
-
-    /**
      * For each object name (VCARD, VCALENDAR, VEVENT, etc), set an adaptor
      * to map external object to the serialized representation.
      */
@@ -262,7 +235,7 @@ public:
      */
     bool loadFile(const char* path);
 
-    AbstractObject* _test_CharToObj(const char* data);
+    void _test_CharToObj(const char* data);
 
 private:
     VParser::VContext* d_ptr;

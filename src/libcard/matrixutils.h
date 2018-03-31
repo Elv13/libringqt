@@ -90,7 +90,7 @@ struct Matrix1D
       std::initializer_list<Value> vs   ;
    };
 
-   Matrix1D(std::initializer_list< std::initializer_list<Value> > s);
+   constexpr Matrix1D(std::initializer_list< std::initializer_list<Value> > s);
    Matrix1D(std::initializer_list< Pairs > s);
    Matrix1D(std::initializer_list<Order> s);
    explicit Matrix1D();
@@ -98,11 +98,11 @@ struct Matrix1D
    ~Matrix1D();
 
    // Row is a built-in type ("int" by default)
-   Value operator[](Row v);
+   inline Value& operator[](Row v);
    void operator=(Matrix1D<Row,Value,A>& other);
    void operator=(std::initializer_list< Pairs > s);
 
-   const Value operator[](Row v) const;
+   inline const Value& operator[](Row v) const;
 
    /**
    * An Iterator for enum classes

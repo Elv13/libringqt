@@ -100,7 +100,7 @@ Matrix1D<Row,Value,Accessor>::~Matrix1D()
 
 //DEPRECATED
 template<class Row, typename Value, typename Accessor>
-Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::initializer_list<Value>> s)
+constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::initializer_list<Value>> s)
 : m_lData{nullptr} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
@@ -199,25 +199,30 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
 }
 
 template<class Row, typename Value, typename Accessor>
-Value Matrix1D<Row,Value,Accessor>::operator[](Row v) {
-   //ASSERT(size_t(v) >= size_t(Row::COUNT__),"State Machine Out of Bounds\n");
-   if (size_t(v) >= enum_class_size<Row>() || static_cast<int>(v) < 0) {
-//       qWarning() << "State Machine Out of Bounds" << size_t(v);
+Value& Matrix1D<Row,Value,Accessor>::operator[](Row v) {
+
+   //This assert is useful only when someone uses unsafe cast on the input and
+   // is otherwise very, very slow in debug mode due to the high call count
+
+   /*if (size_t(v) >= enum_class_size<Row>() || static_cast<int>(v) < 0) {
       assert(false);
       throw v;
-   }
+   } */
+
    return *m_lData[static_cast<int>(v)];
 }
 
 template<class Row, typename Value, typename Accessor>
-const Value Matrix1D<Row,Value,Accessor>::operator[](Row v) const {
-   assert(size_t(v) <= enum_class_size<Row>()+1 && size_t(v)>=0); //COUNT__ is also valid
+const Value& Matrix1D<Row,Value,Accessor>::operator[](Row v) const {
+   //This assert is useful only when someone uses unsafe cast on the input and
+   // is otherwise very, very slow in debug mode due to the high call count
+
+   /*assert(size_t(v) <= enum_class_size<Row>()+1 && size_t(v)>=0); //COUNT__ is also valid
    if (size_t(v) >= enum_class_size<Row>()) {
-//       qWarning() << "State Machine Out of Bounds" << size_t(v);
       assert(false);
       throw v;
    }
-   assert(m_lData[static_cast<int>(v)]);
+   assert(m_lData[static_cast<int>(v)]);*/
 
    return *(m_lData[static_cast<int>(v)]);
 }

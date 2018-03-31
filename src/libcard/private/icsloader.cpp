@@ -110,28 +110,40 @@ struct VContext;
  * Backslash escaped or quoted ';'/':' shall be appended to the value and not
  * used as delimited.
  */
-struct VParameters {
+struct VParameters final {
     using VParameter = std::pair<std::basic_string<char>, std::basic_string<char> >;
 
-    enum class State {
-        EMPTY      , /*!< Before anything happens   */
-        NAME       , /*!< Parsing the name          */
-        ESCAPED    , /*!< Ignore everything         */
-        VALUE      , /*!< Parsing the value         */
-        VALUE_QUOTE, /*!< Parsing the value with "  */
-        DONE       , /*!< Success!                  */
-        ERROR      , /*!< The encoding is corrupted */
+    enum class State : unsigned char {
+        EMPTY  , /*!< Before anything happens   */
+        NAME   , /*!< Parsing the name          */
+        ESCAPED, /*!< Ignore everything         */
+        VALUE  , /*!< Parsing the value         */
+        QUOTED , /*!< Parsing the value with "  */
+        DONE   , /*!< Success!                  */
+        ERROR  , /*!< The encoding is corrupted */
         COUNT__
     };
 
     /// The classes of characters
-    enum class Event {
+    enum class Event : unsigned char {
         READ  , /*!< Anything but ";: */
         QUOTE , /*!<     "            */
         SPLIT , /*!<  = / ;           */
         SKIP  , /*!<                  */
         FINISH, /*!< :                */
         COUNT__
+    };
+
+    /**
+     * Categories of mutations performed from the file to the buffer
+     */
+    enum class Action : unsigned char {
+        INCREMENT, /*!< Add a byte to the buffer                       */
+        SKIP     , /*!< skip a byte instead of adding it to the buffer */
+        SAVENAME , /*!< "save" the current buffer into the name field  */
+        SAVEVALUE, /*!< "save" the current buffer into the value field */
+        ERROR    , /*!< The document is in an invalid state            */
+        NOTHING  , /*!< No operation                                   */
     };
 
     /**
@@ -152,49 +164,41 @@ struct VParameters {
      * The current char is at position **1** ([0] being the previous one to
      * help detect escaping)
      */
-    VParameters::Event charToEvent();
+    VParameters::Event charToEvent() __attribute__((always_inline));
 
-    // Actions
-    void increment();
-    void skip();
-    void saveName();
-    void saveValue();
-    void error();
-    void nothing();
-
-    typedef void (VParameters::*function)();
     State m_State {State::EMPTY};
     void applyEvent() __attribute__((always_inline));
+    void applyActions(VParameters::Action a) __attribute__((always_inline));
     static const Matrix2D<VParameters::State, VParameters::Event, VParameters::State> m_StateMap;
-    static const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> m_StateFunctor;
+    static const Matrix2D<VParameters::State, VParameters::Event, VParameters::Action> m_StateActions;
 };
 
 /**
  * Map of the next state
  */
 #define VPE VParameters::Event::
-#define VPF  &VParameters::
+#define VPF  VParameters::Action::
 #define ST State::
 static EnumClassReordering<VParameters::Event> paramrow =
-{                             VPE READ      , VPE QUOTE     , VPE SPLIT, VPE SKIP, VPE FINISH     };
+{                          VPE READ, VPE QUOTE, VPE SPLIT, VPE SKIP, VPE FINISH   };
 const Matrix2D<VParameters::State, VParameters::Event, VParameters::State> VParameters::m_StateMap = {
-{ST EMPTY      , {{paramrow, {ST NAME       , ST ERROR      , ST ERROR, ST NAME       , ST DONE  }}}},
-{ST NAME       , {{paramrow, {ST NAME       , ST NAME       , ST VALUE, ST NAME       , ST ERROR }}}},
-{ST ESCAPED    , {{paramrow, {ST VALUE      , ST VALUE      , ST NAME , ST VALUE      , ST DONE  }}}},
-{ST VALUE      , {{paramrow, {ST VALUE      , ST VALUE_QUOTE, ST NAME , ST ESCAPED    , ST DONE  }}}},
-{ST VALUE_QUOTE, {{paramrow, {ST VALUE_QUOTE, ST VALUE      , ST NAME , ST VALUE_QUOTE, ST VALUE }}}},
-{ST DONE       , {{paramrow, {ST ERROR      , ST ERROR      , ST ERROR, ST ERROR      , ST DONE  }}}},
-{ST ERROR      , {{paramrow, {ST ERROR      , ST ERROR      , ST ERROR, ST ERROR      , ST ERROR }}}}
+{ST EMPTY  , {{paramrow, {ST NAME  , ST ERROR , ST ERROR, ST NAME   , ST DONE  }}}},
+{ST NAME   , {{paramrow, {ST NAME  , ST NAME  , ST VALUE, ST NAME   , ST ERROR }}}},
+{ST ESCAPED, {{paramrow, {ST VALUE , ST VALUE , ST NAME , ST VALUE  , ST DONE  }}}},
+{ST VALUE  , {{paramrow, {ST VALUE , ST QUOTED, ST NAME , ST ESCAPED, ST DONE  }}}},
+{ST QUOTED , {{paramrow, {ST QUOTED, ST VALUE , ST NAME , ST QUOTED , ST VALUE }}}},
+{ST DONE   , {{paramrow, {ST ERROR , ST ERROR , ST ERROR, ST ERROR  , ST DONE  }}}},
+{ST ERROR  , {{paramrow, {ST ERROR , ST ERROR , ST ERROR, ST ERROR  , ST ERROR }}}}
 };
 
-const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> VParameters::m_StateFunctor = {
-{State::EMPTY      , {{paramrow, { VPF increment  , VPF increment  ,  VPF error    , VPF increment , VPF nothing  }}}},
-{State::NAME       , {{paramrow, { VPF increment  , VPF increment  ,  VPF saveName , VPF increment , VPF nothing  }}}},
-{State::ESCAPED    , {{paramrow, { VPF increment  , VPF increment  ,  VPF increment, VPF increment , VPF increment}}}},
-{State::VALUE      , {{paramrow, { VPF increment  , VPF skip       ,  VPF saveValue, VPF skip      , VPF saveValue}}}},
-{State::VALUE_QUOTE, {{paramrow, { VPF increment  , VPF skip       ,  VPF saveValue, VPF increment , VPF increment}}}},
-{State::DONE       , {{paramrow, { VPF error      , VPF error      ,  VPF nothing  , VPF error     , VPF nothing  }}}},
-{State::ERROR      , {{paramrow, { VPF nothing    , VPF nothing    ,  VPF error    , VPF nothing   , VPF nothing  }}}},
+const Matrix2D<VParameters::State, VParameters::Event, VParameters::Action> VParameters::m_StateActions = {
+{State::EMPTY  , {{paramrow, { VPF INCREMENT, VPF INCREMENT, VPF ERROR    , VPF INCREMENT, VPF NOTHING  }}}},
+{State::NAME   , {{paramrow, { VPF INCREMENT, VPF INCREMENT, VPF SAVENAME , VPF INCREMENT, VPF NOTHING  }}}},
+{State::ESCAPED, {{paramrow, { VPF INCREMENT, VPF INCREMENT, VPF INCREMENT, VPF INCREMENT, VPF INCREMENT}}}},
+{State::VALUE  , {{paramrow, { VPF INCREMENT, VPF SKIP     , VPF SAVEVALUE, VPF SKIP     , VPF SAVEVALUE}}}},
+{State::QUOTED , {{paramrow, { VPF INCREMENT, VPF SKIP     , VPF SAVEVALUE, VPF INCREMENT, VPF INCREMENT}}}},
+{State::DONE   , {{paramrow, { VPF ERROR    , VPF ERROR    , VPF NOTHING  , VPF ERROR    , VPF NOTHING  }}}},
+{State::ERROR  , {{paramrow, { VPF NOTHING  , VPF NOTHING  , VPF ERROR    , VPF NOTHING  , VPF NOTHING  }}}},
 };
 #undef ST
 #undef VPF
@@ -227,12 +231,12 @@ const Matrix2D<VParameters::State, VParameters::Event, VParameters::function> VP
  * Has parameters over 2 lines while it has values over 2 lines if parsed
  * trivially. See RFC5545 section 3.3.11.
  */
-struct VProperty
+struct VProperty final
 {
     /**
      *
      */
-    enum class State {
+    enum class State : unsigned char {
         EMPTY       , /*!< The property is not parsed yet               */
         NAME        , /*!< The property name is being parsed            */
         PARAMETERS  , /*!< The parameters are being parsed              */
@@ -247,14 +251,32 @@ struct VProperty
     /**
      * The events that affect the parsing.
      */
-    enum class Event {
+    enum class Event : unsigned char {
         READ       , /*!<  */
         SPLIT_PARAM, /*!<  */
         SPLIT      , /*!<  */
         LINE_BREAK , /*!<  */
-        FINISH      , /*!< */
+        FINISH     , /*!<  */
         ERROR      , /*!<  */
         COUNT__
+    };
+
+    /**
+     * Actual things to perform on the object.
+     *
+     * The first version of this system directly used methods for this but
+     * they could not be inlined by the compiler and the overhead of millions
+     * of function calls ended up being the largest bottleneck.
+     */
+    enum class Action : unsigned char {
+        PUSHNAME ,
+        INCREMENT,
+        PARAMETER,
+        PUSH     ,
+        PUSHLINE ,
+        ERROR    ,
+        NOTHING  ,
+        RESET    ,
     };
 
     explicit VProperty(VContext* context) : m_pContext(context), m_Parameters(context){}
@@ -262,31 +284,20 @@ struct VProperty
     // Attributes
     VContext*  m_pContext;
     VParameters m_Parameters;
+    std::basic_string<char> m_Name;
+    std::basic_string<char> m_Value;
 
     /**
      *
      */
-    Event charToEvent();
+    Event charToEvent() __attribute__((always_inline));
 
-    // Actions, return the number of bytes the cursor has to be incremented with
-    void pushName();
-    void increment();
-    void parameter();
-    void push();
-    void pushLine();
-    void error();
-    void nothing();
-
-    std::list<VParameters*> parameters;
-
-    std::basic_string<char> m_Name;
-    std::basic_string<char> m_Value;
-
-    typedef void (VProperty::*function)();
     State m_State {State::EMPTY};
     void applyEvent() __attribute__((always_inline));
+    void applyEvent(VProperty::Event e) __attribute__((always_inline));
+    void applyActions(VProperty::Action a) __attribute__((always_inline));
     static const Matrix2D<VProperty::State , VProperty::Event, VProperty::State> m_StateMap;
-    static const Matrix2D<VProperty::State , VProperty::Event, VProperty::function> m_StateFunctor;
+    static const Matrix2D<VProperty::State , VProperty::Event, VProperty::Action> m_StateActions;
     static const Matrix1D<VParameters::State, VProperty::Event> m_ParamToEvent;
 };
 
@@ -294,30 +305,32 @@ struct VProperty
  * Map of the next state
  */
 #define VPE VProperty::Event::
-#define VPF &VProperty::
+#define VPF VProperty::Action::
+#define VPS VProperty::State::
 static EnumClassReordering<VProperty::Event> proprow =
-{                                    VPE READ,        VPE SPLIT_PARAM  ,   VPE SPLIT   ,     VPE LINE_BREAK,  VPE FINISH,  VPE ERROR};
+{                                    VPE READ,    VPE SPLIT_PARAM, VPE SPLIT, VPE LINE_BREAK,  VPE FINISH, VPE ERROR   };
 const Matrix2D<VProperty::State, VProperty::Event, VProperty::State> VProperty::m_StateMap = {
-{State::EMPTY       , {{proprow, {State::NAME      , State::ERROR      , State::ERROR  , State::ERROR        , State::ERROR, State::ERROR }}}},
-{State::NAME        , {{proprow, {State::NAME      , State::PARAMETERS , State::VALUE  , State::ERROR        , State::ERROR, State::ERROR }}}},
-{State::PARAMETERS  , {{proprow, {State::PARAMETERS, State::PARAMETERS , State::VALUE  , State::LINE_BREAK_P , State::ERROR, State::ERROR }}}},
-{State::VALUE       , {{proprow, {State::VALUE     , State::VALUE      , State::VALUE  , State::LINE_BREAK_V , State::DONE , State::ERROR }}}},
-{State::LINE_BREAK_P, {{proprow, {State::PARAMETERS, State::PARAMETERS , State::ERROR  , State::ERROR        , State::ERROR, State::ERROR }}}},
-{State::LINE_BREAK_V, {{proprow, {State::VALUE     , State::VALUE      , State::ERROR  , State::ERROR        , State::ERROR, State::ERROR }}}},
-{State::DONE        , {{proprow, {State::ERROR     , State::ERROR      , State::ERROR  , State::ERROR        , State::ERROR, State::ERROR }}}},
-{State::ERROR       , {{proprow, {State::ERROR     , State::ERROR      , State::ERROR  , State::ERROR        , State::ERROR, State::ERROR }}}}
+{State::EMPTY       , {{proprow, {VPS NAME      , VPS ERROR     , VPS ERROR, VPS ERROR       , VPS ERROR, VPS ERROR }}}},
+{State::NAME        , {{proprow, {VPS NAME      , VPS PARAMETERS, VPS VALUE, VPS ERROR       , VPS ERROR, VPS ERROR }}}},
+{State::PARAMETERS  , {{proprow, {VPS PARAMETERS, VPS PARAMETERS, VPS VALUE, VPS LINE_BREAK_P, VPS ERROR, VPS ERROR }}}},
+{State::VALUE       , {{proprow, {VPS VALUE     , VPS VALUE     , VPS VALUE, VPS LINE_BREAK_V, VPS DONE , VPS ERROR }}}},
+{State::LINE_BREAK_P, {{proprow, {VPS PARAMETERS, VPS PARAMETERS, VPS ERROR, VPS ERROR       , VPS ERROR, VPS ERROR }}}},
+{State::LINE_BREAK_V, {{proprow, {VPS VALUE     , VPS VALUE     , VPS ERROR, VPS ERROR       , VPS ERROR, VPS ERROR }}}},
+{State::DONE        , {{proprow, {VPS ERROR     , VPS ERROR     , VPS ERROR, VPS ERROR       , VPS EMPTY, VPS ERROR }}}},
+{State::ERROR       , {{proprow, {VPS ERROR     , VPS ERROR     , VPS ERROR, VPS ERROR       , VPS ERROR, VPS ERROR }}}}
 };
 
-const Matrix2D<VProperty::State, VProperty::Event, VProperty::function> VProperty::m_StateFunctor = {
-{State::EMPTY       , {{proprow, { VPF increment , VPF error     , VPF error     , VPF error    , VPF error , VPF error }}}},
-{State::NAME        , {{proprow, { VPF increment , VPF pushName  , VPF pushName  , VPF error    , VPF error , VPF error }}}},
-{State::PARAMETERS  , {{proprow, { VPF parameter , VPF nothing   , VPF nothing   , VPF pushLine , VPF error , VPF error }}}},
-{State::VALUE       , {{proprow, { VPF increment , VPF increment , VPF increment , VPF pushLine , VPF push  , VPF error }}}},
-{State::LINE_BREAK_P, {{proprow, { VPF increment , VPF nothing   , VPF error     , VPF error    , VPF error , VPF error }}}},
-{State::LINE_BREAK_V, {{proprow, { VPF increment , VPF increment , VPF error     , VPF error    , VPF error , VPF error }}}},
-{State::DONE        , {{proprow, { VPF error     , VPF error     , VPF error     , VPF error    , VPF error , VPF error }}}},
-{State::ERROR       , {{proprow, { VPF error     , VPF error     , VPF error     , VPF error    , VPF error , VPF error }}}},
+const Matrix2D<VProperty::State, VProperty::Event, VProperty::Action> VProperty::m_StateActions = {
+{State::EMPTY       , {{proprow, { VPF INCREMENT , VPF ERROR     , VPF ERROR     , VPF ERROR    , VPF ERROR , VPF ERROR }}}},
+{State::NAME        , {{proprow, { VPF INCREMENT , VPF PUSHNAME  , VPF PUSHNAME  , VPF ERROR    , VPF ERROR , VPF ERROR }}}},
+{State::PARAMETERS  , {{proprow, { VPF PARAMETER , VPF NOTHING   , VPF NOTHING   , VPF PUSHLINE , VPF ERROR , VPF ERROR }}}},
+{State::VALUE       , {{proprow, { VPF INCREMENT , VPF INCREMENT , VPF INCREMENT , VPF PUSHLINE , VPF PUSH  , VPF ERROR }}}},
+{State::LINE_BREAK_P, {{proprow, { VPF INCREMENT , VPF NOTHING   , VPF ERROR     , VPF ERROR    , VPF ERROR , VPF ERROR }}}},
+{State::LINE_BREAK_V, {{proprow, { VPF INCREMENT , VPF INCREMENT , VPF ERROR     , VPF ERROR    , VPF ERROR , VPF ERROR }}}},
+{State::DONE        , {{proprow, { VPF ERROR     , VPF ERROR     , VPF ERROR     , VPF ERROR    , VPF RESET , VPF ERROR }}}},
+{State::ERROR       , {{proprow, { VPF ERROR     , VPF ERROR     , VPF ERROR     , VPF ERROR    , VPF ERROR , VPF ERROR }}}},
 };
+#undef VPS
 #undef VPF
 #undef VPE
 
@@ -326,21 +339,16 @@ const Matrix1D<VParameters::State, VProperty::Event> VProperty::m_ParamToEvent =
     { VParameters::State::NAME       , VProperty::Event::READ  },
     { VParameters::State::ESCAPED    , VProperty::Event::READ  },
     { VParameters::State::VALUE      , VProperty::Event::READ  },
-    { VParameters::State::VALUE_QUOTE, VProperty::Event::READ  },
+    { VParameters::State::QUOTED, VProperty::Event::READ  },
     { VParameters::State::DONE       , VProperty::Event::SPLIT },
     { VParameters::State::ERROR      , VProperty::Event::ERROR },
 };
 
 /**
  * Everything between a BEGIN:OBJECT_TYPE and it's matching END:OBJECT_TYPE.
- *
- * Note that objects can contain children objects of the same type, so a depth
- * counter is needed.
  */
-struct VObject
+struct VObject final
 {
-    ICSLoader::ObjectType type;
-
     // Keep track of the parent so the global context can push/pop elements.
     VObject* m_pParent {nullptr};
 
@@ -354,12 +362,10 @@ struct VObject
     /**
      *
      */
-    enum class State {
+    enum class State : unsigned char {
         EMPTY     , /*!< Nothing parsed yet              */
-        HEADER    , /*!< BEGIN:OBJECT_TYPE               */ //FIXME remove (handled as a property)
         PROPERTIES, /*!< Normal key / value properties   */
         QUOTE     , /*!< This is a quoted parameter      */ //FIXME implement
-        FOOTER    , /*!< END:OBJECT_TYPE                 */ //FIXME remove (handled as a property)
         DONE      , /*!< Once the footer is fully parsed */
         ERROR     , /*!< Parsing failed                  */
         COUNT__
@@ -368,70 +374,68 @@ struct VObject
     /**
      *
      */
-    enum class Event {
-        READ    , /*!<  */
-        NEW_LINE, /*!<  */
-        CHILD_FINISH, /*!< */
-        ERROR,
+    enum class Event : unsigned char {
+        READ        , /*!<  */
+        NEW_LINE    , /*!<  */
+        CHILD_FINISH, /*!< TODO normalize with children state */
+        ERROR       ,
         COUNT__
+    };
+
+    enum class Action : unsigned char {
+        ERROR    ,
+        INCREMENT,
+        DELEGATE ,
+        PUSH     ,
+        FINISH   ,
+        NOTHING  ,
     };
 
     explicit VObject(VContext* context) : m_pContext(context) {}
 
     // Attributes
     VContext* m_pContext;
-    VProperty* m_pCurrentProperty {nullptr};
-    std::list<VObject*> children; //TODO remove?
     std::basic_string<char> name;
-
 
     /**
      *
      */
     Event charToEvent();
 
-    static const Matrix1D<VProperty::State, VObject::Event> m_PropertyToEvent;
 
-    void error();
-    void increment();
-    void propertyEvent();
-    void pushProperty();
-    void finish();
-    void nothing();
-
-    typedef void (VObject::*function)();
     State m_State {State::EMPTY};
     void applyEvent() __attribute__((always_inline));
+    void applyActions(VObject::Action a) __attribute__((always_inline));
+    static const Matrix1D<VProperty::State, VObject::Event> m_PropertyToEvent;
     static const Matrix2D<VObject::State, VObject::Event, VObject::State> m_StateMap;
-    static const Matrix2D<VObject::State, VObject::Event, VObject::function> m_StateFunctor;
+    static const Matrix2D<VObject::State, VObject::Event, VObject::Action> m_StateActions;
 };
 
 #define VPE VObject::Event::
-#define VPF &VObject::
+#define VPF VObject::Action::
+#define VPS VObject::State::
 static EnumClassReordering<VObject::Event> objrow =
 {                                 VPE READ,            VPE NEW_LINE,     VPE CHILD_FINISH,   VPE ERROR   };
 const Matrix2D<VObject::State, VObject::Event, VObject::State> VObject::m_StateMap = {
-{State::EMPTY      , {{objrow, {State::PROPERTIES , State::ERROR     , State::ERROR      , State::ERROR }}}},
-{State::HEADER     , {{objrow, {State::HEADER     , State::PROPERTIES, State::ERROR      , State::ERROR }}}},//TODO remove
-{State::PROPERTIES , {{objrow, {State::PROPERTIES , State::PROPERTIES, State::PROPERTIES , State::ERROR }}}},
-{State::QUOTE      , {{objrow, {State::QUOTE      , State::PROPERTIES, State::PROPERTIES , State::ERROR }}}},
-{State::FOOTER     , {{objrow, {State::FOOTER     , State::DONE      , State::ERROR      , State::ERROR }}}},//TODO remove
-{State::DONE       , {{objrow, {State::ERROR      , State::ERROR     , State::ERROR      , State::ERROR }}}},
-{State::ERROR      , {{objrow, {State::ERROR      , State::ERROR     , State::ERROR      , State::ERROR }}}},
+{State::EMPTY      , {{objrow, {VPS PROPERTIES, VPS ERROR     , VPS ERROR     , VPS ERROR }}}},
+{State::PROPERTIES , {{objrow, {VPS PROPERTIES, VPS PROPERTIES, VPS PROPERTIES, VPS ERROR }}}},
+{State::QUOTE      , {{objrow, {VPS QUOTE     , VPS PROPERTIES, VPS PROPERTIES, VPS ERROR }}}},
+{State::DONE       , {{objrow, {VPS ERROR     , VPS ERROR     , VPS ERROR     , VPS ERROR }}}},
+{State::ERROR      , {{objrow, {VPS ERROR     , VPS ERROR     , VPS ERROR     , VPS ERROR }}}},
 };
 
-const Matrix2D<VObject::State, VObject::Event, VObject::function> VObject::m_StateFunctor = {
-{State::EMPTY      , {{objrow, { VPF increment    , VPF nothing       , VPF error        , VPF error}}}},
-{State::HEADER     , {{objrow, { VPF increment    , VPF error         , VPF error        , VPF error}}}}, //TODO remove
-{State::PROPERTIES , {{objrow, { VPF propertyEvent, VPF propertyEvent , VPF pushProperty , VPF error}}}},
-{State::QUOTE      , {{objrow, { VPF propertyEvent, VPF propertyEvent , VPF propertyEvent, VPF error}}}},
-{State::FOOTER     , {{objrow, { VPF increment    , VPF finish        , VPF error        , VPF error}}}}, //TODO remove
-{State::DONE       , {{objrow, { VPF error        , VPF error         , VPF error        , VPF error}}}},
-{State::ERROR      , {{objrow, { VPF error        , VPF error         , VPF error        , VPF error}}}},
+const Matrix2D<VObject::State, VObject::Event, VObject::Action> VObject::m_StateActions = {
+{State::EMPTY      , {{objrow, { VPF INCREMENT, VPF NOTHING , VPF ERROR   , VPF ERROR}}}},
+{State::PROPERTIES , {{objrow, { VPF DELEGATE , VPF DELEGATE, VPF PUSH    , VPF ERROR}}}},
+{State::QUOTE      , {{objrow, { VPF DELEGATE , VPF DELEGATE, VPF DELEGATE, VPF ERROR}}}},
+{State::DONE       , {{objrow, { VPF ERROR    , VPF ERROR   , VPF ERROR   , VPF ERROR}}}},
+{State::ERROR      , {{objrow, { VPF ERROR    , VPF ERROR   , VPF ERROR   , VPF ERROR}}}},
 };
+#undef VPS
 #undef VPF
 #undef VPE
 
+//FIXME remove
 const Matrix1D<VProperty::State, VObject::Event> VObject::m_PropertyToEvent = {
     { VProperty::State::EMPTY       , VObject::Event::READ         },
     { VProperty::State::NAME        , VObject::Event::READ         },
@@ -488,75 +492,74 @@ public:
 
     inline void pop(char count) {
         assert(count <= 3);
-//         m_Pos = (m_Pos+count)%4;
+
         m_Room += count;
         assert(m_Room <= 4);
     }
 
-    inline char get(char pos) const {
-        assert(pos < 4 && pos >= 0);
+    // Uses a template to allow static_assert and inlining to work properly
+    template<int pos, char room = 99>
+    inline constexpr char get() const {
+        static_assert(pos < 4 && pos >= 0);
+#ifdef ENABLE_TEST_ASSERTS
+        assert(m_Room <= room);
+#endif
         return m_lContent[(m_Pos+pos) % 4];
     }
 
     // Create validated access for each chars. When compiled in release mode
     // it will inline nicely.
-    inline char current() const {
-        return get(2);
-    }
-
-    inline char previous() const {
-        return get(1);
-    }
-
-    inline char next() const {
-        assert(m_Room <= 2);
-        return get(3);
-    }
-
-    inline char last() const {
-        assert(m_Room <= 1);
-        return get(0);
-    }
+    char current () {return get<2   >();}
+    char previous() {return get<1   >();}
+    char next    () {return get<3, 2>();}
+    char last    () {return get<0, 1>();}
 
     inline bool isActive() const {
         return !m_IsInactive;
     }
 
-    inline char room() const
-    {
+    inline char room() const {
         return m_Room;
     }
 
 private:
+    //TODO it could be applied to the main buffer instead of being a copy
     char m_lContent[4] = {0x00,0x00,0x00,0x00};
+
     char m_Pos {3}; /*!< The previous byte is always necessary, so start at 1*/
     bool m_IsInactive {false};
-    char m_Room {0};
 
-//     m_Pos == 1 and p == 0 --> 1  | 1 % 4 | 1
-//     m_Pos == 1 and p == 1 --> 2  | 2 % 4 | 2
-//     m_Pos == 1 and p == 2 --> 3  | 3 % 4 | 3
-//     m_Pos == 1 and p == 3 --> 0  | 4 % 4 | 0
-//                                  |       |
-//     m_Pos == 2 and p == 0 --> 2  | 2 % 4 | 2
-//     m_Pos == 2 and p == 1 --> 3  | 3 % 4 | 3
-//     m_Pos == 2 and p == 2 --> 0  | 4 % 4 | 0
-//     m_Pos == 2 and p == 3 --> 1  | 5 % 4 | 1
-//                                  |       |
-//     m_Pos == 3 and p == 0 --> 3  | 3 % 4 | 3
-//     m_Pos == 3 and p == 1 --> 0  | 4 % 4 | 0
-//     m_Pos == 3 and p == 2 --> 1  | 5 % 4 | 1
-//     m_Pos == 3 and p == 3 --> 2  | 6 % 4 | 2
+    char m_Room {0};
 };
 
 struct VContext
 {
-
+    /**
+     * Until it becomes a major bottleneck, copy everything in a buffer.
+     *
+     * This removes a lot of complexity.
+     */
     std::basic_string<char> m_Buffer;
 
-    bool     m_IsActive       {  true   };
+    bool m_IsActive {true};
+
+    /**
+     * Objects can be children of other objects, keep a linked list down to the
+     * root object. Further management isn't required since it acts as a memento
+     * and not much else.
+     */
     VObject* m_pCurrentObject { nullptr };
-    int      m_ToGet {0};
+
+    /**
+     * Keep the smallest possible number of VObject instances.
+     *
+     * That's usually 2 but the spec doesn't limit them.
+     */
+    std::list<VObject*> m_lObjectCache;
+    VObject* acquireObject();
+    void releaseObject(VObject* o);
+
+    VProperty m_CurrentProperty {this};
 
     std::unordered_map<std::basic_string<char>, std::shared_ptr<AbstractVObjectAdaptor> > m_Adaptors;
     std::shared_ptr<AbstractVObjectAdaptor> m_FallbackAdaptors;
@@ -597,7 +600,6 @@ struct VContext
     FallbackObjectHandler handlerForAdaptor(std::shared_ptr<AbstractVObjectAdaptor> parent, std::shared_ptr<AbstractVObjectAdaptor> a) {
         if (!parent || !a)
             return nullptr;
-
         return parent->d_ptr->m_hAbtractObjectHandler[a->d_ptr->m_Type];
     }
 
@@ -611,25 +613,25 @@ struct VContext
         return nullptr;
     }
 
-    bool handleProperty()
+    void handleProperty()
     {
         auto o = currentObject();
 
         if (!o)
-            return false;
+            return;
 
-        if (auto handler = propertyHandler(o->m_pCurrentProperty->m_Name))
+        if (auto handler = propertyHandler(m_CurrentProperty.m_Name))
             (*handler)(
                 o->m_pReflected,
-                o->m_pCurrentProperty->m_Value,
-                o->m_pCurrentProperty->m_Parameters.parameters
+                m_CurrentProperty.m_Value,
+                m_CurrentProperty.m_Parameters.parameters
             );
         else if (o->m_pAdaptor && o->m_pAdaptor->d_ptr->m_AbstractPropertyHandler)
             o->m_pAdaptor->d_ptr->m_AbstractPropertyHandler(
                 o->m_pReflected,
-                o->m_pCurrentProperty->m_Name,
-                o->m_pCurrentProperty->m_Value,
-                o->m_pCurrentProperty->m_Parameters.parameters
+                m_CurrentProperty.m_Name,
+                m_CurrentProperty.m_Value,
+                m_CurrentProperty.m_Parameters.parameters
             );
     }
 
@@ -643,15 +645,12 @@ struct VContext
     void stashObject() {
         assert(m_pCurrentObject);
         assert(m_pCurrentObject->m_State == VObject::State::PROPERTIES);
-        assert(m_pCurrentObject->m_pCurrentProperty);
-        assert(m_pCurrentObject->m_pCurrentProperty->m_Name.size() > 0);
-        m_pCurrentObject->m_pCurrentProperty;
+        assert(m_CurrentProperty.m_Name.size() > 0);
 
-        auto newO = new VObject(this);
-        newO->m_State == VObject::State::PROPERTIES;
+        auto newO = acquireObject();
+
         newO->m_pParent = m_pCurrentObject;
-
-        newO->name = m_pCurrentObject->m_pCurrentProperty->m_Value;
+        newO->name = m_CurrentProperty.m_Value;
 
         if (auto factory = factoryForType(newO->name)) {
             newO->m_pReflected = (*factory)(newO->name);
@@ -668,15 +667,10 @@ struct VContext
 
         if (!m_pCurrentObject)
             m_IsActive = false;
-        else {
-            m_pCurrentObject->children.push_back(oldO);
+        else if (auto h = handlerForAdaptor(m_pCurrentObject->m_pAdaptor, oldO->m_pAdaptor))
+            h(m_pCurrentObject->m_pReflected, oldO->m_pReflected, oldO->name);
 
-            if (auto h = handlerForAdaptor(m_pCurrentObject->m_pAdaptor, oldO->m_pAdaptor)) {
-                h(m_pCurrentObject->m_pReflected, oldO->m_pReflected, oldO->name);
-            }
-
-            m_pCurrentObject->m_State == VObject::State::PROPERTIES;
-        }
+        releaseObject(oldO);
 
     }
 
@@ -686,7 +680,7 @@ struct VContext
         return ret;
     }
 
-    ICSLoader::AbstractObject* _test_raw(const char* content);
+    bool _test_raw(const char* content);
 
     bool readFile(const char* path);
 };
@@ -729,8 +723,9 @@ VProperty::Event VProperty::charToEvent()
         return Event::LINE_BREAK;
 
     // If the above failed, then the property is completed
-    if (m_pContext->m_Window.current() == '\n' || m_pContext->m_Window.current() == '\r')
+    if (m_pContext->m_Window.current() == '\n' || m_pContext->m_Window.current() == '\r') {
         return Event::FINISH;
+    }
 
     return Event::READ;
 }
@@ -764,125 +759,106 @@ VObject::Event VObject::charToEvent()
     return Event::READ;
 }
 
-void VParameters::increment()
+void VParameters::applyActions(VParameters::Action a)
 {
-    m_pContext->push(1);
-}
+    switch(a) {
+        case Action::INCREMENT:
+            m_pContext->push(1);
+            break;
 
-void VParameters::skip()
-{
-    m_pContext->skip(1);
-}
+        case Action::SKIP:
+            m_pContext->skip(1);
+            break;
+        case Action::SAVENAME:
+            m_CurrentParam.first = m_pContext->flush();
+            m_pContext->skip(1);
+            break;
+        case Action::SAVEVALUE:
+            m_CurrentParam.second = m_pContext->flush();
 
-void VParameters::saveName()
-{
-    m_CurrentParam.first = m_pContext->flush();
-    m_pContext->skip(1);
-}
-
-void VParameters::saveValue()
-{
-    m_CurrentParam.second = m_pContext->flush();
-
-    parameters.push_back(m_CurrentParam);
-    assert(m_CurrentParam.second != "\"b");
-    m_pContext->skip(1);
-    m_CurrentParam.first.clear();
-    m_CurrentParam.second.clear();
-}
-
-void VParameters::error()
-{
-    assert(false);
-}
-
-void VParameters::nothing()
-{
-}
-
-void VProperty::pushName()
-{
-    m_Name = m_pContext->flush();
-    m_pContext->skip(1);
-}
-
-void VProperty::increment()
-{
-    m_pContext->push(1);
-}
-
-void VProperty::parameter()
-{
-    m_Parameters.applyEvent();
-}
-
-void VProperty::push()
-{
-    m_Value = m_pContext->flush();
-    m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 2 : 1);
-}
-
-void VProperty::pushLine()
-{
-    m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 3 : 2);
-}
-
-void VProperty::nothing()
-{
-}
-
-void VProperty::error()
-{
-    assert(false);
-}
-
-void VObject::error()
-{
-    assert(false);
-}
-
-void VObject::increment()
-{
-    m_pContext->push(1);
-}
-
-void VObject::propertyEvent()
-{
-    if (!m_pCurrentProperty)
-        m_pCurrentProperty = new VProperty(m_pContext);
-
-    m_pCurrentProperty->applyEvent();
-}
-
-void VObject::finish()
-{
-    m_pContext->flush();
-    m_pContext->popObject();
-}
-
-void VObject::nothing()
-{
-    m_pContext->push(1);
-}
-
-void VObject::pushProperty()
-{
-    //TODO move everything into the context
-    assert(m_pCurrentProperty);
-
-    /// Detect when the property is an object
-    if (m_pCurrentProperty->m_Name.substr(0, 5) == "BEGIN") {
-
-        m_pContext->stashObject();
+            parameters.push_back(m_CurrentParam);
+            assert(m_CurrentParam.second != "\"b");
+            m_pContext->skip(1);
+            m_CurrentParam.first.clear();
+            m_CurrentParam.second.clear();
+            break;
+        case Action::ERROR:
+            assert(false);
+            break;
+        case Action::NOTHING:
+            break;
     }
-    else if (m_pCurrentProperty->m_Name.substr(0, 3) == "END") {
-        m_pContext->popObject();
-    }
-    else {
-        m_pContext->handleProperty();
-    }
+}
 
-    m_pCurrentProperty = nullptr;
+void VProperty::applyActions(VProperty::Action a)
+{
+    switch(a) {
+        case Action::PUSHNAME:
+            m_Name = m_pContext->flush();
+            m_pContext->skip(1);
+            break;
+        case Action::INCREMENT:
+            m_pContext->push(1);
+            break;
+        case Action::PARAMETER:
+            m_Parameters.applyEvent();
+            break;
+        case Action::PUSH:
+            m_Value = m_pContext->flush();
+            m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 2 : 1);
+            break;
+        case Action::PUSHLINE:
+            m_pContext->skip(m_pContext->m_Window.current() == '\r' ? 3 : 2);
+            break;
+        case Action::NOTHING:
+            break;
+        case Action::RESET:
+            m_Value.clear();
+            m_Name.clear();
+            m_State = VProperty::State::EMPTY;
+            break;
+        case Action::ERROR:
+            assert(false);
+            break;
+    }
+}
+
+void VObject::applyActions(VObject::Action a)
+{
+    switch(a) {
+        case Action::ERROR:
+            assert(false);
+            break;
+        case Action::INCREMENT:
+            m_pContext->push(1);
+            break;
+        case Action::DELEGATE:
+            m_pContext->m_CurrentProperty.applyEvent();
+            break;
+        case Action::FINISH:
+            m_pContext->flush();
+            m_pContext->popObject();
+            break;
+        case Action::NOTHING:
+            m_pContext->push(1);
+            break;
+        case Action::PUSH:
+            /// Detect when the property is an object
+            if (m_pContext->m_CurrentProperty.m_Name.substr(0, 5) == "BEGIN") {
+                m_pContext->stashObject();
+            }
+            else if (m_pContext->m_CurrentProperty.m_Name.substr(0, 3) == "END") {
+                m_pContext->popObject();
+            }
+            else {
+                m_pContext->handleProperty();
+            }
+
+            assert(m_pContext->m_CurrentProperty.m_State == VProperty::State::DONE);
+            m_pContext->m_CurrentProperty.applyEvent(VProperty::Event::FINISH);
+            assert(m_pContext->m_CurrentProperty.m_State == VProperty::State::EMPTY);
+            break;
+    }
 }
 
 void VParameters::applyEvent()
@@ -900,7 +876,22 @@ void VParameters::applyEvent()
         return;
     }
 
-    (this->*(m_StateFunctor[s][event]))();
+    applyActions(m_StateActions[s][event]);
+}
+
+
+void VProperty::applyEvent(VProperty::Event e) //TODO merge both versions
+{
+    auto s = m_State;
+
+    m_State = m_StateMap[s][e];
+
+    if (m_State == State::ERROR) {
+        std::cout << "Parsing failed\n";
+        return;
+    }
+
+    applyActions(m_StateActions[s][e]);
 }
 
 void VProperty::applyEvent()
@@ -918,11 +909,11 @@ void VProperty::applyEvent()
 
 
     if (m_State == State::ERROR) {
-        std::cout << "Parsing failed\n";
+        std::cout << "Parsing failed " << (int)s << " " << (int)event << std::endl;
         return;
     }
 
-    return (this->*(m_StateFunctor[s][event]))();
+    applyActions(m_StateActions[s][event]);
 }
 
 void VObject::applyEvent()
@@ -932,24 +923,13 @@ void VObject::applyEvent()
     Event event = Event::COUNT__;
 
     if (s == State::PROPERTIES) { //FIXME remove all this
-        if (!m_pCurrentProperty) {
-            m_pCurrentProperty = new VProperty(m_pContext);
-            assert(m_pCurrentProperty->m_State != VProperty::State::ERROR);
-        }
-        assert(m_pCurrentProperty->m_State != VProperty::State::ERROR);
-
-        event = m_PropertyToEvent[m_pCurrentProperty->m_State];
-
-
-        if (event == Event::ERROR)
-            assert(false);
+        assert(m_pContext->m_CurrentProperty.m_State != VProperty::State::ERROR);
+        event = m_PropertyToEvent[m_pContext->m_CurrentProperty.m_State];
     }
-    else {
+    else
         event = charToEvent();
-        if (event == Event::ERROR)
-            assert(false);
-    }
 
+    assert(event != Event::ERROR);
     m_State = m_StateMap[s][event];
 
     if (m_State == State::ERROR) {
@@ -957,15 +937,34 @@ void VObject::applyEvent()
         return;
     }
 
-    return (this->*(m_StateFunctor[s][event]))();
+    applyActions(m_StateActions[s][event]);
 }
 
+VObject* VContext::acquireObject()
+{
+    if (m_lObjectCache.size()) {
+        auto o = m_lObjectCache.back();
+        m_lObjectCache.pop_back();
+        return o;
+    }
+    return new VObject(this);
+}
+
+void VContext::releaseObject(VObject* o)
+{
+    // reset the object
+    o->name.clear();
+    o->m_pParent = nullptr;
+    o->m_State = VObject::State::EMPTY;
+
+    m_lObjectCache.push_back(o);
+}
 
 // For unit testing without reading from the disk
-ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
+bool VContext::_test_raw(const char* content)
 {
     int pos = 3;
-    m_pCurrentObject = new VObject(this);
+    m_pCurrentObject = acquireObject();
 
     m_Window.insert(content[0], 1);
     m_Window.insert(content[1], 2);
@@ -984,16 +983,17 @@ ICSLoader::AbstractObject* VContext::_test_raw(const char* content)
 
         if ((!currentObject()) || (!isActive())) {
             std::cout << "COMPLETE!\n";
-            return nullptr;
+            return true;
         }
     }
+
+    return false;
 }
 
 bool VContext::readFile(const char* path)
 {
-    int c;
-//     FILE *file;
-//     file = fopen(path, "r");
+    char c;
+
     std::ifstream file2(path, std::ios::binary);
 
     if (file2) {
@@ -1009,10 +1009,10 @@ bool VContext::readFile(const char* path)
         file2.read(buf, sizeof(buf) / sizeof(*buf));
         int pos = 0;
 
-        m_pCurrentObject = new VObject(this);
+        m_pCurrentObject = acquireObject();
 
-        // Init the sling window
-        for (pos = 1; pos < 4; pos++) {
+        // Init the sliding window
+        for (pos = 0; pos < 3; pos++) {
             if ((c = buf[pos]) != EOF)
                 m_Window.insert(c, pos+1);
             else {
@@ -1021,13 +1021,17 @@ bool VContext::readFile(const char* path)
             }
         }
 
+        assert(!m_Window.previous());
+
         while (isActive()) {
 
             while (m_Window.room() && (c = buf[pos]) != EOF) {
                 m_Window.put(c);
                 pos++;
                 if (pos == sizeof(buf) / sizeof(*buf)) {
-                    file2.read(buf, sizeof(buf) / sizeof(*buf));
+                    if (!file2.read(buf, sizeof(buf) / sizeof(*buf))) {
+                        buf[file2.gcount()] = EOF;
+                    }
                     pos = 0;
                 }
             }
@@ -1057,7 +1061,7 @@ bool VContext::readFile(const char* path)
 
 bool ICSLoader::loadFile(const char* path)
 {
-    d_ptr->readFile(path);
+    return d_ptr->readFile(path);
 }
 
 ICSLoader::ICSLoader() : d_ptr(new VParser::VContext)
@@ -1079,17 +1083,7 @@ void ICSLoader::registerFallbackVObjectAdaptor(std::shared_ptr<AbstractVObjectAd
     d_ptr->m_FallbackAdaptors = adaptor;
 }
 
-std::atomic<unsigned> ICSLoader::transerQueueSize() const
-{
-    return {};
-}
-
-std::unique_ptr< std::list< ICSLoader::AbstractObject* > > ICSLoader::acquireTrasferQueue() const
-{
-
-}
-
-ICSLoader::AbstractObject* ICSLoader::_test_CharToObj(const char* data)
+void ICSLoader::_test_CharToObj(const char* data)
 {
     std::cout << "In test\n";
 
