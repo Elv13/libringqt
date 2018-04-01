@@ -235,7 +235,7 @@ QString ContactMethod::presenceMessage() const
 }
 
 ///Return the number
-URI ContactMethod::uri() const {
+const URI& ContactMethod::uri() const {
    // Set the Scheme now that it is know to avoid prorating ::NONE
     if (d_ptr->m_pAccount && d_ptr->m_Uri.schemeType() == URI::SchemeType::NONE) {
         switch(d_ptr->m_pAccount->protocol()) {
@@ -253,7 +253,7 @@ URI ContactMethod::uri() const {
         }
     }
 
-    return d_ptr->m_Uri ;
+    return d_ptr->m_Uri;
 }
 
 ///Return the phone number type
@@ -500,7 +500,7 @@ bool ContactMethod::haveCalled() const
 QString ContactMethod::primaryName() const
 {
    if (type() == ContactMethod::Type::TEMPORARY) {
-      return registeredName().isEmpty() ? uri() : registeredName();
+      return registeredName().isEmpty() ? URI(uri()) : registeredName();
    }
 
    //Compute the primary name
@@ -509,7 +509,7 @@ QString ContactMethod::primaryName() const
       if (d_ptr->m_hNames.size() == 1)
          ret =  d_ptr->m_hNames.constBegin().key();
       else {
-         QString toReturn = registeredName().isEmpty() ? uri() : registeredName();
+         QString toReturn = registeredName().isEmpty() ? URI(uri()) : registeredName();
          QPair<int, time_t> max = {0, 0};
 
          for (QHash<QString,QPair<int, time_t>>::const_iterator i = d_ptr->m_hNames.constBegin(); i != d_ptr->m_hNames.constEnd(); ++i) {
@@ -530,7 +530,7 @@ QString ContactMethod::primaryName() const
    }
    //Fallback: Use the URI
    if (d_ptr->m_PrimaryName_cache.isEmpty()) {
-      return registeredName().isEmpty() ? uri() : registeredName();
+      return registeredName().isEmpty() ? URI(uri()) : registeredName();
    }
 
    //Return the cached primaryname
@@ -596,7 +596,7 @@ bool ContactMethod::hasActiveVideo() const
 /// Returns the registered name if available, otherwise returns the uri
 QString ContactMethod::bestId() const
 {
-   return registeredName().isEmpty() ? uri() : registeredName();
+   return registeredName().isEmpty() ? URI(uri()) : registeredName();
 }
 
 /**

@@ -125,7 +125,7 @@ QMimeData* RingMimes::payload(const Call* c, const ContactMethod* cm, const Pers
             "</p>"
          )
          .arg( c->formattedName()                                    )
-         .arg( cm ? cm->uri() : QString()                            )
+         .arg( cm ? URI(cm->uri()) : QString()                       )
          .arg( QDateTime::fromTime_t(c->startTimeStamp()).toString() )
          .toUtf8()
       );

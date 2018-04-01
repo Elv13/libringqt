@@ -190,7 +190,7 @@ public:
    Q_ENUM(MediaAvailailityStatus)
 
    //Getters
-   URI                   uri             () const;
+   const URI&            uri             () const;
    NumberCategory*       category        () const;
    bool                  isSelf          () const;
    bool                  isTracked       () const;
