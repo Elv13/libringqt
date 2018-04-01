@@ -60,7 +60,7 @@ struct TypedStateMachine
 template<typename Enum>
 class EnumClassReordering {
 public:
-   EnumClassReordering(std::initializer_list<Enum> s);
+   constexpr EnumClassReordering(std::initializer_list<Enum> s);
 // private:
    Enum m_lData[enum_class_size<Enum>()];
 };
@@ -91,9 +91,9 @@ struct Matrix1D
    };
 
    constexpr Matrix1D(std::initializer_list< std::initializer_list<Value> > s);
-   Matrix1D(std::initializer_list< Pairs > s);
-   Matrix1D(std::initializer_list<Order> s);
-   explicit Matrix1D();
+   constexpr Matrix1D(std::initializer_list< Pairs > s);
+   constexpr Matrix1D(std::initializer_list<Order> s);
+   constexpr explicit Matrix1D();
    Matrix1D(const Matrix1D<Row,Value,A>& copy);
    ~Matrix1D();
 

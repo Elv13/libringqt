@@ -79,7 +79,7 @@ typename EnumIterator<EnumClass, from, to>::EnumClassIter EnumIterator<EnumClass
 }
 
 template<class Row, typename Value, typename Accessor>
-Matrix1D<Row,Value,Accessor>::Matrix1D() : m_lData{nullptr}
+constexpr Matrix1D<Row,Value,Accessor>::Matrix1D() : m_lData{nullptr}
 {
 }
 
@@ -119,14 +119,14 @@ constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::ini
 }
 
 template<typename Enum>
-EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
+constexpr EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
 {
    static_assert(std::is_enum<Enum>(),"Row has to be an enum class");
    assert(s.size() == enum_class_size<Enum>());
 
    //FIXME the code below isn't correct, this isn't a problem until the limit
    //is reached. This is private API, so it can wait
-   static const int longSize = sizeof(unsigned long long)*8;
+   constexpr const int longSize = sizeof(unsigned long long)*8;
    assert(enum_class_size<Enum>() < longSize -1);
 
    unsigned long long usedElements[enum_class_size<Enum>()] = {};
@@ -141,17 +141,17 @@ EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
 }
 
 template<class Row, typename Value, typename Accessor>
-Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Order > s)
+constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Order > s)
 : m_lData{} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
-      assert(s.size() == 1);
+   assert(s.size() == 1);
 
    for (const Matrix1D<Row,Value,Accessor>::Order& p : s) {
       // FIXME C++14, use static_assert and make the ctor constexpr
       assert(p.vs.size() == enum_class_size<Row>());
 
-      int reOredered[enum_class_size<Row>()],i(0);
+      int reOredered[enum_class_size<Row>()]{},i(0);
       for (const Row r : p.order.m_lData)
          reOredered[i++] = static_cast<int>(r);
 
@@ -168,12 +168,12 @@ Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value
  * they are present only once and support re-ordering
  */
 template<class Row, typename Value, typename Accessor>
-Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Pairs> s)
+constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Pairs> s)
 : m_lData{} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
 
-   static const int longSize = sizeof(unsigned long long)*8;
+   constexpr const int longSize = sizeof(unsigned long long)*8;
 
    //FIXME the code below isn't correct, this isn't a problem until the limit
    //is reached. This is private API, so it can wait
