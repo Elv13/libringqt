@@ -22,8 +22,8 @@
 
 #include "collectionextensioninterface.h"
 
-QMutex CollectionExtensionModelSpecific::m_Mutex = {};
-QMutex CollectionExtensionModelSpecific::m_InsertMutex = {};
+QMutex CollectionExtensionModelSpecific::m_Mutex {};
+QMutex CollectionExtensionModelSpecific::m_InsertMutex {};
 
 class CollectionExtensionModelPrivate
 {
