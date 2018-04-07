@@ -52,6 +52,12 @@ public:
 
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
+   /**
+    * A very bad idea, but when adding new fields to the file format, it's better
+    * than having to `if` a thousand code paths.
+    */
+   void saveEverything() const;
+
    static LocalTextRecordingCollection& instance();
 
 };

@@ -23,23 +23,109 @@
 
 // Ring
 #include <call.h>
+#include "flagutils.h"
 #include <account.h>
 #include <contactmethod.h>
 #include <individual.h>
 #include "libcard/private/event_p.h"
+#include "libcard/matrixutils.h"
+
+/**
+ * Use a second "level" is private data alongside ::EventPrivate.
+ *
+ * EventPrivate is used internally for building events and managing some shared
+ * internal metadata. It isn't the place to track the state.
+ */
+struct EventInternals
+{
+    Event::SyncState m_SyncState {Event::SyncState::NEW};
+
+    /**
+     * The action that affect the SyncState.
+     *
+     * Note that ::Event itself doesn't do much since it's the Calendar job
+     * to synchronize everything.
+     */
+    enum class EditActions {
+        MODIFY      ,
+        DELETE      ,
+        SAVE        ,
+        CONFIRM_SYNC,
+        COUNT__
+    };
+
+    Event::SyncState performAction(EditActions action);
+
+    // Attributes
+    Event* q_ptr {nullptr};
+    static const Matrix2D<Event::SyncState, EditActions, Event::SyncState> m_StateMap;
+
+    // Helper
+};
+
+#define ST Event::SyncState::
+#define EA EventInternals::EditActions
+static EnumClassReordering<EA> acts =
+{                             EA::MODIFY  ,  EA::DELETE  ,     EA::SAVE   , EA::CONFIRM_SYNC   };
+const Matrix2D<Event::SyncState, EventInternals::EditActions, Event::SyncState> EventInternals::m_StateMap = {
+{ST NEW          , {{acts, {ST NEW        , ST DISCARDED , ST SAVED       , ST ERROR        }}}},
+{ST IMPORTED     , {{acts, {ST MODIFIED   , ST DISCARDED , ST SAVED       , ST IMPORTED     }}}},
+{ST MODIFIED     , {{acts, {ST MODIFIED   , ST DISCARDED , ST SAVED       , ST MODIFIED     }}}},
+{ST RESCHEDULED  , {{acts, {ST RESCHEDULED, ST DISCARDED , ST SAVED       , ST MODIFIED     }}}},
+{ST SAVED        , {{acts, {ST MODIFIED   , ST DISCARDED , ST SAVED       , ST SYNCHRONIZED }}}},
+{ST SYNCHRONIZED , {{acts, {ST MODIFIED   , ST DISCARDED , ST SYNCHRONIZED, ST SYNCHRONIZED }}}},
+{ST DISCARDED    , {{acts, {ST ERROR      , ST ERROR     , ST ERROR       , ST DISCARDED    }}}},
+{ST CANCELLED    , {{acts, {ST ERROR      , ST DISCARDED , ST ERROR       , ST CANCELLED    }}}},
+{ST ERROR        , {{acts, {ST ERROR      , ST ERROR     , ST ERROR       , ST ERROR        }}}},
+{ST PLACEHOLDER  , {{acts, {ST ERROR      , ST ERROR     , ST ERROR       , ST ERROR        }}}}
+};
+#undef EA
+#undef ST
 
 // Note that the nullptr parent is intentional. The events are managed using
 // shared pointers.
-Event::Event(const EventPrivate& attrs) : ItemBase(nullptr), d_ptr(new EventPrivate)
+Event::Event(const EventPrivate& attrs, Event::SyncState st) : ItemBase(nullptr),
+    d_ptr(new EventPrivate)
 {
     (*d_ptr) = attrs;
     d_ptr->m_pStrongRef = QSharedPointer<Event>(this);
+    d_ptr->m_pInternals = new EventInternals();
+    d_ptr->m_pInternals->q_ptr = this;
+    d_ptr->m_pInternals->m_SyncState = st;
+
+    if (!d_ptr->m_UID.isEmpty())
+        setObjectName("Event: " + d_ptr->m_UID);
+//     Q_ASSERT(st != Event::SyncState::NEW); //TODO remove
+}
+
+void Event::rebuild(const EventPrivate& attrs, SyncState st)
+{
+    Q_ASSERT(syncState() == Event::SyncState::PLACEHOLDER);
+    Q_ASSERT(uid() == attrs.m_UID);
+    const auto i = d_ptr->m_pInternals;
+    (*d_ptr) = attrs;
+    d_ptr->m_pInternals = i;
 }
 
 Event::~Event()
 {
     d_ptr->m_pStrongRef = nullptr;
     delete d_ptr;
+}
+
+void Event::setStopTimeStamp(time_t t)
+{
+    if (syncState() == Event::SyncState::PLACEHOLDER) {
+        qWarning() << "Trying to modify an event currently loading";
+        Q_ASSERT(false);
+    }
+
+    if (t == d_ptr->m_StopTimeStamp)
+        return;
+
+    d_ptr->m_pInternals->m_SyncState = Event::SyncState::RESCHEDULED;
+
+    d_ptr->m_StopTimeStamp = t;
 }
 
 time_t Event::startTimeStamp() const
@@ -83,6 +169,8 @@ QByteArray Event::uid() const
             .arg(stopTimeStamp() - startTimeStamp())
             .arg(seed.left(std::min(seed.size(), 8)))
             .arg(accId).toLatin1();
+
+        const_cast<Event*>(this)->setObjectName("Event: " + d_ptr->m_UID);
     }
 
     return d_ptr->m_UID;
@@ -188,12 +276,33 @@ QVariant Event::getCustomProperty(Event::CustomProperties property) const
 
 void Event::setCustomProperty(Event::CustomProperties property, const QVariant& value)
 {
+    if (syncState() == Event::SyncState::PLACEHOLDER) {
+        qWarning() << "Trying to modify an event currently loading";
+        Q_ASSERT(false);
+    }
     //TODO
 }
 
 bool Event::isSaved() const
 {
-    return d_ptr->m_IsSaved;
+    switch(syncState()) {
+        case Event::SyncState::NEW:
+        case Event::SyncState::IMPORTED:
+        case Event::SyncState::MODIFIED:
+        case Event::SyncState::RESCHEDULED:
+            return false;
+        case Event::SyncState::DISCARDED:
+        case Event::SyncState::SAVED:
+        case Event::SyncState::SYNCHRONIZED:
+        case Event::SyncState::CANCELLED:
+        case Event::SyncState::ERROR:
+            return true;
+        case Event::SyncState::COUNT__:
+            Q_ASSERT(false);
+    }
+
+    Q_ASSERT(false);
+    return false;
 }
 
 QString Event::displayName() const
@@ -279,6 +388,10 @@ QVariant Event::roleData(int role) const
     return {};
 }
 
+Event::SyncState Event::syncState() const
+{
+    return d_ptr->m_pInternals->m_SyncState;
+}
 
 bool Event::hasAttendee(ContactMethod* cm) const
 {
@@ -300,4 +413,47 @@ QSharedPointer<Event> Event::ref() const
 {
     Q_ASSERT(d_ptr->m_pStrongRef);
     return d_ptr->m_pStrongRef;
+}
+
+Event::SyncState EventInternals::performAction(EventInternals::EditActions action)
+{
+    auto old = m_SyncState;
+
+    m_SyncState = m_StateMap[old][action];
+
+    if (m_SyncState != old) {
+        emit q_ptr->syncStateChanged(m_SyncState, old);
+    }
+    //
+
+    return m_SyncState;
+}
+
+bool Event::save() const
+{
+    if (ItemBase::save())
+        return d_ptr->m_pInternals->performAction(EventInternals::EditActions::SAVE) !=
+            Event::SyncState::ERROR;
+
+    return false;
+}
+
+bool Event::edit()
+{
+    if (ItemBase::edit())
+        return d_ptr->m_pInternals->performAction(EventInternals::EditActions::MODIFY) !=
+            Event::SyncState::ERROR;
+
+    return false;
+}
+
+bool Event::remove()
+{
+    d_ptr->m_Status = Event::Status::CANCELLED;
+
+    if (ItemBase::remove())
+        return d_ptr->m_pInternals->performAction(EventInternals::EditActions::DELETE) !=
+            Event::SyncState::ERROR;
+
+    return false;
 }

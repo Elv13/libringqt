@@ -119,6 +119,7 @@ SET( libringqt_LIB_SRCS
   src/media/file.cpp
   src/media/recording.cpp
   src/media/avrecording.cpp
+  src/media/attachment.cpp
   src/media/textrecording.cpp
   src/media/mimemessage.cpp
 

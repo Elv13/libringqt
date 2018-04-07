@@ -25,9 +25,11 @@
 // Ring
 #include <call.h>
 #include <account.h>
+#include <accountmodel.h>
 #include <media/recordingmodel.h>
 #include <media/recording.h>
 #include <media/textrecording.h>
+#include <localtextrecordingcollection.h>
 #include <private/textrecording_p.h>
 #include <libcard/calendar.h>
 #include <libcard/event.h>
@@ -62,44 +64,93 @@ void importHistory(LocalHistoryCollection* histo, std::function<void (const QVec
         }
     });
 
+    static QHash<Serializable::Group*, QSharedPointer<Event> > fuck;
     // Import the text messages after the first event loop (to prevent being
     // created before the accounts are loaded.
-
     QTimer::singleShot(0, []() {
-        const auto recordingCollections = Media::RecordingModel::instance().collections();
-        for (CollectionInterface* backend : qAsConst(recordingCollections)) {
-            if (backend->id() == "localtextrecording") {
-                const auto items = backend->items<Media::Recording>();
-                for (auto r : qAsConst(items)) {
-                    if (r->type() == Media::Recording::Type::TEXT) {
-                        const auto tR = static_cast<Media::TextRecording*>(r);
-                        const auto nodes = tR->d_ptr->m_lNodes;
+        // Make *sure* it's loaded if for unknown reason it is not, there will
+        // be some data corruption
+        LocalTextRecordingCollection::instance();
 
-                        Serializable::Group* g = nullptr;
+        auto callback = [] {
+            const auto recordingCollections = Media::RecordingModel::instance().collections();
 
-                        time_t oldest = 0;
-                        time_t newest = 0;
+            // Load all text recording, read all files, scan everything
+            for (CollectionInterface* backend : qAsConst(recordingCollections)) {
+                if (backend->id() == "localtextrecording") {
+                    const auto items = backend->items<Media::Recording>();
 
-                        for (auto n : qAsConst(nodes)) {
-                            if (!g && !oldest && n->m_pMessage) {
-                                oldest = n->m_pMessage->timestamp();
-                                newest = oldest;
-                            }
+                    // All text recordings (files)
+                    for (auto r : qAsConst(items)) {
+                        if (r->type() == Media::Recording::Type::TEXT) {
+                            const auto tR = static_cast<Media::TextRecording*>(r);
+                            const auto groups = tR->d_ptr->allGroups();
 
-                            if (n->m_pGroup && n->m_pGroup != g) {
-                                if (g) {
-                                    g->event();
+                            // All messages
+                            for (auto g : qAsConst(groups)) {
+                                // The event has already been loaded
+                                if (g->hasEvent()) {
+                                    Q_ASSERT(!g->eventUid.isEmpty());
+                                    continue;
                                 }
-                                g = n->m_pGroup;
-                            }
-                            if (n->m_pMessage && n->m_pMessage->timestamp() > newest) {
-                                //
+
+                                // Get the event only if it exists
+                                auto e = g->event(false);
+
+                                // If that happens, either the database is corrupted or
+                                // deleting something failed to remove the messages themselves
+                                // but succeeded in deleting the event.
+                                if (e && e->syncState() == Event::SyncState::PLACEHOLDER)
+                                    qWarning() << "An event was referenced by a text message but was not found (1)" << e->uid();
+                                else if ((!e) && !g->eventUid.isEmpty())
+                                    qWarning() << "An event was referenced by a text message but was not found (2)" << g->eventUid;
+
+                                // Create an event
+                                e = g->event(true);
+
+                                fuck[g] = e;
+
+                                // There is no event
+                                Q_ASSERT(e);
+
+                                Q_ASSERT(g->hasEvent());
                             }
                         }
                     }
                 }
             }
+
+            // If there is new groups while they are imported, it's game over
+            Serializable::Group::warnOfRaceCondition = true;
+            LocalTextRecordingCollection::instance().saveEverything();
+            Serializable::Group::warnOfRaceCondition = false;
+        };
+
+
+        int counter = 0;
+        const auto accountCount = AccountModel::instance().size();
+
+        // Wait until all calendars are loaded to limit the number of placeholder events
+        for (int i = 0; i < accountCount; i++) {
+            const auto a = AccountModel::instance()[i];
+
+            // While they currently load synchronously in the main thread, in the
+            // future this should move either to threads or use coroutines.
+            // To avoid forgetting about this, handle it anyway
+            if (!a->calendar()->isLoaded()) {
+                counter++;
+                QMetaObject::Connection conn;
+                conn = QObject::connect(a->calendar(), &Calendar::loadingFinished, a, [&conn, &counter, &callback]() {
+                    QObject::disconnect(conn);
+                    if (!--counter)
+                        callback();
+                });
+            }
         }
+
+        if (!counter)
+            callback();
+
     });
 }
 

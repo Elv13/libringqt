@@ -26,7 +26,7 @@ void VObjectAdapter<T>::setObjectFactory(std::function<T*(const std::basic_strin
 }
 
 template<typename T>
-void VObjectAdapter<T>::addPropertyHandler(char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler)
+void VObjectAdapter<T>::addPropertyHandler(const char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler)
 {
     setAbstractPropertyHandler(name, [handler, this](void* p, const std::basic_string<char>& value, const Parameters& params) {
         auto self = static_cast<T*>(p);
@@ -45,7 +45,7 @@ void VObjectAdapter<T>::setFallbackPropertyHandler(std::function<void(T* self, c
 
 template<typename T>
 template<typename T2>
-void VObjectAdapter<T>::addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler)
+void VObjectAdapter<T>::addObjectHandler(const char* name, std::shared_ptr< VObjectAdapter<T2> > handler)
 {
     //
 }

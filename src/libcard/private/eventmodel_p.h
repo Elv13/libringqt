@@ -34,4 +34,7 @@ public:
 
 
     EventModel* q_ptr;
+
+public Q_SLOTS:
+    void slotFixCache();
 };

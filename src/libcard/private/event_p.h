@@ -23,6 +23,9 @@
 // Defined in EventModel and used to keep track of the attendees
 struct EventModelNode;
 
+// "Really" private data too sensitive to be shared event in the private API
+struct EventInternals;
+
 /**
  * As used by the event aggregate.
  *
@@ -67,7 +70,6 @@ public:
     time_t m_RevTimeStamp   {0};
     uint   m_RevCounter     {0};
     QString m_CN;
-    bool m_IsSaved {false};
     Account* m_pAccount {nullptr};
     QList<Media::Attachment*> m_lAttachedFiles;
     Event::EventCategory  m_EventCategory {Event::EventCategory::CALL};
@@ -77,6 +79,8 @@ public:
     QList< QPair<ContactMethod*, QString> > m_lAttendees;
 
     EventModelNode* m_pTracker {nullptr};
+
+    EventInternals* m_pInternals {nullptr};
 
     /**
      * Use a strong ref so event managed by collections don't get accidentally

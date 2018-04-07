@@ -170,26 +170,26 @@ public:
 
     Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Media*>* > m_mMedias {{{
         /*                                            IN                                                            OUT                           */
-        /* AUDIO */ {{ new QList<Media::Media*>() /*Created lifecycle == progress*/, new QList<Media::Media*>() /*Created lifecycle == progress*/}},
-        /* VIDEO */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
-        /* TEXT  */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */}},
-        /* FILE  */ {{ new QList<Media::Media*>() /*Not implemented              */, new QList<Media::Media*>() /*Not implemented              */}},
+        /* AUDIO */ {{ new QList<Media::Media*>() /*Created lifecycle == progress*/, new QList<Media::Media*>() /*Created lifecycle == progress*/, new QList<Media::Media*>()}},
+        /* VIDEO */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>()}},
+        /* TEXT  */ {{ new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>() /*On demand                    */, new QList<Media::Media*>()}},
+        /* FILE  */ {{ new QList<Media::Media*>() /*Not implemented              */, new QList<Media::Media*>() /*Not implemented              */, new QList<Media::Media*>()}},
     }}};
 
     Matrix2D<Media::Media::Type, Media::Media::Direction, QList<Media::Recording*>* > m_mRecordings {{{
         /*                           IN                            OUT                */
-        /* AUDIO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-        /* VIDEO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-        /* TEXT  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
-        /* FILE  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* AUDIO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* VIDEO */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* TEXT  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
+        /* FILE  */ {{ new QList<Media::Recording*>(), new QList<Media::Recording*>(), new QList<Media::Recording*>()}},
     }}};
 
     Matrix2D<Media::Media::Type, Media::Media::Direction, bool > m_mIsRecording {{{
         /*              IN     OUT   */
-        /* AUDIO */ {{ false, false }},
-        /* VIDEO */ {{ false, false }},
-        /* TEXT  */ {{ false, false }},
-        /* FILE  */ {{ false, false }},
+        /* AUDIO */ {{ false, false, false }},
+        /* VIDEO */ {{ false, false, false }},
+        /* TEXT  */ {{ false, false, false }},
+        /* FILE  */ {{ false, false, false }},
     }}};
 
     static const Matrix1D<Call::LifeCycleState,function> m_mLifeCycleStateChanges;

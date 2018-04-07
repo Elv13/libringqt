@@ -28,6 +28,7 @@ class QItemSelectionModel;
 //Ring
 #include "collectionmanagerinterface.h"
 class Account;
+class Calendar;
 class EventModelPrivate;
 #include <libcard/event.h>
 
@@ -57,9 +58,12 @@ public:
 
     QItemSelectionModel* defaultSelectionModel() const;
 
-    QSharedPointer<Event> getById(const QByteArray& eventId) const;
+    QSharedPointer<Event> getById(const QByteArray& eventId, bool placeholder = false) const;
 
     static EventModel& instance();
+
+Q_SIGNALS:
+    void calendarLoaded(Calendar* cal);
 
 private:
     explicit EventModel(QObject* parent = nullptr);

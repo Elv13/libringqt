@@ -21,9 +21,7 @@
 #include <media/attachment.h>
 #include <typedefs.h>
 
-class MediaFilePrivate;
-class Call;
-class CallPrivate;
+class FilePrivate;
 
 namespace Media {
 
@@ -32,22 +30,22 @@ namespace Media {
  */
 class LIB_EXPORT File : public ::Media::Media, public ::Media::Attachment
 {
-   friend class ::CallPrivate;
+   Q_OBJECT
 public:
+    explicit File(const QUrl& path, BuiltInTypes t, QMimeType* mt);
+    virtual ~File();
 
-   virtual Media::Type type() override;
+    virtual Media::Type type() override;
 
-   // The attachment properties
-   virtual QMimeType* mimeType() const override;
-   virtual QUrl path          () const override;
-   virtual QByteArray role    () const override;
-
+    // The attachment properties
+    virtual QMimeType* mimeType() const override;
+    virtual QUrl path          () const override;
+    virtual BuiltInTypes type  () const override;
 
 private:
-   File(Call* parent, const Media::Direction direction);
-   virtual ~File();
 
-   MediaFilePrivate* d_ptr;
+    FilePrivate* d_ptr;
+    Q_DECLARE_PRIVATE(File)
 };
 
 }

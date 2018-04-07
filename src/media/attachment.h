@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -34,9 +34,28 @@ class LIB_EXPORT Attachment
 {
 public:
 
+    /**
+     * A finite number of supported attachments for an event.
+     *
+     * In accordance to rfc5545 section 3.2.8, each attachment has a MIME types
+     * (rfc2046), a variable number of parameters and a value (either has an
+     * URI, as a payload or as a CID).
+     *
+     * @warning only add new entries at the end to preserve the file format
+     */
+    enum class BuiltInTypes {
+        OTHER            = 0, /*!< Unknown, handle them as normal files       */
+        AUDIO_RECORDING  = 1, /*!< .wav file extracted from calls             */
+        TEXT_RECORDING   = 2, /*!< .json of the text messages                 */
+        EMBEDDED         = 3, /*!< Anything that's embedded into the timeline */
+        TRANSFERRED_FILE = 4, /*!< Files download from the peer               */
+    };
+
     virtual QMimeType* mimeType() const = 0;
 
     virtual QUrl path() const = 0;
+
+    virtual BuiltInTypes type() const = 0;
 
     /**
      * The role of this file within the ::Event it is serialized in.
@@ -44,7 +63,7 @@ public:
      * This is a custom concept used to create the right kind of asset when
      * parsing the serialized events.
      */
-    virtual QByteArray role() const = 0;
+    virtual QByteArray role() const;
 
 };
 

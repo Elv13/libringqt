@@ -57,8 +57,9 @@ public:
    Q_ENUMS(State)
 
    enum class Direction {
-      IN , /*!< The media is coming from the peer */
-      OUT, /*!< The media is going to the peer    */
+      IN , /*!< The media is coming from the peer   */
+      OUT, /*!< The media is going to the peer      */
+      BOTH, /*!< This is a purely interactive media */
       COUNT__
    };
    Q_ENUMS(Direction)
@@ -92,6 +93,7 @@ protected:
    virtual bool terminate();
 
    Media(Call* parent, const Direction direction);
+   explicit Media(QObject* parent = nullptr);
 
 Q_SIGNALS:
    void stateChanged(const Media::State state, const Media::State previous);

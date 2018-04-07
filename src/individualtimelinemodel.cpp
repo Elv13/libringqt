@@ -506,8 +506,11 @@ IndividualTimelineNode* IndividualTimelineModelPrivate::getGroup(TextMessageNode
     ret->m_pGroup  = g;
     ret->m_pParent = cat;
 
+    const auto range = g->timeRange();
+
     // Take the oldest message (for consistency)
-    ret->m_StartTime = ret->m_pGroup->begin;
+    ret->m_StartTime = range.first;
+    ret->m_EndTime   = range.second;
 
     Q_ASSERT(g->size());
 
@@ -541,7 +544,7 @@ void IndividualTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
     insert(ret, ret->m_StartTime, group->m_lChildren, q_ptr->createIndex(group->m_Index, 0, group));
 
     // Update the group timelapse
-    group->m_EndTime = ret->m_StartTime;
+    group->m_EndTime = std::max(ret->m_StartTime, group->m_EndTime);
     const auto idx   = q_ptr->createIndex(group->m_Index, 0, group);
     emit q_ptr->dataChanged(idx, idx);
 }

@@ -47,9 +47,10 @@ namespace Serializable {
 class Group;
 class Peers;
 
-class Group {
+class Group final
+{
 public:
-    Group(Account* a) : m_pAccount(a) {}
+    explicit Group(Account* a);
     ~Group();
 
     /**Also link upward to avoid duplicating the peers metadata in each group
@@ -69,40 +70,53 @@ public:
     int nextGroupId;
     ///The unique identifier of the event associated with this text message group
     QByteArray eventUid;
-    ///The timestamp of the first group entry
-    time_t begin {0};
-    ///The timestamp of the last group entry
-    time_t end   {0};
 
     /// The account that owns this group, ignore the possible cardinality issues
-    Account* m_pAccount {nullptr};
+    mutable Account* m_pAccount {nullptr};
 
-    QSharedPointer<Event> event();
+    QSharedPointer<Event> event(bool allowPlaceholders = true) const;
     void addMessage(MimeMessage* m, ContactMethod* peer);
 
     /// Prevent the list from being modified directly.
     const QList<QPair<MimeMessage*, ContactMethod*> >& messagesRef() const;
+
+    QPair<time_t, time_t> timeRange() const;
 
     int size() const;
 
     /// Create an event;
     Event* buildEvent();
 
+    bool hasEvent() const;
+
     /// Keep the peers in sync
     void addPeer(ContactMethod* cm);
 
     /// Keep the event in sync
-    void reloadAttendees();
+    void reloadAttendees() const;
 
-    void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s);
+    void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s, const QString& path);
     void write(QJsonObject       &json) const;
 
+    /**
+     *HACK The old file format did not have the concept of events and if new
+     * groups are created during importation, it will go very, very wrong
+     */
+    static bool warnOfRaceCondition;
+
 private:
+    ///The timestamp of the first group entry
+    time_t begin {0};
+    ///The timestamp of the last group entry
+    time_t end   {0};
+
+    QString m_Path;
+
     ///All messages from this chunk (the ContactMethod is the author of incoming messages)
     QList< QPair<MimeMessage*, ContactMethod*> > messages;
 
     ///Due to complex ownership, give no direct access
-    QSharedPointer<Event> m_pEvent;
+    mutable QSharedPointer<Event> m_pEvent;
 };
 
 class Peers {
@@ -123,7 +137,7 @@ public:
     ///Keep a cache of the peers sha1
     QHash<QString,ContactMethod*> m_hSha1;
 
-    void read (const QJsonObject &json);
+    void read (const QJsonObject &json, const QString& path);
     void write(QJsonObject       &json) const;
 
     QJsonArray toSha1Array() const;
@@ -152,7 +166,7 @@ public:
     static QSharedPointer<Serializable::Peers> peer(ContactMethod* cm);
     static QSharedPointer<Serializable::Peers> peers(const QSet<ContactMethod*>& cms);
     static QSharedPointer<Serializable::Peers> fromSha1(const QByteArray& sha1);
-    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, ContactMethod* cm = nullptr);
+    static QSharedPointer<Serializable::Peers> fromJson(const QJsonObject& obj, const QString& path, ContactMethod* cm = nullptr);
 private:
     static QHash<QByteArray, QWeakPointer<Serializable::Peers>> m_hPeers;
 };

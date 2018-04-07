@@ -52,7 +52,7 @@ protected:
     explicit AbstractVObjectAdaptor(int typeId);
 
     void setAbstractFactory(std::function<void*(const std::basic_string<char>& object_type)> f);
-    void setAbstractPropertyHandler(char* name, std::function<void(void* p, const std::basic_string<char>& value, const Parameters& params)> handler);
+    void setAbstractPropertyHandler(const char* name, std::function<void(void* p, const std::basic_string<char>& value, const Parameters& params)> handler);
 
     void setAbstractFallbackPropertyHandler(std::function<
         void(void* p, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)
@@ -93,11 +93,11 @@ public:
      */
     void setObjectFactory(std::function<T*(const std::basic_string<char>& object_type)> factory);
 
-    void addPropertyHandler(char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler);
+    void addPropertyHandler(const char* name, std::function<void(T* self, const std::basic_string<char>& value, const Parameters& params)> handler);
     void setFallbackPropertyHandler(std::function<void(T* self, const std::basic_string<char>& name, const std::basic_string<char>& value, const Parameters& params)> handler);
 
     template<typename T2 = T>
-    void addObjectHandler(char* name, std::shared_ptr< VObjectAdapter<T2> > handler);
+    void addObjectHandler(const char* name, std::shared_ptr< VObjectAdapter<T2> > handler);
 
     template<typename T2 = T>
     void setFallbackObjectHandler(std::function<void(T* self, T2* object, const std::basic_string<char>& name)> handler);
@@ -219,7 +219,7 @@ public:
      * For each object name (VCARD, VCALENDAR, VEVENT, etc), set an adaptor
      * to map external object to the serialized representation.
      */
-    void registerVObjectAdaptor(char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor);
+    void registerVObjectAdaptor(const char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor);
 
     /**
      * When an object name isn't registered, this handler will be used.

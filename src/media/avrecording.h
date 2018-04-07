@@ -61,7 +61,7 @@ public:
    // Attachment properties
    virtual QUrl path          () const override;
    virtual QMimeType* mimeType() const override;
-   virtual QByteArray role    () const override;
+   virtual BuiltInTypes type  () const override;
 
    virtual QVariant roleData(int role) const override;
 

@@ -275,6 +275,7 @@ bool EventModel::addItemCallback(const Event* item)
     }
 
     d_ptr->m_hUids[item->uid()] = const_cast<Event*>(item);
+    connect(item, &QObject::destroyed, d_ptr, &EventModelPrivate::slotFixCache);
 
     beginInsertRows({} ,d_ptr->m_lEvent.size(),d_ptr->m_lEvent.size());
 
@@ -325,10 +326,21 @@ bool EventModel::removeItemCallback(const Event* item)
     return true;
 }
 
-QSharedPointer<Event> EventModel::getById(const QByteArray& eventId) const
+QSharedPointer<Event> EventModel::getById(const QByteArray& eventId, bool placeholder) const
 {
+    if (eventId.isEmpty())
+        return nullptr;
+
     if (auto e = d_ptr->m_hUids.value(eventId))
         return e->d_ptr->m_pStrongRef;
+
+    if (placeholder && !eventId.isEmpty()) {
+        auto e = new Event({}, Event::SyncState::PLACEHOLDER);
+        connect(e, &QObject::destroyed, d_ptr, &EventModelPrivate::slotFixCache);
+        e->d_ptr->m_UID = eventId;
+        d_ptr->m_hUids[eventId] = e;
+        return e->d_ptr->m_pStrongRef;
+    }
 
     return nullptr;
 }
@@ -410,6 +422,13 @@ void EventModelPrivate::mergeEvents(ContactMethod* dest, ContactMethod* src)
       dest->d_ptr->m_Events.m_pOldest->startTimeStamp()
     ))
         dest->d_ptr->m_Events.m_pOldest = src->d_ptr->m_Events.m_pOldest;
+}
+
+void EventModelPrivate::slotFixCache()
+{
+    auto e = qobject_cast<Event*>(sender());
+
+    m_hUids.remove(e->uid());
 }
 
 #include <eventmodel.moc>

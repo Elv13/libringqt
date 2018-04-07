@@ -19,6 +19,8 @@
 
 // Qt
 #include <QtCore/QCryptographicHash>
+#include <QtCore/QMimeDatabase>
+#include <QtCore/QUrl>
 
 // Ring
 #include "contactmethod.h"
@@ -29,6 +31,7 @@
 #include "eventmodel.h"
 #include "libcard/private/event_p.h"
 #include "libcard/calendar.h"
+#include "media/file.h"
 #include "availableaccountmodel.h"
 #include "phonedirectorymodel.h"
 
@@ -113,7 +116,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromSha1(const QB
     return m_hPeers[sha1];
 }
 
-QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, ContactMethod* cm)
+QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, const QString& path, ContactMethod* cm)
 {
     //Check if the object is already loaded
     QStringList sha1List;
@@ -136,7 +139,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
 
     //Load from json
     QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
-    p->read(json);
+    p->read(json, path);
 
     //TODO Remove in 2016
     //Some older versions of the file don't store necessary values, fix that
@@ -146,6 +149,13 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
     return p;
 }
 
+
+bool Serializable::Group::warnOfRaceCondition = false;
+
+Serializable::Group::Group(Account* a) : m_pAccount(a)
+{
+    Q_ASSERT(!warnOfRaceCondition);
+}
 
 Serializable::Group::~Group()
 {
@@ -190,7 +200,7 @@ void Serializable::Group::addMessage(MimeMessage* m, ContactMethod* peer)
     messages.append({m, peer});
 }
 
-void Serializable::Group::reloadAttendees()
+void Serializable::Group::reloadAttendees() const
 {
     if (m_pParent && m_pEvent) {
         m_pEvent->d_ptr->m_lAttendees.clear();
@@ -224,17 +234,21 @@ void Serializable::Group::addPeer(ContactMethod* cm)
     reloadAttendees();
 }
 
-void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s)
+void Serializable::Group::read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s, const QString& path)
 {
     id            = json[QStringLiteral("id")           ].toInt   ();
     nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
     nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
     eventUid      = json[QStringLiteral("eventUid")     ].toString().toLatin1();
     type          = static_cast<MimeMessage::Type>(json[QStringLiteral("type")].toInt());
+    m_Path        = path;
 
     QJsonArray a = json[QStringLiteral("messages")].toArray();
     for (int i = 0; i < a.size(); ++i) {
         QJsonObject o = a[i].toObject();
+
+        if (o.isEmpty())
+            continue;
 
         ContactMethod* cm = nullptr;
 
@@ -250,16 +264,35 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
 
 void Serializable::Group::write(QJsonObject &json) const
 {
-    json[QStringLiteral("id")            ] = id                    ;
-    json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1         ;
-    json[QStringLiteral("nextGroupId")   ] = nextGroupId           ;
-    json[QStringLiteral("type")          ] = static_cast<int>(type);
-    json[QStringLiteral("eventUid")      ] = QString(eventUid)     ;
+    // This is really not supposed to happen anymore
+    if (!m_pEvent)
+        qWarning() << "Trying to save a text message group without an event" << eventUid;
+
+    Q_ASSERT(eventUid == event()->uid());
+
+    json[QStringLiteral("id")            ] = id                     ;
+    json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1          ;
+    json[QStringLiteral("nextGroupId")   ] = nextGroupId            ;
+    json[QStringLiteral("type")          ] = static_cast<int>(type) ;
+
+    // Deleting messages have strange ways to fail, this mitigates one of the
+    // two main race
+    if (event()->syncState() == Event::SyncState::PLACEHOLDER) {
+        qWarning() << "An event cannot be saved if it doesn't exist";
+    }
+    else {
+        Q_ASSERT(event()->collection());
+        json[QStringLiteral("eventUid")] = QString(event()->uid());
+    }
 
     QJsonArray a;
     for (const auto& m : qAsConst(messages)) {
         QJsonObject o;
         m.first->write(o);
+
+        if (o.isEmpty())
+            continue;
+
         if (m.second)
             o[QStringLiteral("authorSha1")] = QString(m.second->sha1());
 
@@ -274,7 +307,7 @@ Serializable::Peers::~Peers()
         delete g;
 }
 
-void Serializable::Peers::read (const QJsonObject &json)
+void Serializable::Peers::read(const QJsonObject &json, const QString& path)
 {
     QJsonArray as = json[QStringLiteral("sha1s")].toArray();
     for (int i = 0; i < as.size(); ++i) {
@@ -295,7 +328,7 @@ void Serializable::Peers::read (const QJsonObject &json)
         // file is resaved. Tracking the problem source is not worth it as the
         // data will be worthless.
         if (o[QStringLiteral("uri")].toString().isEmpty()) {
-            qWarning() << "\n\n\nCorrupted chat history entry: Missing URI" << o;
+            qWarning() << "Corrupted chat history entry: Missing URI" << o;
             continue;
         }
 
@@ -327,8 +360,9 @@ void Serializable::Peers::read (const QJsonObject &json)
     QJsonArray arr = json[QStringLiteral("groups")].toArray();
     for (int i = 0; i < arr.size(); ++i) {
         QJsonObject o = arr[i].toObject();
+
         Group* group = new Group(a);
-        group->read(o,m_hSha1);
+        group->read(o, m_hSha1, path);
 
         // Work around a bug in older chat conversation where whe authorSha1
         // wasn't set.
@@ -339,7 +373,12 @@ void Serializable::Peers::read (const QJsonObject &json)
             group->reloadAttendees();
         }
 
-        groups.append(group);
+        if (!group->size())
+            delete group;
+        else {
+            groups.append(group);
+            Q_ASSERT(group->timeRange().first);
+        }
     }
 }
 
@@ -355,14 +394,22 @@ QJsonArray Serializable::Peers::toSha1Array() const
 
 void Serializable::Peers::write(QJsonObject &json) const
 {
-    json[QStringLiteral("sha1s")] = toSha1Array();
 
     QJsonArray a;
     for (const Group* g : groups) {
         QJsonObject o;
         g->write(o);
+
+        if (o.isEmpty())
+            continue;
+
         a.append(o);
     }
+
+    if (a.isEmpty())
+        return;
+
+    json[QStringLiteral("sha1s")] = toSha1Array();
     json[QStringLiteral("groups")] = a;
 
     QJsonArray a3;
@@ -378,23 +425,45 @@ Event* Serializable::Group::buildEvent()
     //
 }
 
+bool Serializable::Group::hasEvent() const
+{
+    return m_pEvent && m_pEvent->syncState() != Event::SyncState::PLACEHOLDER;
+}
+
+QPair<time_t, time_t> Serializable::Group::timeRange() const
+{
+//     end = 0;
+//     begin = std::numeric_limits<time_t>::max();
+//
+//     //TODO add something to detect if the cache are still valid
+//     for (const auto& p : qAsConst(messages)) {
+//         begin = std::min(p.first()->timestamp(), begin);
+//     }
+
+    return {begin, end};
+}
+
 /**
  * It is important to keep in mind the events are owned by the calendars, not
  * the text recordings or its internal data structures.
  */
-QSharedPointer<Event> Serializable::Group::event()
+QSharedPointer<Event> Serializable::Group::event(bool allowPlaceholders) const
 {
     if (m_pEvent)
         return m_pEvent;
 
     // In the future, this should work most of the time. However existing data
     // and some obscure core paths may still handle unregistered events
-    m_pEvent = EventModel::instance().getById(eventUid);
-
-    if (m_pEvent) {
+    if ((m_pEvent = EventModel::instance().getById(eventUid, allowPlaceholders))) {
         reloadAttendees();
         return m_pEvent;
     }
+
+    // There is a bunch of reason why this can happen, most of them are races.
+    // A valid use case would be to cleanup a messy history or someone who
+    // import backups from another device.
+    if (Q_UNLIKELY(!eventUid.isEmpty()))
+        qWarning() << "Trying to import an event that seems to already exists, but was not found" << eventUid;
 
     // Try to fix the errors of the past and fix a suitable account.
     if (!m_pAccount)
@@ -413,7 +482,20 @@ QSharedPointer<Event> Serializable::Group::event()
     // Build an event;
     EventPrivate ev;
 
+    Q_ASSERT(!m_Path.isEmpty());
+
+    static QMimeType* t = nullptr;
+    if (!t) {
+        QMimeDatabase db;
+        t = new QMimeType(db.mimeTypeForFile("foo.json"));
+    }
+
+    auto path = new Media::File(
+        m_Path, Media::Attachment::BuiltInTypes::TEXT_RECORDING, t
+    );
+
     ev.m_EventCategory  = Event::EventCategory::MESSAGE_GROUP;
+    ev.m_Status         = Event::Status::FINAL;
     ev.m_StartTimeStamp = begin;
     ev.m_StopTimeStamp  = end;
     ev.m_RevTimeStamp   = end;
@@ -427,6 +509,13 @@ QSharedPointer<Event> Serializable::Group::event()
     }
 
     m_pEvent = m_pAccount->calendar()->addEvent(ev);
+
+    m_pEvent->attachFile(path);
+
+    Q_ASSERT(!path->path().isEmpty());
+
+    const_cast<Group*>(this)->eventUid = m_pEvent->uid();
+
 
 //     Q_ASSERT((!m_pParent) || !m_pEvent->d_ptr->m_lAttendees.size() == m_pParent->peers.size());
 

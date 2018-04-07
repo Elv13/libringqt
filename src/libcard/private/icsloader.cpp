@@ -70,7 +70,7 @@ void AbstractVObjectAdaptor::setAbstractFactory(std::function<void*(const std::b
     d_ptr->m_Factory = f;
 }
 
-void AbstractVObjectAdaptor::setAbstractPropertyHandler(char* name, PropertyHandler handler)
+void AbstractVObjectAdaptor::setAbstractPropertyHandler(const char* name, PropertyHandler handler)
 {
     d_ptr->m_hPropertyMap[name] = handler;
 }
@@ -843,12 +843,20 @@ void VObject::applyActions(VObject::Action a)
             m_pContext->push(1);
             break;
         case Action::PUSH:
+            // Helps debugging a lot
+            //std::cout << "PUSH " << m_pContext->m_CurrentProperty.m_Name << " ===> "
+            //  << m_pContext->m_CurrentProperty.m_Value << std::endl;
+
+
             /// Detect when the property is an object
             if (m_pContext->m_CurrentProperty.m_Name.substr(0, 5) == "BEGIN") {
                 m_pContext->stashObject();
             }
             else if (m_pContext->m_CurrentProperty.m_Name.substr(0, 3) == "END") {
                 m_pContext->popObject();
+                // Helps debugging a lot
+                //std::cout << "END OBJ" << m_pContext->m_CurrentProperty.m_Name << " ===> "
+                //    << m_pContext->m_CurrentProperty.m_Value << std::endl;
             }
             else {
                 m_pContext->handleProperty();
@@ -909,7 +917,7 @@ void VProperty::applyEvent()
 
 
     if (m_State == State::ERROR) {
-        std::cout << "Parsing failed " << (int)s << " " << (int)event << std::endl;
+        std::cout << "Parsing failed " << (int)s << " " << (int)event << " : " << m_pContext->m_Buffer << std::endl;
         return;
     }
 
@@ -996,65 +1004,68 @@ bool VContext::readFile(const char* path)
 
     std::ifstream file2(path, std::ios::binary);
 
-    if (file2) {
+    if (!file2)
+        return false;
 
-        // Implement an inlined buffer along with __attribute__((always_inline))
-        //
-        // The first implementation had serious issues with using iostream
-        // own buffer due to the overhead of the function call not being
-        // inlined reliably (100x too slow, not ~5%). The proper inlining of
-        // this type of state machine is absolutely necessary to get any
-        // performance out of state machine based parsers.
-        char buf[4096];
-        file2.read(buf, sizeof(buf) / sizeof(*buf));
-        int pos = 0;
+    // Implement an inlined buffer along with __attribute__((always_inline))
+    //
+    // The first implementation had serious issues with using iostream
+    // own buffer due to the overhead of the function call not being
+    // inlined reliably (100x too slow, not ~5%). The proper inlining of
+    // this type of state machine is absolutely necessary to get any
+    // performance out of state machine based parsers.
+    char buf[4096];
+    int pos(0), eofAt(sizeof(buf) / sizeof(*buf) + 1);
 
-        m_pCurrentObject = acquireObject();
-
-        // Init the sliding window
-        for (pos = 0; pos < 3; pos++) {
-            if ((c = buf[pos]) != EOF)
-                m_Window.insert(c, pos+1);
-            else {
-                file2.close();
-                return false;
-            }
-        }
-
-        assert(!m_Window.previous());
-
-        while (isActive()) {
-
-            while (m_Window.room() && (c = buf[pos]) != EOF) {
-                m_Window.put(c);
-                pos++;
-                if (pos == sizeof(buf) / sizeof(*buf)) {
-                    if (!file2.read(buf, sizeof(buf) / sizeof(*buf))) {
-                        buf[file2.gcount()] = EOF;
-                    }
-                    pos = 0;
-                }
-            }
-
-            if (c == EOF || !c)
-                m_IsActive = false;
-
-            if (!isActive())
-                break;
-
-            currentObject()->applyEvent();
-        }
-
-        file2.close();
-
-        if ((!currentObject()) || (!isActive())) {
-            std::cout << "COMPLETE!\n";
-        }
-
-        return true;
+    if (!file2.read(buf, sizeof(buf) / sizeof(*buf))) {
+        eofAt = file2.gcount();
+        buf[file2.gcount()] = EOF;
     }
 
-    return false;
+    m_pCurrentObject = acquireObject();
+
+    // Init the sliding window
+    for (pos = 0; pos < 3; pos++) {
+        if ((c = buf[pos]) != EOF)
+            m_Window.insert(c, pos+1);
+        else {
+            file2.close();
+            return false;
+        }
+    }
+
+    assert(!m_Window.previous());
+
+    while (isActive()) {
+        while (m_Window.room() && (c = buf[pos]) != EOF) {
+            m_Window.put(c);
+            if (++pos == sizeof(buf) / sizeof(*buf)) {
+                if (!file2.read(buf, sizeof(buf) / sizeof(*buf))) {
+                    eofAt = file2.gcount();
+                    buf[file2.gcount()] = EOF;
+                }
+                pos = 0;
+            }
+        }
+
+        if (c == EOF || !c || pos >= eofAt)
+            m_IsActive = false;
+
+        if (!isActive())
+            break;
+
+        //std::cout << "char " << buf[pos] << " " << pos << " " << eofAt << std::endl;
+
+        currentObject()->applyEvent();
+    }
+
+    file2.close();
+
+    if ((!currentObject()) || (!isActive())) {
+        std::cout << "COMPLETE!\n";
+    }
+
+    return true;
 }
 
 }
@@ -1073,7 +1084,7 @@ ICSLoader::~ICSLoader()
     delete d_ptr;
 }
 
-void ICSLoader::registerVObjectAdaptor(char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor)
+void ICSLoader::registerVObjectAdaptor(const char* name, std::shared_ptr<AbstractVObjectAdaptor> adaptor)
 {
     d_ptr->m_Adaptors[name] = adaptor;
 }

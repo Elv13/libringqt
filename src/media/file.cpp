@@ -24,36 +24,42 @@
 //Ring
 #include <call.h>
 
-class MediaFilePrivate
+class FilePrivate
 {
+public:
+    QUrl m_Path;
+    Media::Attachment::BuiltInTypes m_Type {Media::Attachment::BuiltInTypes::OTHER};
+    QMimeType* m_pMimeType {nullptr};
 };
 
-Media::File::File(Call* parent, const Media::Direction direction) : Media::Media(parent, direction), d_ptr(new MediaFilePrivate())
+Media::File::File(const QUrl& path, BuiltInTypes t, QMimeType* mt) : d_ptr(new FilePrivate)
 {
-   Q_ASSERT(parent);
+    d_ptr->m_Path      = path;
+    d_ptr->m_pMimeType = mt;
+    d_ptr->m_Type      = t;
 }
 
 Media::Media::Type Media::File::type()
 {
-   return Media::Media::Type::FILE;
+    return Media::Media::Type::FILE;
 }
 
 Media::File::~File()
 {
-   delete d_ptr;
+    delete d_ptr;
 }
 
 QMimeType* Media::File::mimeType() const
 {
-    return nullptr;
+    return d_ptr->m_pMimeType;
 }
 
 QUrl Media::File::path() const
 {
-    return {};
+    return d_ptr->m_Path;
 }
 
-QByteArray Media::File::role() const
+Media::Attachment::BuiltInTypes Media::File::type() const
 {
-    return {};
+    return d_ptr->m_Type;
 }

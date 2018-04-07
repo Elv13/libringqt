@@ -67,7 +67,9 @@ public:
     static bool toStream(Account* a, std::basic_iostream<char>* device);
     static bool toStream(Media::Attachment* file, std::basic_iostream<char>* device);
 
-    static bool save(Calendar* cal, std::function<void(bool)> cb);
+    static bool save(Calendar* cal, std::function<void(bool)> cb = nullptr);
+    static bool create(Calendar* cal, std::function<void(bool)> cb = nullptr);
+    static bool rebuild(Calendar* cal, std::function<void(bool)> cb = nullptr);
+    static void append(Calendar* cal, Event* event, std::function<void(bool)> cb);
 
-    static void appendToCalendar(Calendar* cal, Event* event, std::function<void(bool)> cb);
 };

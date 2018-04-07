@@ -67,7 +67,7 @@ namespace Serializable {
 class LIB_EXPORT Event : public ItemBase
 {
     Q_OBJECT
-    friend class Calendar; // factory
+    friend class Calendar; // factory, synchronization
     friend class CalendarPrivate; // factory
     friend class CalendarEditor; // serialization
     friend class Serializable::Group; // update the timestamps on new messages
@@ -77,6 +77,25 @@ class LIB_EXPORT Event : public ItemBase
 public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)
     Q_PROPERTY(time_t stopTimeStamp  READ stopTimeStamp  CONSTANT)
+
+    /**
+     * The (local) serialization state of the event.
+     *
+     * Note that this is parallel to the multi-device synchronization states.
+     */
+    enum class SyncState {
+        NEW         , /*!< When an event isn't serialized at all                            */
+        IMPORTED    , /*!< An event comes from a remote source and isn't locally serialized */
+        MODIFIED    , /*!< An event is serialized, but not with the most recent data        */
+        RESCHEDULED , /*!< An event is serialized, but is modified (including the time_t)   */
+        SAVED       , /*!< An event is serialized and it up to date                         */
+        SYNCHRONIZED, /*!< Exists locally, but received an update from another device       */
+        DISCARDED   , /*!< An event is serialized, but has to be deleted                    */
+        CANCELLED   , /*!< An event was dropped before it ever was serialized               */
+        ERROR       , /*!< Something impossible happened (ie: synchronize discarded events) */
+        PLACEHOLDER , /*!< The event was referred before it was loader                      */
+        COUNT__
+    };
 
     enum Roles {
         REVISION_COUNT = static_cast<int>(Ring::Role::UserRole) + 1,
@@ -124,18 +143,6 @@ public:
     Q_ENUM(Event::EventCategory)
 
     /**
-     * A finite number of supported attachments for an event.
-     *
-     * In accordance to rfc5545 section 3.2.8, each attachment has a MIME types
-     * (rfc2046), a variable number of parameters and a value (either has an
-     * URI, as a payload or as a CID).
-     */
-    enum class SupportedAttachments {
-        AUDIO_RECORDING ,
-        TRANSFERRED_FILE,
-    };
-
-    /**
      * These properties are (allowed) extensions to the iCal file format to
      * handle use case unique to Ring.
      */
@@ -163,7 +170,7 @@ public:
     enum class Status {
         TENTATIVE , // 3.8.1.11
         IN_PROCESS, // 3.8.1.11 "IN-PROCESS"
-        CANCELLED , // 3.8.1.11
+        CANCELLED , // 3.8.1.11 These events should be discarded later
         FINAL     , // 3.8.1.11
         X_MISSED  , // non-standard
     };
@@ -173,8 +180,12 @@ public:
     time_t startTimeStamp() const;
     time_t stopTimeStamp () const;
 
+    void setStopTimeStamp(time_t t);
+
     EventCategory eventCategory() const;
     Type type() const;
+
+    SyncState syncState() const;
 
     bool isSaved() const;
 
@@ -276,6 +287,11 @@ public:
      */
     QSharedPointer<Event> ref() const;
 
+    // ItemBase override
+    Q_INVOKABLE virtual bool save  () const override;
+    Q_INVOKABLE virtual bool edit  ()       override;
+    Q_INVOKABLE virtual bool remove()       override;
+
     static QByteArray categoryName(EventCategory cat);
     static QByteArray statusName(Status st);
     static EventCategory categoryFromName(const QByteArray& name);
@@ -285,13 +301,25 @@ public:
 
     QVariant roleData(int role) const;
 
+Q_SIGNALS:
+    void syncStateChanged(SyncState newState, SyncState oldState);
+
 private:
     /**
      * The `attrs` are read only and used to load the initial (and often
      * immutable) properties. This class is intended to be managed/created by
      * the Calendars, so there is no point in making any of this public.
      */
-    explicit Event(const EventPrivate& attrs);
+    explicit Event(const EventPrivate& attrs, SyncState st);
+
+    /**
+     * Let the factory turn placeholders into "real" objects.
+     */
+    void rebuild(const EventPrivate& attrs, SyncState st);
+
+    /**
+     * To be used by the factory to turn placeholders into "active" events.
+     */
 
     EventPrivate* d_ptr;
     Q_DECLARE_PRIVATE(Event)

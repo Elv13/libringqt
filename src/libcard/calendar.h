@@ -36,8 +36,10 @@ class CalendarPrivate;
  * Calendars are collections of events and the various associated metadatas.
  *
  */
-class LIB_EXPORT Calendar : public CollectionInterface
+class LIB_EXPORT Calendar : public QObject, public CollectionInterface
 {
+    Q_OBJECT
+
 public:
     explicit Calendar(CollectionMediator<Event>* mediator, Account* a);
     virtual ~Calendar();
@@ -69,7 +71,21 @@ public:
 
     QSharedPointer<Event> eventAt(int position) const;
 
+    int unsavedCount() const;
+
+    /**
+     * Return a sorted list of unsaved events (oldest first)
+     *
+     * @warning, this function can be CPU intensive due to the sorting
+     */
+    QList<QSharedPointer<Event> > unsavedEvents() const;
+
     virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
+
+    bool isLoaded() const;
+
+Q_SIGNALS:
+    void loadingFinished();
 
 private:
     CalendarPrivate* d_ptr;

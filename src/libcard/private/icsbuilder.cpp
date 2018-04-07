@@ -64,11 +64,11 @@ class ICSBuilderPrivate final
  */
 bool ICSBuilder::toStream(Media::Attachment* file, std::basic_iostream<char>* device)
 {
-    (*device) << "ATTACH;FMTTYPE=" << file->mimeType()->name().data();
+    (*device) << "ATTACH;FMTTYPE=" << file->mimeType()->name().toStdString();
 
-    const char* path = file->path().toString().toLatin1().data();
+    const auto path = file->path().toString().toStdString();
 
-    (*device) << ";X_RING_ROLE=\"" << file->role().data() << "\":" << path << '\n';
+    (*device) << ";X_RING_ROLE=\"" << file->role().toStdString() << "\":" << path << '\n';
 }
 
 /**
@@ -83,14 +83,14 @@ bool ICSBuilder::toStream(ContactMethod* cm, const QString& name, std::basic_ios
     if (name != cm->uri().userinfo())
         (*device) << ";CN=\"" <<(
             name.isEmpty() ? cm->bestName() : name
-        ).toLatin1().data() <<'\"';
+        ).toStdString() <<'\"';
 
     if (cm->contact() && !cm->contact()->uid().isEmpty())
-        (*device) << ";UID=" << cm->contact()->uid().data();
+        (*device) << ";UID=" << cm->contact()->uid().toStdString();
 
     (*device) << ':' << cm->uri().format (
         URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME
-    ).toLatin1().data() << '\n';
+    ).toStdString() << '\n';
 
     return true;
 }
@@ -101,31 +101,38 @@ bool ICSBuilder::toStream(Account* a, std::basic_iostream<char>* device)
 
     (*device) << (
         a->registeredName().isEmpty() ?
-            a->displayName().toLatin1().data() : a->registeredName().toLatin1().data()
+            a->displayName().toStdString() : a->registeredName().toStdString()
     ) <<'\"';
 
-    (*device) << ";X_RING_ACCOUNTID=" << a->id().data() << ':';
+    (*device) << ";X_RING_ACCOUNTID=" << a->id().toStdString() << ':';
     const auto uri = a->contactMethod()->uri().format (
         URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME
     );
 
     (*device) << a->contactMethod()->uri().format (
         URI::Section::SCHEME | URI::Section::USER_INFO | URI::Section::HOSTNAME
-    ).toLatin1().data() << '\n';
+    ).toStdString() << '\n';
 
     return true;
 }
 
 bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
 {
-    (*device) << "BEGIN:" << Event::typeName(e->type()).data() <<"\n";
+    // This is a current convention in libringqt to discard
+    if (e->status() == Event::Status::CANCELLED) {
+        return false;
+    }
 
-    (*device) << "UID:" << e->uid().data() << '\n';
-    (*device) << "CATEGORIES:" << Event::categoryName(e->eventCategory()).data() << '\n';
+    (*device) << "BEGIN:" << Event::typeName(e->type()).toStdString() <<"\n";
 
-    (*device) << "DTSTART;TZID=" << e->timezone()->id().data() << ':' << e->startTimeStamp() << '\n';
-    (*device) << "DTEND;TZID=" << e->timezone()->id().data() << ':' << e->stopTimeStamp() << '\n';
-    (*device) << "DTSTAMP;TZID=" << e->timezone()->id().data() << ':' << e->revTimeStamp() << '\n';
+    (*device) << "UID:" << e->uid().toStdString() << '\n';
+    (*device) << "CATEGORIES:" << Event::categoryName(e->eventCategory()).toStdString() << '\n';
+
+    const auto tzid = e->timezone()->id().toStdString();
+
+    (*device) << "DTSTART;TZID=" << tzid << ':' << e->startTimeStamp() << '\n';
+    (*device) << "DTEND;TZID=" << tzid << ':' << e->stopTimeStamp() << '\n';
+    (*device) << "DTSTAMP;TZID=" << tzid << ':' << e->revTimeStamp() << '\n';
 
     // A custom property as defined in rfc5545#section-3.8.4.1
     // In theory it can be reverse engineered from the ORGANIZER/ATTENDEE
@@ -135,7 +142,7 @@ bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
             "INCOMING" : "OUTGOING"
     ) << '\n';
 
-    (*device) << "STATUS:" << Event::statusName(e->status()).data() << '\n';
+    (*device) << "STATUS:" << Event::statusName(e->status()).toStdString() << '\n';
 
     toStream(e->account(), device);
 
@@ -149,7 +156,7 @@ bool ICSBuilder::toStream(Event* e, std::basic_iostream<char>* device)
     for (const auto file : qAsConst(attachedFiles))
         toStream(file, device);
 
-    (*device) << "END:" << Event::typeName(e->type()).data() <<"\n";
+    (*device) << "END:" << Event::typeName(e->type()).toStdString() <<"\n";
 
     return true;
 }
@@ -160,7 +167,7 @@ bool ICSBuilder::toStream(const QTimeZone* tz, std::basic_iostream<char>* device
     // by third party products
 
     (*device) << "BEGIN:VTIMEZONE\n";
-    (*device) << "TZID:" << tz->id().data() << '\n';
+    (*device) << "TZID:" << tz->id().toStdString() << '\n';
     (*device) << "END:VTIMEZONE\n";
 
     return false;
@@ -183,7 +190,7 @@ bool ICSBuilder::toStream(Calendar* cal, std::basic_iostream<char>* device)
     for (const auto tz : qAsConst(timezones))
         toStream(tz, device);
 
-
+    Q_ASSERT(device->good());
 
     (*device) << "END:VCALENDAR\n";
 }
@@ -197,18 +204,76 @@ bool ICSBuilder::toStream(Calendar* cal, std::basic_iostream<char>* device)
  * After a long time, it might be a good idea to squash everything back into
  * single VEVENTs instead of keeping multiple updated versions.
  */
-bool ICSBuilder::save(Calendar* cal, std::function<void(bool)> cb)
+bool ICSBuilder::create(Calendar* cal, std::function<void(bool)> cb)
 {
     std::fstream fs(cal->path().toLatin1(),
         std::fstream::out
     );
 
-    if (!fs.good())
+    if (!fs.good()) {
+        if (cb)
+            cb(false);
         return false;
+    }
 
     toStream(cal, &fs);
 
+    if (cb)
+        cb(true);
+
     fs.close();
+
+    return true;
+}
+
+bool ICSBuilder::save(Calendar* cal, std::function<void(bool)> cb)
+{
+    // If it doesn't exist, build it
+    {
+        std::ifstream infile(cal->path().toLatin1());
+        if (!infile.good())
+            return rebuild(cal);
+    }
+
+    // If there is nothing to save, then don't
+    if (!cal->unsavedCount()) {
+        if (cb)
+            cb(true);
+        return true;
+    }
+
+    std::fstream fs(cal->path().toLatin1(),
+        std::fstream::binary |
+        std::fstream::in     |
+        std::fstream::out
+    );
+
+    if (!fs.good()) {
+        if (cb)
+            cb(false);
+        return false;
+    }
+
+    static int len = -strlen("\nEND:VCALENDAR");
+
+    // Move before the END:VCALENDAR
+    fs.seekp(len, std::ios_base::end); //TODO actually check if it's right
+
+    const auto unsaved = cal->unsavedEvents();
+
+
+    for (auto e : qAsConst(unsaved)) {
+        toStream(e.data(), &fs);
+    }
+
+    fs << "END:VCALENDAR\n";
+
+    fs.close();
+
+    if (cb)
+        cb(true);
+
+    return true;
 }
 
 /**
@@ -217,18 +282,18 @@ bool ICSBuilder::save(Calendar* cal, std::function<void(bool)> cb)
  * This is more efficient than rewriting the file everytime. Do not use this
  * for synchronization, use DAV objects.
  */
-void ICSBuilder::appendToCalendar(Calendar* cal, Event* event, std::function<void(bool)> cb)
+void ICSBuilder::append(Calendar* cal, Event* event, std::function<void(bool)> cb)
 {
 
     // If the file does not exist, do a full save
     {
         std::ifstream infile(cal->path().toLatin1());
         if (!infile.good()) {
-            save(cal, [event, cb, cal](bool success) {
+            create(cal, [event, cb, cal](bool success) {
                 if (!success)
                     cb(false);
                 else if (!event->isSaved())
-                    appendToCalendar(cal, event, cb);
+                    append(cal, event, cb);
                 else
                     cb(true);
             });
@@ -257,4 +322,57 @@ void ICSBuilder::appendToCalendar(Calendar* cal, Event* event, std::function<voi
     fs << "END:VCALENDAR\n";
 
     fs.close();
+}
+
+/**
+ * Replace the old file with a new file instead of using an append-only strategy.
+ *
+ * This is important for 2 reasons:
+ *
+ *  * Faster load time because the file database is more compact
+ *  * Lower CPU because there is less elements
+ *  * Lower CPU because elements are indexed and therefor use the "fast path"
+ *    instead of sorting at runtime
+ *  * Waste less of the limited mobile device local storage
+ *  * Improve load time
+ *
+ * Note that this is I/O and CPU intensive and should be avoided if the file is
+ * already mostly clean.
+ */
+bool ICSBuilder::rebuild(Calendar* cal, std::function<void(bool)> cb)
+{
+    if (!create(cal, nullptr))
+        return false;
+
+    std::fstream fs(cal->path().toLatin1(),
+        std::fstream::binary |
+        std::fstream::in     |
+        std::fstream::out
+    );
+
+    if (!fs.good()) {
+        if (cb)
+            cb(false);
+        return false;
+    }
+
+    static int len = -strlen("\nEND:VCALENDAR");
+
+    // Move before the END:VCALENDAR
+    fs.seekp(len, std::ios_base::end); //TODO actually check if it's right
+
+    for (int i = 0; i < cal->size(); i++) {
+        if (auto e = cal->eventAt(i)) {
+            toStream(e.data(), &fs);
+        }
+    }
+
+    fs << "END:VCALENDAR\n";
+
+    fs.close();
+
+    if (cb)
+        cb(true);
+
+    return true;
 }

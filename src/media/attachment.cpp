@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2015-2016 by Savoir-faire Linux                               *
+ *   Copyright (C) 2015-2016 by Savoir-faire Linux                          *
  *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com> *
  *                                                                          *
  *   This library is free software; you can redistribute it and/or          *
@@ -15,47 +15,27 @@
  *   You should have received a copy of the GNU General Public License      *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
-#pragma once
+#include "attachment.h"
 
-#include <typedefs.h>
+namespace Media {
 
-#include <collectioninterface.h>
-
-class ItemBasePrivate;
-
-/**
- * Base class for all items to be managed in CollectionInterface
- */
-class LIB_EXPORT ItemBase : public QObject
+QByteArray Attachment::role() const
 {
-   Q_OBJECT
+    switch(type()) {
+        case Attachment::BuiltInTypes::OTHER:
+            return "other";
+        case Attachment::BuiltInTypes::AUDIO_RECORDING:
+            return "audio_recording";
+        case Attachment::BuiltInTypes::TEXT_RECORDING:
+            return "text_recording";
+        case Attachment::BuiltInTypes::EMBEDDED:
+            return "embedded";
+        case Attachment::BuiltInTypes::TRANSFERRED_FILE:
+            return "transferred_file";
+    }
 
-   friend class CollectionInterface;
-public:
-   //Constructor
-   explicit ItemBase(QObject* parent = nullptr);
-   virtual ~ItemBase();
-   virtual CollectionInterface* collection() const final;
+    Q_ASSERT(false);
+    return {};
+}
 
-   //Extension system
-   template<typename T2>
-   bool hasExtenstion() const;
-
-   template<typename T2>
-   T2* extension() const;
-
-   //Mutator methods
-   Q_INVOKABLE virtual bool save    () const;
-   Q_INVOKABLE virtual bool edit    ()      ;
-   Q_INVOKABLE virtual bool remove  ()      ;
-   Q_INVOKABLE virtual bool isActive() const;
-
-   //Setter
-   void setCollection(CollectionInterface* backend);
-
-private:
-   ItemBasePrivate* d_ptr;
-};
-
-#include <itembase.hpp>
-
+}

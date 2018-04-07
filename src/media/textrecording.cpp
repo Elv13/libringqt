@@ -364,15 +364,24 @@ int Media::TextRecording::count() const { return size(); }
 QHash<QByteArray,QByteArray> Media::TextRecordingPrivate::toJsons() const
 {
     QHash<QByteArray,QByteArray> ret;
+
+    int groups = 0;
+
     for (const auto p : qAsConst(m_lAssociatedPeers)) {
         p->hasChanged = false;
 
         QJsonObject output;
         p->write(output);
 
+        groups += p->groups.size();
+
         QJsonDocument doc(output);
         ret[p->sha1s[0].toLatin1()] = doc.toJson();
     }
+
+    // Try to GC empty section when messages are deleted
+    if (!groups)
+        return {};
 
    return ret;
 }
@@ -382,7 +391,20 @@ time_t Media::TextRecording::lastUsed() const
     return d_ptr->m_LastUsed;
 }
 
-Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, ContactMethod* cm, CollectionInterface* backend)
+QList<Serializable::Group*> Media::TextRecordingPrivate::allGroups() const
+{
+    QList<Serializable::Group*> ret;
+
+    for (auto p : qAsConst(m_lAssociatedPeers)) {
+        for (auto g : qAsConst(p->groups)) {
+            ret << g;
+        }
+    }
+
+    return ret;
+}
+
+Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& items, const QString& path, ContactMethod* cm, CollectionInterface* backend)
 {
 
     // If it's loaded from a JSON file, assume it's consumed until proven otherwise
@@ -393,7 +415,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
 
     //Load the history data
     for (const QJsonObject& obj : qAsConst(items))
-        t->d_ptr->m_lAssociatedPeers << SerializableEntityManager::fromJson(obj,cm);
+        t->d_ptr->m_lAssociatedPeers << SerializableEntityManager::fromJson(obj, path, cm);
 
     //Create the model
     bool statusChanged = false; // if a msg status changed during parsing, we need to re-save the model
@@ -499,7 +521,7 @@ Media::TextRecording* Media::TextRecording::fromPath(const QString& path, const 
         return nullptr;
     }
 
-    return fromJson({loadDoc.object()}, nullptr, backend);
+    return fromJson({loadDoc.object()}, path, nullptr, backend);
 }
 
 void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* cm)

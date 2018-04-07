@@ -146,9 +146,9 @@ QMimeType* Media::AVRecording::mimeType() const
     return t;
 }
 
-QByteArray Media::AVRecording::role() const
+Media::Attachment::BuiltInTypes Media::AVRecording::type() const
 {
-    return "recording";
+    return Attachment::BuiltInTypes::AUDIO_RECORDING;
 }
 
 ///Get the current playback position (0.0 if not playing)

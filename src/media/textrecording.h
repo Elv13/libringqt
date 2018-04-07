@@ -111,7 +111,7 @@ public:
    //Constructor
    explicit TextRecording(const Recording::Status status);
    virtual ~TextRecording();
-   static TextRecording* fromJson(const QList<QJsonObject>& items, ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
+   static TextRecording* fromJson(const QList<QJsonObject>& items, const QString& path, ContactMethod* cm = nullptr, CollectionInterface* backend = nullptr);
    static TextRecording* fromPath(const QString& path, const Metadata& metadata, CollectionInterface* backend = nullptr);
 
    //Getter

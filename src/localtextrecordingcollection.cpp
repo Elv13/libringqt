@@ -60,12 +60,13 @@ public:
     virtual bool addNew     ( Media::Recording*       item ) override;
     virtual bool addExisting( const Media::Recording* item ) override;
     QString fetch(const QByteArray& sha1);
+    QString path(const QByteArray& sha1);
 
     void clearAll();
     void loadStat();
 
-private:
     virtual QVector<Media::Recording*> items() const override;
+private:
     //Attributes
     QVector<Media::Recording*> m_lNumbers;
 };
@@ -158,6 +159,11 @@ bool LocalTextRecordingEditor::save(const Media::Recording* recording)
         }
     }
 
+    if (ret.isEmpty()) {
+        //TODO delete the file if it exists (requires to keep track of them)
+        return false;
+    }
+
     return true;
 }
 
@@ -209,9 +215,14 @@ bool LocalTextRecordingEditor::addExisting(const Media::Recording* item)
     return false;
 }
 
+QString LocalTextRecordingEditor::path(const QByteArray& sha1)
+{
+    return QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/" + sha1 + ".json";
+}
+
 QString LocalTextRecordingEditor::fetch(const QByteArray& sha1)
 {
-    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/text/" + sha1 + ".json");
+    QFile file(path(sha1));
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return {};
@@ -357,8 +368,10 @@ bool LocalTextRecordingCollection::fetch( const QList<CollectionInterface::Eleme
 
 Media::TextRecording* LocalTextRecordingCollection::fetchFor(const ContactMethod* cm)
 {
+    auto e = static_cast<LocalTextRecordingEditor*>(editor<Media::Recording>());
+
     const QByteArray& sha1 = cm->sha1();
-    const QString content = static_cast<LocalTextRecordingEditor*>(editor<Media::Recording>())->fetch(sha1);
+    const QString content = e->fetch(sha1);
 
     if (content.isEmpty())
         return nullptr;
@@ -372,7 +385,7 @@ Media::TextRecording* LocalTextRecordingCollection::fetchFor(const ContactMethod
     }
 
     Media::TextRecording* r = Media::TextRecording::fromJson(
-        {loadDoc.object()}, const_cast<ContactMethod*>(cm), this
+        {loadDoc.object()}, e->path(sha1), const_cast<ContactMethod*>(cm), this
     );
 
     editor<Media::Recording>()->addExisting(r);
@@ -391,4 +404,13 @@ Media::TextRecording* LocalTextRecordingCollection::createFor(const ContactMetho
     }
 
     return r;
+}
+
+void LocalTextRecordingCollection::saveEverything() const
+{
+    const auto itms = items<Media::Recording>();
+
+    for (Media::Recording *recording : qAsConst(itms)) {
+        recording->save();
+    }
 }

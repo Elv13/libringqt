@@ -307,6 +307,27 @@ bool MimeMessage::performAction(const DRing::Account::MessageStates daemonState)
 
 void MimeMessage::write(QJsonObject &json) const
 {
+    QJsonArray a;
+
+    static auto toIgnore = QStringLiteral("x-ring/ring.profile.vcard");
+
+    int validPayloads = 0;
+
+    for (const Payload* p : qAsConst(d_ptr->m_lPayloads)) {
+        // The vCards are saved elsewhere
+        if (p->mimeType.left(toIgnore.size()) == toIgnore)
+            return;
+
+        QJsonObject o;
+        p->write(o);
+        a.append(o);
+        validPayloads++;
+    }
+
+    if (!validPayloads)
+        return;
+
+    json[QStringLiteral("payloads")] = a;
     json[QStringLiteral("timestamp")     ] = static_cast<int>(d_ptr->m_TimeStamp);
     json[QStringLiteral("authorSha1")    ] = d_ptr->authorSha1;
     json[QStringLiteral("direction")     ] = static_cast<int>(d_ptr->m_Direction);
@@ -314,16 +335,6 @@ void MimeMessage::write(QJsonObject &json) const
     json[QStringLiteral("isRead")        ] = status() == State::READ;
     json[QStringLiteral("id")            ] = QString::number(d_ptr->m_Id);
     json[QStringLiteral("deliveryStatus")] = static_cast<int>(d_ptr->m_Status);
-
-    QJsonArray a;
-
-    for (const Payload* p : qAsConst(d_ptr->m_lPayloads)) {
-        QJsonObject o;
-        p->write(o);
-        a.append(o);
-    }
-
-    json[QStringLiteral("payloads")] = a;
 }
 
 const QRegularExpression MimeMessagePrivate::m_linkRegex = QRegularExpression(QStringLiteral("((?>(?>https|http|ftp|ring):|www\\.)(?>[^\\s,.);!>]|[,.);!>](?!\\s|$))+)"),

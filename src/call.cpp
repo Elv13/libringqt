@@ -1162,7 +1162,9 @@ Media::Media* MediaTypeInference::safeMediaCreator(Call* c, Media::Media::Type t
       case Media::Media::Type::TEXT :
          return c->d_ptr->mediaFactory<Media::Text>(d);
       case Media::Media::Type::FILE :
-         return c->d_ptr->mediaFactory<Media::File>(d);
+         Q_ASSERT(false); //TODO create a session object as a Call superclass
+         break;
+         //return c->d_ptr->mediaFactory<Media::File>(d);
       case Media::Media::Type::COUNT__:
          break;
    }
