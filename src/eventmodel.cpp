@@ -20,6 +20,7 @@
 
 //Ring
 #include "account.h"
+#include "individual.h"
 #include "private/contactmethod_p.h"
 #include "libcard/event.h"
 #include "libcard/private/event_p.h"
@@ -38,6 +39,7 @@ struct EventModelNode {
     EventModelNode* m_pNextByContactMethod     {nullptr};
     EventModelNode* m_pPreviousByContactMethod {nullptr};
     EventModelNode* m_pNextByIndividual        {nullptr};
+    EventModelNode* m_pPreviousByIndividual    {nullptr};
 
     /**
      * Once events are sorted, insert them sorted.
@@ -48,25 +50,37 @@ struct EventModelNode {
         NONE = 0x0,
         CM   = 0x1 << 0,
         IND  = 0x1 << 1,
-    } m_SortMode {SortMode::NONE};
+    };
+
+    FlagPack<SortMode> m_SortMode {SortMode::NONE};
 };
 
-int cmp(EventModelNode *a, EventModelNode *b) {
+struct ContactMethodEvents
+{
+    Event* m_pNewest       {nullptr}; /*!< Highest stopTimeStamp () */
+    Event* m_pOldest       {nullptr}; /*!< Lowest  startTimeStamp() */
+    Event* m_pUnsortedTail {nullptr}; /*!< Lastest addition         */
+    Event* m_pUnsortedHead {nullptr}; /*!< The first addition       */
+
+    //FIXME this sucks and forces to track all events all the time.
+    // Given events are synchronized across devices, they are expected in semi
+    // random order and keeping a sorted vector for every CM becomes very
+    // CPU/memcpy intensive.
+    // I have no time left until release to finish the lazy sorting system.
+    QVector< QSharedPointer<Event> > m_lEvents;
+};
+
+inline static int cmp(EventModelNode *a, EventModelNode *b) {
     return a->m_pEvent->startTimeStamp() - b->m_pEvent->startTimeStamp();
 }
 
-/*
-* This is the actual sort function. Notice that it returns the new
-* head of the list. (It has to, because the head will not
-* generally be the same element after the sort.) So unlike sorting
-* an array, where you can do
-*
-*     sort(myarray);
-*
-* you now have to do
-*
-*     list = listsort(mylist);
-*/
+/**
+ * FIXME
+ *
+ * The idea behind this was to keep the events in a linked list as long as
+ * possible because sorting them isn't required 99% of the time. But it's
+ * incomplete and would take too long to fix.
+ */
 
 /*
  * This file is copyright 2001 Simon Tatham.
@@ -92,6 +106,11 @@ int cmp(EventModelNode *a, EventModelNode *b) {
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+template<
+    EventModelNode* EventModelNode::*next     = &EventModelNode::m_pNextByContactMethod    ,
+    EventModelNode* EventModelNode::*previous = &EventModelNode::m_pPreviousByContactMethod,
+    EventModelNode::SortMode         mode     = EventModelNode::SortMode::CM
+>
 EventModelNode* listsort(EventModelNode *list, bool is_circular, bool is_double) {
     EventModelNode *p, *q, *e, *tail, *oldhead;
     int insize, nmerges, psize, qsize, i;
@@ -101,7 +120,7 @@ EventModelNode* listsort(EventModelNode *list, bool is_circular, bool is_double)
     * NULL immediately.
     */
     if (!list)
-    return NULL;
+        return NULL;
 
     insize = 1;
 
@@ -118,13 +137,15 @@ EventModelNode* listsort(EventModelNode *list, bool is_circular, bool is_double)
             /* step `insize' places along from p */
             q = p;
             psize = 0;
+
             for (i = 0; i < insize; i++) {
                 psize++;
-        if (is_circular)
-            q = (q->m_pNextByContactMethod == oldhead ? NULL : q->m_pNextByContactMethod);
-        else
-            q = q->m_pNextByContactMethod;
-                if (!q) break;
+
+                if (is_circular)
+                    q = (q->*(next) == oldhead ? NULL : q->*(next));
+                else
+                    q = q->*(next);
+                        if (!q) break;
             }
 
             /* if q hasn't fallen off end, we have two lists to merge */
@@ -135,47 +156,54 @@ EventModelNode* listsort(EventModelNode *list, bool is_circular, bool is_double)
 
                 /* decide whether next element of merge comes from p or q */
                 if (psize == 0) {
-            /* p is empty; e must come from q. */
-            e = q; q = q->m_pNextByContactMethod; qsize--;
-            if (is_circular && q == oldhead) q = NULL;
-        } else if (qsize == 0 || !q) {
-            /* q is empty; e must come from p. */
-            e = p; p = p->m_pNextByContactMethod; psize--;
-            if (is_circular && p == oldhead) p = NULL;
-        } else if (cmp(p,q) <= 0) {
-            /* First element of p is lower (or same);
-            * e must come from p. */
-            e = p; p = p->m_pNextByContactMethod; psize--;
-            if (is_circular && p == oldhead) p = NULL;
-        } else {
-            /* First element of q is lower; e must come from q. */
-            e = q; q = q->m_pNextByContactMethod; qsize--;
-            if (is_circular && q == oldhead) q = NULL;
-        }
+                    /* p is empty; e must come from q. */
+                    e = q; q = q->*(next); qsize--;
+                    if (is_circular && q == oldhead)
+                        q = NULL;
+                } else if (qsize == 0 || !q) {
+                    /* q is empty; e must come from p. */
+                    e = p; p = p->*(next); psize--;
+                    if (is_circular && p == oldhead)
+                        p = NULL;
+                } else if (cmp(p,q) <= 0) {
+                    /* First element of p is lower (or same);
+                    * e must come from p. */
+                    e = p; p = p->*(next); psize--;
+                    if (is_circular && p == oldhead)
+                        p = NULL;
+                } else {
+                    /* First element of q is lower; e must come from q. */
+                    e = q; q = q->*(next); qsize--;
+                    if (is_circular && q == oldhead)
+                        q = NULL;
+                }
 
-                /* add the next element to the merged list */
-        if (tail) {
-            tail->m_pNextByContactMethod = e;
-        } else {
-            list = e;
-        }
-        if (is_double) {
-            /* Maintain reverse pointers in a doubly linked list. */
-            e->m_pPreviousByContactMethod = tail;
-        }
-        tail = e;
+                        /* add the next element to the merged list */
+                if (tail) {
+                    tail->*(next) = e;
+                } else {
+                    list = e;
+                }
+                if (is_double) {
+                    /* Maintain reverse pointers in a doubly linked list. */
+                    e->*(previous) = tail;
+                }
+                tail = e;
             }
+
+            p->m_SortMode |= mode;
+            q->m_SortMode |= mode;
 
             /* now p has stepped `insize' places along, and q has too */
             p = q;
         }
 
         if (is_circular) {
-            tail->m_pNextByContactMethod = list;
+            tail->*(next) = list;
             if (is_double)
-            list->m_pPreviousByContactMethod = tail;
+                list->*(previous) = tail;
         } else {
-            tail->m_pNextByContactMethod = NULL;
+            tail->*(next) = NULL;
         }
 
         /* If we have done only one merge, we're finished. */
@@ -235,6 +263,8 @@ QHash<int,QByteArray> EventModel::roleNames() const
         roles[Event::Roles::UPDATE_TIMESTAMP] = "updateTimestamp";
         roles[Event::Roles::EVENT_CATEGORY  ] = "eventCategory";
         roles[Event::Roles::DIRECTION       ] = "direction";
+        roles[Event::Roles::HAS_AV_RECORDING] = "hasAVRecording";
+        roles[Event::Roles::STATUS          ] = "status";
     }
 
     return roles;
@@ -294,15 +324,19 @@ bool EventModel::addItemCallback(const Event* item)
     // Update the ContactMethod and handle sorting (if any)
     for (auto pair : qAsConst(item->d_ptr->m_lAttendees)) {
         auto cm = pair.first; //TODO C++17
-        if ((!cm->d_ptr->m_Events.m_pOldest) || cm->d_ptr->m_Events.m_pOldest->startTimeStamp() > item->startTimeStamp()) {
-            cm->d_ptr->m_Events.m_pOldest = const_cast<Event*>(item);
+
+        if (!cm->d_ptr->m_pEvents)
+            cm->d_ptr->m_pEvents = new ContactMethodEvents;
+
+        if ((!cm->d_ptr->m_pEvents->m_pOldest) || cm->d_ptr->m_pEvents->m_pOldest->startTimeStamp() > item->startTimeStamp()) {
+            cm->d_ptr->m_pEvents->m_pOldest = const_cast<Event*>(item);
         }
 
         // Update the unsorted Event_by_CM linked list
-        if (cm->d_ptr->m_Events.m_pUnsortedTail) {
-            Q_ASSERT(cm->d_ptr->m_Events.m_pUnsortedTail->d_ptr->m_pTracker);
+        if (cm->d_ptr->m_pEvents->m_pUnsortedTail) {
+            Q_ASSERT(cm->d_ptr->m_pEvents->m_pUnsortedTail->d_ptr->m_pTracker);
 
-            auto tail = cm->d_ptr->m_Events.m_pUnsortedTail->d_ptr->m_pTracker;
+            auto tail = cm->d_ptr->m_pEvents->m_pUnsortedTail->d_ptr->m_pTracker;
 
             Q_ASSERT(!tail->m_pNextByContactMethod);
 
@@ -310,11 +344,17 @@ bool EventModel::addItemCallback(const Event* item)
             n->m_pPreviousByContactMethod = tail;
         }
 
-        cm->d_ptr->m_Events.m_pUnsortedTail = const_cast<Event*>(item);
+        cm->d_ptr->m_pEvents->m_pUnsortedTail = const_cast<Event*>(item);
 
-        if ((!cm->d_ptr->m_Events.m_pNewest) || cm->d_ptr->m_Events.m_pNewest->stopTimeStamp() <= item->stopTimeStamp()) {
-            cm->d_ptr->m_Events.m_pNewest = const_cast<Event*>(item);
+        if ((!cm->d_ptr->m_pEvents->m_pNewest) || cm->d_ptr->m_pEvents->m_pNewest->stopTimeStamp() <= item->stopTimeStamp()) {
+            cm->d_ptr->m_pEvents->m_pNewest = const_cast<Event*>(item);
         }
+
+        //FIXME someday, do better than that
+        cm->d_ptr->m_pEvents->m_lEvents << item->d_ptr->m_pStrongRef;
+
+        emit cm->eventAdded(const_cast<Event*>(item)->ref());
+        emit cm->individual()->eventAdded(const_cast<Event*>(item)->ref());
     }
 
     return true;
@@ -322,7 +362,12 @@ bool EventModel::addItemCallback(const Event* item)
 
 bool EventModel::removeItemCallback(const Event* item)
 {
-    Q_UNUSED(item)
+    for (auto pair : qAsConst(item->d_ptr->m_lAttendees)) {
+        auto cm = pair.first; //TODO C++17
+        emit cm->eventDetached(const_cast<Event*>(item)->ref());
+        emit cm->individual()->eventDetached(const_cast<Event*>(item)->ref());
+    }
+
     return true;
 }
 
@@ -363,18 +408,34 @@ QSharedPointer<Event> EventModel::getById(const QByteArray& eventId, bool placeh
  *
  *
  */
-void EventModelPrivate::sortContactMethod(ContactMethod* cm)
+void EventModelPrivate::sort(ContactMethod* cm)
 {
     if (!cm)
         return;
 
-    if (!cm->d_ptr->m_Events.m_pUnsortedHead)
+    if (!cm->d_ptr->m_pEvents)
+        cm->d_ptr->m_pEvents = new ContactMethodEvents;
+
+    if (!cm->d_ptr->m_pEvents->m_pUnsortedHead)
         return;
 
-    Q_ASSERT(cm->d_ptr->m_Events.m_pUnsortedTail);
-    Q_ASSERT(cm->d_ptr->m_Events.m_pUnsortedHead->d_ptr->m_pTracker);
+    Q_ASSERT(cm->d_ptr->m_pEvents->m_pUnsortedTail);
+    Q_ASSERT(cm->d_ptr->m_pEvents->m_pUnsortedHead->d_ptr->m_pTracker);
 
-    listsort(cm->d_ptr->m_Events.m_pUnsortedHead->d_ptr->m_pTracker, false, false);
+    listsort(cm->d_ptr->m_pEvents->m_pUnsortedHead->d_ptr->m_pTracker, false, false);
+
+//     SortMode
+}
+
+/// Same as above, for on the invididual granularity
+void EventModelPrivate::sort(Individual* ind)
+{
+//     listsort <
+//         &EventModelNode::m_pNextByIndividual,
+//         &EventModelNode::m_pPreviousByIndividual,
+//         EventModelNode::SortMode::IND
+//     >
+//     (cm->d_ptr->m_pEvents->m_pUnsortedHead->d_ptr->m_pTracker, false, false);
 }
 
 /**
@@ -387,41 +448,47 @@ void EventModelPrivate::sortContactMethod(ContactMethod* cm)
 void EventModelPrivate::mergeEvents(ContactMethod* dest, ContactMethod* src)
 {
     // The source has no events, there is nothing to do
-    if (!src->d_ptr->m_Events.m_pUnsortedHead)
+    if (!src->d_ptr->m_pEvents || !src->d_ptr->m_pEvents->m_pUnsortedHead)
         return;
 
     // The destination has no events, use the source ones
-    if (!dest->d_ptr->m_Events.m_pUnsortedHead) {
-        dest->d_ptr->m_Events = src->d_ptr->m_Events;
+    if (dest->d_ptr->m_pEvents && (!dest->d_ptr->m_pEvents->m_pUnsortedHead) && src->d_ptr->m_pEvents) {
+        (*dest->d_ptr->m_pEvents) = (*src->d_ptr->m_pEvents);
         return;
     }
+    else if (src->d_ptr->m_pEvents && !dest->d_ptr->m_pEvents) {
+        dest->d_ptr->m_pEvents = src->d_ptr->m_pEvents;
+        return;
+    }
+    else if (!dest->d_ptr->m_pEvents)
+        dest->d_ptr->m_pEvents = new ContactMethodEvents;
 
     // If that happens, there is a race condition when inserting events
     // This is not the right place to fix it, it's already too late
-    Q_ASSERT(src->d_ptr->m_Events.m_pUnsortedHead->d_ptr->m_pTracker);
+    Q_ASSERT(src->d_ptr->m_pEvents->m_pUnsortedHead->d_ptr->m_pTracker);
 
     // Unsorted merge (append)
-    for (auto e = src->d_ptr->m_Events.m_pUnsortedHead->d_ptr->m_pTracker; e; e = e->m_pNextByContactMethod) {
-        dest->d_ptr->m_Events.m_pUnsortedTail->d_ptr->m_pTracker->m_pNextByContactMethod = e;
+    for (auto e = src->d_ptr->m_pEvents->m_pUnsortedHead->d_ptr->m_pTracker; e; e = e->m_pNextByContactMethod) {
+        dest->d_ptr->m_pEvents->m_pUnsortedTail->d_ptr->m_pTracker->m_pNextByContactMethod = e;
 
-        e->m_pPreviousByContactMethod = dest->d_ptr->m_Events.m_pUnsortedTail->d_ptr->m_pTracker;
+        e->m_pPreviousByContactMethod = dest->d_ptr->m_pEvents->m_pUnsortedTail->d_ptr->m_pTracker;
 
-        dest->d_ptr->m_Events.m_pUnsortedTail = e->m_pEvent;
+        dest->d_ptr->m_pEvents->m_pUnsortedTail = e->m_pEvent;
     }
 
-    if (src->d_ptr->m_Events.m_pNewest && (
-      (!dest->d_ptr->m_Events.m_pNewest) ||
-      src->d_ptr->m_Events.m_pNewest->stopTimeStamp() >
-      dest->d_ptr->m_Events.m_pNewest->stopTimeStamp()
+    if (src->d_ptr->m_pEvents->m_pNewest && (
+      (!dest->d_ptr->m_pEvents->m_pNewest) ||
+      src->d_ptr->m_pEvents->m_pNewest->stopTimeStamp() >
+      dest->d_ptr->m_pEvents->m_pNewest->stopTimeStamp()
     ))
-        dest->d_ptr->m_Events.m_pNewest = src->d_ptr->m_Events.m_pNewest;
+        dest->d_ptr->m_pEvents->m_pNewest = src->d_ptr->m_pEvents->m_pNewest;
 
-    if (src->d_ptr->m_Events.m_pOldest && (
-      (!dest->d_ptr->m_Events.m_pOldest) ||
-      src->d_ptr->m_Events.m_pOldest->startTimeStamp() <
-      dest->d_ptr->m_Events.m_pOldest->startTimeStamp()
+    if (src->d_ptr->m_pEvents->m_pOldest && (
+      (!dest->d_ptr->m_pEvents->m_pOldest) ||
+      src->d_ptr->m_pEvents->m_pOldest->startTimeStamp() <
+      dest->d_ptr->m_pEvents->m_pOldest->startTimeStamp()
     ))
-        dest->d_ptr->m_Events.m_pOldest = src->d_ptr->m_Events.m_pOldest;
+        dest->d_ptr->m_pEvents->m_pOldest = src->d_ptr->m_pEvents->m_pOldest;
 }
 
 void EventModelPrivate::slotFixCache()
@@ -429,6 +496,56 @@ void EventModelPrivate::slotFixCache()
     auto e = qobject_cast<Event*>(sender());
 
     m_hUids.remove(e->uid());
+}
+
+QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const
+{
+    return {};
+}
+
+QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const
+{
+    return {};
+}
+
+QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const
+{
+    return {};
+}
+
+QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const
+{
+    return {};
+}
+
+QSharedPointer<Event> EventModel::oldest(const ContactMethod* cm) const
+{
+    if (!cm->d_ptr->m_pEvents)
+        return nullptr;
+
+    if (!cm->d_ptr->m_pEvents->m_pOldest)
+        return nullptr;
+
+    return cm->d_ptr->m_pEvents->m_pOldest->d_ptr->m_pStrongRef;
+}
+
+QSharedPointer<Event> EventModel::newest(const ContactMethod* cm) const
+{
+    if (!cm->d_ptr->m_pEvents)
+        return nullptr;
+
+    if (!cm->d_ptr->m_pEvents->m_pNewest)
+        return nullptr;
+
+    return cm->d_ptr->m_pEvents->m_pNewest->d_ptr->m_pStrongRef;
+}
+
+const QVector< QSharedPointer<Event> >& EventModelPrivate::events(const ContactMethod* cm) const
+{
+    if (!cm->d_ptr->m_pEvents)
+        cm->d_ptr->m_pEvents = new ContactMethodEvents;
+
+    return cm->d_ptr->m_pEvents->m_lEvents;
 }
 
 #include <eventmodel.moc>

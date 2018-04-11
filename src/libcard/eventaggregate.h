@@ -39,7 +39,12 @@ class Individual;
 class LIB_EXPORT EventAggregate : public QObject
 {
     Q_OBJECT
+    friend class ContactMethod; // factory/manager
+    friend class Individual   ; // factory/manager
 public:
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> groupedView READ groupedView CONSTANT)
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> calendarView READ calendarView CONSTANT)
+    Q_PROPERTY(QSharedPointer<QAbstractItemModel> unsortedListView READ unsortedListView CONSTANT)
 
     virtual ~EventAggregate();
 
@@ -49,8 +54,8 @@ public:
     /// A grid with cells representing days and their children events for that day
     QSharedPointer<QAbstractItemModel> calendarView() const;
 
-    static QSharedPointer<EventAggregate> buildFromContactMethod(ContactMethod* cm);
-    static QSharedPointer<EventAggregate> buildFromIndividual(ContactMethod* cm);
+    /// Nothing fancy, no grouping, no sorting, just a list
+    QSharedPointer<QAbstractItemModel> unsortedListView() const;
 
     /** The correct way to create multi-party aggregates is to create them
      * individually then merge them. Most of the memory and computation will be
@@ -60,10 +65,15 @@ public:
         const QList<QSharedPointer<EventAggregate> >& source
     );
 
-
 private:
     explicit EventAggregate();
+
+    static QSharedPointer<EventAggregate> build(ContactMethod* cm);
+    static QSharedPointer<EventAggregate> build(QSharedPointer<Individual> ind);
 
     EventAggregatePrivate* d_ptr;
     Q_DECLARE_PRIVATE(EventAggregate)
 };
+
+Q_DECLARE_METATYPE(EventAggregate*)
+Q_DECLARE_METATYPE(QSharedPointer<EventAggregate>)

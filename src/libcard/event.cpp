@@ -126,6 +126,7 @@ void Event::setStopTimeStamp(time_t t)
     d_ptr->m_pInternals->m_SyncState = Event::SyncState::RESCHEDULED;
 
     d_ptr->m_StopTimeStamp = t;
+    emit changed();
 }
 
 time_t Event::startTimeStamp() const
@@ -305,6 +306,26 @@ bool Event::isSaved() const
     return false;
 }
 
+///Generate an human readable string from the difference between StartTimeStamp and StopTimeStamp (or 'now')
+QString Event::length() const
+{
+   if (stopTimeStamp() == startTimeStamp())
+      return QString(); //Invalid
+
+   int nsec =0;
+   if (stopTimeStamp())
+      nsec = stopTimeStamp() - startTimeStamp();//If the call is over
+   else { //Time to now
+      time_t curTime;
+      ::time(&curTime);
+      nsec = curTime - startTimeStamp();
+   }
+   if (nsec/3600)
+      return QStringLiteral("%1:%2:%3 ").arg((nsec%(3600*24))/3600).arg(((nsec%(3600*24))%3600)/60,2,10,QChar('0')).arg(((nsec%(3600*24))%3600)%60,2,10,QChar('0'));
+   else
+      return QStringLiteral("%1:%2 ").arg(nsec/60,2,10,QChar('0')).arg(nsec%60,2,10,QChar('0'));
+}
+
 QString Event::displayName() const
 {
     return d_ptr->m_CN;
@@ -360,6 +381,16 @@ void Event::detachFile(Media::Attachment* file)
     d_ptr->m_lAttachedFiles.removeAll(file);
 }
 
+bool Event::hasAttachment(Media::Attachment::BuiltInTypes t) const
+{
+    for (auto a : qAsConst(d_ptr->m_lAttachedFiles)) {
+        if (a->type() == t)
+            return true;
+    }
+
+    return false;
+}
+
 int Event::revisionCount() const
 {
     return d_ptr->m_RevCounter;
@@ -368,7 +399,32 @@ int Event::revisionCount() const
 QVariant Event::roleData(int role) const
 {
     switch(role) {
+        case (int) Ring::Role::Object:
+            return QVariant::fromValue(const_cast<Event*>(this));
+
+        case (int) Ring::Role::ObjectType:
+            return QVariant::fromValue(Ring::ObjectType::Event);
+        case (int) Ring::Role::FormattedLastUsed:
+            return HistoryTimeCategoryModel::timeToHistoryCategory(stopTimeStamp());
+        case (int) Ring::Role::IndexedLastUsed:
+            return QVariant(static_cast<int>(
+                HistoryTimeCategoryModel::timeToHistoryConst(stopTimeStamp())
+            ));
+        case (int) Ring::Role::Length:
+            return length();
+        case (int) Ring::Role::IsPresent:
+            return false; //TODO
+        case (int) Ring::Role::UnreadTextMessageCount:
+            return 0; //TODO
+        case (int) Ring::Role::IsBookmarked:
+        case (int) Ring::Role::HasActiveCall:
+        case (int) Ring::Role::HasActiveVideo:
+        case (int) Ring::Role::IsRecording:
+            return false;
+        case (int) Ring::Role::Name:
         case Qt::DisplayRole:
+        case (int) Ring::Role::Number:
+        case (int) Ring::Role::URI:
         case Event::Roles::UID             :
             return uid();
         case Event::Roles::REVISION_COUNT  :
@@ -376,6 +432,7 @@ QVariant Event::roleData(int role) const
         case Event::Roles::BEGIN_TIMESTAMP :
             return QVariant::fromValue(startTimeStamp());
         case Event::Roles::END_TIMESTAMP   :
+        case (int) Ring::Role::LastUsed:
             return QVariant::fromValue(stopTimeStamp());
         case Event::Roles::UPDATE_TIMESTAMP:
             return QVariant::fromValue(revTimeStamp());
@@ -383,6 +440,14 @@ QVariant Event::roleData(int role) const
             return QVariant::fromValue(eventCategory());
         case Event::Roles::DIRECTION       :
             return QVariant::fromValue(direction());
+        case Event::Roles::HAS_AV_RECORDING:
+            return hasAttachment(Media::Attachment::BuiltInTypes::AUDIO_RECORDING);
+        case Event::Roles::STATUS:
+            return QVariant::fromValue(status());
+        case (int) Ring::Role::State:
+        case (int) Ring::Role::FormattedState:
+        case (int) Ring::Role::DropState:
+            return {};
     }
 
     return {};
@@ -401,7 +466,7 @@ bool Event::hasAttendee(ContactMethod* cm) const
     }) != e;
 }
 
-bool Event::hasAttendee(Individual* ind) const
+bool Event::hasAttendee(QSharedPointer<Individual> ind) const
 {
     const auto b(d_ptr->m_lAttendees.constBegin()), e(d_ptr->m_lAttendees.constEnd());
     return std::find_if(b, e, [ind](const QPair<ContactMethod*, QString>& other) {
@@ -423,6 +488,7 @@ Event::SyncState EventInternals::performAction(EventInternals::EditActions actio
 
     if (m_SyncState != old) {
         emit q_ptr->syncStateChanged(m_SyncState, old);
+        emit q_ptr->changed();
     }
     //
 
@@ -456,4 +522,29 @@ bool Event::remove()
             Event::SyncState::ERROR;
 
     return false;
+}
+
+bool Event::addAttendee(ContactMethod* cm, const QString& name)
+{
+    if (hasAttendee(cm))
+        return false;
+
+    const auto ind = cm->individual();
+
+    const bool hasInd = hasAttendee(ind);
+
+    d_ptr->m_lAttendees << QPair<ContactMethod*, QString> {cm, name};
+
+    // Let it happen, someone calling her/himself to leave voicemails or
+    // something like this isn't all that unusual.
+    if (hasInd) {
+        qWarning() << "Trying to add the same indivudual twice to the same event"
+            << cm << ind;
+        emit attendeeAdded(ind);
+    }
+
+    emit attendeeAdded(cm);
+    emit changed();
+
+    return true;
 }

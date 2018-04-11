@@ -217,7 +217,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
       case PhoneDirectoryModelPrivate::Columns::CALL_COUNT:
          switch (role) {
             case Qt::DisplayRole:
-               return number->callCount();
+               return number->roleData((int)ContactMethod::Role::TotalCallCount);
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::LAST_USED:
@@ -383,7 +383,7 @@ QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientatio
       tr("Is self"),
       tr("Account"),
       tr("State"),
-      tr("Call count"),
+      tr("Event count"),
       tr("Week count"),
       tr("Trimester count"),
       tr("Have Called"),

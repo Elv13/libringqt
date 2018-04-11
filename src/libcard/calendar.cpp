@@ -272,7 +272,7 @@ bool CalendarEditor::save( const Event* item )
 
     static QString dir = (QStandardPaths::writableLocation(QStandardPaths::DataLocation)) + "/iCal/";
     if (!QDir().mkpath(dir)) {
-        qWarning() << "cannot create path for fallbackcollection: " << dir;
+        qWarning() << "cannot create path for the calendar: " << dir;
         return false;
     }
 // Q_ASSERT(false);
@@ -319,9 +319,7 @@ bool CalendarEditor::edit( Event* item )
 
 bool CalendarEditor::addNew( Event* item )
 {
-    Q_ASSERT(!item->collection());
-    item->setCollection(m_pCal);
-    return save(item);
+    return addExisting(item) && save(item);
 }
 
 bool CalendarEditor::addExisting( const Event* item )
@@ -380,10 +378,11 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     }
 
     EventPrivate b;
-    b.m_StartTimeStamp = c->startTimeStamp();
-    b.m_StopTimeStamp  = c->stopTimeStamp ();
-    b.m_Status         = Event::Status::FINAL;
-    b.m_Direction      = c->direction() == Call::Direction::OUTGOING ?
+    b.m_StartTimeStamp  = c->startTimeStamp();
+    b.m_StopTimeStamp   = c->stopTimeStamp ();
+    b.m_Status          = Event::Status::FINAL;
+    b.m_HasImportedCall = true;
+    b.m_Direction       = c->direction() == Call::Direction::OUTGOING ?
         Event::Direction::OUTGOING : Event::Direction::INCOMING;
 
     auto e = new Event(b, Event::SyncState::NEW);

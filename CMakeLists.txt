@@ -231,7 +231,6 @@ SET( libringqt_LIB_SRCS
   src/video/previewmanager.cpp
   src/private/sortproxies.cpp
   src/private/threadworker.cpp
-  src/private/cmcallsmodel.cpp
   src/private/addressmodel.cpp
   src/mime.cpp
   src/smartinfohub.cpp

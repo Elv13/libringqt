@@ -402,29 +402,29 @@ const Matrix1D< UAMA, FlagPack<UAM::Asset>> UserActionModelPrivate::availableByA
  * Different objects type have access to a different subset of actions
  */
 const Matrix2D< UAMA, Ring::ObjectType , bool  > UserActionModelPrivate::availableObjectActions = {
-   /*                            Person ContactMethod  Call    Media  Certificate   ContactRequest*/
-   { UAMA::ACCEPT            , {{ false,    false,     true ,  false,    false,        false     }}},
-   { UAMA::HOLD              , {{ false,    false,     true ,  true ,    false,        false     }}},
-   { UAMA::MUTE_AUDIO        , {{ false,    false,     true ,  true ,    false,        false     }}},
-   { UAMA::MUTE_VIDEO        , {{ false,    false,     true ,  true ,    false,        false     }}},
-   { UAMA::SERVER_TRANSFER   , {{ false,    false,     true ,  false,    false,        false     }}},
-   { UAMA::RECORD            , {{ false,    false,     true ,  true ,    false,        false     }}},
-   { UAMA::HANGUP            , {{ false,    false,     true ,  false,    false,        false     }}},
-   { UAMA::JOIN              , {{ false,    false,     true ,  false,    false,        false     }}},
-   { UAMA::ADD_NEW           , {{ false,    false,     true ,  false,    false,        false     }}},
-   { UAMA::TOGGLE_VIDEO      , {{ false,    false,     true ,  true ,    false,        false     }}},
-   { UAMA::ADD_CONTACT       , {{ false,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::ADD_TO_CONTACT    , {{ false,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::DELETE_CONTACT    , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::EMAIL_CONTACT     , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::COPY_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::BOOKMARK          , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     true ,  true ,    true ,        true      }}},
-   { UAMA::ADD_CONTACT_METHOD, {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::CALL_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::EDIT_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::REMOVE_HISTORY    , {{ true ,    true ,     true ,  false,    true ,        false     }}},
-   { UAMA::MARK_AS_CONSUMED  , {{ true ,    true ,     true ,  true ,    true ,        false     }}},
+   /*                            Person ContactMethod  Call    Media  Certificate   ContactRequest Event*/
+   { UAMA::ACCEPT            , {{ false,    false,     true ,  false,    false,        false,     false}}},
+   { UAMA::HOLD              , {{ false,    false,     true ,  true ,    false,        false,     false}}},
+   { UAMA::MUTE_AUDIO        , {{ false,    false,     true ,  true ,    false,        false,     false}}},
+   { UAMA::MUTE_VIDEO        , {{ false,    false,     true ,  true ,    false,        false,     false}}},
+   { UAMA::SERVER_TRANSFER   , {{ false,    false,     true ,  false,    false,        false,     false}}},
+   { UAMA::RECORD            , {{ false,    false,     true ,  true ,    false,        false,     false}}},
+   { UAMA::HANGUP            , {{ false,    false,     true ,  false,    false,        false,     false}}},
+   { UAMA::JOIN              , {{ false,    false,     true ,  false,    false,        false,     false}}},
+   { UAMA::ADD_NEW           , {{ false,    false,     true ,  false,    false,        false,     false}}},
+   { UAMA::TOGGLE_VIDEO      , {{ false,    false,     true ,  true ,    false,        false,     false}}},
+   { UAMA::ADD_CONTACT       , {{ false,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::ADD_TO_CONTACT    , {{ false,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::DELETE_CONTACT    , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::EMAIL_CONTACT     , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::COPY_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::BOOKMARK          , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     true ,  true ,    true ,        true ,     true }}},
+   { UAMA::ADD_CONTACT_METHOD, {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::CALL_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::EDIT_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::REMOVE_HISTORY    , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
+   { UAMA::MARK_AS_CONSUMED  , {{ true ,    true ,     true ,  true ,    true ,        false,     false}}},
 };
 
 #define P_CB [](const Person* p) -> bool
@@ -971,6 +971,7 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
                   case Ring::ObjectType::Media          : //TODO
                   case Ring::ObjectType::Certificate    : //TODO
                   case Ring::ObjectType::ContactRequest   : //TODO
+                  case Ring::ObjectType::Event          : //TODO
                   case Ring::ObjectType::COUNT__        :
                      break;
                }

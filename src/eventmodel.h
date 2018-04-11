@@ -47,11 +47,12 @@ class LIB_EXPORT EventModel : public QAbstractListModel, public CollectionManage
    Q_OBJECT
 
    friend class ContactMethod; // calls into the private API when deduplicating itself
+   friend class EventAggregate; // use the private getters to get references on the event list
 public:
 
     virtual ~EventModel();
 
-    //Model functions
+    // Model functions
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole) const override;
     virtual int rowCount( const QModelIndex& parent = {}) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
@@ -59,6 +60,15 @@ public:
     QItemSelectionModel* defaultSelectionModel() const;
 
     QSharedPointer<Event> getById(const QByteArray& eventId, bool placeholder = false) const;
+
+    // Keep event sorting centralized
+    inline QSharedPointer<Event> nextEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const;
+    inline QSharedPointer<Event> nextEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const;
+    inline QSharedPointer<Event> previousEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const;
+    inline QSharedPointer<Event> previousEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const;
+
+    inline QSharedPointer<Event> oldest(const ContactMethod* cm) const;
+    inline QSharedPointer<Event> newest(const ContactMethod* cm) const;
 
     static EventModel& instance();
 

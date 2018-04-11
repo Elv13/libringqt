@@ -27,35 +27,24 @@ struct EventModelNode;
 struct EventInternals;
 
 /**
- * As used by the event aggregate.
+ * Superclass of all type of event model nodes.
  *
- * It allows the same event to be tracked in different ways, including by
- * individual, groups of individual or time categories.
+ * This allows multiple models to share the same memory tree.
  */
-struct EventAggregateNode
+struct EventMetaNode
 {
-    using EAN = EventAggregateNode;
-
     enum class Type {
-        EVENT, /*!< A single event                     */
-        GROUP, /*!< A group of similar events          */
-        DAY  , /*!< A group of event from the same 24h */
+        EVENT     ,
+        CALENDAR  ,
+        HISTORY   ,
+        EVENT_DATA,
+        TIME_CAT  ,
+        CALL_GROUP,
+        ROOT      ,
     } m_Type {Type::EVENT};
-
-    Event*        m_pEvent    {nullptr};
-    EAN*          m_pParent   {nullptr};
-    int           m_Index     {   0   };
-    QVector<EAN*> m_lChildren {       };
-};
-
-/**
- * Low level wrapping to track listeners.
- *
- * The EventModel expose a private interface to be notified of changes
- */
-struct EventWrapperNode
-{
-    QVector<EventAggregateNode*> m_lListeners;
+    uint m_Index{0};
+    time_t m_StartTime {0};
+    time_t m_EndTime   {0};
 };
 
 /**
@@ -77,6 +66,12 @@ public:
     Event::Status m_Status {Event::Status::CANCELLED};
     Event::Type m_Type {Event::Type::VJOURNAL};
     QList< QPair<ContactMethod*, QString> > m_lAttendees;
+
+    /**
+     * Either the call was from this session or it's an imported Call from the
+     * old sflphone history.
+     */
+    bool m_HasImportedCall {false};
 
     EventModelNode* m_pTracker {nullptr};
 

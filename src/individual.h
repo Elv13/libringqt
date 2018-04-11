@@ -45,6 +45,7 @@ class LIB_EXPORT Individual final : public QAbstractListModel
 public:
     Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineModel READ timelineModel)
+    Q_PROPERTY(QSharedPointer<EventAggregate> eventAggregate READ eventAggregate CONSTANT)
 
     virtual ~Individual();
 
@@ -67,6 +68,8 @@ public:
 
     QSharedPointer<IndividualEditor> createEditor() const;
 
+    QSharedPointer<EventAggregate> eventAggregate() const;
+
     Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
     Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
     Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
@@ -78,7 +81,7 @@ public:
     /**
      * Group all events related to this individual.
      */
-    QSharedPointer<EventAggregate> events(FlagPack<Event::EventCategory> categories = Event::EventCategory::ALL);
+    //QSharedPointer<EventAggregate> events(FlagPack<Event::EventCategory> categories = Event::EventCategory::ALL);
 
     /// Reverse map the boolean cardinality from N to 1
     template<bool (ContactMethod :: *prop)() const>
@@ -124,6 +127,11 @@ Q_SIGNALS:
     // Forward some relevant contactMethods signals
     void childrenContactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
     void childrenRebased(ContactMethod* cm,  ContactMethod* other  );
+
+    /// When an event is attached to a ContactMethod
+    void eventAdded(QSharedPointer<Event> e);
+    /// When an event is detached from a ContactMethod
+    void eventDetached(QSharedPointer<Event> e);
 
 private:
     explicit Individual();

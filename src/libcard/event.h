@@ -32,9 +32,7 @@ class Call;
 class Account;
 class Individual;
 
-namespace Media {
-    class Attachment;
-}
+#include <media/attachment.h>
 
 namespace Serializable {
     class Group;
@@ -105,6 +103,8 @@ public:
         UPDATE_TIMESTAMP,
         EVENT_CATEGORY  ,
         DIRECTION       ,
+        HAS_AV_RECORDING,
+        STATUS          ,
     };
 
     /**
@@ -174,6 +174,7 @@ public:
         FINAL     , // 3.8.1.11
         X_MISSED  , // non-standard
     };
+    Q_ENUM(Status)
 
     virtual ~Event();
 
@@ -188,6 +189,8 @@ public:
     SyncState syncState() const;
 
     bool isSaved() const;
+
+    QString length() const;
 
     QVariant getCustomProperty(CustomProperties property) const;
 
@@ -231,6 +234,8 @@ public:
     void attachFile(Media::Attachment* file);
     void detachFile(Media::Attachment* file);
 
+    bool hasAttachment(Media::Attachment::BuiltInTypes t) const;
+
     /**
      * Each attendees with the name they used for that event
      */
@@ -244,7 +249,17 @@ public:
     /**
      * Convenience method to determine if someone attended this event.
      */
-    bool hasAttendee(Individual* cm) const;
+    bool hasAttendee(QSharedPointer<Individual> cm) const;
+
+    /**
+     * Add an attendee to this event.
+     *
+     * The name is optional and will often be overrriden by the contact name
+     * anyway.
+     *
+     * @return If it was added successfully (ei. it isn't a duplicate or an invalid CM)
+     */
+    bool addAttendee(ContactMethod* cm, const QString& name = {});
 
     /**
      * Define an truly unique identifier for the event that encompass some
@@ -303,6 +318,11 @@ public:
 
 Q_SIGNALS:
     void syncStateChanged(SyncState newState, SyncState oldState);
+    void attendeeAdded(ContactMethod* cm);
+    void attendeeAdded(QSharedPointer<Individual> ind);
+    void attendeeRemoved(ContactMethod* cm);
+    void attendeeRemoved(QSharedPointer<Individual> ind);
+    void changed();
 
 private:
     /**

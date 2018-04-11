@@ -25,6 +25,7 @@
 #include <phonedirectorymodel.h>
 #include <person.h>
 #include <account.h>
+#include "libcard/eventaggregate.h"
 #include <infotemplatemanager.h>
 #include <infotemplate.h>
 #include <accountmodel.h>
@@ -55,6 +56,8 @@ public:
 
     QWeakPointer<IndividualTimelineModel> m_TimelineModel;
 
+    QSharedPointer<EventAggregate> m_pEventAggregate;
+
     QWeakPointer<Individual> m_pWeakRef;
 
     // Helpers
@@ -66,10 +69,11 @@ public:
 
 public Q_SLOTS:
     void slotLastUsedTimeChanged(::time_t t       );
-    void slotLastContactMethod  (ContactMethod* cm);
-    void slotCallAdded          (Call *call       );
-    void slotUnreadCountChanged (                 );
-    void slotCmDestroyed        (                 );
+    void slotLastContactMethod  ( ContactMethod* cm       );
+    void slotCallAdded          ( Call *call              );
+    void slotUnreadCountChanged (                         );
+    void slotCmDestroyed        (                         );
+    void slotCmEventAdded       ( QSharedPointer<Event> e );
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -234,6 +238,17 @@ void Individual::setEditRow(bool v)
     emit layoutChanged();
 }
 
+QSharedPointer<EventAggregate> Individual::eventAggregate() const
+{
+    if (!d_ptr->m_pEventAggregate) {
+        d_ptr->m_pEventAggregate = EventAggregate::build(
+            const_cast<Individual*>(this)->d_ptr->m_pWeakRef
+        );
+    }
+
+    return d_ptr->m_pEventAggregate;
+}
+
 void IndividualPrivate::connectContactMethod(ContactMethod* m)
 {
     connect(m, &ContactMethod::destroyed, this,
@@ -244,6 +259,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
 
     connect(m, &ContactMethod::callAdded, this,
         &IndividualPrivate::slotCallAdded);
+
+    connect(m, &ContactMethod::eventAdded, this,
+        &IndividualPrivate::slotCmEventAdded);
 
     connect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
@@ -271,6 +289,9 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::callAdded, this,
         &IndividualPrivate::slotCallAdded);
+
+    disconnect(m, &ContactMethod::eventAdded, this,
+        &IndividualPrivate::slotCmEventAdded);
 
     disconnect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
@@ -540,6 +561,11 @@ void IndividualPrivate::slotCallAdded(Call *call)
     emit q_ptr->callAdded(call);
 }
 
+void IndividualPrivate::slotCmEventAdded( QSharedPointer<Event> e )
+{
+    emit q_ptr->eventAdded(e);
+}
+
 void IndividualPrivate::slotUnreadCountChanged()
 {
     emit q_ptr->unreadCountChanged(0);
@@ -717,10 +743,10 @@ QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>
     return ind;
 }
 
-QSharedPointer<EventAggregate> Individual::events(FlagPack<Event::EventCategory> categories)
-{
-    return {};
-}
+// QSharedPointer<EventAggregate> Individual::events(FlagPack<Event::EventCategory> categories)
+// {
+//     return {};
+// }
 
 InfoTemplate* IndividualPrivate::infoTemplate()
 {

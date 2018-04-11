@@ -25,12 +25,15 @@
 class Call;
 class Person;
 class NumberCategory;
+class EventAggregate;
 
 namespace Media {
     class TextRecording;
 }
 
 class IndividualTimelineModel;
+
+struct ContactMethodEvents; // defined in eventmodel.cpp
 
 class ContactMethodPrivate final: public QObject
 {
@@ -72,15 +75,11 @@ public:
     * The unsorted pair are managed by the EventModel to allow it to eventually
     * run a merge sort on the linked list and generate the aggregates.
     */
-   struct {
-       Event* m_pNewest       {nullptr}; /*!< Highest stopTimeStamp () */
-       Event* m_pOldest       {nullptr}; /*!< Lowest  startTimeStamp() */
-       Event* m_pUnsortedTail {nullptr}; /*!< Lastest addition         */
-       Event* m_pUnsortedHead {nullptr}; /*!< The first addition       */
-   } m_Events;
+   ContactMethodEvents* m_pEvents {nullptr};
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<Individual> m_pIndividual;
+   QSharedPointer<EventAggregate> m_pEventAggregate;
 
    //Parents
    QSet<ContactMethod*> m_lParents;

@@ -113,6 +113,7 @@ public:
       CanSendTexts     ,
       TotalCallCount   ,
       TotalMessageCount,
+      TotalEventCount  ,
       UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };
@@ -157,7 +158,6 @@ public:
    Q_PROPERTY(bool                                  isAvailable  READ isAvailable       NOTIFY changed                )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
-   Q_PROPERTY(QSharedPointer<QAbstractItemModel> callsModel READ callsModel)
    Q_PROPERTY(IndividualPointer individual READ individual)
 
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
@@ -238,11 +238,11 @@ public:
    bool isAvailable() const;
    QVector<Media::TextRecording*> alternativeTextRecordings() const;
 
-   QSharedPointer<QAbstractItemModel> callsModel() const;
+   QSharedPointer<Event>          oldestEvent   () const;
+   QSharedPointer<Event>          newestEvent   () const;
 
+   QSharedPointer<EventAggregate> eventAggregate() const;
 
-   QSharedPointer<Event>              oldestEvent() const;
-   QSharedPointer<Event>              newestEvent() const;
    IndividualPointer  individual() const;
 
    /*
@@ -355,6 +355,10 @@ Q_SIGNALS:
    void hasInitCallChanged(bool status);
    /// When an account is set, it should not "change" after that
    void accountChanged(Account* account);
+   /// When an event is attached to a ContactMethod
+   void eventAdded(QSharedPointer<Event> e);
+   /// When an event is detached from a ContactMethod
+   void eventDetached(QSharedPointer<Event> e);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

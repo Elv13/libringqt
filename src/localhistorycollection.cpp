@@ -200,7 +200,7 @@ QVector<Call*> LocalHistoryEditor::items() const
 
 QString LocalHistoryCollection::name () const
 {
-   return QObject::tr("Local history");
+   return QObject::tr("Legacy history");
 }
 
 QString LocalHistoryCollection::category () const
@@ -288,7 +288,6 @@ FlagPack<CollectionInterface::SupportedFeatures> LocalHistoryCollection::support
       CollectionInterface::SupportedFeatures::LOAD       |
       CollectionInterface::SupportedFeatures::CLEAR      |
       CollectionInterface::SupportedFeatures::REMOVE     |
-      CollectionInterface::SupportedFeatures::MANAGEABLE |
       CollectionInterface::SupportedFeatures::ADD        ;
 }
 

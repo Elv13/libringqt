@@ -43,13 +43,13 @@
 #include "individual.h"
 #include "certificatemodel.h"
 #include "eventmodel.h"
+#include "libcard/eventaggregate.h"
 #include "libcard/private/eventmodel_p.h"
 #include "media/textrecording.h"
 #include "mime.h"
 #include "usagestatistics.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
-#include "private/cmcallsmodel.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -797,6 +797,8 @@ QVariant ContactMethod::roleData(int role) const
           return canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
       case static_cast<int>(Role::TotalCallCount):
           return callCount();
+      case static_cast<int>(Role::TotalEventCount):
+          return EventModel::instance().d_ptr->events(this).size();
       case static_cast<int>(Role::TotalMessageCount):
           if (auto rec = textRecording())
             cat = rec->sentCount() + rec->receivedCount();
@@ -844,18 +846,6 @@ bool ContactMethod::setRoleData(const QVariant &value, int role)
     return false;
 }
 
-/// Return or create a model for the `calls()`
-QSharedPointer<QAbstractItemModel> ContactMethod::callsModel() const
-{
-   if (!d_ptr->m_CallsModel) {
-      auto p = QSharedPointer<QAbstractItemModel>(new CMCallsModel(this));
-      d_ptr->m_CallsModel = p;
-      return p;
-   }
-
-   return d_ptr->m_CallsModel;
-}
-
 QSharedPointer<Individual> ContactMethod::individual() const
 {
     if (contact())
@@ -870,6 +860,17 @@ QSharedPointer<Individual> ContactMethod::individual() const
     return d_ptr->m_pIndividual;
 }
 
+QSharedPointer<EventAggregate> ContactMethod::eventAggregate() const
+{
+    if (!d_ptr->m_pEventAggregate) {
+        d_ptr->m_pEventAggregate = EventAggregate::build(
+            const_cast<ContactMethod*>(this)
+        );
+    }
+
+    return d_ptr->m_pEventAggregate;
+}
+
 /**
  * The oldest event this contact method attended.
  *
@@ -881,10 +882,7 @@ QSharedPointer<Individual> ContactMethod::individual() const
  */
 QSharedPointer<Event> ContactMethod::oldestEvent() const
 {
-    if (!d_ptr->m_Events.m_pOldest)
-        return nullptr;
-
-    return d_ptr->m_Events.m_pOldest->ref();
+    return EventModel::instance().oldest(this);
 }
 
 /**
@@ -894,11 +892,7 @@ QSharedPointer<Event> ContactMethod::oldestEvent() const
  */
 QSharedPointer<Event> ContactMethod::newestEvent() const
 {
-
-    if (!d_ptr->m_Events.m_pNewest)
-        return nullptr;
-
-    return d_ptr->m_Events.m_pNewest->ref();
+    return EventModel::instance().newest(this);
 }
 
 QMimeData* ContactMethod::mimePayload() const

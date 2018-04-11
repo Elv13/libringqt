@@ -92,6 +92,7 @@ enum class ObjectType
     Media,
     Certificate,
     ContactRequest,
+    Event,
     COUNT__
 };
 Q_ENUMS(ObjectType)

@@ -19,6 +19,8 @@
 #include <QtCore/QObject>
 
 struct EventModelNode;
+class Individual;
+class EventModel;
 
 class EventModelPrivate final : public QObject
 {
@@ -29,9 +31,12 @@ public:
     QHash<const QByteArray, Event*> m_hUids;
 
     // Helpers
-    void sortContactMethod(ContactMethod* cm);
+    void sort(ContactMethod* cm);
+    void sort(Individual* ind);
     void mergeEvents(ContactMethod* dest, ContactMethod* src);
 
+    // Unoptimal internal API to get events, time not permitting anything better
+    const QVector< QSharedPointer<Event> >& events(const ContactMethod* cm) const;
 
     EventModel* q_ptr;
 
