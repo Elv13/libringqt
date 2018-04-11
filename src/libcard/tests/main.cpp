@@ -133,6 +133,7 @@ ICSLoader* TestObj::isEqual(const char* content, const TestObj& other)
             assert(pp.parameters.size() == pe.parameters.size());
             for (int j = 0; j < pp.parameters.size(); j++) {
                 assert(pp.parameters[j].name == pe.parameters[j].name);
+                assert(pp.parameters[j].value == pe.parameters[j].value);
             }
         }
 
@@ -212,8 +213,8 @@ void testBasicEvent()
     "DTSTART:19960918T143000Z\r\n"
     "DTEND:19960920T220000Z\r\n"
     "STATUS:CONFIRMED\r\n"
-    "CATEGORIES:CONFERENCE\r\n"
-    "SUMMARY:Networld+Interop Conference\r\n"
+    "CATEGORIES;prop3=value3:CONFERENCE\r\n"
+    "SUMMARY;prop=value;prop2=\"value2\":Networld+Interop Conference\r\n"
     "DESCRIPTION:Networld+Interop Conference\r\n"
     "  and Exhibit\\nAtlanta World Congress Center\\n\r\n"
     " Atlanta\\, Georgia\r\n"
@@ -233,8 +234,15 @@ void testBasicEvent()
                     {"DTSTART", "19960918T143000Z", {}},
                     {"DTEND", "19960920T220000Z", {}},
                     {"STATUS", "CONFIRMED", {}},
-                    {"CATEGORIES", "CONFERENCE", {}},
-                    {"SUMMARY", "Networld+Interop Conference", {}},
+                    {"CATEGORIES", "CONFERENCE", {
+                        {"prop3", "value3"},
+                    }},
+                    {"SUMMARY", "Networld+Interop Conference", {
+                        // This tests that the state was properly restored if
+                        // previous properties have parameters
+                        {"prop", "value"},
+                        {"prop2", "value2"},
+                    }},
                     {"DESCRIPTION", "Networld+Interop Conference and Exhibit\\nAtlanta World Congress Center\\nAtlanta\\, Georgia", {}},
                 }
             }

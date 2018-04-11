@@ -815,6 +815,12 @@ void VProperty::applyActions(VProperty::Action a)
         case Action::RESET:
             m_Value.clear();
             m_Name.clear();
+
+            //TODO add an explicit action to VParameters and use applyEvent
+            m_Parameters.parameters.clear();
+            m_Parameters.m_CurrentParam = {};
+            m_Parameters.m_State = VParameters::State::EMPTY;
+
             m_State = VProperty::State::EMPTY;
             break;
         case Action::ERROR:
