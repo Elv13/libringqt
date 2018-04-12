@@ -189,6 +189,11 @@ QSharedPointer<QAbstractItemModel> EventAggregate::calendarView() const
     return {};
 }
 
+const QVector< QSharedPointer<Event> > EventAggregate::events() const
+{
+    return d_ptr->m_lAllEvents;
+}
+
 QSharedPointer<QAbstractItemModel> EventAggregate::unsortedListView() const
 {
     if (!d_ptr->m_pUnsortedListModel) {

@@ -129,9 +129,9 @@ Q_SIGNALS:
     void childrenRebased(ContactMethod* cm,  ContactMethod* other  );
 
     /// When an event is attached to a ContactMethod
-    void eventAdded(QSharedPointer<Event> e);
+    void eventAdded(QSharedPointer<Event>& e);
     /// When an event is detached from a ContactMethod
-    void eventDetached(QSharedPointer<Event> e);
+    void eventDetached(QSharedPointer<Event>& e);
 
 private:
     explicit Individual();

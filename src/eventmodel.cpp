@@ -353,8 +353,10 @@ bool EventModel::addItemCallback(const Event* item)
         //FIXME someday, do better than that
         cm->d_ptr->m_pEvents->m_lEvents << item->d_ptr->m_pStrongRef;
 
-        emit cm->eventAdded(const_cast<Event*>(item)->ref());
-        emit cm->individual()->eventAdded(const_cast<Event*>(item)->ref());
+        auto ref = const_cast<Event*>(item)->ref();
+
+        emit cm->eventAdded(ref);
+        emit cm->individual()->eventAdded(ref);
     }
 
     return true;
@@ -364,8 +366,9 @@ bool EventModel::removeItemCallback(const Event* item)
 {
     for (auto pair : qAsConst(item->d_ptr->m_lAttendees)) {
         auto cm = pair.first; //TODO C++17
-        emit cm->eventDetached(const_cast<Event*>(item)->ref());
-        emit cm->individual()->eventDetached(const_cast<Event*>(item)->ref());
+        auto ref = const_cast<Event*>(item)->ref();
+        emit cm->eventDetached(ref);
+        emit cm->individual()->eventDetached(ref);
     }
 
     return true;

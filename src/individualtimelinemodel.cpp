@@ -32,6 +32,7 @@
 #include "contactmethod.h"
 #include "person.h"
 #include "individual.h"
+#include "libcard/eventaggregate.h"
 #include "call.h"
 #include "historytimecategorymodel.h"
 #include "private/textrecording_p.h"
@@ -76,7 +77,7 @@ struct IndividualTimelineNode final {
         ushort m_lSummary[4];
 
         // Type::CALL
-        Call* m_pCall;
+        Event* m_pCall;
 
         // Type::TEXT_MESSAGE and Type::SNAPSHOT
         TextMessageNode* m_pMessage;
@@ -126,7 +127,7 @@ public:
     IndividualTimelineModel* q_ptr;
 public Q_SLOTS:
     void slotMessageAdded(TextMessageNode* message);
-    void slotCallAdded(Call* call);
+    void slotEventAdded(QSharedPointer<Event>& call);
     void slotReload();
     void slotClear(IndividualTimelineNode* root = nullptr);
     void slotContactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
@@ -166,8 +167,8 @@ IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelin
 
 void IndividualTimelineModelPrivate::init()
 {
-    connect(m_pIndividual.data(), &Individual::callAdded,
-        this, &IndividualTimelineModelPrivate::slotCallAdded);
+    connect(m_pIndividual.data(), &Individual::eventAdded,
+        this, &IndividualTimelineModelPrivate::slotEventAdded);
 
     connect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
@@ -189,6 +190,11 @@ void IndividualTimelineModelPrivate::init()
 
     for (auto cm : qAsConst(cms))
         q_ptr->addContactMethod(cm);
+
+    const auto events = m_pIndividual->eventAggregate()->events();
+
+    for (auto e : qAsConst(events))
+        slotEventAdded(e);
 
     const auto trs = m_pIndividual->textRecordings();
     for (auto t : qAsConst(trs))
@@ -549,9 +555,12 @@ void IndividualTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
     emit q_ptr->dataChanged(idx, idx);
 }
 
-void IndividualTimelineModelPrivate::slotCallAdded(Call* call)
+void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event)
 {
-    auto cat = getCategory(call->startTimeStamp());
+    if (event->eventCategory() != Event::EventCategory::CALL)
+        return; //TODO merge both code paths
+
+    auto cat = getCategory(event->startTimeStamp());
 
     // This abuses a bit of implementation details of the history. The calls
     // are expected to arrive ordered by time_t, so this allows to take a
@@ -562,8 +571,8 @@ void IndividualTimelineModelPrivate::slotCallAdded(Call* call)
         m_pCurrentTextGroup = nullptr;
 
         m_pCurrentCallGroup->m_Type      = IndividualTimelineModel::NodeType::CALL_GROUP;
-        m_pCurrentCallGroup->m_StartTime = call->startTimeStamp();
-        m_pCurrentCallGroup->m_EndTime   = call->stopTimeStamp ();
+        m_pCurrentCallGroup->m_StartTime = event->startTimeStamp();
+        m_pCurrentCallGroup->m_EndTime   = event->stopTimeStamp ();
 
         for (int i=0; i < 4; i++) m_pCurrentCallGroup->m_lSummary[i] = 0;
 
@@ -576,10 +585,10 @@ void IndividualTimelineModelPrivate::slotCallAdded(Call* call)
     }
 
     auto ret         = new IndividualTimelineNode;
-    ret->m_pCall     = call;
+    ret->m_pCall     = event.data(); //FIXME
     ret->m_Type      = IndividualTimelineModel::NodeType::CALL;
-    ret->m_StartTime = call->startTimeStamp();
-    ret->m_EndTime   = call->stopTimeStamp();
+    ret->m_StartTime = event->startTimeStamp();
+    ret->m_EndTime   = event->stopTimeStamp();
     ret->m_pParent   = m_pCurrentCallGroup;
 
     insert(
@@ -589,8 +598,8 @@ void IndividualTimelineModelPrivate::slotCallAdded(Call* call)
 
     // Update the group timelapse and counters
     m_pCurrentCallGroup->m_lSummary[
-        (call->isMissed() ? 2 : 0) +
-        (call->direction() == Call::Direction::INCOMING ? 0 : 1)
+        (event->status() == Event::Status::X_MISSED ? 2 : 0) +
+        (event->direction() == Event::Direction::INCOMING ? 0 : 1)
     ]++;
 
     m_pCurrentCallGroup->m_EndTime = ret->m_EndTime;
@@ -611,11 +620,6 @@ void IndividualTimelineModel::addContactMethod(ContactMethod* cm)
         if ( (*cm) == (*ocm))
             return;
     }
-
-    const auto calls = cm->calls();
-
-    for (auto c : qAsConst(calls))
-        d_ptr->slotCallAdded(c);
 
     d_ptr->m_hTrackedCMs.insert(cm);
 }
@@ -733,8 +737,8 @@ void IndividualTimelineModelPrivate::disconnectOldCms()
     // Both m_pPerson and m_pCM can be null if the smart pointer race condition
     // inside of Qt5::Quick happens
 
-    disconnect(m_pIndividual.data(), &Individual::callAdded,
-        this, &IndividualTimelineModelPrivate::slotCallAdded);
+    disconnect(m_pIndividual.data(), &Individual::eventAdded,
+        this, &IndividualTimelineModelPrivate::slotEventAdded);
 
     disconnect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);

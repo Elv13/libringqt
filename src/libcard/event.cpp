@@ -400,7 +400,7 @@ QVariant Event::roleData(int role) const
 {
     switch(role) {
         case (int) Ring::Role::Object:
-            return QVariant::fromValue(const_cast<Event*>(this));
+            return QVariant::fromValue(ref());
 
         case (int) Ring::Role::ObjectType:
             return QVariant::fromValue(Ring::ObjectType::Event);

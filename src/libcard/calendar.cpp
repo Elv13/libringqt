@@ -382,6 +382,8 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     b.m_StopTimeStamp   = c->stopTimeStamp ();
     b.m_Status          = Event::Status::FINAL;
     b.m_HasImportedCall = true;
+    b.m_Status          = c->isMissed() ?
+        Event::Status::X_MISSED : Event::Status::FINAL;
     b.m_Direction       = c->direction() == Call::Direction::OUTGOING ?
         Event::Direction::OUTGOING : Event::Direction::INCOMING;
 

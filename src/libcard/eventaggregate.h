@@ -29,6 +29,7 @@ class EventAggregatePrivate;
 class EventAggregateIterator;
 class ContactMethod;
 class Individual;
+class Event;
 
 /**
  * This class creates "virtual" views of the EventModel.
@@ -56,6 +57,9 @@ public:
 
     /// Nothing fancy, no grouping, no sorting, just a list
     QSharedPointer<QAbstractItemModel> unsortedListView() const;
+
+    /// Get a reference to the list of events
+    const QVector< QSharedPointer<Event> > events() const;
 
     /** The correct way to create multi-party aggregates is to create them
      * individually then merge them. Most of the memory and computation will be
