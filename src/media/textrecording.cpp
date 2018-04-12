@@ -37,6 +37,7 @@
 #include "accountmodel.h"
 #include "personmodel.h"
 #include "private/textrecording_p.h"
+#include "private/contactmethod_p.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "itemdataroles.h"
@@ -487,7 +488,7 @@ Media::TextRecording* Media::TextRecording::fromJson(const QList<QJsonObject>& i
             t->save();
 
         // update the timestamp of the CM
-        peerCM->setLastUsed(lastUsed);
+        peerCM->d_ptr->setLastUsed(lastUsed);
     }
 
     return t;
@@ -581,7 +582,7 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
     m_lNodes << n;
 
     if (n->m_pContactMethod->lastUsed() < m->timestamp())
-        n->m_pContactMethod->setLastUsed(m->timestamp());
+        n->m_pContactMethod->d_ptr->setLastUsed(m->timestamp());
 
     m_LastUsed = std::max(m_LastUsed, m->timestamp());
 
@@ -650,7 +651,7 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
 
 
     if (cm->lastUsed() < m->timestamp())
-        cm->setLastUsed(m->timestamp());
+        cm->d_ptr->setLastUsed(m->timestamp());
 
     m_LastUsed = std::max(m_LastUsed, m->timestamp());
 

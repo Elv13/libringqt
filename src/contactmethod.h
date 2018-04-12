@@ -49,6 +49,7 @@ using IndividualPointer = QSharedPointer<Individual>;
 
 namespace Media {
    class TextRecording;
+   class TextRecordingPrivate;
 }
 
 /**
@@ -95,7 +96,10 @@ public:
    friend class LocalTextRecordingCollection; // Manage the CM own text recording
    friend class CallPrivate; //TODO remove, this is a legacy of the pre-Event separation of concerns
    friend class AccountPrivate; // An account is a ContactMethod and share some internals
+   friend class Account; // update type
    friend class Individual;
+   friend class Media::TextRecording; // update last used
+   friend class Media::TextRecordingPrivate; // update last used
    friend class EventModelPrivate; // manage the CM Events, emit signals and so on
    friend class EventModel; // manage the CM Events, emit signals and so on
 
@@ -121,12 +125,12 @@ public:
    //Properties
    Q_PROPERTY(Account*          account          READ account WRITE setAccount NOTIFY accountChanged  )
    Q_PROPERTY(Person*           person           READ contact           WRITE setPerson NOTIFY contactChanged)
-   Q_PROPERTY(int               lastUsed         READ lastUsed          WRITE setLastUsed             )
+   Q_PROPERTY(int               lastUsed         READ lastUsed                                        )
    Q_PROPERTY(QString           uri              READ uri                                             )
    Q_PROPERTY(int               callCount        READ callCount                                       )
    Q_PROPERTY(const QList<Call*> calls           READ calls                                           )
    Q_PROPERTY(bool              bookmarked       READ isBookmarked WRITE setBookmarked NOTIFY bookmarkedChanged )
-   Q_PROPERTY(QString           uid              READ uid               WRITE setUid                  )
+   Q_PROPERTY(QString           uid              READ uid                                             )
    Q_PROPERTY(bool              isTracked        READ isTracked         NOTIFY trackedChanged         )
    Q_PROPERTY(bool              isPresent        READ isPresent         NOTIFY presentChanged         )
    Q_PROPERTY(bool              isSelf           READ isSelf            NOTIFY accountChanged         )
@@ -260,10 +264,6 @@ public:
    Q_INVOKABLE void setTracked       (bool                track         );
    void             setCategory      (NumberCategory*     cat           );
    void             setBookmarked    (bool                bookmarked    );
-   void             setUid           (const QString&      uri           );
-   bool             setType          (ContactMethod::Type t             );
-   void             setLastUsed      (time_t              t             );
-   void             setPresent       (bool                present       );
 
    //Mutator
    Q_INVOKABLE void addCall(Call* call);

@@ -191,13 +191,17 @@ bool Calendar::load()
         return &e;
     });
 
+    // Do not add the events yet, batch those insertion once the newest event
+    // is known to avoid triggering thousand of peers timeline updates.
+    QList<Event*> events;
+
     calendarAdapter->setFallbackObjectHandler<EventPrivate>(
-        [this](
+        [this, &events](
            Calendar* self,
            EventPrivate* child,
            const std::basic_string<char>& name
         ) {
-            d_ptr->getEvent(*child, Event::SyncState::SAVED);
+            events << d_ptr->getEvent(*child, Event::SyncState::SAVED);
     });
 
     l.registerVObjectAdaptor("VCALENDAR", calendarAdapter);
@@ -209,6 +213,19 @@ bool Calendar::load()
     l.loadFile(path().toLatin1().data());
 
 #undef ARGS
+
+    //TODO add batching to the collection system
+
+    // Read backward to improve the odds of the newest being added first
+    while (!events.isEmpty()) {
+        auto e = events.takeLast();
+        if (!e->collection()) {
+            if (e->syncState() == Event::SyncState::NEW)
+                editor<Event>()->addNew(e);
+            else
+                editor<Event>()->addExisting(e);
+        }
+    }
 
     d_ptr->m_IsLoaded = true;
     emit loadingFinished();
@@ -464,17 +481,21 @@ Event* CalendarPrivate::getEvent(const EventPrivate& data, Event::SyncState st)
 
     e->d_ptr->m_pAccount = m_pAccount;
 
-    if (st == Event::SyncState::NEW)
-        q_ptr->editor<Event>()->addNew(e);
-    else
-        q_ptr->editor<Event>()->addExisting(e);
-
     return e;
 }
 
 QSharedPointer<Event> Calendar::addEvent(const EventPrivate& data)
 {
-    return d_ptr->getEvent(data, Event::SyncState::NEW)->d_ptr->m_pStrongRef;
+    auto e = d_ptr->getEvent(data, Event::SyncState::NEW)->d_ptr->m_pStrongRef;
+
+    if (!e->collection()) {
+        if (e->syncState() == Event::SyncState::NEW)
+            editor<Event>()->addNew(e.data());
+        else
+            editor<Event>()->addExisting(e.data());
+    }
+
+    return e;
 }
 
 void CalendarPrivate::slotEventStateChanged(Event::SyncState state, Event::SyncState old)

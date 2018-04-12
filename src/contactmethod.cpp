@@ -368,45 +368,46 @@ void ContactMethod::setBookmarked(bool bookmarked )
 }
 
 ///Force an Uid on this number (instead of hash)
-void ContactMethod::setUid(const QString& uri)
+void ContactMethodPrivate::setUid(const QString& uri)
 {
-   d_ptr->m_Uid = uri;
+   m_Uid = uri;
 }
 
 ///Attempt to change the number type
-bool ContactMethod::setType(ContactMethod::Type t)
+bool ContactMethodPrivate::setType(ContactMethod::Type t)
 {
-   if (d_ptr->m_Type == ContactMethod::Type::BLANK)
+   if (m_Type == ContactMethod::Type::BLANK)
       return false;
 
-   if (t == d_ptr->m_Type)
+   if (t == m_Type)
       return true;
 
-   if (account() && t == ContactMethod::Type::ACCOUNT) {
+   if (q_ptr->account() && t == ContactMethod::Type::ACCOUNT) {
       // Avoid the possible ambiguity since the correct value is currently know
-      switch(account()->protocol()) {
+      switch(q_ptr->account()->protocol()) {
          case Account::Protocol::SIP:
-            d_ptr->m_Uri.setSchemeType(URI::SchemeType::SIP);
+            m_Uri.setSchemeType(URI::SchemeType::SIP);
             break;
          case Account::Protocol::RING:
-            d_ptr->m_Uri.setSchemeType(URI::SchemeType::RING);
+            m_Uri.setSchemeType(URI::SchemeType::RING);
       }
 
-      if (account()->supportPresenceSubscribe()) {
-         d_ptr->m_Tracked = true; //The daemon will init the tracker itself
-         d_ptr->trackedChanged(true);
+      if (q_ptr->account()->supportPresenceSubscribe()) {
+         m_Tracked = true; //The daemon will init the tracker itself
+         trackedChanged(true);
       }
-      d_ptr->m_Type = t;
+      m_Type = t;
       return true;
    }
    return false;
 }
 
 ///Update the last time used only if t is more recent than m_LastUsed
-void ContactMethod::setLastUsed(time_t t)
+void ContactMethodPrivate::setLastUsed(time_t t)
 {
-    if (d_ptr->m_pUsageStats->d_ptr->setLastUsed(t))
-       emit lastUsedChanged(t);
+    if (m_pUsageStats->d_ptr->setLastUsed(t))
+       foreach (ContactMethod* n, m_lParents)
+          emit n->lastUsedChanged(t);
 }
 
 ///Set if this number is tracking presence information
@@ -450,14 +451,14 @@ void ContactMethodPrivate::setRegisteredName(const QString& registeredName)
 }
 
 ///Allow phonedirectorymodel to change presence status
-void ContactMethod::setPresent(bool present)
+void ContactMethodPrivate::setPresent(bool present)
 {
-    if (isSelf()) {
+    if (q_ptr->isSelf()) {
         //TODO
     }
-    else if (d_ptr->m_Present != present) {
-        d_ptr->m_Present = present;
-        d_ptr->presentChanged(present);
+    else if (m_Present != present) {
+        m_Present = present;
+        presentChanged(present);
     }
 }
 
@@ -910,7 +911,7 @@ void ContactMethod::addCall(Call* call)
 
    // call setLastUsed first so that we emit lastUsedChanged()
    auto time = call->startTimeStamp();
-   setLastUsed(time);
+   d_ptr->setLastUsed(time);
 
    //Update the contact method statistics
    d_ptr->m_pUsageStats->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());

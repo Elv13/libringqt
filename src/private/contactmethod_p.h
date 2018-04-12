@@ -107,6 +107,10 @@ public:
    void addAlternativeTextRecording(Media::TextRecording* recording);
    void setCertificate (Certificate*);
    void setRegisteredName(const QString& registeredName);
+   void setLastUsed(time_t t);
+   bool setType(ContactMethod::Type t);
+   void setUid(const QString& uri);
+   void setPresent(bool present);
 
 public Q_SLOTS:
    void slotAccountDestroyed(QObject* o);

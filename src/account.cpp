@@ -45,6 +45,7 @@
 #include "private/certificatemodel_p.h"
 #include "private/account_p.h"
 #include "private/accountmodel_p.h"
+#include "private/contactmethod_p.h"
 #include "credentialmodel.h"
 #include "ciphermodel.h"
 #include "protocolmodel.h"
@@ -178,7 +179,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
        ContactMethod* tracked_buddy = PhoneDirectoryModel::instance().getNumber(subscription[DRing::Presence::BUDDY_KEY], a);
        bool tracked_buddy_present = subscription[DRing::Presence::STATUS_KEY].compare(DRing::Presence::ONLINE_KEY) == 0;
        tracked_buddy->setTracked(true);
-       tracked_buddy->setPresent(tracked_buddy_present);
+       tracked_buddy->d_ptr->setPresent(tracked_buddy_present);
    }
 
     const QString currentUri = a->d_ptr->buildUri();
@@ -186,7 +187,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
     a->d_ptr->m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, a);
     Q_ASSERT(a->d_ptr->m_pAccountNumber->uri() != '@');
 
-    a->d_ptr->m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
+    a->d_ptr->m_pAccountNumber->d_ptr->setType(ContactMethod::Type::ACCOUNT);
 
    return a;
 } //buildExistingAccountFromId
@@ -2650,7 +2651,7 @@ void AccountPrivate::reload()
          m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, q_ptr);
 
          Q_ASSERT(m_pAccountNumber->uri() != '@');
-         m_pAccountNumber->setType(ContactMethod::Type::ACCOUNT);
+         m_pAccountNumber->d_ptr->setType(ContactMethod::Type::ACCOUNT);
          connect(m_pAccountNumber,SIGNAL(presenceMessageChanged(QString)),this,SLOT(slotPresenceMessageChanged(QString)));
          connect(m_pAccountNumber,SIGNAL(presentChanged(bool)),this,SLOT(slotPresentChanged(bool)));
       }
