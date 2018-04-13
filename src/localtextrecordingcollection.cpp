@@ -60,7 +60,7 @@ public:
     virtual bool addNew     ( Media::Recording*       item ) override;
     virtual bool addExisting( const Media::Recording* item ) override;
     QString fetch(const QByteArray& sha1);
-    QString path(const QByteArray& sha1);
+    static QString path(const QByteArray& sha1);
 
     void clearAll();
     void loadStat();
@@ -136,9 +136,23 @@ LocalTextRecordingCollection& LocalTextRecordingCollection::instance()
     return *instance;
 }
 
+QString LocalTextRecordingCollection::directoryPath()
+{
+    static QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+
+    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    if (!init_flag.test_and_set())
+        dir.mkdir(QStringLiteral("text/"));
+
+    static auto p = dir.path()+"/text/";
+
+    return p;
+}
+
 bool LocalTextRecordingEditor::save(const Media::Recording* recording)
 {
     Q_UNUSED(recording)
+
     QHash<QByteArray,QByteArray> ret = static_cast<const Media::TextRecording*>(recording)->d_ptr->toJsons();
 
     static QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
@@ -213,6 +227,11 @@ bool LocalTextRecordingEditor::addExisting(const Media::Recording* item)
     m_lNumbers << const_cast<Media::Recording*>(item);
     mediator()->addItem(item);
     return false;
+}
+
+QString LocalTextRecordingCollection::pathForCm(ContactMethod* cm)
+{
+    return LocalTextRecordingEditor::path(cm->sha1());
 }
 
 QString LocalTextRecordingEditor::path(const QByteArray& sha1)

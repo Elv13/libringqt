@@ -44,6 +44,7 @@
 #include "mime.h"
 #include "dbus/configurationmanager.h"
 #include "private/textrecordingmodel.h"
+#include "localtextrecordingcollection.h"
 
 //Std
 #include <ctime>
@@ -538,7 +539,7 @@ void Media::TextRecordingPrivate::initGroup(MimeMessage::Type t, ContactMethod* 
 
         Q_ASSERT(cMethod);
 
-        m_pCurrentGroup = new Serializable::Group(cMethod->account());
+        m_pCurrentGroup = new Serializable::Group(cMethod->account(), LocalTextRecordingCollection::pathForCm(cm));
         m_pCurrentGroup->type = t;
 
         auto p = SerializableEntityManager::peer(cMethod);

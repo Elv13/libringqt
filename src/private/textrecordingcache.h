@@ -50,7 +50,7 @@ class Peers;
 class Group final
 {
 public:
-    explicit Group(Account* a);
+    explicit Group(Account* a, const QString& path);
     ~Group();
 
     /**Also link upward to avoid duplicating the peers metadata in each group
@@ -96,7 +96,7 @@ public:
     void reloadAttendees() const;
 
     void read (const QJsonObject &json, const QHash<QString,ContactMethod*> sha1s, const QString& path);
-    void write(QJsonObject       &json) const;
+    void write(QJsonObject       &json, const QString& path) const;
 
     /**
      *HACK The old file format did not have the concept of events and if new

@@ -33,6 +33,7 @@
 #include "libcard/calendar.h"
 #include "media/file.h"
 #include "availableaccountmodel.h"
+#include "localtextrecordingcollection.h"
 #include "phonedirectorymodel.h"
 
 QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;
@@ -152,7 +153,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
 
 bool Serializable::Group::warnOfRaceCondition = false;
 
-Serializable::Group::Group(Account* a) : m_pAccount(a)
+Serializable::Group::Group(Account* a, const QString& path) : m_pAccount(a), m_Path(path)
 {
     Q_ASSERT(!warnOfRaceCondition);
 }
@@ -262,13 +263,25 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
     }
 }
 
-void Serializable::Group::write(QJsonObject &json) const
+void Serializable::Group::write(QJsonObject &json, const QString& path) const
 {
     // This is really not supposed to happen anymore
     if (!m_pEvent)
         qWarning() << "Trying to save a text message group without an event" << eventUid;
 
     Q_ASSERT(eventUid == event()->uid());
+
+    if (!event()->hasAttachment(path)) {
+        static QMimeType* t = nullptr;
+        if (!t) {
+            QMimeDatabase db;
+            t = new QMimeType(db.mimeTypeForFile("foo.json"));
+        }
+
+        event()->attachFile(new Media::File(
+            path, Media::Attachment::BuiltInTypes::TEXT_RECORDING, t
+        ));
+    }
 
     json[QStringLiteral("id")            ] = id                     ;
     json[QStringLiteral("nextGroupSha1") ] = nextGroupSha1          ;
@@ -361,7 +374,7 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
     for (int i = 0; i < arr.size(); ++i) {
         QJsonObject o = arr[i].toObject();
 
-        Group* group = new Group(a);
+        Group* group = new Group(a, path);
         group->read(o, m_hSha1, path);
 
         // Work around a bug in older chat conversation where whe authorSha1
@@ -396,9 +409,12 @@ void Serializable::Peers::write(QJsonObject &json) const
 {
 
     QJsonArray a;
+
+    const auto sha1s = toSha1Array();
+
     for (const Group* g : groups) {
         QJsonObject o;
-        g->write(o);
+        g->write(o, LocalTextRecordingCollection::directoryPath()+sha1s.first().toString()+".json");
 
         if (o.isEmpty())
             continue;
@@ -409,7 +425,7 @@ void Serializable::Peers::write(QJsonObject &json) const
     if (a.isEmpty())
         return;
 
-    json[QStringLiteral("sha1s")] = toSha1Array();
+    json[QStringLiteral("sha1s")] = sha1s;
     json[QStringLiteral("groups")] = a;
 
     QJsonArray a3;

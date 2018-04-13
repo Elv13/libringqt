@@ -235,6 +235,7 @@ public:
     void detachFile(Media::Attachment* file);
 
     bool hasAttachment(Media::Attachment::BuiltInTypes t) const;
+    bool hasAttachment(const QUrl& path) const;
 
     /**
      * Each attendees with the name they used for that event

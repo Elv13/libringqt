@@ -21,6 +21,9 @@
 // Std
 #include <ctime>
 
+// Qt
+#include <QtCore/QUrl>
+
 // Ring
 #include <call.h>
 #include "flagutils.h"
@@ -385,6 +388,16 @@ bool Event::hasAttachment(Media::Attachment::BuiltInTypes t) const
 {
     for (auto a : qAsConst(d_ptr->m_lAttachedFiles)) {
         if (a->type() == t)
+            return true;
+    }
+
+    return false;
+}
+
+bool Event::hasAttachment(const QUrl& path) const
+{
+    for (auto a : qAsConst(d_ptr->m_lAttachedFiles)) {
+        if (a->path() == path)
             return true;
     }
 

@@ -52,6 +52,9 @@ public:
 
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
+   static QString pathForCm(ContactMethod* cm);
+   static QString directoryPath();
+
    /**
     * A very bad idea, but when adding new fields to the file format, it's better
     * than having to `if` a thousand code paths.
