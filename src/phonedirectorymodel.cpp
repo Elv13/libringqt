@@ -811,8 +811,11 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    return number;
 }
 
-ContactMethod* PhoneDirectoryModel::fromTemporary(const TemporaryContactMethod* number)
+ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
 {
+    if (number->type() != ContactMethod::Type::TEMPORARY)
+        return number;
+
     auto ret = getNumber(number->uri(),number->contact(),number->account());
 
     Q_ASSERT(ret);
