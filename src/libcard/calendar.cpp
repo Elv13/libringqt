@@ -139,12 +139,19 @@ bool Calendar::load()
 
         for (auto param : params) {
             const QByteArray pKey = QByteArray::fromRawData(param.first.data (), param.first.size ());
-            const QByteArray pVal = QByteArray::fromRawData(param.second.data(), param.second.size());
+            QByteArray pVal = QByteArray::fromRawData(param.second.data(), param.second.size());
 
-            if (pKey == "CN")
+            //WARNING Always detach the value before sending into other classes
+            // unless it is not stored
+
+            if (pKey == "CN") {
+                pVal.detach();
                 self->m_CN = pVal;
-            else if (pKey == "UID")
+            }
+            else if (pKey == "UID") {
+                pVal.detach();
                 p = PersonModel::instance().getPlaceHolder(pVal);
+            }
             else if (pKey == "X_RING_ACCOUNTID")
                 a = AccountModel::instance().getById(pVal);
         }
