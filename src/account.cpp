@@ -744,7 +744,17 @@ Account::getContacts() const
 ///Return the account user name
 QString Account::username() const
 {
-   return d_ptr->accountDetail(DRing::Account::ConfProperties::USERNAME);
+   auto ret = d_ptr->accountDetail(DRing::Account::ConfProperties::USERNAME);
+
+   // The username (ringId) can take a while to be available, keep trying
+   if (ret.isEmpty() && protocol() == Account::Protocol::RING && editState() == Account::EditState::READY) {
+       ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
+       const QMap<QString,QString> aDetails = configurationManager.getAccountDetails(id());
+       ret = aDetails[DRing::Account::ConfProperties::USERNAME];
+       d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::USERNAME] = ret;
+   }
+
+   return ret;
 }
 
 //Return the account registered name
