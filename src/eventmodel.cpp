@@ -499,6 +499,9 @@ void EventModelPrivate::slotFixCache()
 {
     auto e = qobject_cast<Event*>(sender());
 
+    if (!e)
+        return;
+
     m_hUids.remove(e->uid());
 }
 

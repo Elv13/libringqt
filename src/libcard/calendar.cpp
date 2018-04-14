@@ -90,7 +90,7 @@ public Q_SLOTS:
     void slotSaveOnDisk();
 };
 
-Calendar::Calendar(CollectionMediator<Event>* mediator, Account* a) : QObject(a), CollectionInterface(new CalendarEditor(mediator)),
+Calendar::Calendar(CollectionMediator<Event>* mediator, Account* a) : QObject(nullptr), CollectionInterface(new CalendarEditor(mediator)),
 d_ptr(new CalendarPrivate)
 {
     d_ptr->q_ptr      = this;
