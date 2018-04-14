@@ -64,6 +64,10 @@ public:
     void connectContactMethod(ContactMethod* cm);
     void disconnectContactMethod(ContactMethod* cm);
     InfoTemplate* infoTemplate();
+    bool merge(QSharedPointer<Individual> other);
+    bool contains(ContactMethod* cm) const;
+
+    QList<Individual*> m_lParents;
 
     Individual* q_ptr;
 
@@ -74,6 +78,7 @@ public Q_SLOTS:
     void slotUnreadCountChanged (                         );
     void slotCmDestroyed        (                         );
     void slotCmEventAdded       ( QSharedPointer<Event> e );
+    void slotContactChanged     (                         );
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -94,6 +99,7 @@ Individual::Individual(Person* parent) :
 Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
 {
     d_ptr->q_ptr = this;
+    d_ptr->m_lParents << this;
 
 }
 
@@ -113,7 +119,59 @@ Individual::~Individual()
 
     setEditRow(false);
 
-    delete d_ptr;
+    d_ptr->m_lParents.removeAll(this);
+
+    if (d_ptr->m_lParents.isEmpty())
+        delete d_ptr;
+}
+
+bool IndividualPrivate::contains(ContactMethod* cm) const
+{
+    bool ret = false;
+    q_ptr->forAllNumbers([&ret, cm](ContactMethod* other) {
+        if (other->d() == cm->d()) {
+            ret = true;
+            return;
+        }
+    });
+
+    return ret;
+}
+
+/**
+ * This will happen when an individual was already created and contact is then
+ * added to one of the contact method. The trick is to "fix" this silently by
+ * swapping the d_ptr. Once the QSharedPointer<Individual> loses it's last
+ * references it gets deleted and everyone is happy.
+ */
+bool IndividualPrivate::merge(QSharedPointer<Individual> other)
+{
+    // It will happen when the Person re-use the first individual it finds.
+    // (it's done on purpose)
+    if (other.data()->d_ptr == this)
+        return false;
+
+    if (Q_UNLIKELY(m_pPerson && other->d_ptr->m_pPerson && !(*m_pPerson == *other->d_ptr->m_pPerson))) {
+        qWarning() << "Trying to merge 2 incompatible individuals";
+        return false;
+    }
+
+    other->d_ptr->m_lParents << q_ptr;
+
+    if ((!other->d_ptr->m_LastUsedCM) || (m_LastUsedCM && m_LastUsedCM->lastUsed() > other->d_ptr->m_LastUsedCM->lastUsed()))
+        other->d_ptr->m_LastUsedCM =  m_LastUsedCM;
+
+    for (auto cm : qAsConst(m_Numbers))
+        if (!other->d_ptr->contains(cm))
+            other->addPhoneNumber(cm);
+
+    for (auto cm : qAsConst(m_HiddenContactMethods))
+        if (!other->d_ptr->contains(cm))
+            other->registerContactMethod(cm);
+
+    delete this;
+
+    return true;
 }
 
 QVariant Individual::data( const QModelIndex& index, int role ) const
@@ -275,6 +333,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::unreadTextMessageCountChanged, this,
         &IndividualPrivate::slotUnreadCountChanged);
 
+    connect(m, &ContactMethod::contactChanged, this,
+        &IndividualPrivate::slotContactChanged);
+
 //     connect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     connect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
 }
@@ -304,6 +365,9 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::unreadTextMessageCountChanged, this,
         &IndividualPrivate::slotUnreadCountChanged);
+
+    disconnect(m, &ContactMethod::contactChanged, this,
+        &IndividualPrivate::slotContactChanged);
 
 //     disconnect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     disconnect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
@@ -362,8 +426,7 @@ QVector<ContactMethod*> Individual::relatedContactMethods() const
 ///Set the phone number (type and number)
 void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
 {
-    Q_ASSERT(false);
-   //TODO make a diff instead of full reload
+    //TODO make a diff instead of full reload
     const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
 
     emit phoneNumbersAboutToChange();
@@ -600,6 +663,14 @@ void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
     emit q_ptr->childrenRebased(cm, other);
+}
+
+void IndividualPrivate::slotContactChanged()
+{
+    auto cm = qobject_cast<ContactMethod*>(sender());
+
+    if (!m_pPerson && cm->contact())
+        merge(cm->contact()->individual());
 }
 
 /// Like std::any_of

@@ -136,6 +136,7 @@ Q_SIGNALS:
 private:
     explicit Individual();
     Individual(Person* parent);
+    Q_DECLARE_PRIVATE(Individual)
 
     IndividualPrivate* d_ptr;
 };
