@@ -109,8 +109,25 @@ QByteArray LocalProfileCollection::id() const
 
 void LocalProfileCollectionPrivate::setupDefaultProfile()
 {
+    // Select a better name
+    auto name = QObject::tr("Default");
+
+    const int accountCount = AccountModel::instance().size();
+
+    for (int i = 0; i < accountCount; i++) {
+        const auto a = AccountModel::instance()[i];
+        if (!a->registeredName().isEmpty()) {
+            name = a->registeredName();
+            break;
+        }
+        else if (!a->alias().isEmpty()) {
+            name = a->alias();
+            break;
+        }
+    }
+
     auto profile = new Person();
-    profile->setFormattedName(QObject::tr("Default"));
+    profile->setFormattedName(name);
     profile->addCustomField(VCardUtils::Property::X_RINGDEFAULTACCOUNT, "1");
 
     for (int i = 0 ; i < AccountModel::instance().size() ; i++)

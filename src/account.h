@@ -485,6 +485,8 @@ class LIB_EXPORT Account : public ItemBase {
       Q_INVOKABLE bool lookupName   (const QString& name                         ) const;
       Q_INVOKABLE bool lookupAddress(const QString& address                      ) const;
 
+      Q_INVOKABLE bool createProfile();
+
       bool   isUsedForOutgogingCall () const;
       uint   totalCallCount         () const;
       uint   weekCallCount          () const;

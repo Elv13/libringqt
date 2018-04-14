@@ -78,6 +78,7 @@ public:
     QModelIndex accountIndex(Account* a) const;
 
     QItemSelectionModel* getAccountSelectionModel(Account* a) const;
+    Q_INVOKABLE bool setProfile(Account* a, Person* p);
 
 private:
     ProfileModelPrivate* d_ptr;
@@ -89,7 +90,7 @@ private:
 public Q_SLOTS:
     bool remove(const QModelIndex& idx);
     bool add(Person* person = nullptr);
-    bool add(const QString& name);
+    Person* add(const QString& name);
 
 Q_SIGNALS:
     void hasAvailableProfileChanged();

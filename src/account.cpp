@@ -1613,6 +1613,14 @@ bool Account::lookupAddress(const QString& address) const
     return NameDirectory::instance().lookupAddress(this, QString(), address);
 }
 
+/// Automatically create a profile based on the account name
+bool Account::createProfile()
+{
+    qDebug() << "\n\nCREATING PROFILE!" << ProfileModel::instance().rowCount();
+    auto name = registeredName().isEmpty() ? alias() : registeredName();
+    setProfile(ProfileModel::instance().add(name));
+}
+
 ///Set the account username, everything is valid, some might be rejected by the PBX server
 void Account::setUsername(const QString& detail)
 {
@@ -2077,11 +2085,7 @@ void Account::setProfile(Person* p)
         return;
     }
 
-    Q_ASSERT(contactMethod()->isSelf());
-
-    contactMethod()->setPerson(p);
-
-    p->save();
+    ProfileModel::instance().setProfile(this, p);
 
     emit changed(this);
 }

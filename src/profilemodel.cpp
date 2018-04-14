@@ -96,7 +96,7 @@ public:
 
     //Helpers
     void updateIndexes();
-    inline bool addProfile(Person* person, const QString& name, CollectionInterface* col);
+    inline Person* addProfile(Person* person, const QString& name, CollectionInterface* col);
 
     void _test_validate();
 
@@ -106,6 +106,7 @@ public:
     ProfileNode* nodeForAccount(const Account* a) const;
     QModelIndex mapToSource  (const QModelIndex& idx) const;
     QModelIndex mapFromSource(const QModelIndex& idx) const;
+    ProfileNode* createNodeForAccount(Account* a);
 
     //Constants
     constexpr static const int c_OrderRole = 9999;
@@ -122,6 +123,18 @@ AvailableProfileModel::AvailableProfileModel(ProfileModelPrivate* d) :
 {
     setObjectName("AvailableProfileModel");
     setSourceModel(d->q_ptr);
+}
+
+ProfileNode* ProfileModelPrivate::createNodeForAccount(Account* acc)
+{
+    auto account_pro     = new ProfileNode;
+    account_pro->type    = ProfileNode::Type::ACCOUNT;
+    account_pro->parent  = nullptr;
+    account_pro->m_AccData.m_pSelectionModel = nullptr;
+    account_pro->m_AccData.m_pAccount = acc;
+    account_pro->m_Index = -1;
+
+    return account_pro;
 }
 
 void ProfileModelPrivate::slotAccountAdded(Account* acc)
@@ -153,12 +166,9 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
         return;
     }
 
-    auto account_pro     = new ProfileNode;
-    account_pro->type    = ProfileNode::Type::ACCOUNT;
-    account_pro->parent  = currentNode;
-    account_pro->m_AccData.m_pSelectionModel = nullptr;
-    account_pro->m_AccData.m_pAccount = acc;
+    auto account_pro     = createNodeForAccount(acc);
     account_pro->m_Index = currentNode->children.size();
+    account_pro->parent  = currentNode;
 
     const auto parentIdx = ProfileModel::instance().index(currentNode->m_Index,0);
 
@@ -531,6 +541,40 @@ bool ProfileModel::hasAvailableProfiles() const
     return availableProfileModel()->rowCount();
 }
 
+bool ProfileModel::setProfile(Account* a, Person* p)
+{
+    if (!p)
+        return false;
+
+    if (p->uid().isEmpty())
+        p->ensureUid();
+
+    if (!p->collection()) {
+        const auto cols = collections(CollectionInterface::SupportedFeatures::ADD);
+
+        if (cols.isEmpty())
+            return false;
+
+        cols.first()->editor<Person>()->addNew(p);
+    }
+
+    Q_ASSERT(!p->uid().isEmpty());
+
+    auto accNode = d_ptr->nodeForAccount(a);
+    auto proNode = d_ptr->profileNodeById(p->uid());
+
+    if (!accNode)
+        accNode = d_ptr->createNodeForAccount(a);
+
+    Q_ASSERT(accNode);
+    Q_ASSERT(proNode);
+
+    Q_ASSERT(a->contactMethod()->isSelf());
+    a->contactMethod()->setPerson(p);
+
+    d_ptr->setProfile(accNode, proNode);
+}
+
 void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 {
     Q_ASSERT(accNode->type == ProfileNode::Type::ACCOUNT);
@@ -538,27 +582,33 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 
     auto oldProfile = accNode->parent;
 
-    const auto oldParentIdx = q_ptr->index(oldProfile->m_Index, 0);
+    const auto oldParentIdx = oldProfile ? q_ptr->index(oldProfile->m_Index, 0) : QModelIndex();
 
     const auto newParentIdx = q_ptr->index(proNode->m_Index, 0);
 
-    if(!q_ptr->beginMoveRows(oldParentIdx, accNode->m_Index, accNode->m_Index, newParentIdx, 0))
+    if (!oldParentIdx.isValid()) {
+        accNode->m_Index = proNode->m_Index = 0;
+        q_ptr->beginInsertRows(newParentIdx, accNode->m_Index, accNode->m_Index);
+    }
+    else if(!q_ptr->beginMoveRows(oldParentIdx, accNode->m_Index, accNode->m_Index, newParentIdx, 0))
         return;
 
-    Q_ASSERT(accNode == oldProfile->children.at(accNode->m_Index));
+    Q_ASSERT((!oldProfile) || accNode == oldProfile->children.at(accNode->m_Index));
 
     qDebug() << "Moving:" << accNode->m_AccData.m_pAccount->alias();
 
-    const bool ret = oldProfile->m_pPerson->removeCustomField(
+    const bool ret = oldProfile ? oldProfile->m_pPerson->removeCustomField(
         VCardUtils::Property::X_RINGACCOUNT,
         accNode->m_AccData.m_pAccount->id()
-    );
+    ) : true;
 
     if (Q_UNLIKELY(!ret)) {
         qWarning() << "Removing from the old profile failed, ignoring";
     }
 
-    oldProfile->children.remove(accNode->m_Index);
+    if (oldProfile)
+        oldProfile->children.remove(accNode->m_Index);
+
     accNode->parent = proNode;
     proNode->children.insert(0, accNode);
 
@@ -570,9 +620,14 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
     );
 
     proNode->m_pPerson->save();
-    oldProfile->m_pPerson->save();
 
-    q_ptr->endMoveRows();
+    if (oldProfile)
+        oldProfile->m_pPerson->save();
+
+    if (oldProfile)
+        q_ptr->endMoveRows();
+    else
+        q_ptr->endInsertRows();
 }
 
 bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
@@ -777,11 +832,11 @@ bool ProfileModel::remove(const QModelIndex& idx)
     return n->m_pPerson->remove();
 }
 
-bool ProfileModelPrivate::addProfile(Person* person, const QString& name, CollectionInterface* col)
+Person* ProfileModelPrivate::addProfile(Person* person, const QString& name, CollectionInterface* col)
 {
     if (!col) {
         qWarning() << "Can't add profile, no collection specified";
-        return false;
+        return nullptr;
     }
 
     if (!person) {
@@ -794,7 +849,7 @@ bool ProfileModelPrivate::addProfile(Person* person, const QString& name, Collec
 
     col->editor<Person>()->addNew(person);
 
-    return true;
+    return person;
 }
 
 void ProfileModelPrivate::_test_validate()
@@ -826,7 +881,7 @@ void ProfileModelPrivate::_test_validate()
 bool ProfileModel::add(Person* person)
 {
     const auto cols = collections(CollectionInterface::SupportedFeatures::ADD);
-    return cols.isEmpty() ? false : d_ptr->addProfile(person, {}, cols.first());
+    return cols.isEmpty() ? false : d_ptr->addProfile(person, {}, cols.first()) != nullptr;
 }
 
 /**
@@ -834,10 +889,10 @@ bool ProfileModel::add(Person* person)
  *
  * @param name The new profile name
  */
-bool ProfileModel::add(const QString& name)
+Person* ProfileModel::add(const QString& name)
 {
     const auto cols = collections(CollectionInterface::SupportedFeatures::ADD);
-    return cols.isEmpty() ? false : d_ptr->addProfile(nullptr, name, cols.first());
+    return cols.isEmpty() ? nullptr : d_ptr->addProfile(nullptr, name, cols.first());
 }
 
 Person* ProfileModel::getProfile(const QModelIndex& idx) const
