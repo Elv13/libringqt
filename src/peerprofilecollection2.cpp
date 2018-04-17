@@ -156,7 +156,7 @@ void PeerProfileCollection2Private::mergePersons(Person* source, ContactMethod* 
             break;
     }
 
-    delete source;
+//     delete source;
 }
 
 ///When we get a peer profile, its a vCard from a ContactRequest or a Call. We need to verify if
