@@ -603,7 +603,7 @@ void PersonPrivate::slotTrackedChanged()
 }
 
 ///Create a placeholder contact, it will eventually be replaced when the real one is loaded
-PersonPlaceHolder::PersonPlaceHolder(const QByteArray& uid):d_ptr(nullptr)
+PersonPlaceHolder::PersonPlaceHolder(const QByteArray& uid): Person()
 {
     setUid(uid);
     Person::d_ptr->m_isPlaceHolder = true;
@@ -619,12 +619,17 @@ bool PersonPlaceHolder::merge(Person* contact)
     if ((!contact) || ((*contact) == this))
         return false;
 
+
     PersonPrivate* currentD = Person::d_ptr;
+    qDebug() << "\n\nDEDUPLICATE PERSON!" << contact << currentD;
+    Q_ASSERT(currentD);
+
     replaceDPointer(contact);
     currentD->m_lParents.removeAll(this);
 
     if (!currentD->m_lParents.size())
         delete currentD;
+
     return true;
 }
 
@@ -635,7 +640,7 @@ void Person::replaceDPointer(Person* c)
         emit c->lastUsedTimeChanged(individual()->lastUsedContactMethod()->lastUsed());
     }
 
-    this->d_ptr = c->d_ptr;
+    this->Person::d_ptr = c->Person::d_ptr;
     d_ptr->m_lParents << this;
     emit changed();
     emit rebased(c);

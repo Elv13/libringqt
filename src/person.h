@@ -31,7 +31,6 @@ class PersonPrivate;
 class AddressPrivate;
 class Account;
 class CollectionInterface;
-class PersonPlaceHolderPrivate;
 class UsageStatistics;
 class Address;
 class Individual;
@@ -212,9 +211,6 @@ class LIB_EXPORT PersonPlaceHolder : public Person {
 public:
    explicit PersonPlaceHolder(const QByteArray& uid);
    bool merge(Person* contact);
-private:
-   PersonPlaceHolderPrivate* d_ptr;
-   Q_DECLARE_PRIVATE(PersonPlaceHolder)
 };
 
 Q_DECLARE_METATYPE(Person*)
