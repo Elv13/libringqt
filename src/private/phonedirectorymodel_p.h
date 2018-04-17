@@ -23,6 +23,7 @@
 class PhoneDirectoryModel;
 class LocalNameServiceCache;
 #include "contactmethod.h"
+#include "account.h"
 #include "namedirectory.h"
 
 //Internal data structures
@@ -113,6 +114,7 @@ private Q_SLOTS:
    void slotContactChanged(Person* newContact, Person* oldContact);
    void slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name);
    void slotContactMethodMerged(ContactMethod* other);
+   void slotAccountStateChanged(Account* a, const Account::RegistrationState state);
 
    //From DBus
    void slotNewBuddySubscription(const QString& uri, const QString& accountId, bool status, const QString& message);

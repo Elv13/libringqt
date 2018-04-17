@@ -282,6 +282,8 @@ QSharedPointer<Individual> Person::individual() const
     if (!d_ptr->m_pIndividual)
         d_ptr->m_pIndividual = Individual::getIndividual(const_cast<Person*>(this));
 
+    Q_ASSERT(d_ptr->m_pIndividual);
+
     return d_ptr->m_pIndividual;
 }
 

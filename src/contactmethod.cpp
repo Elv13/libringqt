@@ -99,13 +99,12 @@ void ContactMethodPrivate::changed()
       emit n->changed();
 }
 
-void ContactMethodPrivate::canSendTextsChanged()
+void ContactMethodPrivate::mediaAvailabilityChanged()
 {
-    const ContactMethod::MediaAvailailityStatus v = q_ptr->canSendTexts();
     const bool a = q_ptr->hasActiveCall();
 
     for (auto n : qAsConst(m_lParents)) {
-        emit n->canSendTextsChanged (v);
+        emit n->mediaAvailabilityChanged();
         emit n->hasActiveCallChanged(a);
     }
 }
@@ -1226,6 +1225,7 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
 ContactMethod::MediaAvailailityStatus ContactMethod::canSendTexts(bool warn) const
 {
     auto selectedAccount = account() ? account() : AvailableAccountModel::instance().currentDefaultAccount(this);
+    qDebug() << "IN CAN SEND TEXT!" << selectedAccount;
 
     // Texts might still fail, but there is no reliable way to know, assume the
     // best.
@@ -1262,6 +1262,7 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canCall() const
         return ContactMethod::MediaAvailailityStatus::AVAILABLE;
 
     auto selectedAccount = account();
+    qDebug() << "IN CAN CALL!" << selectedAccount;
 
     if (!selectedAccount)
         return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
@@ -1350,7 +1351,7 @@ void ContactMethodPrivate::addActiveCall(Call* c)
     removeInitCall(c);
 
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
-        canSendTextsChanged();
+        mediaAvailabilityChanged();
 }
 
 void ContactMethodPrivate::removeActiveCall(Call* c)
@@ -1362,7 +1363,7 @@ void ContactMethodPrivate::removeActiveCall(Call* c)
     changed();
 
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
-        canSendTextsChanged();
+        mediaAvailabilityChanged();
 }
 
 void ContactMethodPrivate::addInitCall(Call* c)
