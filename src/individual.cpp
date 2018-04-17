@@ -736,11 +736,13 @@ QSharedPointer<Individual> Individual::getIndividual(Person* p)
     if (auto i = p->d_ptr->m_pIndividual)
         return i;
 
+    qDebug() << "\n\nCREATING" << p;
     // strong ref
     p->d_ptr->m_pIndividual = QSharedPointer<Individual>(
         new Individual(p)
     );
     p->d_ptr->m_pIndividual->d_ptr->m_pWeakRef = p->d_ptr->m_pIndividual;
+    qDebug() << "\n\nCREATED" << p << p->d_ptr->m_pIndividual << p->d_ptr->m_pIndividual.data();
 
     return p->d_ptr->m_pIndividual;
 }

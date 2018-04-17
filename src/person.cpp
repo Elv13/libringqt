@@ -279,8 +279,9 @@ UsageStatistics* Person::usageStatistics() const
 
 QSharedPointer<Individual> Person::individual() const
 {
+    qDebug() << "BEFORE" << d_ptr->m_pIndividual;
     if (!d_ptr->m_pIndividual)
-        d_ptr->m_pIndividual = Individual::getIndividual(const_cast<Person*>(this));
+        Individual::getIndividual(const_cast<Person*>(this));
 
     qDebug() << "\n\n\nINDIVIDUAL!!!" << d_ptr->m_pIndividual;
     Q_ASSERT(d_ptr->m_pIndividual);
