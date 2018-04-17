@@ -169,6 +169,7 @@ Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionI
 Person::Person(const Person& other) noexcept : ItemBase(&PersonModel::instance()),
 d_ptr(new PersonPrivate(this))
 {
+   qDebug() << "COPY PERSON";
    d_ptr->m_FirstName            = other.d_ptr->m_FirstName           ;
    d_ptr->m_SecondName           = other.d_ptr->m_SecondName          ;
    d_ptr->m_NickName             = other.d_ptr->m_NickName            ;
@@ -203,6 +204,7 @@ Person::~Person()
    //Unregister itself from the D-Pointer list
    d_ptr->m_lParents.removeAll(this);
 
+   qDebug() << "\n\nDELETE PERSON" << this;
    if (d_ptr->m_lParents.isEmpty()) {
       d_ptr->setParent(nullptr);
       delete d_ptr;
@@ -621,14 +623,17 @@ bool PersonPlaceHolder::merge(Person* contact)
 
 
     PersonPrivate* currentD = Person::d_ptr;
-    qDebug() << "\n\nDEDUPLICATE PERSON!" << contact << currentD;
     Q_ASSERT(currentD);
 
     replaceDPointer(contact);
+
     currentD->m_lParents.removeAll(this);
+    qDebug() << "\n\nDEDUPLICATE PERSON!" << contact << currentD << d_ptr->m_lParents.size() << currentD->m_lParents.size();
 
     if (!currentD->m_lParents.size())
         delete currentD;
+
+    Q_ASSERT(d_ptr->m_lParents.size() > 1);
 
     return true;
 }
