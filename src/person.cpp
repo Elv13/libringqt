@@ -630,7 +630,7 @@ bool PersonPlaceHolder::merge(Person* contact)
     currentD->m_lParents.removeAll(this);
     qDebug() << "\n\nDEDUPLICATE PERSON!" << contact << currentD << d_ptr->m_lParents.size() << currentD->m_lParents.size();
 
-    if (!currentD->m_lParents.size())
+    if (currentD->m_lParents.isEmpty())
         delete currentD;
 
     Q_ASSERT(d_ptr->m_lParents.size() > 1);

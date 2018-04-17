@@ -58,7 +58,7 @@ public:
 
     QSharedPointer<EventAggregate> m_pEventAggregate;
 
-    QWeakPointer<Individual> m_pWeakRef;
+    QSharedPointer<Individual> m_pWeakRef;
 
     // Helpers
     void connectContactMethod(ContactMethod* cm);
