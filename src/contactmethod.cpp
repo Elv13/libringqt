@@ -99,13 +99,12 @@ void ContactMethodPrivate::changed()
       emit n->changed();
 }
 
-void ContactMethodPrivate::canSendTextsChanged()
+void ContactMethodPrivate::mediaAvailabilityChanged()
 {
-    const ContactMethod::MediaAvailailityStatus v = q_ptr->canSendTexts();
     const bool a = q_ptr->hasActiveCall();
 
     for (auto n : qAsConst(m_lParents)) {
-        emit n->canSendTextsChanged (v);
+        emit n->mediaAvailabilityChanged();
         emit n->hasActiveCallChanged(a);
     }
 }
@@ -1350,7 +1349,7 @@ void ContactMethodPrivate::addActiveCall(Call* c)
     removeInitCall(c);
 
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
-        canSendTextsChanged();
+        mediaAvailabilityChanged();
 }
 
 void ContactMethodPrivate::removeActiveCall(Call* c)
@@ -1362,7 +1361,7 @@ void ContactMethodPrivate::removeActiveCall(Call* c)
     changed();
 
     if (wasEmpty != m_pUsageStats->d_ptr->m_lActiveCalls.isEmpty())
-        canSendTextsChanged();
+        mediaAvailabilityChanged();
 }
 
 void ContactMethodPrivate::addInitCall(Call* c)

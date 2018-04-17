@@ -156,10 +156,10 @@ public:
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
 
-   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts      NOTIFY canSendTextsChanged    )
-   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall           NOTIFY changed                )
-   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canVideoCall READ canVideoCall      NOTIFY changed                )
-   Q_PROPERTY(bool                                  isAvailable  READ isAvailable       NOTIFY changed                )
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
+   Q_PROPERTY(ContactMethod::MediaAvailailityStatus canVideoCall READ canVideoCall NOTIFY mediaAvailabilityChanged )
+   Q_PROPERTY(bool                                  isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(IndividualPointer individual READ individual)
@@ -348,7 +348,7 @@ Q_SIGNALS:
    /// When a new alternative TextRecording is added
    void alternativeTextRecordingAdded(Media::TextRecording* t);
    /// When the capacity to send text messages changes.
-   void canSendTextsChanged(MediaAvailailityStatus status);
+   void mediaAvailabilityChanged();
    /// When one or more call is in progress.
    void hasActiveCallChanged(bool status);
    /// When one or more call is undergoing initialization or is ringing

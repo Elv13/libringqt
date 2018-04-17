@@ -88,7 +88,7 @@ public:
    //Emit proxies
    void callAdded(Call* call);
    void changed  (          );
-   void canSendTextsChanged();
+   void mediaAvailabilityChanged();
    void presentChanged(bool);
    void presenceMessageChanged(const QString&);
    void trackedChanged(bool);

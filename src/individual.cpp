@@ -58,7 +58,7 @@ public:
 
     QSharedPointer<EventAggregate> m_pEventAggregate;
 
-    QWeakPointer<Individual> m_pWeakRef;
+    QSharedPointer<Individual> m_pWeakRef;
 
     // Helpers
     void connectContactMethod(ContactMethod* cm);
@@ -94,6 +94,7 @@ Individual::Individual(Person* parent) :
     // Row inserted/deleted can be implemented later //FIXME
     d_ptr->m_cBeginCB = connect(this, &Individual::phoneNumbersAboutToChange, this, [this](){beginResetModel();});
     d_ptr->m_cEndCB   = connect(this, &Individual::phoneNumbersChanged      , this, [this](){endResetModel  ();});
+    d_ptr->m_lParents << this;
 }
 
 Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)

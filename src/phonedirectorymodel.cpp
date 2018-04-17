@@ -71,6 +71,11 @@ PhoneDirectoryModel::PhoneDirectoryModel(QObject* parent) :
    setObjectName(QStringLiteral("PhoneDirectoryModel"));
    connect(&PresenceManager::instance(),SIGNAL(newBuddyNotification(QString,QString,bool,QString)),d_ptr.data(),
            SLOT(slotNewBuddySubscription(QString,QString,bool,QString)));
+
+   QTimer::singleShot(0, [this]() {
+      connect(&AccountModel::instance(), &AccountModel::accountStateChanged,
+         d_ptr.data(), &PhoneDirectoryModelPrivate::slotAccountStateChanged);
+   });
 }
 
 PhoneDirectoryModel::~PhoneDirectoryModel()
@@ -971,6 +976,18 @@ void PhoneDirectoryModelPrivate::slotContactMethodMerged(ContactMethod* other)
         cm->isDuplicate() ? cm    : other,
         cm->isDuplicate() ? other : cm
     );
+}
+
+// Reload all ContactMethod mediaavailability. This is done here and only once
+// rather than having 1 qobject connection per CM.
+void PhoneDirectoryModelPrivate::slotAccountStateChanged(Account* a, const Account::RegistrationState state)
+{
+    for (const auto numbers : qAsConst(m_hDirectory)) {
+        for (auto cm : qAsConst(numbers->numbers)) {
+            if ((!cm->account()) || cm->account()->protocol() == a->protocol())
+                cm->d_ptr->mediaAvailabilityChanged();
+        }
+    }
 }
 
 void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
