@@ -26,6 +26,8 @@
 #include <contactmethod.h>
 #include <individual.h>
 
+#include "private/person_p.h"
+
 class PeerProfileCollection2Private final
 {
 public:
@@ -156,7 +158,19 @@ void PeerProfileCollection2Private::mergePersons(Person* source, ContactMethod* 
             break;
     }
 
-    delete source;
+    //FIXME this is a memory leak
+    // The problem is that some contact methods already have this person.
+    // In theory slotContactRebased should help, but it's most probably already
+    // too late. VCardUtils need to be fixed not to set the contact.
+    if (target->contact() != source) {
+        target->contact()->d_ptr->m_lParents << source;
+        auto d = source->d_ptr;
+        source->d_ptr = target->contact()->d_ptr;
+        delete d;
+    }
+
+
+//     delete source;
 }
 
 ///When we get a peer profile, its a vCard from a ContactRequest or a Call. We need to verify if
