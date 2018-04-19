@@ -279,7 +279,14 @@ Qt::ItemFlags NumberCompletionModel::flags(const QModelIndex& index ) const
    if (!index.isValid())
       return Qt::NoItemFlags;
 
-   return Qt::ItemIsEnabled|Qt::ItemIsSelectable;
+   const QMap<int,ContactMethod*>::iterator i = d_ptr->m_hNumbers.end()-1-index.row();
+
+   const auto status = d_ptr->entryStatus(i.value());
+
+   return (
+      status == NumberCompletionModel::LookupStatus::FAILURE ?
+         Qt::NoItemFlags : Qt::ItemIsEnabled
+      ) |Qt::ItemIsSelectable;
 }
 
 QVariant NumberCompletionModel::headerData (int section, Qt::Orientation orientation, int role) const
