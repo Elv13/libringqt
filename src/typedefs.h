@@ -40,16 +40,18 @@ typedef QMap< QString, QStringList >                        MapStringStringList 
 typedef QVector< QByteArray >                               VectorVectorByte              ;
 
 // Adapted from libring DRing::DataTransferInfo
+// Adapted from libring DRing::DataTransferInfo
 struct DataTransferInfo
 {
-    bool isOutgoing;
-    uint lastEvent;
-    qulonglong totalSize;
-    qulonglong bytesProgress;
+    QString accountId;
+    quint32 lastEvent;
+    quint32 flags;
+    qlonglong totalSize;
+    qlonglong bytesProgress;
+    QString peer;
     QString displayName;
     QString path;
-    QString accountId;
-    QString peer;
+    QString mimetype;
 };
 Q_DECLARE_METATYPE(DataTransferInfo)
 
