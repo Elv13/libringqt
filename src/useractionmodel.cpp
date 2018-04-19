@@ -419,7 +419,7 @@ const Matrix2D< UAMA, Ring::ObjectType , bool  > UserActionModelPrivate::availab
    { UAMA::EMAIL_CONTACT     , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::COPY_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::BOOKMARK          , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
-   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     true ,  true ,    true ,        true ,     true }}},
+   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     false,  true ,    true ,        true ,     true }}},
    { UAMA::ADD_CONTACT_METHOD, {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::CALL_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::EDIT_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
