@@ -567,6 +567,12 @@ bool ProfileModel::setProfile(Account* a, Person* p)
         accNode = d_ptr->createNodeForAccount(a);
 
     Q_ASSERT(accNode);
+
+    if (Q_UNLIKELY(!proNode)) {
+        qWarning() << "Cannot set a profile to account" << a << " because it doesn't exist";
+        return false;
+    }
+
     Q_ASSERT(proNode);
 
     Q_ASSERT(a->contactMethod()->isSelf());
