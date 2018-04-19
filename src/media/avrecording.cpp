@@ -17,6 +17,9 @@
  ***************************************************************************/
 #include "avrecording.h"
 
+//Qt
+#include <QtCore/QMimeDatabase>
+
 //DRing
 #include "dbus/callmanager.h"
 

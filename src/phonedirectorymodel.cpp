@@ -21,6 +21,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 #include <QtCore/QMetaEnum>
+#include <QtCore/QJsonObject>
 
 //DRing
 #include <account_const.h>

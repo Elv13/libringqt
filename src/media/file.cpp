@@ -17,6 +17,9 @@
  ***************************************************************************/
 #include "file.h"
 
+//Qt
+#include <QtCore/QUrl>
+
 //Dring
 #include <media_const.h>
 #include "dbus/callmanager.h"
