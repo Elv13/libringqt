@@ -47,6 +47,12 @@ QSharedPointer<Serializable::Peers> Serializable::Peers::join(ContactMethod* cm)
 {
     QSet<ContactMethod*> cms = peers;
 
+    // Prevent duplicates
+    for (auto cm2 : qAsConst(cms)) {
+        if (cm2->d() == cm->d())
+            return SerializableEntityManager::peers(cms);
+    }
+
     peers.insert(cm);
 
     return SerializableEntityManager::peers(cms);
@@ -232,6 +238,7 @@ void Serializable::Group::addPeer(ContactMethod* cm)
 
 
     m_pParent = m_pParent->join(cm);
+
     reloadAttendees();
 }
 
