@@ -97,6 +97,8 @@ void AccountModelPrivate::init()
             &AccountModelPrivate::slotMigrationEnded, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::contactRemoved, this,
             &AccountModelPrivate::slotContactRemoved, Qt::QueuedConnection);
+
+    slotAvailabilityStatusChanged();
 }
 
 ///Destructor
@@ -334,6 +336,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
             connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
             connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
             connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
+            connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotAvailabilityStatusChanged     );
 
             emit q_ptr->accountAdded(acc);
 
@@ -388,6 +391,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
       slotVolatileAccountDetailsChange(account,configurationManager.getVolatileAccountDetails(account));
 
       emit q_ptr->accountStateChanged(a,a->registrationState());
+      emit q_ptr->hasAvailableAccountsChanged();
    }
 
 }
@@ -434,11 +438,12 @@ void AccountModelPrivate::slotAccountPresenceEnabledChanged(bool state)
 ///Emitted when some runtime details changes
 void AccountModelPrivate::slotVolatileAccountDetailsChange(const QString& accountId, const MapStringString& details)
 {
-   Account* a = q_ptr->getById(accountId.toLatin1());
-   if (a) {
+   if (auto a = q_ptr->getById(accountId.toLatin1())) {
       const int     transportCode = details[DRing::Account::VolatileProperties::Transport::STATE_CODE].toInt();
       const QString transportDesc = details[DRing::Account::VolatileProperties::Transport::STATE_DESC];
       const QString status        = details[DRing::Account::VolatileProperties::Registration::STATUS];
+
+      const auto oldState = a->registrationState();
 
       a->statusModel()->addTransportEvent(transportDesc,transportCode);
 
@@ -450,6 +455,8 @@ void AccountModelPrivate::slotVolatileAccountDetailsChange(const QString& accoun
       );
 
       a->d_ptr->setRegistrationState(state);
+
+      slotAvailabilityStatusChanged();
    }
 }
 
@@ -562,6 +569,21 @@ void AccountModelPrivate::slotHasMediaCodecChanged(bool status)
     emit q_ptr->canVideoCallChanged(account, status);
 }
 
+void AccountModelPrivate::slotAvailabilityStatusChanged()
+{
+    m_HasAvailableAccounts = 0;
+    m_HasEnabledAccounts   = 0;
+    for (auto a : qAsConst(m_lAccounts)) {
+        m_HasAvailableAccounts +=
+            a->registrationState() == Account::RegistrationState::READY ? 1 : 0;
+        m_HasEnabledAccounts +=
+            a->isEnabled() ? 1 : 0;
+    }
+
+   emit q_ptr->hasAvailableAccountsChanged();
+   emit q_ptr->hasEnabledAccountsChanged();
+}
+
 ///Update accounts
 void AccountModel::update()
 {
@@ -588,6 +610,7 @@ void AccountModel::update()
          connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
          //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
          connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
+         connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
 
          emit accountAdded(a);
 
@@ -595,6 +618,9 @@ void AccountModel::update()
             d_ptr->enableProtocol(a->protocol());
       }
    }
+
+   d_ptr->slotAvailabilityStatusChanged();
+
 } //update
 
 ///Update accounts
@@ -620,6 +646,7 @@ void AccountModel::updateAccounts()
          connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
          //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
          connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
+         connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
          emit dataChanged(index(size()-1,0),index(size()-1,0));
 
          if (!a->isIp2ip())
@@ -1028,6 +1055,17 @@ bool AccountModel::hasMultipleProtocols() const
         d_ptr->m_lSupportedProtocols[Account::Protocol::SIP ];
 }
 
+bool AccountModel::hasAvailableAccounts() const
+{
+    return d_ptr->m_HasAvailableAccounts;
+}
+
+bool AccountModel::hasEnabledAccounts() const
+{
+    return d_ptr->m_HasEnabledAccounts;
+}
+
+
 ProtocolModel* AccountModel::protocolModel() const
 {
    if (!d_ptr->m_pProtocolModel)
@@ -1099,6 +1137,7 @@ Account* AccountModel::add(const QString& alias, const Account::Protocol proto)
    connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
    d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
    connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
+   connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
    //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
 
    emit dataChanged(index(d_ptr->m_lAccounts.size()-1,0), index(d_ptr->m_lAccounts.size()-1,0));

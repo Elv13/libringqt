@@ -61,6 +61,8 @@ public:
     QList<Account*>                   m_lSipAccounts    ;
     QList<Account*>                   m_lRingAccounts   ;
     QMutex                            m_pSingleton      ;
+    int                               m_HasAvailableAccounts {0};
+    int                               m_HasEnabledAccounts   {0};
 
     QStringList                       m_lMimes {{RingMimes::ACCOUNT}};
     Matrix1D<Account::Protocol, bool> m_lSupportedProtocols {{
@@ -88,4 +90,5 @@ public Q_SLOTS:
     void slotMigrationEnded(const QString& accountId, const QString& result);
     void slotContactRemoved(const QString &accountID, const QString &uri, bool banned);
     void slotHasMediaCodecChanged(bool status);
+    void slotAvailabilityStatusChanged();
 };

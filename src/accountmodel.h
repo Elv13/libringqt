@@ -41,6 +41,7 @@ class LIB_EXPORT AccountModel : public QAbstractListModel {
 
 public:
    Q_PROPERTY(Account*       ip2ip                      READ ip2ip                                            )
+   Q_PROPERTY(int            size                       READ size   NOTIFY accountListUpdated                 )
    Q_PROPERTY(bool           presenceEnabled            READ isPresenceEnabled                                )
    Q_PROPERTY(bool           presencePublishSupported   READ isPresencePublishSupported                       )
    Q_PROPERTY(bool           presenceSubscribeSupported READ isPresenceSubscribeSupported                     )
@@ -51,6 +52,8 @@ public:
    Q_PROPERTY(Account*       selectedAccount            READ selectedAccount                                  )
    Q_PROPERTY(bool           hasAmbiguousAccounts       READ hasAmbiguousAccounts   NOTIFY accountListUpdated )
    Q_PROPERTY(bool           hasMultipleProtocols       READ hasMultipleProtocols   NOTIFY accountListUpdated )
+   Q_PROPERTY(bool           hasAvailableAccounts       READ hasAvailableAccounts   NOTIFY hasAvailableAccountsChanged)
+   Q_PROPERTY(bool           hasEnabledAccounts         READ hasEnabledAccounts   NOTIFY hasEnabledAccountsChanged)
 
    Q_PROPERTY(QAbstractItemModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT       )
 
@@ -84,6 +87,8 @@ public:
    bool                 isRingSupported             (                                      ) const;
    bool                 hasAmbiguousAccounts        (                                      ) const;
    bool                 hasMultipleProtocols        (                                      ) const;
+   bool                 hasAvailableAccounts        (                                      ) const;
+   bool                 hasEnabledAccounts          (                                      ) const;
    EditState            editState                   (                                      ) const;
    Account*             selectedAccount             (                                      ) const;
    QList<Account*>      accountsToMigrate           (                                      ) const;
@@ -177,5 +182,9 @@ Q_SIGNALS:
    /// When one of the account ability to call changed
    void canCallChanged(Account* a, bool status);
    void canVideoCallChanged(Account* a, bool status);
+   /// When there is at least one registered account.
+   void hasAvailableAccountsChanged();
+   /// When there is at least one enabled (checked) account.
+   void hasEnabledAccountsChanged();
 };
 Q_DECLARE_METATYPE(AccountModel*)
