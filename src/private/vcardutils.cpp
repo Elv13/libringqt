@@ -503,7 +503,8 @@ Person* VCardUtils::mapToPersonFromReceivedProfile(ContactMethod *contactMethod,
      */
     Person* person = nullptr;//contactMethod->contact();
     if (!person) {
-        person = new Person();
+        person = contactMethod->contact() ? contactMethod->contact() : new Person();
+
         person->individual()->addPhoneNumber(contactMethod);
         contactMethod->setPerson(person);
     }
