@@ -466,9 +466,11 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
         return nullptr;
 
-    if (Q_UNLIKELY(d_ptr->m_Numbers.indexOf(cm) != -1)) {
-        qWarning() << this << "already has the phone number" << cm;
-        return cm;
+    for (auto cm2 : qAsConst(d_ptr->m_Numbers)) {
+        if (Q_UNLIKELY(cm2->d() == cm->d())) {
+            qWarning() << this << "already has the phone number" << cm;
+            return cm;
+        }
     }
 
     if (cm->type() == ContactMethod::Type::TEMPORARY)
