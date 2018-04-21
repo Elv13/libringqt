@@ -100,12 +100,14 @@ Individual::Individual(Person* parent) :
     d_ptr->m_cBeginCB = connect(this, &Individual::phoneNumbersAboutToChange, this, [this](){beginResetModel();});
     d_ptr->m_cEndCB   = connect(this, &Individual::phoneNumbersChanged      , this, [this](){endResetModel  ();});
     d_ptr->m_lParents << this;
+    moveToThread(QCoreApplication::instance()->thread());
 }
 
 Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
 {
     d_ptr->q_ptr = this;
     d_ptr->m_lParents << this;
+    moveToThread(QCoreApplication::instance()->thread());
 
 }
 
@@ -326,6 +328,11 @@ QString Individual::bestName() const
     return d_ptr->m_BestName;
 }
 
+QString Individual::lastUsedUri() const
+{
+    return lastUsedContactMethod() ? QString(lastUsedContactMethod()->uri()) : QStringLiteral("N/A");
+}
+
 QVariant Individual::roleData(int role) const
 {
     switch (role) {
@@ -356,8 +363,9 @@ QVariant Individual::roleData(int role) const
             )));
         case static_cast<int>(Call::Role::ContactMethod):
         case static_cast<int>(Ring::Role::Object):
-            return QVariant::fromValue(lastUsedContactMethod());
-            //return QVariant::fromValue(QSharedPointer<Individual>(d_ptr->m_pWeakRef));
+            return QVariant::fromValue(const_cast<Individual*>(this));
+            //return QVariant::fromValue(lastUsedContactMethod());
+            //return QVariant::fromValue(IndividualPointer(d_ptr->m_pWeakRef));
         case static_cast<int>(Ring::Role::ObjectType):
             return QVariant::fromValue(Ring::ObjectType::Individual);
         case static_cast<int>(Call::Role::IsBookmark):

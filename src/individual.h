@@ -46,6 +46,9 @@ public:
     Q_PROPERTY(bool editRow READ hasEditRow WRITE setEditRow NOTIFY hasEditRowChanged)
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineModel READ timelineModel)
     Q_PROPERTY(QSharedPointer<EventAggregate> eventAggregate READ eventAggregate CONSTANT)
+    Q_PROPERTY(QString bestName READ bestName NOTIFY changed)
+    Q_PROPERTY(QString lastUsedUri READ lastUsedUri NOTIFY lastUsedTimeChanged)
+    Q_PROPERTY(ContactMethod* lastUsedContactMethod READ lastUsedContactMethod NOTIFY lastUsedTimeChanged)
 
     virtual ~Individual();
 
@@ -62,6 +65,8 @@ public:
     Person* person() const;
 
     QString bestName() const;
+
+    QString lastUsedUri() const;
 
     QVariant roleData(int role) const;
 
@@ -169,4 +174,3 @@ Q_DECLARE_METATYPE(Individual*)
 using IndividualPointer = QSharedPointer<Individual>;
 
 Q_DECLARE_METATYPE(IndividualPointer)
-
