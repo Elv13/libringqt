@@ -35,6 +35,8 @@
 #include "media/textrecording.h"
 #include "contactmethod_p.h"
 #include "person_p.h"
+#include "globalinstances.h"
+#include "interfaces/pixmapmanipulatori.h"
 
 class IndividualPrivate final : public QObject
 {
@@ -47,6 +49,7 @@ public:
     QMetaObject::Connection m_cBeginCB;
     QMetaObject::Connection m_cEndCB;
     TemporaryContactMethod* m_pTmpCM {nullptr};
+    QString m_BestName;
 
     ContactMethod*           m_LastUsedCM {nullptr};
     QVector<ContactMethod*>  m_HiddenContactMethods;
@@ -79,6 +82,8 @@ public Q_SLOTS:
     void slotCmDestroyed        (                         );
     void slotCmEventAdded       ( QSharedPointer<Event> e );
     void slotContactChanged     (                         );
+    void slotChanged            (                         );
+    void slotRegisteredName     (                         );
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -280,6 +285,142 @@ QHash<int,QByteArray> Individual::roleNames() const
     return roles;
 }
 
+QString Individual::bestName() const
+{
+    if (!d_ptr->m_BestName.isEmpty())
+        return d_ptr->m_BestName;
+
+    Person* p = nullptr;
+    QString firstRegisteredName, display, firstUri;
+
+    forAllNumbers([&p, &firstRegisteredName, &display, &firstUri](ContactMethod* cm) {
+        if (cm->contact())
+            p = cm->contact();
+
+        // The phone numbers are first are have priority
+        if (cm->registeredName().size() && firstRegisteredName.isEmpty())
+            firstRegisteredName = cm->registeredName();
+
+        if (firstUri.isEmpty())
+            firstUri = cm->uri();
+
+        if (display.isEmpty() && cm->primaryName() != cm->uri())
+            display = cm->primaryName();
+    });
+
+    // Can be empty for new contacts
+    if (p)
+        d_ptr->m_BestName = p->formattedName();
+
+    if (d_ptr->m_BestName.isEmpty() && !firstRegisteredName.isEmpty())
+        d_ptr->m_BestName = firstRegisteredName;
+    else if (!display.isEmpty())
+        d_ptr->m_BestName = display;
+    else if (!firstUri.isEmpty())
+        d_ptr->m_BestName = firstUri;
+    else
+        d_ptr->m_BestName = tr("Unknown");
+
+    Q_ASSERT(!d_ptr->m_BestName.isEmpty());
+
+    return d_ptr->m_BestName;
+}
+
+QVariant Individual::roleData(int role) const
+{
+    switch (role) {
+        case Qt::DisplayRole:
+        case static_cast<int>(Ring::Role::Name):
+        case static_cast<int>(Call::Role::Name):
+            return bestName();
+        case static_cast<int>(Ring::Role::Number):
+        case static_cast<int>(Call::Role::Number):
+            // Use the most recent or nothing
+            return lastUsedContactMethod() ? lastUsedContactMethod()->bestId() : QString();
+        case Qt::DecorationRole:
+            return d_ptr->m_pPerson ?
+                GlobalInstances::pixmapManipulator().decorationRole(d_ptr->m_pPerson) : QVariant();
+        case static_cast<int>(Ring::Role::LastUsed):
+        case static_cast<int>(Call::Role::Date):
+            return lastUsedContactMethod() ?
+                QVariant::fromValue(lastUsedContactMethod()->lastUsed()) : QVariant::fromValue((time_t)0);
+        case static_cast<int>(Ring::Role::FormattedLastUsed):
+        case static_cast<int>(Call::Role::FormattedDate):
+        case static_cast<int>(Call::Role::FuzzyDate):
+            return HistoryTimeCategoryModel::timeToHistoryCategory(
+                lastUsedContactMethod() ? lastUsedContactMethod()->lastUsed() : 0
+            );
+        case static_cast<int>(Ring::Role::IndexedLastUsed):
+            return QVariant(static_cast<int>(HistoryTimeCategoryModel::timeToHistoryConst(
+                lastUsedContactMethod() ? lastUsedContactMethod()->lastUsed() : 0
+            )));
+        case static_cast<int>(Call::Role::ContactMethod):
+        case static_cast<int>(Ring::Role::Object):
+            return QVariant::fromValue(lastUsedContactMethod());
+            //return QVariant::fromValue(QSharedPointer<Individual>(d_ptr->m_pWeakRef));
+        case static_cast<int>(Ring::Role::ObjectType):
+            return QVariant::fromValue(Ring::ObjectType::Individual);
+        case static_cast<int>(Call::Role::IsBookmark):
+        case static_cast<int>(Ring::Role::IsBookmarked):
+            return hasProperty<&ContactMethod::isBookmarked>();
+        case static_cast<int>(Ring::Role::IsPresent):
+        case static_cast<int>(Call::Role::IsPresent):
+            return hasProperty<&ContactMethod::isPresent>();
+        case static_cast<int>(ContactMethod::Role::IsReachable):
+            return hasProperty<&ContactMethod::isReachable>();
+        case static_cast<int>(ContactMethod::Role::TotalCallCount):
+            return propertySum<&ContactMethod::callCount>();
+        case static_cast<int>(Ring::Role::UnreadTextMessageCount):
+            return unreadTextMessageCount();
+        case static_cast<int>(Ring::Role::IsRecording):
+            return hasProperty<&ContactMethod::isRecording>();
+        case static_cast<int>(Ring::Role::HasActiveCall):
+            return hasProperty<&ContactMethod::hasActiveCall>();
+        case static_cast<int>(Ring::Role::HasActiveVideo):
+            return hasProperty<&ContactMethod::hasActiveVideo>();
+
+//       case static_cast<int>(Role::CanCall): //TODO
+//           return canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+//       case static_cast<int>(Role::CanVideoCall):
+//           return canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+//       case static_cast<int>(Role::CanSendTexts):
+//           return canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+//       case static_cast<int>(Role::TotalEventCount):
+//           return EventModel::instance().d_ptr->events(this).size();
+//       case static_cast<int>(Role::TotalMessageCount):
+//           if (auto rec = textRecording())
+//             cat = rec->sentCount() + rec->receivedCount();
+//          else
+//             cat = 0;
+//          break;
+
+    }
+
+    return {};
+}
+
+Person* Individual::person() const
+{
+    return d_ptr->m_pPerson;
+}
+
+int Individual::unreadTextMessageCount() const
+{
+    int unread = 0;
+
+    QSet<Media::TextRecording*> trs;
+
+    forAllNumbers([&unread, &trs](ContactMethod* cm) {
+        auto rec = cm->textRecording();
+        if ((!rec) || !trs.contains(rec)) {
+            unread += rec->unreadCount();
+            trs << rec;
+        }
+    });
+
+    return unread;
+}
+
 bool Individual::hasEditRow() const
 {
     return d_ptr->m_pTmpCM;
@@ -337,6 +478,12 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotContactChanged);
 
+    connect(m, &ContactMethod::changed, this,
+        &IndividualPrivate::slotChanged);
+
+    connect(m, &ContactMethod::registeredNameSet, this,
+        &IndividualPrivate::slotRegisteredName);
+
 //     connect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     connect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
 }
@@ -370,6 +517,12 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
     disconnect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotContactChanged);
 
+    disconnect(m, &ContactMethod::changed, this,
+        &IndividualPrivate::slotChanged);
+
+    disconnect(m, &ContactMethod::registeredNameSet, this,
+        &IndividualPrivate::slotRegisteredName);
+
 //     disconnect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     disconnect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
 }
@@ -377,6 +530,7 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 void Individual::registerContactMethod(ContactMethod* m)
 {
     d_ptr->m_HiddenContactMethods << m;
+    d_ptr->m_BestName.clear();
 
     emit relatedContactMethodsAdded(m);
 
@@ -490,6 +644,8 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
 
     d_ptr->m_Numbers << cm;
 
+    d_ptr->m_BestName.clear();
+
     emit phoneNumbersChanged();
 
     if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
@@ -563,6 +719,7 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
     d_ptr->m_Numbers.replace(idx, newCm);
 
     d_ptr->m_HiddenContactMethods << newCm;
+    d_ptr->m_BestName.clear();
 
     emit relatedContactMethodsAdded(old);
 
@@ -634,7 +791,7 @@ void IndividualPrivate::slotCmEventAdded( QSharedPointer<Event> e )
 
 void IndividualPrivate::slotUnreadCountChanged()
 {
-    emit q_ptr->unreadCountChanged(0);
+    emit q_ptr->unreadCountChanged(q_ptr->unreadTextMessageCount());
 }
 
 void IndividualPrivate::slotCmDestroyed()
@@ -674,6 +831,34 @@ void IndividualPrivate::slotContactChanged()
 
     if (!m_pPerson && cm->contact())
         merge(cm->contact()->individual());
+}
+
+void IndividualPrivate::slotChanged()
+{
+//     static bool blocked = false;
+//
+//     if (blocked)
+//         return;
+//
+//     auto cm = qobject_cast<ContactMethod*>(sender());
+//
+//     blocked = true;
+//
+//     // Make sure the models get up-to-date data even if they watch only CMs
+//     q_ptr->forAllNumbers([cm](ContactMethod* other) {
+//         if (cm != other)
+//             emit other->changed();
+//     });
+//
+//     blocked = false;
+
+    emit q_ptr->changed();
+}
+
+void IndividualPrivate::slotRegisteredName()
+{
+    m_BestName.clear();
+    emit q_ptr->changed();
 }
 
 /// Like std::any_of

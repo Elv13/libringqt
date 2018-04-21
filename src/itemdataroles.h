@@ -93,6 +93,7 @@ enum class ObjectType
     Certificate,
     ContactRequest,
     Event,
+    Individual,
     COUNT__
 };
 Q_ENUMS(ObjectType)

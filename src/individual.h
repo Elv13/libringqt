@@ -59,6 +59,14 @@ public:
     bool hasEditRow() const;
     void setEditRow(bool v);
 
+    Person* person() const;
+
+    QString bestName() const;
+
+    QVariant roleData(int role) const;
+
+    int unreadTextMessageCount() const;
+
     time_t lastUsedTime() const;
 
     bool hasHiddenContactMethods() const;
@@ -85,7 +93,7 @@ public:
 
     /// Reverse map the boolean cardinality from N to 1
     template<bool (ContactMethod :: *prop)() const>
-    bool hasProperty() {
+    bool hasProperty() const {
         for (const auto l : {phoneNumbers(), relatedContactMethods()}) {
             for (const auto cm : qAsConst(l))
                 if ((cm->*prop)())
@@ -93,6 +101,18 @@ public:
         }
 
         return false;
+    }
+
+    /// Sum the total of all ContactMethod
+    template<int (ContactMethod :: *prop)() const>
+    int propertySum() const {
+        int ret = 0;
+        for (const auto l : {phoneNumbers(), relatedContactMethods()}) {
+            for (const auto cm : qAsConst(l))
+                ret += (cm->*prop)();
+        }
+
+        return ret;
     }
 
     /// Helpers
@@ -132,6 +152,9 @@ Q_SIGNALS:
     void eventAdded(QSharedPointer<Event>& e);
     /// When an event is detached from a ContactMethod
     void eventDetached(QSharedPointer<Event>& e);
+
+    /// When any ContactMethod changes
+    void changed();
 
 private:
     explicit Individual();

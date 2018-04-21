@@ -28,6 +28,7 @@
 // Ring
 #include <contactmethod.h>
 #include <person.h>
+#include <individual.h>
 #include <phonedirectorymodel.h>
 #include <private/modelutils.h>
 #include <historytimecategorymodel.h>
@@ -46,8 +47,9 @@ struct CMTimelineNode final
     explicit CMTimelineNode(ContactMethod* cm, time_t t=0):m_pCM(cm),m_Time(t) {}
     int            m_Index  { -1      };
     time_t         m_Time   {  0      };
-    ContactMethod* m_pCM    { nullptr };
     int            m_CatHead{ -1      };
+    ContactMethod* m_pCM    { nullptr };
+    QSharedPointer<Individual> m_pInd { nullptr };
 };
 
 class PeersTimelineModelPrivate final : public QObject
@@ -186,7 +188,14 @@ QVariant PeersTimelineModel::data( const QModelIndex& idx, int role) const
 {
     if (!idx.isValid())
         return {};
-    return static_cast<CMTimelineNode*>(idx.internalPointer())->m_pCM->roleData(role);
+
+    auto i = static_cast<CMTimelineNode*>(idx.internalPointer());
+
+    // Lazy load the individuals as late as possible to avoid wasteful deduplication
+    if (!i->m_pInd)
+        i->m_pInd = i->m_pCM->individual();
+
+    return i->m_pInd->roleData(role);
 }
 
 int PeersTimelineModel::rowCount( const QModelIndex& parent) const

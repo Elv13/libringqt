@@ -565,15 +565,7 @@ QVariant Person::roleData(int role) const
                 return cm ? cm->bestId() : QString();
             }
         case static_cast<int>(Ring::Role::UnreadTextMessageCount):
-            {
-                int unread = 0;
-                individual()->forAllNumbers([&unread](ContactMethod* cm) {
-                    if (auto rec = cm->textRecording())
-                        unread += rec->unreadCount();
-                });
-                return unread;
-            }
-            break;
+            return individual()->unreadTextMessageCount();
         default:
             break;
     }
