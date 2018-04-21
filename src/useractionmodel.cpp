@@ -158,7 +158,7 @@ const Matrix2D< UAM::Action, Call::State, bool > UserActionModelPrivate::availab
  { UAMA::EMAIL_CONTACT     , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::COPY_CONTACT      , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::BOOKMARK          , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
- { UAMA::VIEW_CHAT_HISTORY , {{co, { false, true  , true , true , true , true , true , true , true , true , true , true , false, false, true , true , true  }}}},
+ { UAMA::VIEW_CHAT_HISTORY , {{co, { false, false , false, false, false, false, false, false, false, false, false, false, false, false, false, false, false }}}},
  { UAMA::ADD_CONTACT_METHOD, {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::CALL_CONTACT      , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
  { UAMA::EDIT_CONTACT      , {{co, { false, true  , true , true , false, true , true , true , true , true , true , true , false, false, true , true , true  }}}},
@@ -191,7 +191,7 @@ const Matrix2D< UAMA, Account::RegistrationState, bool > UserActionModelPrivate:
    { UAMA::EMAIL_CONTACT     , {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::COPY_CONTACT      , {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::BOOKMARK          , {{ true ,    true ,     false,        true ,  true   }}},
-   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     false,        true ,  true   }}},
+   { UAMA::VIEW_CHAT_HISTORY , {{ false,    false,     false,        false,  false  }}},
    { UAMA::ADD_CONTACT_METHOD, {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::CALL_CONTACT      , {{ true ,    true ,     false,        true ,  true   }}},
    { UAMA::EDIT_CONTACT      , {{ true ,    true ,     false,        true ,  true   }}},
@@ -222,7 +222,7 @@ const Matrix2D< UAMA, UserActionModelPrivate::SelectionState, bool > UserActionM
    { UAMA::EMAIL_CONTACT     , {{ false,  true ,  false }}},
    { UAMA::COPY_CONTACT      , {{ false,  true ,  false }}},
    { UAMA::BOOKMARK          , {{ false,  true ,  false }}},
-   { UAMA::VIEW_CHAT_HISTORY , {{ false,  true ,  false }}},
+   { UAMA::VIEW_CHAT_HISTORY , {{ false,  false,  false }}},
    { UAMA::ADD_CONTACT_METHOD, {{ false,  true ,  false }}},
    { UAMA::CALL_CONTACT      , {{ false,  true ,  false }}},
    { UAMA::EDIT_CONTACT      , {{ false,  true ,  false }}},
@@ -419,7 +419,7 @@ const Matrix2D< UAMA, Ring::ObjectType , bool  > UserActionModelPrivate::availab
    { UAMA::EMAIL_CONTACT     , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::COPY_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::BOOKMARK          , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
-   { UAMA::VIEW_CHAT_HISTORY , {{ true ,    true ,     false,  true ,    true ,        true ,     true }}},
+   { UAMA::VIEW_CHAT_HISTORY , {{ false,    false,     false,  false,    false,        false,     false}}},
    { UAMA::ADD_CONTACT_METHOD, {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::CALL_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
    { UAMA::EDIT_CONTACT      , {{ true ,    true ,     true ,  false,    true ,        false,     false}}},
@@ -455,10 +455,10 @@ const Matrix1D< UAM::Action, bool(*)(const Person*)> UserActionModelPrivate::per
    { UAMA::COPY_CONTACT      , nullptr                                         },
    { UAMA::BOOKMARK          , nullptr                                         },
    { UAMA::VIEW_CHAT_HISTORY , P_CB {
-      return p->hasRecording(
+      return false;/*p->hasRecording(
         Media::Media::Type::TEXT,
         Media::Media::Direction::OUT
-      );
+      );*/
    }},
    { UAMA::ADD_CONTACT_METHOD, nullptr                                         },
    { UAMA::CALL_CONTACT      , P_CB { return p->isReachable();                 }},
@@ -509,13 +509,13 @@ const Matrix1D< UAM::Action, bool(*)(const ContactMethod*)> UserActionModelPriva
    { UAMA::COPY_CONTACT      , CM_CB { return cm && cm->contact();            }},
    { UAMA::BOOKMARK          , nullptr                                         },
    { UAMA::VIEW_CHAT_HISTORY , CM_CB {
-       return cm && ((
+       return false; /*cm && ((
           cm->textRecording()
           && !cm->textRecording()->isEmpty()
        ) || (
            cm->protocolHint() == URI::ProtocolHint::RING_USERNAME ||
            cm->protocolHint() == URI::ProtocolHint::RING
-       ));
+       ));*/
    }},
    { UAMA::ADD_CONTACT_METHOD, CM_CB { return cm && cm->contact();            }},
    { UAMA::CALL_CONTACT      , CM_CB { return (!cm) || cm->isReachable();     }},
