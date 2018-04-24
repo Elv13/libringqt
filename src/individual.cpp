@@ -101,6 +101,7 @@ Individual::Individual(Person* parent) :
     d_ptr->m_cEndCB   = connect(this, &Individual::phoneNumbersChanged      , this, [this](){endResetModel  ();});
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
+    setObjectName(parent->formattedName());
 }
 
 Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
@@ -108,7 +109,6 @@ Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()),
     d_ptr->q_ptr = this;
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
-
 }
 
 Individual::~Individual()
@@ -546,6 +546,9 @@ void Individual::registerContactMethod(ContactMethod* m)
 
     if ((!d_ptr->m_LastUsedCM) || m->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
         d_ptr->slotLastContactMethod(m);
+
+    if (objectName().isEmpty())
+        setObjectName(m->primaryName());
 }
 
 ///Get the phone number list
@@ -669,6 +672,9 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         cm->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
     else if (cm->d_ptr->m_pIndividual != d_ptr->m_pWeakRef)
         Q_ASSERT(false);
+
+    if (objectName().isEmpty())
+        setObjectName(cm->primaryName());
 
     return cm;
 }

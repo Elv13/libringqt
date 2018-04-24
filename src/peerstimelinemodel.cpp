@@ -282,6 +282,9 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t
         q_ptr->endMoveRows();
     }
 
+    if (!dtEnd)
+        emit q_ptr->headChanged();
+
     if (m_pSummaryModel)
         m_pSummaryModel->updateCategories(i, t);
 
@@ -553,6 +556,20 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
     }
 
     return d_ptr->m_BookmarkedCMPtr;
+}
+
+QSharedPointer<Individual> PeersTimelineModel::mostRecentIndividual() const
+{
+    if (!d_ptr->m_lRows.size())
+        return nullptr;
+
+    auto i = d_ptr->m_lRows[d_ptr->m_lRows.size()-1];
+
+    // Lazy load the individuals as late as possible to avoid wasteful deduplication
+    if (!i->m_pInd)
+        i->m_pInd = i->m_pCM->individual();
+
+    return i->m_pInd;
 }
 
 QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
