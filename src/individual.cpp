@@ -939,6 +939,11 @@ bool Individual::hasBookmarks() const
     return hasProperty<&ContactMethod::isBookmarked>();
 }
 
+QSharedPointer<Individual> Individual::getIndividual(Individual* cm)
+{
+    return cm ? cm->d_ptr->m_pWeakRef : nullptr;
+}
+
 QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
 {
     if (auto i = cm->d_ptr->m_pIndividual)

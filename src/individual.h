@@ -140,6 +140,7 @@ public:
     static QSharedPointer<Individual> getIndividual(ContactMethod* cm);
     static QSharedPointer<Individual> getIndividual(Person* cm);
     static QSharedPointer<Individual> getIndividual(const QList<ContactMethod*>& cms);
+    Q_INVOKABLE static QSharedPointer<Individual> getIndividual(Individual* cm);
 
 Q_SIGNALS:
     void hasEditRowChanged(bool v);
