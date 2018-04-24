@@ -326,7 +326,7 @@ int CallModel::size()
 }
 
 ///Return the action call list
-CallList CallModel::getActiveCalls()
+CallList CallModel::getActiveCalls() const
 {
     CallList callList;
     for (InternalStruct* internalS : qAsConst(d_ptr->m_lInternalModel)) {
@@ -463,6 +463,37 @@ Call* CallModel::getCall( const QString& callId ) const
 
     return nullptr;
 }
+
+Call* CallModel::firstActiveCall(const QSharedPointer<Individual>& ind) const
+{
+    if (!ind)
+        return nullptr;
+
+    foreach (Call* call, getActiveCalls()) {
+        if (call->lifeCycleState() != Call::LifeCycleState::FINISHED
+          && call->state() != Call::State::DIALING
+          && call->peer() == ind)
+            return call;
+    }
+
+    return nullptr;
+}
+
+Call* CallModel::firstActiveCall(const ContactMethod* cm) const
+{
+    if (!cm)
+        return nullptr;
+
+    foreach (Call* call, getActiveCalls()) {
+        if (call->lifeCycleState() != Call::LifeCycleState::FINISHED
+          && call->state() != Call::State::DIALING
+          && call->peerContactMethod()->d() == cm->d())
+            return call;
+    }
+
+    return nullptr;
+}
+
 
 ///Make sure all signals can be mapped back to Call objects
 void CallModel::registerCall(Call* call)

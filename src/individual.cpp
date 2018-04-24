@@ -35,6 +35,7 @@
 #include "media/textrecording.h"
 #include "contactmethod_p.h"
 #include "person_p.h"
+#include "callmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 
@@ -287,6 +288,12 @@ QHash<int,QByteArray> Individual::roleNames() const
 
     return roles;
 }
+
+Call* Individual::firstActiveCall() const
+{
+    return CallModel::instance().firstActiveCall(d_ptr->m_pWeakRef);
+}
+
 
 QString Individual::bestName() const
 {

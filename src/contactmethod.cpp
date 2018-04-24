@@ -49,6 +49,7 @@
 #include "mime.h"
 #include "usagestatistics.h"
 #include "globalinstances.h"
+#include "callmodel.h"
 #include "interfaces/pixmapmanipulatori.h"
 
 //Private
@@ -702,6 +703,11 @@ Call* ContactMethod::firstOutgoingCall() const
             return c;
 
     return nullptr;
+}
+
+Call* ContactMethod::firstActiveCall() const
+{
+    return CallModel::instance().firstActiveCall(this);
 }
 
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const

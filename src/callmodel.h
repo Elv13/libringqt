@@ -104,7 +104,7 @@ public:
    Q_INVOKABLE bool detachAllCalls           (                               );
 
    //Getters
-   Q_INVOKABLE CallList getActiveCalls      ();
+   Q_INVOKABLE CallList getActiveCalls      () const;
    Q_INVOKABLE CallList getActiveConferences();
    Q_INVOKABLE int      acceptedPayloadTypes();
    bool                 isValid             ();
@@ -120,6 +120,9 @@ public:
 
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
    Q_INVOKABLE QList<Call*> getConferenceParticipants(Call *conf) const;
+
+   Q_INVOKABLE Call* firstActiveCall(const QSharedPointer<Individual>& ind) const;
+   Q_INVOKABLE Call* firstActiveCall(const ContactMethod* cm) const;
 
    // Setters
    void setAudoCleanDelay(int delay);

@@ -209,7 +209,7 @@ public:
    uint                  trimCount       () const;
    bool                  haveCalled      () const;
    const QList<Call*>    calls           () const;
-   Call*                firstOutgoingCall() const;
+   Call*                 firstOutgoingCall() const;
    QHash<QString, QPair<int, time_t>> alternativeNames() const;
    QString               primaryName     () const;
    bool                  isBookmarked    () const;
@@ -232,6 +232,7 @@ public:
    bool                  hasInitCall     () const;
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
+   Call*                 firstActiveCall () const;
 
    /// Opaque pointer to be used as a deduplicated identifier
    ContactMethodPrivate* d() const;

@@ -80,6 +80,8 @@ public:
 
     bool hasHiddenContactMethods() const;
 
+    Call* firstActiveCall() const;
+
     QSharedPointer<QAbstractItemModel> timelineModel() const;
     ContactMethod* lastUsedContactMethod() const;
 
