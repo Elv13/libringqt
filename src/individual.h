@@ -49,6 +49,8 @@ public:
     Q_PROPERTY(QString bestName READ bestName NOTIFY changed)
     Q_PROPERTY(QString lastUsedUri READ lastUsedUri NOTIFY lastUsedTimeChanged)
     Q_PROPERTY(ContactMethod* lastUsedContactMethod READ lastUsedContactMethod NOTIFY lastUsedTimeChanged)
+    Q_PROPERTY(bool hasBookmarks READ hasBookmarks NOTIFY bookmarkedChanged)
+    Q_PROPERTY(Person* person READ person CONSTANT)
 
     virtual ~Individual();
 
@@ -73,6 +75,8 @@ public:
     int unreadTextMessageCount() const;
 
     time_t lastUsedTime() const;
+
+    bool hasBookmarks() const;
 
     bool hasHiddenContactMethods() const;
 
@@ -146,6 +150,9 @@ Q_SIGNALS:
     void unreadCountChanged(int count);
     void callAdded(Call* call);
     void lastUsedTimeChanged(time_t time);
+
+    /// When any ContactMethod bookmark status changes
+    void bookmarkedChanged(ContactMethod* cm, bool isBookmarked);
 
     void textRecordingAdded(Media::TextRecording* r);
 

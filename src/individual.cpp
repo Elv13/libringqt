@@ -84,6 +84,7 @@ public Q_SLOTS:
     void slotContactChanged     (                         );
     void slotChanged            (                         );
     void slotRegisteredName     (                         );
+    void slotBookmark           ( bool b                  );
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -370,7 +371,7 @@ QVariant Individual::roleData(int role) const
             return QVariant::fromValue(Ring::ObjectType::Individual);
         case static_cast<int>(Call::Role::IsBookmark):
         case static_cast<int>(Ring::Role::IsBookmarked):
-            return hasProperty<&ContactMethod::isBookmarked>();
+            return hasBookmarks();
         case static_cast<int>(Ring::Role::IsPresent):
         case static_cast<int>(Call::Role::IsPresent):
             return hasProperty<&ContactMethod::isPresent>();
@@ -492,6 +493,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::registeredNameSet, this,
         &IndividualPrivate::slotRegisteredName);
 
+    connect(m, &ContactMethod::bookmarkedChanged, this,
+        &IndividualPrivate::slotBookmark);
+
 //     connect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     connect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
 }
@@ -530,6 +534,9 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::registeredNameSet, this,
         &IndividualPrivate::slotRegisteredName);
+
+    disconnect(m, &ContactMethod::bookmarkedChanged, this,
+        &IndividualPrivate::slotBookmark);
 
 //     disconnect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     disconnect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
@@ -875,6 +882,13 @@ void IndividualPrivate::slotRegisteredName()
     emit q_ptr->changed();
 }
 
+void IndividualPrivate::slotBookmark(bool b)
+{
+    auto cm = qobject_cast<ContactMethod*>(sender());
+
+    emit q_ptr->bookmarkedChanged(cm, b);
+}
+
 /// Like std::any_of
 bool Individual::matchExpression(const std::function<bool(ContactMethod*)>& functor)
 {
@@ -911,6 +925,11 @@ time_t Individual::lastUsedTime() const
         return 0;
 
     return lastUsedContactMethod()->lastUsed();
+}
+
+bool Individual::hasBookmarks() const
+{
+    return hasProperty<&ContactMethod::isBookmarked>();
 }
 
 QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
