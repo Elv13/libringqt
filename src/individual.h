@@ -180,6 +180,4 @@ private:
 
 Q_DECLARE_METATYPE(Individual*)
 
-using IndividualPointer = QSharedPointer<Individual>;
-
-Q_DECLARE_METATYPE(IndividualPointer)
+Q_DECLARE_METATYPE(QSharedPointer<Individual>)

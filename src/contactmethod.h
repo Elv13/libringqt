@@ -45,8 +45,6 @@ class UsageStatistics;
 class Individual;
 class EventAggregate;
 
-using IndividualPointer = QSharedPointer<Individual>;
-
 namespace Media {
    class TextRecording;
    class TextRecordingPrivate;
@@ -162,7 +160,7 @@ public:
    Q_PROPERTY(bool                                  isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
-   Q_PROPERTY(IndividualPointer individual READ individual)
+   Q_PROPERTY(QSharedPointer<Individual> individual READ individual)
 
 //    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
 
@@ -248,7 +246,7 @@ public:
 
    QSharedPointer<EventAggregate> eventAggregate() const;
 
-   IndividualPointer  individual() const;
+   QSharedPointer<Individual> individual() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles
