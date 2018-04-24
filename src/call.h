@@ -39,6 +39,7 @@ class CollectionInterface   ;
 class Certificate           ;
 class Person                ;
 class Event                 ;
+class Individual            ;
 
 namespace Video {
    class Manager;
@@ -287,6 +288,7 @@ public:
    Q_PROPERTY( QString            peerName           READ peerName          WRITE setPeerName       )
    Q_PROPERTY( QString            transferNumber     READ transferNumber    WRITE setTransferNumber )
    Q_PROPERTY( QString            dialNumber         READ dialNumber        WRITE setDialNumber      NOTIFY dialNumberChanged(QString))
+   Q_PROPERTY( QSharedPointer<Individual> peer       READ peer              NOTIFY dialNumberChanged)
 
    //Constructors & Destructors
    static Call* buildHistoryCall  (const QMap<QStringRef,QStringRef>& hc);
@@ -327,6 +329,7 @@ public:
    QDate                    date             () const;
    Video::SourceModel*      sourceModel      () const;
    QSharedPointer<Event>    calendarEvent    () const;
+   QSharedPointer<Individual> peer           () const;
 
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;

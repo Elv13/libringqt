@@ -850,6 +850,15 @@ ContactMethod* Call::peerContactMethod() const
     return const_cast<ContactMethod*>(ContactMethod::BLANK());
 }
 
+
+QSharedPointer<Individual> Call::peer() const
+{
+    if (peerContactMethod()->type() == ContactMethod::Type::TEMPORARY)
+        return nullptr;
+
+    return peerContactMethod()->individual();
+}
+
 ///Get the peer name
 const QString Call::peerName() const
 {
