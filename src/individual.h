@@ -51,6 +51,14 @@ public:
     Q_PROPERTY(ContactMethod* lastUsedContactMethod READ lastUsedContactMethod NOTIFY lastUsedTimeChanged)
     Q_PROPERTY(bool hasBookmarks READ hasBookmarks NOTIFY bookmarkedChanged)
     Q_PROPERTY(Person* person READ person CONSTANT)
+    Q_PROPERTY(Call* firstActiveCall READ firstActiveCall NOTIFY hasActiveCallChanged)
+
+    //
+    Q_PROPERTY(bool canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
+    Q_PROPERTY(bool canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
+    Q_PROPERTY(bool canVideoCall READ canVideoCall NOTIFY mediaAvailabilityChanged )
+    Q_PROPERTY(bool isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
+
 
     virtual ~Individual();
 
@@ -97,6 +105,11 @@ public:
     QVector<ContactMethod*> relatedContactMethods() const;
     QVector<Media::TextRecording*> textRecordings() const;
 
+    bool canSendTexts() const;
+    bool canCall() const;
+    bool canVideoCall() const;
+    bool isAvailable() const;
+
     /**
      * Group all events related to this individual.
      */
@@ -127,7 +140,7 @@ public:
     }
 
     /// Helpers
-    bool matchExpression(const std::function<bool(ContactMethod*)>& functor);
+    bool matchExpression(const std::function<bool(ContactMethod*)>& functor) const;
     void forAllNumbers(const std::function<void(ContactMethod*)> functor, bool indludeHidden = true) const;
 
     //TODO make private
@@ -170,6 +183,11 @@ Q_SIGNALS:
 
     /// When any ContactMethod changes
     void changed();
+
+    void mediaAvailabilityChanged();
+
+    /// When one or more call is in progress.
+    void hasActiveCallChanged();
 
 private:
     explicit Individual();

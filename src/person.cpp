@@ -454,23 +454,17 @@ bool Person::hasBeenCalled() const
 
 bool Person::canCall() const
 {
-    return individual()->matchExpression([this](ContactMethod* cm) {
-        return cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
-    });
+    return individual()->canCall();
 }
 
 bool Person::canVideoCall() const
 {
-    return individual()->matchExpression([this](ContactMethod* cm) {
-        return cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
-    });
+    return individual()->canVideoCall();
 }
 
 bool Person::canSendTexts() const
 {
-    return individual()->matchExpression([this](ContactMethod* cm) {
-        return cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
-    });
+    return individual()->canSendTexts();
 }
 
 /**

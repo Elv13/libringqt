@@ -86,6 +86,8 @@ public Q_SLOTS:
     void slotChanged            (                         );
     void slotRegisteredName     (                         );
     void slotBookmark           ( bool b                  );
+    void slotMediaAvailabilityChanged();
+    void slotHasActiveCallChanged();
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -503,6 +505,12 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::bookmarkedChanged, this,
         &IndividualPrivate::slotBookmark);
 
+    connect(m, &ContactMethod::mediaAvailabilityChanged, this,
+        &IndividualPrivate::slotMediaAvailabilityChanged);
+
+    connect(m, &ContactMethod::hasActiveCallChanged, this,
+        &IndividualPrivate::slotHasActiveCallChanged);
+
 //     connect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     connect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
 }
@@ -544,6 +552,12 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::bookmarkedChanged, this,
         &IndividualPrivate::slotBookmark);
+
+    disconnect(m, &ContactMethod::mediaAvailabilityChanged, this,
+        &IndividualPrivate::slotMediaAvailabilityChanged);
+
+    disconnect(m, &ContactMethod::hasActiveCallChanged, this,
+        &IndividualPrivate::slotHasActiveCallChanged);
 
 //     disconnect(m, SIGNAL(presentChanged(bool)),d_ptr,SLOT(slotPresenceChanged()));
 //     disconnect(m, SIGNAL(trackedChanged(bool)),d_ptr,SLOT(slotTrackedChanged()));
@@ -896,8 +910,18 @@ void IndividualPrivate::slotBookmark(bool b)
     emit q_ptr->bookmarkedChanged(cm, b);
 }
 
+void IndividualPrivate::slotMediaAvailabilityChanged()
+{
+    emit q_ptr->mediaAvailabilityChanged();
+}
+
+void IndividualPrivate::slotHasActiveCallChanged()
+{
+    emit q_ptr->hasActiveCallChanged();
+}
+
 /// Like std::any_of
-bool Individual::matchExpression(const std::function<bool(ContactMethod*)>& functor)
+bool Individual::matchExpression(const std::function<bool(ContactMethod*)>& functor) const
 {
     for (const auto l : {phoneNumbers(), relatedContactMethods()}) {
         for (const auto cm : qAsConst(l))
@@ -1069,6 +1093,32 @@ QSharedPointer<IndividualEditor> Individual::createEditor() const
             d_ptr->infoTemplate()
         )
     );
+}
+
+bool Individual::canCall() const
+{
+    return matchExpression([this](ContactMethod* cm) {
+        return cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
+}
+
+bool Individual::canVideoCall() const
+{
+    return matchExpression([this](ContactMethod* cm) {
+        return cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
+}
+
+bool Individual::canSendTexts() const
+{
+    return matchExpression([this](ContactMethod* cm) {
+        return cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
+    });
+}
+
+bool Individual::isAvailable() const
+{
+    hasProperty<&ContactMethod::isAvailable>();
 }
 
 #include <individual.moc>
