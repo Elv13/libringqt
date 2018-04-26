@@ -1141,7 +1141,26 @@ bool Individual::canSendTexts() const
 
 bool Individual::isAvailable() const
 {
-    hasProperty<&ContactMethod::isAvailable>();
+    return hasProperty<&ContactMethod::isAvailable>();
+}
+
+QModelIndex Individual::defaultIndex() const
+{
+    if (d_ptr->m_Numbers.isEmpty())
+        return {};
+
+    ContactMethod* cm = nullptr;
+    int idx = 0;
+
+    for (int i = 0; i < d_ptr->m_Numbers.size(); i++) {
+        auto other = d_ptr->m_Numbers[i];
+        if ((!cm) || other->lastUsed() > cm->lastUsed()) {
+            cm = other;
+            idx = i;
+        }
+    }
+
+    return index(idx, 0);
 }
 
 #include <individual.moc>

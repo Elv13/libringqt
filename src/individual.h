@@ -54,6 +54,7 @@ public:
     Q_PROPERTY(Call* firstActiveCall READ firstActiveCall NOTIFY hasActiveCallChanged)
     Q_PROPERTY(ContactMethod* mainContactMethod READ mainContactMethod NOTIFY relatedContactMethodsAdded)
     Q_PROPERTY(bool requireUserSelection READ requireUserSelection NOTIFY relatedContactMethodsAdded)
+    Q_PROPERTY(QModelIndex defaultIndex READ defaultIndex NOTIFY relatedContactMethodsAdded)
 
     //
     Q_PROPERTY(bool canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
@@ -93,6 +94,12 @@ public:
     bool requireUserSelection() const;
 
     Call* firstActiveCall() const;
+
+    /**
+     * There is no value in a QItemSelectionModel here, all there is to know is
+     * the default selection.
+     */
+    QModelIndex defaultIndex() const;
 
     QSharedPointer<QAbstractItemModel> timelineModel() const;
     ContactMethod* lastUsedContactMethod() const;
