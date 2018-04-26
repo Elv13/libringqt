@@ -1269,7 +1269,8 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canCall() const
     auto selectedAccount = account();
 
     if (!selectedAccount)
-        return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
+        if (!(selectedAccount = AvailableAccountModel::instance().currentDefaultAccount(this)))
+            return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
 
     if (!selectedAccount->canCall())
         return ContactMethod::MediaAvailailityStatus::ACCOUNT_DOWN;
@@ -1286,11 +1287,13 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
 
     auto selectedAccount = account();
 
-    if (!selectedAccount)
-        return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
+    if (!selectedAccount) {
+        if (!(selectedAccount = AvailableAccountModel::instance().currentDefaultAccount(this)))
+            return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
+    }
 
     if (!selectedAccount->canVideoCall())
-        return ContactMethod::MediaAvailailityStatus::ACCOUNT_DOWN;
+        return ContactMethod::MediaAvailailityStatus::CODECS;
 
     return ContactMethod::MediaAvailailityStatus::AVAILABLE; //TODO find other accounts
 }
@@ -1301,7 +1304,7 @@ bool ContactMethod::isAvailable() const
     // warning: This is also used for the account own CM, it cannot choose other
     // accounts.
     return canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE ||
-        canSendTexts() ==ContactMethod::MediaAvailailityStatus::AVAILABLE;
+        canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
 }
 
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
