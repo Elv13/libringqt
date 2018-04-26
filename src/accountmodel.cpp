@@ -305,6 +305,17 @@ AccountModel::getContacts(const Account* account) const
     return ConfigurationManager::instance().getContacts(account->id().data());
 }
 
+/// Mutualize all the connections
+void AccountModelPrivate::connectAccount(Account* acc)
+{
+    connect(acc, &Account::changed                , this, &AccountModelPrivate::slotAccountChanged                );
+    connect(acc, &Account::presenceEnabledChanged , this, &AccountModelPrivate::slotAccountPresenceEnabledChanged );
+    connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
+    connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
+    connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
+    connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotAvailabilityStatusChanged     );
+}
+
 ///Account status changed
 void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const QString& registration_state, unsigned code, const QString& status)
 {
@@ -331,12 +342,7 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
             Account* acc = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
             qDebug() << "building missing account" << accountIds[i];
             insertAccount(acc,i);
-            connect(acc, &Account::changed                , this, &AccountModelPrivate::slotAccountChanged                );
-            connect(acc, &Account::presenceEnabledChanged , this, &AccountModelPrivate::slotAccountPresenceEnabledChanged );
-            connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotSupportedProtocolsChanged     );
-            connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
-            connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
-            connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotAvailabilityStatusChanged     );
+            connectAccount(acc);
 
             emit q_ptr->accountAdded(acc);
 
@@ -607,10 +613,7 @@ void AccountModel::update()
          Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
          d_ptr->insertAccount(a,i);
          emit dataChanged(index(i,0),index(size()-1,0));
-         connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
-         //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
-         connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
-         connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
+         d_ptr->connectAccount(a);
 
          emit accountAdded(a);
 
@@ -643,10 +646,7 @@ void AccountModel::updateAccounts()
       if (!acc) {
          Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
          d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
-         connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
-         //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
-         connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
-         connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
+         d_ptr->connectAccount(a);
          emit dataChanged(index(size()-1,0),index(size()-1,0));
 
          if (!a->isIp2ip())
@@ -1134,11 +1134,8 @@ void AccountModelPrivate::removeAccount(Account* account)
 Account* AccountModel::add(const QString& alias, const Account::Protocol proto)
 {
    Account* a = AccountPrivate::buildNewAccountFromAlias(proto,alias);
-   connect(a,SIGNAL(changed(Account*)),d_ptr,SLOT(slotAccountChanged(Account*)));
    d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
-   connect(a,SIGNAL(presenceEnabledChanged(bool)),d_ptr,SLOT(slotAccountPresenceEnabledChanged(bool)));
-   connect(a, &Account::enabled, d_ptr, &AccountModelPrivate::slotAvailabilityStatusChanged);
-   //connect(a,SIGNAL(propertyChanged(Account*,QString,QString,QString)),d_ptr,SLOT(slotAccountChanged(Account*)));
+   d_ptr->connectAccount(a);
 
    emit dataChanged(index(d_ptr->m_lAccounts.size()-1,0), index(d_ptr->m_lAccounts.size()-1,0));
 

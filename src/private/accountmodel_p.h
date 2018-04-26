@@ -47,6 +47,7 @@ public:
     AccountModel::EditState convertAccountEditState(const Account::EditState s);
     void insertAccount(Account* a, int idx);
     void removeAccount(Account* account);
+    void connectAccount(Account* a);
 
     //Attributes
     QItemSelectionModel*              m_pSelectionModel          {nullptr};
