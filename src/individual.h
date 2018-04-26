@@ -52,6 +52,8 @@ public:
     Q_PROPERTY(bool hasBookmarks READ hasBookmarks NOTIFY bookmarkedChanged)
     Q_PROPERTY(Person* person READ person CONSTANT)
     Q_PROPERTY(Call* firstActiveCall READ firstActiveCall NOTIFY hasActiveCallChanged)
+    Q_PROPERTY(ContactMethod* mainContactMethod READ mainContactMethod NOTIFY relatedContactMethodsAdded)
+    Q_PROPERTY(bool requireUserSelection READ requireUserSelection NOTIFY relatedContactMethodsAdded)
 
     //
     Q_PROPERTY(bool canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
@@ -88,10 +90,19 @@ public:
 
     bool hasHiddenContactMethods() const;
 
+    bool requireUserSelection() const;
+
     Call* firstActiveCall() const;
 
     QSharedPointer<QAbstractItemModel> timelineModel() const;
     ContactMethod* lastUsedContactMethod() const;
+
+    /**
+     * 95% of the time there is a single "official" ContactMethod per Individual.
+     *
+     * For those case, skip the selection dialog and have a "fast path"
+     */
+    ContactMethod* mainContactMethod() const;
 
     QSharedPointer<IndividualEditor> createEditor() const;
 

@@ -686,6 +686,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     d_ptr->m_BestName.clear();
 
     emit phoneNumbersChanged();
+    emit relatedContactMethodsAdded(cm);
 
     if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
         d_ptr->m_HiddenContactMethods.removeAll(cm);
@@ -774,6 +775,28 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
 ContactMethod* Individual::lastUsedContactMethod() const
 {
     return d_ptr->m_LastUsedCM;
+}
+
+ContactMethod* Individual::mainContactMethod() const
+{
+    // If that's not true, then there is ambiguities that cannot be resolved
+    // using an algorithm. A choice has to be presented to the user.
+    if (phoneNumbers().size() != 1)
+        return nullptr;
+
+    // It may or may not be an hidden ContactMethod, it's not important, it's
+    // attached to this individual and known to work. If it was wrongly
+    // attached, then the bug is elsewhere and this condition stays true.
+    if (auto cm = lastUsedContactMethod())
+        return cm;
+
+    // It will get there is the user was never reached
+    return phoneNumbers().first();
+}
+
+bool Individual::requireUserSelection() const
+{
+    return !mainContactMethod();
 }
 
 bool Individual::hasHiddenContactMethods() const
