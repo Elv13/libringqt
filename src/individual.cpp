@@ -1163,4 +1163,30 @@ QModelIndex Individual::defaultIndex() const
     return index(idx, 0);
 }
 
+bool Individual::isOffline() const
+{
+    bool ret = true;
+    forAllNumbers([&ret](ContactMethod* cm) {
+        if (!ret)
+            return;
+
+        // There is no way to know, assume the individual is present
+        if (!cm->account()) {
+            ret = false;
+            return;
+        }
+
+        // SIP tracking is unreliable, assume it's wrong
+        if (cm->account()->protocol() != Account::Protocol::RING) {
+            ret = false;
+            return;
+        }
+
+        // The individual is present
+        if (cm->lastUsed() && cm->isTracked() && cm->isPresent())
+            ret = false;
+
+    }, false);
+}
+
 #include <individual.moc>

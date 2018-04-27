@@ -61,6 +61,7 @@ public:
     Q_PROPERTY(bool canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
     Q_PROPERTY(bool canVideoCall READ canVideoCall NOTIFY mediaAvailabilityChanged )
     Q_PROPERTY(bool isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
+    Q_PROPERTY(bool isOffline    READ isOffline    NOTIFY changed                  )
 
 
     virtual ~Individual();
@@ -94,6 +95,13 @@ public:
     bool requireUserSelection() const;
 
     Call* firstActiveCall() const;
+
+    /**
+     * A more specialized version of the presence that returns true when the
+     * individual is known to be offline rather than being a mix of isTracked,
+     * Ring accounts and isPresent.
+     */
+    bool isOffline() const;
 
     /**
      * There is no value in a QItemSelectionModel here, all there is to know is
