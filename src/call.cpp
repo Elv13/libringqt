@@ -1516,12 +1516,14 @@ void CallPrivate::terminateMedia()
    for (const auto t : EnumIterator<Media::Media::Type>() ) {
       for (const auto d : EnumIterator<Media::Media::Direction>() ) {
          QList<Media::Media*>& media = *m_mMedias[t][d];
-         for (auto m : qAsConst(media)) {
+
+         while(!media.isEmpty()) {
+            auto m = media.takeFirst();
             m << Media::Media::Action::TERMINATE;
-            m_mMedias[t][d]->removeAll(m);
-            //TODO keep the media for history visualization purpose if it has a recording
             delete m;
          }
+
+         m_mMedias[t][d]->clear();
 
          media.clear();
       }
