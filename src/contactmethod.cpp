@@ -1505,6 +1505,11 @@ void UsageStatisticsPrivate::update(time_t start, time_t stop)
         ++m_LastTrimCount;
 }
 
+void ContactMethodPrivate::addTimeRange(time_t start, time_t end)
+{
+    m_pUsageStats->d_ptr->update(start, end);
+}
+
 /// \brief Use this method to update lastUsed time by a new time only if sooner.
 ///
 /// \return \a true if the update has been effective.
