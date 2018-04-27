@@ -207,7 +207,7 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
       case NumberCompletionModelPrivate::Columns::CONTENT:
          switch (role) {
             case Qt::DisplayRole:
-               return n->primaryName();
+               return n->bestName();
             case Qt::ToolTipRole:
                return QStringLiteral("<table><tr><td>%1</td></tr><tr><td>%2</td></tr></table>")
                   .arg(n->primaryName())
