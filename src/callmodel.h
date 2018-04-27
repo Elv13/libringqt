@@ -122,6 +122,7 @@ public:
    Q_INVOKABLE QList<Call*> getConferenceParticipants(Call *conf) const;
 
    Q_INVOKABLE Call* firstActiveCall(const QSharedPointer<Individual>& ind) const;
+   Q_INVOKABLE Call* firstActiveCall(Individual* ind) const;
    Q_INVOKABLE Call* firstActiveCall(const ContactMethod* cm) const;
 
    // Setters

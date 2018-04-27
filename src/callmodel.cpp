@@ -42,6 +42,7 @@
 #include "mime.h"
 #include "typedefs.h"
 #include "libcard/calendar.h"
+#include "individual.h"
 #include "collectioninterface.h"
 #include "dbus/videomanager.h"
 #include "categorizedhistorymodel.h"
@@ -477,6 +478,12 @@ Call* CallModel::firstActiveCall(const QSharedPointer<Individual>& ind) const
     }
 
     return nullptr;
+}
+
+/// Because QML is horrible at handling shared pointers
+Call* CallModel::firstActiveCall(Individual* ind) const
+{
+    return firstActiveCall(Individual::getIndividual(ind));
 }
 
 Call* CallModel::firstActiveCall(const ContactMethod* cm) const
