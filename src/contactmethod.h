@@ -188,6 +188,7 @@ public:
        CODECS       = 5, /*!< The media is unavailable because all codecs are unchecked      */
        ACCOUNT_DOWN = 6, /*!< An account is set, but it's not currently available            */
        NETWORK      = 7, /*!< There is a known network issue                                 */
+       COUNT__
    };
    Q_ENUM(MediaAvailailityStatus)
 

@@ -122,6 +122,7 @@ SET( libringqt_LIB_SRCS
   src/media/attachment.cpp
   src/media/textrecording.cpp
   src/media/mimemessage.cpp
+  src/media/availabilitytracker.cpp
 
   #Models
   src/bootstrapmodel.cpp
@@ -388,6 +389,7 @@ SET(libringqt_media_LIB_HDRS
   src/media/avrecording.h
   src/media/textrecording.h
   src/media/recordingmodel.h
+  src/media/availabilitytracker.h
 )
 
 SET(libringqt_card_LIB_HDRS
