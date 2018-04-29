@@ -76,7 +76,7 @@ public:
     * run a merge sort on the linked list and generate the aggregates.
     */
    ContactMethodEvents* m_pEvents {nullptr};
-   void addTimeRange(time_t start, time_t end);
+   void addTimeRange(time_t start, time_t end, Event::EventCategory c);
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<Individual> m_pIndividual;

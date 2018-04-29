@@ -55,6 +55,11 @@ public:
     Q_PROPERTY(ContactMethod* mainContactMethod READ mainContactMethod NOTIFY relatedContactMethodsAdded)
     Q_PROPERTY(bool requireUserSelection READ requireUserSelection NOTIFY relatedContactMethodsAdded)
     Q_PROPERTY(QModelIndex defaultIndex READ defaultIndex NOTIFY relatedContactMethodsAdded)
+    Q_PROPERTY(QString formattedLastUsedTime READ formattedLastUsedTime NOTIFY lastUsedTimeChanged)
+    Q_PROPERTY(int callCount READ callCount NOTIFY callAdded)
+    Q_PROPERTY(int totalSpentTime READ totalSpentTime NOTIFY callAdded)
+    Q_PROPERTY(int textMessageCount READ textMessageCount NOTIFY eventAdded)
+    Q_PROPERTY(int lastUsedTime READ lastUsedTime NOTIFY lastUsedTimeChanged)
 
     //
     Q_PROPERTY(bool canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
@@ -87,6 +92,12 @@ public:
     int unreadTextMessageCount() const;
 
     time_t lastUsedTime() const;
+
+    QString formattedLastUsedTime() const;
+
+    int callCount() const;
+    int textMessageCount() const;
+    int totalSpentTime() const;
 
     bool hasBookmarks() const;
 

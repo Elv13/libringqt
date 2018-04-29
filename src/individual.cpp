@@ -981,6 +981,32 @@ time_t Individual::lastUsedTime() const
     return lastUsedContactMethod()->lastUsed();
 }
 
+QString Individual::formattedLastUsedTime() const
+{
+    return QDateTime::fromTime_t(lastUsedTime()).toString();
+}
+
+int Individual::callCount() const
+{
+    return propertySum<&ContactMethod::callCount>();
+}
+
+int Individual::textMessageCount() const
+{
+    const auto recs = textRecordings();
+    int ret = 0;
+
+    for (const auto r : qAsConst(recs))
+        ret += r->size();
+
+    return ret;
+}
+
+int Individual::totalSpentTime() const
+{
+    return propertySum<&ContactMethod::totalSpentTime>();
+}
+
 bool Individual::hasBookmarks() const
 {
     return hasProperty<&ContactMethod::isBookmarked>();

@@ -68,6 +68,8 @@ public:
     QList<Call*> m_lActiveCalls         ;
     QList<Call*> m_lInitCalls           ;
 
+    int m_lEventType[enum_class_size<Event::EventCategory>()] {0};
+
     // Mutators
     void setHaveCalled();
 
@@ -78,7 +80,8 @@ public:
     ///
     /// \param start starting time of usage
     /// \param stop ending time of usage, must be greater than \a start
-    void update(time_t start, time_t stop);
+    /// \param c The type of event
+    void update(time_t start, time_t stop, Event::EventCategory c);
 
     /// \brief Use this method to update lastUsed time by a new time only if sooner.
     ///
@@ -479,7 +482,7 @@ ContactMethod::Type ContactMethod::type() const
 ///Return the number of calls from this number
 int ContactMethod::callCount() const
 {
-   return d_ptr->m_pUsageStats->d_ptr->m_lCalls.size();
+   return d_ptr->m_pUsageStats->d_ptr->m_lEventType[(int)Event::EventCategory::CALL];
 }
 
 uint ContactMethod::weekCount() const
@@ -919,9 +922,9 @@ void ContactMethod::addCall(Call* call)
    d_ptr->setLastUsed(time);
 
    //Update the contact method statistics
-   d_ptr->m_pUsageStats->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
+   d_ptr->m_pUsageStats->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp(), Event::EventCategory::CALL);
    if (d_ptr->m_pAccount)
-      d_ptr->m_pAccount->usageStatistics()->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp());
+      d_ptr->m_pAccount->usageStatistics()->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp(), Event::EventCategory::CALL);
 
    if (call->direction() == Call::Direction::OUTGOING) {
       d_ptr->m_pUsageStats->d_ptr->setHaveCalled();
@@ -1493,10 +1496,22 @@ void UsageStatisticsPrivate::setHaveCalled()
 ///
 /// \param start starting time of usage
 /// \param stop ending time of usage, must be greater than \a start
-void UsageStatisticsPrivate::update(time_t start, time_t stop)
+void UsageStatisticsPrivate::update(time_t start, time_t stop, Event::EventCategory c)
 {
+    // Remove garbage events, the bugs are elsewhere and they will wreck the
+    // stat if they are used.
+    if ((!start) || (!stop))
+        return;
+
+    if (start > stop)
+        return;
+
     setLastUsed(start);
+    Q_ASSERT(stop >= start);
     m_TotalSeconds += stop - start;
+
+    m_lEventType[(int)c]++;
+
     time_t now;
     ::time(&now);
     if (now - 3600*24*7 < stop)
@@ -1505,9 +1520,9 @@ void UsageStatisticsPrivate::update(time_t start, time_t stop)
         ++m_LastTrimCount;
 }
 
-void ContactMethodPrivate::addTimeRange(time_t start, time_t end)
+void ContactMethodPrivate::addTimeRange(time_t start, time_t end, Event::EventCategory c)
 {
-    m_pUsageStats->d_ptr->update(start, end);
+    m_pUsageStats->d_ptr->update(start, end, c);
 }
 
 /// \brief Use this method to update lastUsed time by a new time only if sooner.

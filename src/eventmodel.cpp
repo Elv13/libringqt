@@ -353,7 +353,7 @@ bool EventModel::addItemCallback(const Event* item)
         //FIXME someday, do better than that
         cm->d_ptr->m_pEvents->m_lEvents << item->d_ptr->m_pStrongRef;
         cm->d_ptr->setLastUsed(item->stopTimeStamp());
-        cm->d_ptr->addTimeRange(item->startTimeStamp(), item->stopTimeStamp());
+        cm->d_ptr->addTimeRange(item->startTimeStamp(), item->stopTimeStamp(), item->eventCategory());
 
         auto ref = const_cast<Event*>(item)->ref();
 
