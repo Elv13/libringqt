@@ -1432,6 +1432,7 @@ void TemporaryContactMethod::setUri(const URI& u)
 
 void TemporaryContactMethod::setRegisteredName(const QString& regName)
 {
+   ContactMethod::d_ptr->m_PrimaryName_cache.clear();
    ContactMethod::d_ptr->m_RegisteredName = regName;
    ContactMethod::d_ptr->primaryNameChanged(primaryName());
 }
