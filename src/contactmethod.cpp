@@ -839,6 +839,8 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Ring::Role::HasActiveVideo):
          cat = hasActiveVideo();
          break;
+      case static_cast<int>(ContactMethod::Role::Type):
+         return QVariant::fromValue(type());
    }
    return cat;
 }

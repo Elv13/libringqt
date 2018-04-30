@@ -205,29 +205,17 @@ QVariant Individual::data( const QModelIndex& index, int role ) const
 
     if (d_ptr->m_pTmpCM && index.row() >= phoneNumbers().size()) {
         Q_ASSERT(index.row() == phoneNumbers().size());
-
-        switch(role) {
-            case Qt::DisplayRole:
-            case Qt::EditRole:
-                return d_ptr->m_pTmpCM->uri();
-            case (int) ContactMethod::Role::CategoryName:
-                return d_ptr->m_pTmpCM->category() ?
-                    d_ptr->m_pTmpCM->category()->name() : QString();
-            case static_cast<int>(Call::Role::ContactMethod):
-            case static_cast<int>(Ring::Role::Object):
-                return QVariant::fromValue(d_ptr->m_pTmpCM);
-        }
-
-        return {};
-    }
-
-    // As this model is always associated with the person, the relevant icon
-    // is the phone number type (category)
-    if (role == Qt::DecorationRole) {
-        return phoneNumbers()[index.row()]->category()->icon();
+        Q_ASSERT(d_ptr->m_pTmpCM->type() == ContactMethod::Type::TEMPORARY);
+        Q_ASSERT(d_ptr->m_pTmpCM->roleData((int)ContactMethod::Role::Type).toInt() == (int)ContactMethod::Type::TEMPORARY);
+        return d_ptr->m_pTmpCM->roleData(role);
     }
 
     const auto cm = phoneNumbers()[index.row()];
+
+    // As this model is always associated with the person, the relevant icon
+    // is the phone number type (category)
+    if (role == Qt::DecorationRole)
+        return cm->category()->icon();
 
     return cm->roleData(role);
 }
@@ -235,22 +223,15 @@ QVariant Individual::data( const QModelIndex& index, int role ) const
 bool Individual::setData( const QModelIndex& index, const QVariant &value, int role)
 {
     if (index.row() == rowCount()) {
-        beginInsertRows({}, rowCount(), rowCount());
         setEditRow(true);
-        endInsertRows();
     }
     else if (!index.isValid())
         return false;
 
-    switch(role) {
-        case Qt::DisplayRole:
-        case Qt::EditRole:
-            d_ptr->m_pTmpCM->setUri(value.toString());
-            emit dataChanged(index, index);
-            return true;
-    }
+    if (index.row() == rowCount() - 1 && d_ptr->m_pTmpCM)
+        return d_ptr->m_pTmpCM->setRoleData(value, role);
 
-    return false;
+    return phoneNumbers()[index.row()]->setRoleData(value, role);
 }
 
 int Individual::rowCount( const QModelIndex& parent ) const
@@ -263,10 +244,7 @@ int Individual::rowCount( const QModelIndex& parent ) const
 // Re-implement to allow adding new rows
 QModelIndex Individual::index(int row, int col, const QModelIndex& parent) const
 {
-    if (col || parent.isValid())
-        return {};
-
-    if (row > phoneNumbers().size()+(d_ptr->m_pTmpCM ? -1 : 0))
+    if (col || parent.isValid() || row < 0 || row >= rowCount())
         return {};
 
     return createIndex(row, 0, row);
@@ -279,7 +257,6 @@ bool Individual::removeRows(int row, int count, const QModelIndex &parent)
 
     if (row == rowCount()-1) {
         setEditRow(false);
-        emit layoutChanged();
         return true;
     }
 
@@ -460,14 +437,21 @@ bool Individual::hasEditRow() const
 
 void Individual::setEditRow(bool v)
 {
-    if (v && !d_ptr->m_pTmpCM) {
-        d_ptr->m_pTmpCM = new TemporaryContactMethod();
-    }
-    else if ((!v) && d_ptr->m_pTmpCM)
-        delete d_ptr->m_pTmpCM;
+    const int idx = rowCount();
 
-    emit hasEditRowChanged(v);
-    emit layoutChanged();
+    if (v && !d_ptr->m_pTmpCM) {
+        beginInsertRows({}, idx, idx);
+        d_ptr->m_pTmpCM = new TemporaryContactMethod();
+        endInsertRows();
+    }
+    else if ((!v) && d_ptr->m_pTmpCM) {
+        beginRemoveRows({}, idx-1, idx-1);
+        delete d_ptr->m_pTmpCM;
+        d_ptr->m_pTmpCM = 0;
+        endRemoveRows();
+    }
+
+    emit hasEditRowChanged(hasEditRow());
 }
 
 QSharedPointer<EventAggregate> Individual::eventAggregate() const

@@ -158,6 +158,7 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
         roles[ static_cast<int>(ContactMethod::Role::CanSendTexts) ] = "canSendTexts";
         roles[ static_cast<int>(ContactMethod::Role::TotalCallCount) ] = "totalCallCount";
         roles[ static_cast<int>(ContactMethod::Role::TotalMessageCount) ] = "totalMessageCount";
+        roles[ static_cast<int>(ContactMethod::Role::Type) ] = "type";
 
     }
 

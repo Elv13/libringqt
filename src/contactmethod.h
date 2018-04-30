@@ -117,6 +117,7 @@ public:
       TotalCallCount   ,
       TotalMessageCount,
       TotalEventCount  ,
+      Type             ,
       UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };
@@ -364,6 +365,7 @@ Q_SIGNALS:
 
 Q_DECLARE_METATYPE(ContactMethod*)
 Q_DECLARE_METATYPE(ContactMethod::MediaAvailailityStatus)
+Q_DECLARE_METATYPE(ContactMethod::Type)
 
 ///@class TemporaryContactMethod: An incomplete phone number
 class LIB_EXPORT TemporaryContactMethod : public ContactMethod {
