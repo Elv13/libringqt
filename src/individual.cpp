@@ -39,6 +39,18 @@
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 
+/** The ::Individual properties associated with each ContactMethod.
+ *
+ * This is possible because a ContactMethod only has a single ::Individual
+ * object.
+ */
+struct ContactMethodIndividualData
+{
+    /// Used for the model
+    int m_PhoneNumberIndex {-1};
+    IndividualPrivate* d_ptr {nullptr};
+};
+
 class IndividualPrivate final : public QObject
 {
     Q_OBJECT
@@ -211,11 +223,13 @@ QVariant Individual::data( const QModelIndex& index, int role ) const
 
     // As this model is always associated with the person, the relevant icon
     // is the phone number type (category)
-    if (index.isValid() && role == Qt::DecorationRole) {
+    if (role == Qt::DecorationRole) {
         return phoneNumbers()[index.row()]->category()->icon();
     }
 
-    return index.isValid() ? phoneNumbers()[index.row()]->roleData(role) : QVariant();
+    const auto cm = phoneNumbers()[index.row()];
+
+    return cm->roleData(role);
 }
 
 bool Individual::setData( const QModelIndex& index, const QVariant &value, int role)
@@ -681,9 +695,17 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     if ((!d_ptr->m_LastUsedCM) || cm->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
         d_ptr->slotLastContactMethod(cm);
 
-    d_ptr->m_Numbers << cm;
+    Q_ASSERT(!cm->d_ptr->m_pIndividualData);
 
+    cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
+        d_ptr->m_Numbers.size(),
+        d_ptr
+    };
+
+    beginInsertRows({}, d_ptr->m_Numbers.size(), d_ptr->m_Numbers.size());
+    d_ptr->m_Numbers << cm;
     d_ptr->m_BestName.clear();
+    endInsertRows();
 
     emit phoneNumbersChanged();
     emit relatedContactMethodsAdded(cm);
@@ -722,7 +744,16 @@ ContactMethod* Individual::removePhoneNumber(ContactMethod* cm)
     }
 
     phoneNumbersAboutToChange();
+    beginRemoveRows({}, idx, idx);
     d_ptr->m_Numbers.remove(idx);
+
+    for (int i =0; i < d_ptr->m_Numbers.size(); i++) {
+        auto cm = d_ptr->m_Numbers[i];
+        Q_ASSERT(cm->d_ptr->m_pIndividualData);
+        cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = i;
+    }
+
+    endRemoveRows();
     phoneNumbersChanged();
 
     d_ptr->m_HiddenContactMethods << cm;
@@ -900,12 +931,19 @@ void IndividualPrivate::slotContactChanged()
 
 void IndividualPrivate::slotChanged()
 {
+    auto cm = qobject_cast<ContactMethod*>(sender());
+
+    if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == this) {
+        const auto idx = q_ptr->index(cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex, 0);
+
+        emit q_ptr->dataChanged(idx, idx);
+    }
+
 //     static bool blocked = false;
 //
 //     if (blocked)
 //         return;
 //
-//     auto cm = qobject_cast<ContactMethod*>(sender());
 //
 //     blocked = true;
 //
@@ -916,6 +954,8 @@ void IndividualPrivate::slotChanged()
 //     });
 //
 //     blocked = false;
+
+
 
     emit q_ptr->changed();
 }

@@ -95,7 +95,8 @@ public:
    friend class CallPrivate; //TODO remove, this is a legacy of the pre-Event separation of concerns
    friend class AccountPrivate; // An account is a ContactMethod and share some internals
    friend class Account; // update type
-   friend class Individual;
+   friend class Individual; // manage d_ptr->m_pIndividual
+   friend class IndividualPrivate; // access it's own internal properties stored in an opaque ptr
    friend class Media::TextRecording; // update last used
    friend class Media::TextRecordingPrivate; // update last used
    friend class EventModelPrivate; // manage the CM Events, emit signals and so on

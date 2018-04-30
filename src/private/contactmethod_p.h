@@ -34,6 +34,7 @@ namespace Media {
 class IndividualTimelineModel;
 
 struct ContactMethodEvents; // defined in eventmodel.cpp
+struct ContactMethodIndividualData; // defined in individual.cpp
 
 class ContactMethodPrivate final: public QObject
 {
@@ -77,6 +78,11 @@ public:
     */
    ContactMethodEvents* m_pEvents {nullptr};
    void addTimeRange(time_t start, time_t end, Event::EventCategory c);
+
+   /**
+    * The individual own properties (opaque pointer to the CM)
+    */
+   ContactMethodIndividualData* m_pIndividualData {nullptr};
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
    QWeakPointer<Individual> m_pIndividual;
