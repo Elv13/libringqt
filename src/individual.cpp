@@ -74,14 +74,14 @@ public:
 
     QSharedPointer<EventAggregate> m_pEventAggregate;
 
-    QSharedPointer<Individual> m_pWeakRef;
+    QSharedPointer<Individual> m_pWeakRef {nullptr};
 
     // Helpers
     void connectContactMethod(ContactMethod* cm);
     void disconnectContactMethod(ContactMethod* cm);
     InfoTemplate* infoTemplate();
     bool merge(QSharedPointer<Individual> other);
-    bool contains(ContactMethod* cm) const;
+    bool contains(ContactMethod* cm, bool includeHidden = true) const;
 
     QList<Individual*> m_lParents;
 
@@ -149,7 +149,7 @@ Individual::~Individual()
         delete d_ptr;
 }
 
-bool IndividualPrivate::contains(ContactMethod* cm) const
+bool IndividualPrivate::contains(ContactMethod* cm, bool includeHidden) const
 {
     bool ret = false;
     q_ptr->forAllNumbers([&ret, cm](ContactMethod* other) {
@@ -157,7 +157,7 @@ bool IndividualPrivate::contains(ContactMethod* cm) const
             ret = true;
             return;
         }
-    });
+    }, includeHidden);
 
     return ret;
 }
@@ -185,13 +185,35 @@ bool IndividualPrivate::merge(QSharedPointer<Individual> other)
     if ((!other->d_ptr->m_LastUsedCM) || (m_LastUsedCM && m_LastUsedCM->lastUsed() > other->d_ptr->m_LastUsedCM->lastUsed()))
         other->d_ptr->m_LastUsedCM =  m_LastUsedCM;
 
-    for (auto cm : qAsConst(m_Numbers))
+    for (auto cm : qAsConst(m_Numbers)) {
+        if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == this) {
+            delete cm->d_ptr->m_pIndividualData;
+            cm->d_ptr->m_pIndividualData = nullptr;
+        }
+
         if (!other->d_ptr->contains(cm))
             other->addPhoneNumber(cm);
+    }
 
-    for (auto cm : qAsConst(m_HiddenContactMethods))
+    for (auto cm : qAsConst(m_HiddenContactMethods)) {
         if (!other->d_ptr->contains(cm))
             other->registerContactMethod(cm);
+    }
+
+    m_lParents.removeAll(q_ptr);
+
+    // Marge all the copies
+    for (auto q : qAsConst(m_lParents)) {
+        if (other->d_ptr->m_lParents.indexOf(q) == -1) {
+            other->d_ptr->m_lParents << q;
+            q->d_ptr = other->d_ptr;
+            emit q_ptr->layoutChanged();
+        }
+    }
+
+    q_ptr->d_ptr = other->d_ptr;
+
+    emit q_ptr->layoutChanged();
 
     delete this;
 
@@ -669,22 +691,31 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
             static_cast<TemporaryContactMethod*>(cm)
         );
 
+    if (!d_ptr->m_pPerson)
+        qDebug() << "Trying to add a new phone number without a contact" << cm;
+
     if (Q_UNLIKELY(cm->contact() && !(*cm->contact() == *d_ptr->m_pPerson))) {
         qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
         Q_ASSERT(false);
     }
+
+    if (d_ptr->m_pPerson)
+        cm->setPerson(d_ptr->m_pPerson);
 
     d_ptr->connectContactMethod(cm);
 
     if ((!d_ptr->m_LastUsedCM) || cm->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
         d_ptr->slotLastContactMethod(cm);
 
-    Q_ASSERT(!cm->d_ptr->m_pIndividualData);
-
-    cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
-        d_ptr->m_Numbers.size(),
-        d_ptr
-    };
+    if (cm->d_ptr->m_pIndividualData) {
+        Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
+        cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = d_ptr->m_Numbers.size();
+    }
+    else
+        cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
+            d_ptr->m_Numbers.size(),
+            d_ptr
+        };
 
     beginInsertRows({}, d_ptr->m_Numbers.size(), d_ptr->m_Numbers.size());
     d_ptr->m_Numbers << cm;
@@ -705,8 +736,14 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     }
     else if (!cm->d_ptr->m_pIndividual)
         cm->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
-    else if (cm->d_ptr->m_pIndividual != d_ptr->m_pWeakRef)
-        Q_ASSERT(false);
+    else if (cm->d_ptr->m_pIndividual != d_ptr->m_pWeakRef) {
+        if (d_ptr->m_pPerson && ((!cm->contact()) || cm->contact()->d_ptr == d_ptr->m_pPerson->d_ptr)) {
+            QSharedPointer<Individual> ind = cm->d_ptr->m_pIndividual;
+            ind->d_ptr->merge(d_ptr->m_pPerson->individual());
+        }
+        else
+            Q_ASSERT(false);
+    }
 
     if (objectName().isEmpty())
         setObjectName(cm->primaryName());
@@ -733,12 +770,25 @@ ContactMethod* Individual::removePhoneNumber(ContactMethod* cm)
 
     for (int i =0; i < d_ptr->m_Numbers.size(); i++) {
         auto cm = d_ptr->m_Numbers[i];
-        Q_ASSERT(cm->d_ptr->m_pIndividualData);
+
+        if (!cm->d_ptr->m_pIndividualData)
+            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
+                -1,
+                d_ptr
+            };
+        else
+            Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
+
         cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = i;
     }
 
     endRemoveRows();
     phoneNumbersChanged();
+
+    if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == d_ptr) {
+        delete cm->d_ptr->m_pIndividualData;
+        cm->d_ptr->m_pIndividualData = nullptr;
+    }
 
     d_ptr->m_HiddenContactMethods << cm;
 
@@ -750,7 +800,7 @@ ContactMethod* Individual::removePhoneNumber(ContactMethod* cm)
 /// ContactMethods URI are immutable, they need to be replaced when edited
 ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod* newCm)
 {
-    if (Q_UNLIKELY(!newCm)) {
+    if (Q_UNLIKELY((!newCm) || (!old))) {
         qWarning() << this << "trying to replace a phone number with nothing";
         return nullptr;
     }
@@ -762,9 +812,14 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
         return nullptr;
     }
 
-    if (old == newCm) {
+    if (old->d() == newCm->d()) {
         qWarning() << "Trying to replace a phone number with itself";
         return old;
+    }
+
+    if (old->d_ptr->m_pIndividualData) {
+        delete old->d_ptr->m_pIndividualData;
+        old->d_ptr->m_pIndividualData = nullptr;
     }
 
     if (newCm->type() == ContactMethod::Type::TEMPORARY)
@@ -774,7 +829,27 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
 
     phoneNumbersAboutToChange();
 
+    Q_ASSERT(!newCm->d_ptr->m_pIndividualData);
+
     d_ptr->m_Numbers.replace(idx, newCm);
+
+    for (int i =0; i < d_ptr->m_Numbers.size(); i++) {
+        auto cm = d_ptr->m_Numbers[i];
+
+        if (!cm->d_ptr->m_pIndividualData)
+            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
+                -1,
+                d_ptr
+            };
+        else
+            Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
+
+        cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = i;
+    }
+
+    const auto midx = index(idx, 0);
+
+    emit dataChanged(midx, midx);
 
     d_ptr->m_HiddenContactMethods << newCm;
     d_ptr->m_BestName.clear();
@@ -909,8 +984,27 @@ void IndividualPrivate::slotContactChanged()
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
 
-    if (!m_pPerson && cm->contact())
+    if ((!m_pPerson) && cm->contact())
         merge(cm->contact()->individual());
+    else if (QSharedPointer<Individual> ind = cm->d_ptr->m_pIndividual) {
+        if (m_pPerson)
+            ind->d_ptr->merge(m_pPerson->individual());
+    }
+
+    if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr != this) {
+        delete cm->d_ptr->m_pIndividualData;
+
+        cm->d_ptr->m_pIndividualData = contains(cm, false) ? new ContactMethodIndividualData {
+            -1,
+            this
+        } : nullptr;
+
+        for (int i =0; i < m_Numbers.size(); i++) {
+            auto cm = m_Numbers[i];
+            Q_ASSERT(cm->d_ptr->m_pIndividualData);
+            cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = i;
+        }
+    }
 }
 
 void IndividualPrivate::slotChanged()
@@ -1039,6 +1133,32 @@ bool Individual::hasBookmarks() const
 QSharedPointer<Individual> Individual::getIndividual(Individual* cm)
 {
     return cm ? cm->d_ptr->m_pWeakRef : nullptr;
+}
+
+Person* Individual::buildPerson() const
+{
+    if (d_ptr->m_pPerson)
+        return d_ptr->m_pPerson;
+
+    Person* p = nullptr;
+
+    forAllNumbers([&p](ContactMethod* cm) {
+        if ((!p) && cm->contact())
+            p = cm->contact();
+    }, false);
+
+    if (!p) {
+        p = new Person();
+        p->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
+        d_ptr->m_pPerson = p;
+    }
+
+    for (auto cm : qAsConst(d_ptr->m_Numbers)) {
+        if (!cm->contact())
+            cm->setPerson(p);
+    }
+
+    return p;
 }
 
 QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)

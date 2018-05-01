@@ -138,6 +138,8 @@ public:
     Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
     Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
 
+    Q_INVOKABLE Person* buildPerson() const;
+
     QVector<ContactMethod*> phoneNumbers() const;
     QVector<ContactMethod*> relatedContactMethods() const;
     QVector<Media::TextRecording*> textRecordings() const;

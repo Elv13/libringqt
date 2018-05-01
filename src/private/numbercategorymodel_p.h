@@ -21,10 +21,10 @@ class NumberCategoryModelPrivate final
 {
 public:
    struct InternalTypeRepresentation final {
-      NumberCategory* category;
-      int             index   ;
-      bool            enabled ;
-      int             counter ;
+      NumberCategory* category { nullptr };
+      int             index    {   -1    };
+      bool            enabled  {   true  };
+      int             counter  {    0    };
    };
 
    //Attributes
@@ -37,7 +37,5 @@ public:
    void registerNumber  ( ContactMethod* number     ); //FIXME this should be private
    void unregisterNumber( ContactMethod* number     );
    int  getSize         ( const NumberCategory* cat ) const;
-
-   virtual ~NumberCategoryModelPrivate();
 };
 

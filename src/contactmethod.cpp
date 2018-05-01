@@ -293,6 +293,10 @@ void ContactMethod::setAccount(Account* account)
    if (account == d_ptr->m_pAccount)
       return;
 
+   //Account cannot be changed for the Account own contact method
+   if (this->account() && type() == ContactMethod::Type::ACCOUNT)
+      return;
+
    //Add the statistics
    if (account && !d_ptr->m_pAccount && account->usageStatistics())
        account->usageStatistics()->d_ptr->append(d_ptr->m_pUsageStats);
@@ -306,9 +310,8 @@ void ContactMethod::setAccount(Account* account)
       connect (d_ptr->m_pAccount,SIGNAL(destroyed(QObject*)), d_ptr,SLOT(slotAccountDestroyed(QObject*)));
 
    //Track Ring contacts by default
-   if (this->protocolHint() == URI::ProtocolHint::RING || this->protocolHint() == URI::ProtocolHint::RING_USERNAME) {
+   if (this->protocolHint() == URI::ProtocolHint::RING || this->protocolHint() == URI::ProtocolHint::RING_USERNAME)
        setTracked(true);
-   }
 
    d_ptr->changed();
    d_ptr->accountChanged();
@@ -324,9 +327,13 @@ void ContactMethod::setPerson(Person* contact)
 
    // This *will* have bad side effects. Better just call
    // `PhoneDirectoryModel::getNumber()` to get a new ContactMethod.
-   if (d_ptr->m_pPerson && contact && contact->uid() != d_ptr->m_pPerson->uid())
+   if (d_ptr->m_pPerson && contact && contact->uid() != d_ptr->m_pPerson->uid()) {
       qWarning() << "WARNING: There's already a contact, this is a bug"
          << contact << d_ptr->m_pPerson;
+
+      d_ptr->m_pPerson->individual()->removePhoneNumber(this);
+
+   }
 
    d_ptr->m_pPerson = contact;
 
@@ -841,6 +848,10 @@ QVariant ContactMethod::roleData(int role) const
          break;
       case static_cast<int>(ContactMethod::Role::Type):
          return QVariant::fromValue(type());
+      case static_cast<int>(ContactMethod::Role::CategoryKey):
+         return d_ptr->m_pCategory->key();
+      case static_cast<int>(ContactMethod::Role::Account):
+         return QVariant::fromValue(account());
    }
    return cat;
 }
@@ -848,10 +859,43 @@ QVariant ContactMethod::roleData(int role) const
 /// Keep a single method to set the roles instead of copy/pasting in 5 models
 bool ContactMethod::setRoleData(const QVariant &value, int role)
 {
+    // Those values are immutable once the CM becomes "real"
+    if (type() == ContactMethod::Type::TEMPORARY) {
+        switch(role) {
+            case static_cast<int>(Ring::Role::URI):
+            case static_cast<int>(Role::Uri):
+                qobject_cast<TemporaryContactMethod*>(this)->setUri(value.toString());
+                return true;
+        }
+    }
+
     switch(role) {
         case static_cast<int>(Ring::Role::IsBookmarked):
             setBookmarked(value.toBool());
             return true;
+        case static_cast<int>(Role::CategoryKey):
+            if (auto cat = NumberCategoryModel::instance().forKey(value.toInt())) {
+                setCategory(cat);
+                return true;
+            }
+            break;
+        case static_cast<int>(Role::Account):
+            if (type() == ContactMethod::Type::ACCOUNT)
+                return false;
+
+            if (value.canConvert<Account*>()) {
+                setAccount(qvariant_cast<Account*>(value));
+                return true;
+            }
+            else if (value.canConvert<QModelIndex>()) {
+                const auto idx = qvariant_cast<QModelIndex>(value);
+                if (idx.model() == &AccountModel::instance()) {
+                    setAccount(AccountModel::instance().getAccountByModelIndex(idx));
+                    return true;
+                }
+            }
+            break;
+
     };
 
     return false;

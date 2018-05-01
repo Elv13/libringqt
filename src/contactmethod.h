@@ -118,6 +118,8 @@ public:
       TotalMessageCount,
       TotalEventCount  ,
       Type             ,
+      CategoryKey      ,
+      Account          ,
       UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };
@@ -152,7 +154,7 @@ public:
    Q_PROPERTY(Certificate*      certificate      READ certificate                                     )
    Q_PROPERTY(QString           registeredName   READ registeredName    NOTIFY registeredNameSet      )
    Q_PROPERTY(QString           bestId           READ bestId                                          )
-   Q_PROPERTY(QString           bestName         READ bestName                                        )
+   Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
 

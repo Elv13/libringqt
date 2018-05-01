@@ -159,6 +159,8 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
         roles[ static_cast<int>(ContactMethod::Role::TotalCallCount) ] = "totalCallCount";
         roles[ static_cast<int>(ContactMethod::Role::TotalMessageCount) ] = "totalMessageCount";
         roles[ static_cast<int>(ContactMethod::Role::Type) ] = "type";
+        roles[ static_cast<int>(ContactMethod::Role::CategoryKey) ] = "categoryKey";
+        roles[ static_cast<int>(ContactMethod::Role::Account) ] = "account";
 
     }
 
@@ -820,6 +822,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
 ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
 {
+    if (!number)
+        return nullptr;
+
     if (number->type() != ContactMethod::Type::TEMPORARY)
         return number;
 
