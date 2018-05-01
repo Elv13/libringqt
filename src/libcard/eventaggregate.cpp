@@ -28,6 +28,9 @@
 #include <individual.h>
 #include <contactmethod.h>
 
+// libstdc++
+#include <new>
+
 struct Multi //TODO
 {
     QVector<ContactMethod*> m_lCms;
@@ -104,7 +107,8 @@ class EventAggregatePrivate final : public QObject
 {
     Q_OBJECT
 public:
-    ~EventAggregatePrivate();
+    explicit EventAggregatePrivate() noexcept : QObject(nullptr) {}
+    virtual ~EventAggregatePrivate();
 
     enum class Mode {
         CONTACT_METHOD, /*!< Only a single contact method and nothing else */
@@ -113,11 +117,11 @@ public:
     } m_Mode {Mode::CONTACT_METHOD};
 
     // Depends on the m_Mode
-    union {
+//     union { //FIXME it worked, but it was unstable because of unrelated reasons and I wanted to debug less places
         Individual* m_pIndividual;
         Multi* m_Multi;
         ContactMethod* m_pContactMethod;
-    };
+//     };
 
     // Attributes
     RootEventNode* m_pRoot { new RootEventNode() };
@@ -125,7 +129,7 @@ public:
     //HACK no time to do better
     QVector<QSharedPointer<Event>> m_lAllEvents;
 
-    QWeakPointer<QAbstractItemModel> m_pUnsortedListModel {nullptr};
+    QSharedPointer<QAbstractItemModel> m_pUnsortedListModel {nullptr};
 
     QSharedPointer<EventAggregate> m_pWeakSelf {nullptr}; //FIXME use QWeakPointer
 
@@ -145,7 +149,7 @@ class UnsortedEventListView final : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit UnsortedEventListView(EventAggregatePrivate* d_ptr);
+    explicit UnsortedEventListView(const QSharedPointer<EventAggregatePrivate>& d_ptr);
     virtual ~UnsortedEventListView();
 
     virtual QVariant data( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
@@ -159,20 +163,27 @@ private:
     // This is a private class, no need for d_ptr
     const ContactMethod* m_pCM;
     QMetaObject::Connection m_cCallBack;
-    EventAggregatePrivate* d_ptr;
+    QSharedPointer<EventAggregatePrivate> d_ptr;
 
     // Prevent the aggregate from being deleted while the model is visible
-    QSharedPointer<EventAggregate> m_pParentRef;
+    QSharedPointer<EventAggregate> m_pParentRef {nullptr};
 };
 
-EventAggregate::EventAggregate() : QObject(&EventModel::instance()), d_ptr(new EventAggregatePrivate())
+EventAggregate::EventAggregate() : QObject(&EventModel::instance())
 {
+//     d_ptr = (EventAggregatePrivate*) malloc(sizeof(EventAggregatePrivate));
+//     d_ptr = new(d_ptr) EventAggregatePrivate();
+    d_ptr = QSharedPointer<EventAggregatePrivate>(new EventAggregatePrivate());
+
+    d_ptr->m_pUnsortedListModel = nullptr;
     d_ptr->m_pWeakSelf = QSharedPointer<EventAggregate>(this);
 }
 
 EventAggregate::~EventAggregate()
 {
-    free(d_ptr);
+//     d_ptr->m_pUnsortedListModel.~QWeakPointer<QAbstractItemModel>();
+//     d_ptr->m_pWeakSelf.~QSharedPointer<EventAggregate>();
+//     free(d_ptr);
 }
 
 // It cannot be called due to the union, but has to exist
@@ -198,7 +209,7 @@ QSharedPointer<QAbstractItemModel> EventAggregate::unsortedListView() const
 {
     if (!d_ptr->m_pUnsortedListModel) {
         QSharedPointer<QAbstractItemModel> ret(
-            static_cast<QAbstractItemModel*>( new UnsortedEventListView(d_ptr))
+            qobject_cast<QAbstractItemModel*>( new UnsortedEventListView(d_ptr))
         );
         d_ptr->m_pUnsortedListModel = ret;
         return ret;
@@ -219,8 +230,8 @@ QSharedPointer<EventAggregate> EventAggregate::build(ContactMethod* cm)
     for (auto e : qAsConst(ret->d_ptr->m_lAllEvents))
         e->setProperty("__singleAggregate", i++); //HACK it has to work-ish ASAP at any cost
 
-    connect(cm, &ContactMethod::eventAdded, ret->d_ptr, &EventAggregatePrivate::slotEventAdded);
-    connect(cm, &ContactMethod::eventDetached, ret->d_ptr, &EventAggregatePrivate::slotEventDetached);
+    connect(cm, &ContactMethod::eventAdded, ret->d_ptr.data(), &EventAggregatePrivate::slotEventAdded);
+    connect(cm, &ContactMethod::eventDetached, ret->d_ptr.data(), &EventAggregatePrivate::slotEventDetached);
 
     return ret;
 }
@@ -240,8 +251,8 @@ QSharedPointer<EventAggregate> EventAggregate::build(QSharedPointer<Individual> 
     for (auto e : qAsConst(ret->d_ptr->m_lAllEvents))
         e->setProperty("__singleAggregate", i++); //HACK it has to work-ish ASAP at any cost
 
-    connect(ind.data(), &Individual::eventAdded, ret->d_ptr, &EventAggregatePrivate::slotEventAdded);
-    connect(ind.data(), &Individual::eventDetached, ret->d_ptr, &EventAggregatePrivate::slotEventDetached);
+    connect(ind.data(), &Individual::eventAdded, ret->d_ptr.data(), &EventAggregatePrivate::slotEventAdded);
+    connect(ind.data(), &Individual::eventDetached, ret->d_ptr.data(), &EventAggregatePrivate::slotEventDetached);
 
     return ret;
 }
@@ -287,8 +298,8 @@ void EventAggregatePrivate::slotEventDetached(QSharedPointer<Event> e)
 
 }
 
-UnsortedEventListView::UnsortedEventListView(EventAggregatePrivate* d) :
-    QAbstractListModel(d), d_ptr(d), m_pParentRef(d->m_pWeakSelf)
+UnsortedEventListView::UnsortedEventListView(const QSharedPointer<EventAggregatePrivate>& d) :
+    QAbstractListModel(d.data()), d_ptr(d), m_pParentRef(d->m_pWeakSelf)
 {
 }
 
