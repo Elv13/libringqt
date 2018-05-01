@@ -31,8 +31,8 @@ template <typename T> class CollectionManagerInterface;
  * This class represent a ContactMethod category. Categories usually
  * come from the contact provider, but can be added dynamically too
  */
-class LIB_EXPORT NumberCategory : public CollectionInterface {
-
+class LIB_EXPORT NumberCategory final : public CollectionInterface
+{
 public:
    friend class NumberCategoryModel;
    friend class CollectionManagerInterface<ContactMethod>;

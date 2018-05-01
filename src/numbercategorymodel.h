@@ -58,9 +58,12 @@ public:
    static NumberCategoryModel& instance();
 
    //Getter
-   QModelIndex            nameToIndex(const QString& name       ) const;
-   NumberCategory*        getCategory(const QString& type       );
-   static NumberCategory* other      (                          );
+   QModelIndex     nameToIndex(const QString& name       ) const;
+   NumberCategory* getCategory(const QString& type       ) const;
+   NumberCategory* getCategory(const QModelIndex& index  ) const;
+   NumberCategory* forKey     (int   key                 ) const;
+
+   static NumberCategory* other();
 
    virtual ~NumberCategoryModel();
 private:

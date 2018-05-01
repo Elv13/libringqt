@@ -21,73 +21,69 @@
 #include "numbercategory.h"
 
 NumberCategoryModel::NumberCategoryModel(QObject* parent) : QAbstractListModel(parent),CollectionManagerInterface(this),d_ptr(new NumberCategoryModelPrivate())
-{
-}
+{}
 
 NumberCategoryModel::~NumberCategoryModel()
 {
-   delete d_ptr;
-}
-
-NumberCategoryModelPrivate::~NumberCategoryModelPrivate()
-{
-   for (InternalTypeRepresentation* rep : m_lCategories)
-      delete rep;
+    qDeleteAll(d_ptr->m_lCategories);
+    delete d_ptr;
 }
 
 QHash<int,QByteArray> NumberCategoryModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-   static bool initRoles = false;
-   if (!initRoles) {
-      initRoles = true;
-      roles[Role::KEY] = "key";
-   }
-   return roles;
+    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
+
+    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    if (!init_flag.test_and_set())
+        roles[Role::KEY] = "key";
+
+    return roles;
 }
 
-//Abstract model member
 QVariant NumberCategoryModel::data(const QModelIndex& index, int role) const
 {
-   if (!index.isValid()) return QVariant();
-   switch (role) {
-      case Qt::DisplayRole: {
-         const QString name = d_ptr->m_lCategories[index.row()]->category->name();
-         return name.isEmpty()?tr("Uncategorized"):name;
-      }
-      case Qt::DecorationRole:
-         return d_ptr->m_lCategories[index.row()]->category->icon();//m_pDelegate->icon(m_lCategories[index.row()]->icon);
-      case Qt::CheckStateRole:
-         return d_ptr->m_lCategories[index.row()]->enabled?Qt::Checked:Qt::Unchecked;
-      case Qt::UserRole:
-         return 'x'+QString::number(d_ptr->m_lCategories[index.row()]->counter);
-      case Role::KEY:
-         return d_ptr->m_lCategories[index.row()]->category->key();
-   }
-   return QVariant();
+    if (!index.isValid())
+        return {};
+
+    switch (role) {
+        case Qt::DisplayRole: {
+            const QString name = d_ptr->m_lCategories[index.row()]->category->name();
+            return name.isEmpty()?tr("Uncategorized"):name;
+        }
+        case Qt::DecorationRole:
+            return d_ptr->m_lCategories[index.row()]->category->icon();//m_pDelegate->icon(m_lCategories[index.row()]->icon);
+        case Qt::CheckStateRole:
+            return d_ptr->m_lCategories[index.row()]->enabled?Qt::Checked:Qt::Unchecked;
+        case Qt::UserRole:
+            return 'x'+QString::number(d_ptr->m_lCategories[index.row()]->counter);
+        case Role::KEY:
+            return d_ptr->m_lCategories[index.row()]->category->key();
+    }
+
+    return {};
 }
 
 int NumberCategoryModel::rowCount(const QModelIndex& parent) const
 {
-   if (parent.isValid()) return 0;
-   return d_ptr->m_lCategories.size();
+    return parent.isValid() ? 0 : d_ptr->m_lCategories.size();
 }
 
 Qt::ItemFlags NumberCategoryModel::flags(const QModelIndex& index) const
 {
-   return (d_ptr->m_lCategories[index.row()]->category->name().isEmpty() ? Qt::NoItemFlags : Qt::ItemIsEnabled)
-            | Qt::ItemIsSelectable
-            | Qt::ItemIsUserCheckable;
+    return (d_ptr->m_lCategories[index.row()]->category->name().isEmpty() ? Qt::NoItemFlags : Qt::ItemIsEnabled)
+        | Qt::ItemIsSelectable
+        | Qt::ItemIsUserCheckable;
 }
 
 bool NumberCategoryModel::setData(const QModelIndex& idx, const QVariant &value, int role)
 {
-   if (idx.isValid() && role == Qt::CheckStateRole) {
-      d_ptr->m_lCategories[idx.row()]->enabled = value.toBool();
-      emit dataChanged(idx,idx);
-      return true;
-   }
-   return false;
+    if (idx.isValid() && role == Qt::CheckStateRole) {
+        d_ptr->m_lCategories[idx.row()]->enabled = value.toBool();
+        emit dataChanged(idx,idx);
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -95,30 +91,32 @@ bool NumberCategoryModel::setData(const QModelIndex& idx, const QVariant &value,
  */
 NumberCategory* NumberCategoryModel::addCategory(const QString& name, const QVariant& icon, int key)
 {
-   NumberCategoryModelPrivate::InternalTypeRepresentation* rep = d_ptr->m_hByName[name];
-   if (!name.size())
-      return this->other();
+    if (name.isEmpty())
+        return this->other();
 
-   if (!rep) {
-      rep = new NumberCategoryModelPrivate::InternalTypeRepresentation();
-      rep->counter = 0;
-   }
+    const auto lower = name.toLower();
 
-   NumberCategory* cat = addCollection<NumberCategory,QString>(name, LoadOptions::NONE);
-   cat->setKey ( key  );
-   cat->setIcon( icon );
+    if (auto rep = d_ptr->m_hByName.value(lower))
+        return rep->category;
 
-   rep->category   = cat                        ;
-   rep->index      = d_ptr->m_lCategories.size();
-   rep->enabled    = false                      ;
+    auto rep = new NumberCategoryModelPrivate::InternalTypeRepresentation();
 
-   this->beginInsertRows(this->nameToIndex(name),d_ptr->m_lCategories.size(), d_ptr->m_lCategories.size());
-   d_ptr->m_hToInternal[ cat           ] = rep;
-   d_ptr->m_hByIdx     [ key           ] = rep;
-   d_ptr->m_hByName    [ name.toLower()] = rep;
-   d_ptr->m_lCategories << rep;
-   this->endInsertRows();
-   return cat;
+    NumberCategory* cat = addCollection<NumberCategory,QString>(name, LoadOptions::NONE);
+    cat->setKey ( key  );
+    cat->setIcon( icon );
+
+    rep->category = cat                        ;
+    rep->index    = d_ptr->m_lCategories.size();
+    rep->enabled  = false                      ;
+
+    this->beginInsertRows(this->nameToIndex(name),d_ptr->m_lCategories.size(), d_ptr->m_lCategories.size());
+    d_ptr->m_hToInternal[ cat   ] = rep;
+    d_ptr->m_hByIdx     [ key   ] = rep;
+    d_ptr->m_hByName    [ lower ] = rep;
+    d_ptr->m_lCategories << rep;
+    this->endInsertRows();
+
+    return cat;
 }
 
 NumberCategoryModel& NumberCategoryModel::instance()
@@ -127,93 +125,92 @@ NumberCategoryModel& NumberCategoryModel::instance()
     return *instance;
 }
 
-/*void NumberCategoryModel::setIcon(int idx, const QVariant& icon)
-{
-   NumberCategoryModelPrivate::InternalTypeRepresentation* rep = d_ptr->m_hByIdx[idx];
-   if (rep) {
-      rep->category->setIcon(icon);
-      emit dataChanged(index(d_ptr->m_lCategories.indexOf(rep),0),index(d_ptr->m_lCategories.indexOf(rep),0));
-   }
-}*/
-
 QModelIndex NumberCategoryModel::nameToIndex(const QString& name) const
 {
-   const QString lower = name.toLower();
-   if (!d_ptr->m_hByName[lower])
-      return QModelIndex();
-   else {
-      return index(d_ptr->m_hByName[lower]->index,0);
-   }
+    if (const auto rep = d_ptr->m_hByName.value(name.toLower()))
+        return index(rep->index, 0);
+
+    return {};
 }
 
 ///Be sure the category exist, increment the counter
 void NumberCategoryModelPrivate::registerNumber(ContactMethod* number)
 {
-   const QString lower = number->category()->name().toLower();
-   NumberCategoryModelPrivate::InternalTypeRepresentation* rep = m_hByName[lower];
-   if (!rep) {
-      NumberCategoryModel::instance().addCategory(number->category()->name(),QVariant());
-      rep = m_hByName[lower];
-   }
-   rep->counter++;
+    const QString lower = number->category()->name().toLower();
+
+    auto rep = m_hByName.value(lower);
+
+    if (!rep) {
+        NumberCategoryModel::instance().addCategory(number->category()->name(), {});
+        rep = m_hByName[lower];
+    }
+
+    rep->counter++;
 }
 
 void NumberCategoryModelPrivate::unregisterNumber(ContactMethod* number)
 {
-   const QString lower = number->category()->name().toLower();
-   NumberCategoryModelPrivate::InternalTypeRepresentation* rep = m_hByName[lower];
-   if (rep)
-      rep->counter--;
+    const QString lower = number->category()->name().toLower();
+
+    if (auto rep = m_hByName[lower])
+        rep->counter--;
 }
 
 ///Get the category (case insensitive)
-NumberCategory* NumberCategoryModel::getCategory(const QString& type)
+NumberCategory* NumberCategoryModel::getCategory(const QString& type) const
 {
-   const QString lower = type.toLower();
-   if (!lower.size())
-       return this->other();
-   else {
-      NumberCategoryModelPrivate::InternalTypeRepresentation* internal = d_ptr->m_hByName[lower];
-      if (internal)
-         return internal->category;
-      return addCategory(lower,QVariant());
-   }
+    const QString lower = type.toLower();
+
+    if (lower.isEmpty())
+        return this->other();
+    else if(auto internal = d_ptr->m_hByName.value(lower))
+        return internal->category;
+
+    return instance().addCategory(lower, {});
 }
 
+NumberCategory* NumberCategoryModel::getCategory(const QModelIndex& index) const
+{
+    return (index.row() < 0 || index.row() >= rowCount()) ?
+        nullptr : d_ptr->m_lCategories[index.row()]->category;
+}
+
+NumberCategory* NumberCategoryModel::forKey(int key) const
+{
+    if (const auto ret = d_ptr->m_hByIdx.value(key))
+        return ret->category;
+
+    return nullptr;
+}
 
 NumberCategory* NumberCategoryModel::other()
 {
-   static QString translated = QObject::tr("Other");
-   static QString lower      = translated.toLower();
-   if (instance().d_ptr->m_hByName[lower])
-       return instance().d_ptr->m_hByName[lower]->category;
-
-   ///Singleton
-   static auto other = instance().addCategory(lower, QVariant());
-   return other;
+    static QString translated = QObject::tr("Other");
+    static auto ret = instance().getCategory(translated);
+    return ret;
 }
 
 int NumberCategoryModelPrivate::getSize(const NumberCategory* cat) const
 {
-   NumberCategoryModelPrivate::InternalTypeRepresentation* i = m_hToInternal[cat];
-   return i ? i->counter : 0;
+    const auto i = m_hToInternal.value(cat);
+    return i ? i->counter : 0;
 }
 
 void NumberCategoryModel::collectionAddedCallback(CollectionInterface* collection)
 {
-   Q_UNUSED(collection)
+    Q_UNUSED(collection)
 }
 
 bool NumberCategoryModel::addItemCallback(const ContactMethod* item)
 {
-   Q_UNUSED(item)
-   return false;
+    Q_UNUSED(item)
+    return false;
 }
 
 bool NumberCategoryModel::removeItemCallback(const ContactMethod* item)
 {
-   Q_UNUSED(item)
-   return false;
+    Q_UNUSED(item)
+    return false;
 }
 
 #include <numbercategorymodel.moc>
