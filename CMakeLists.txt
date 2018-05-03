@@ -187,6 +187,15 @@ SET( libringqt_LIB_SRCS
   src/libcard/private/icsloader.cpp
   src/libcard/private/icsbuilder.cpp
 
+  # Error handling requiring user intervention
+  src/troubleshoot/base.cpp
+  src/troubleshoot/dispatcher.cpp
+  src/troubleshoot/handshake.cpp
+  src/troubleshoot/videostuck.cpp
+  src/troubleshoot/generic.cpp
+  src/troubleshoot/callstate.cpp
+  src/troubleshoot/absent.cpp
+
   #Data collections
   src/transitionalpersonbackend.cpp
   src/collectioninterface.cpp
@@ -666,6 +675,11 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
 
     INSTALL( FILES ${libringqt_card_LIB_HDRS}
     DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/libcard
+    COMPONENT Devel
+    )
+
+    INSTALL( FILES ${libringqt_troubleshoot_LIB_HDRS}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/troubleshoot
     COMPONENT Devel
     )
 

@@ -19,6 +19,7 @@
 
 //System
 #include <errno.h>
+#include <system_error>
 
 #ifdef Q_OS_WIN
 #include <winerror.h>
@@ -88,6 +89,86 @@ static void init_statuscode()
    //The content of this list is mostly copy pasted from various pjproject
    //header. This is done for translation reasons and eventually to associate
    //error with account fields/properties
+
+   // std::errc
+   SET_MESSAGE((int)std::errc::address_family_not_supported      ) QObject::tr("Address family not supported");
+   SET_MESSAGE((int)std::errc::address_in_use                    ) QObject::tr("Address in use");
+   SET_MESSAGE((int)std::errc::address_not_available             ) QObject::tr("Address not available");
+   SET_MESSAGE((int)std::errc::already_connected                 ) QObject::tr("Already connected");
+   SET_MESSAGE((int)std::errc::argument_list_too_long            ) QObject::tr("Argument list too long");
+   SET_MESSAGE((int)std::errc::argument_out_of_domain            ) QObject::tr("Argument out of domain");
+   SET_MESSAGE((int)std::errc::bad_address                       ) QObject::tr("Bad address");
+   SET_MESSAGE((int)std::errc::bad_file_descriptor               ) QObject::tr("Bad file descriptor");
+   SET_MESSAGE((int)std::errc::bad_message                       ) QObject::tr("Bad message");
+   SET_MESSAGE((int)std::errc::broken_pipe                       ) QObject::tr("Broken pipe");
+   SET_MESSAGE((int)std::errc::connection_aborted                ) QObject::tr("Connection aborted");
+   SET_MESSAGE((int)std::errc::connection_already_in_progress    ) QObject::tr("Connection already in progress");
+   SET_MESSAGE((int)std::errc::connection_refused                ) QObject::tr("Connection refused");
+   SET_MESSAGE((int)std::errc::connection_reset                  ) QObject::tr("Connection reset");
+   SET_MESSAGE((int)std::errc::cross_device_link                 ) QObject::tr("Cross device link");
+   SET_MESSAGE((int)std::errc::destination_address_required      ) QObject::tr("Destination address required");
+   SET_MESSAGE((int)std::errc::device_or_resource_busy           ) QObject::tr("Device or resource busy");
+   SET_MESSAGE((int)std::errc::directory_not_empty               ) QObject::tr("Directory not empty");
+   SET_MESSAGE((int)std::errc::executable_format_error           ) QObject::tr("Executable format error");
+   SET_MESSAGE((int)std::errc::file_exists                       ) QObject::tr("File exists");
+   SET_MESSAGE((int)std::errc::file_too_large                    ) QObject::tr("File too large");
+   SET_MESSAGE((int)std::errc::filename_too_long                 ) QObject::tr("Filename too long");
+   SET_MESSAGE((int)std::errc::function_not_supported            ) QObject::tr("Function not supported");
+   SET_MESSAGE((int)std::errc::host_unreachable                  ) QObject::tr("Host unreachable");
+   SET_MESSAGE((int)std::errc::identifier_removed                ) QObject::tr("Identifier removed");
+   SET_MESSAGE((int)std::errc::illegal_byte_sequence             ) QObject::tr("Illegal byte sequence");
+   SET_MESSAGE((int)std::errc::inappropriate_io_control_operation) QObject::tr("Inappropriate io control operation");
+   SET_MESSAGE((int)std::errc::interrupted                       ) QObject::tr("Interrupted");
+   SET_MESSAGE((int)std::errc::invalid_argument                  ) QObject::tr("Invalid argument");
+   SET_MESSAGE((int)std::errc::invalid_seek                      ) QObject::tr("Invalid seek");
+   SET_MESSAGE((int)std::errc::io_error                          ) QObject::tr("Io error");
+   SET_MESSAGE((int)std::errc::is_a_directory                    ) QObject::tr("Is a directory");
+   SET_MESSAGE((int)std::errc::message_size                      ) QObject::tr("Message size");
+   SET_MESSAGE((int)std::errc::network_down                      ) QObject::tr("Network down");
+   SET_MESSAGE((int)std::errc::network_reset                     ) QObject::tr("Network reset");
+   SET_MESSAGE((int)std::errc::network_unreachable               ) QObject::tr("Network unreachable");
+   SET_MESSAGE((int)std::errc::no_buffer_space                   ) QObject::tr("No buffer space");
+   SET_MESSAGE((int)std::errc::no_child_process                  ) QObject::tr("No child process");
+   SET_MESSAGE((int)std::errc::no_link                           ) QObject::tr("No link");
+   SET_MESSAGE((int)std::errc::no_lock_available                 ) QObject::tr("No lock available");
+   SET_MESSAGE((int)std::errc::no_message_available              ) QObject::tr("No message available");
+   SET_MESSAGE((int)std::errc::no_message                        ) QObject::tr("No message");
+   SET_MESSAGE((int)std::errc::no_protocol_option                ) QObject::tr("No protocol option");
+   SET_MESSAGE((int)std::errc::no_space_on_device                ) QObject::tr("No space on device");
+   SET_MESSAGE((int)std::errc::no_stream_resources               ) QObject::tr("No stream resources");
+   SET_MESSAGE((int)std::errc::no_such_device_or_address         ) QObject::tr("No such device or address");
+   SET_MESSAGE((int)std::errc::no_such_device                    ) QObject::tr("No such device");
+   SET_MESSAGE((int)std::errc::no_such_file_or_directory         ) QObject::tr("No such file or directory");
+   SET_MESSAGE((int)std::errc::no_such_process                   ) QObject::tr("No such process");
+   SET_MESSAGE((int)std::errc::not_a_directory                   ) QObject::tr("Not a directory");
+   SET_MESSAGE((int)std::errc::not_a_socket                      ) QObject::tr("Not a socket");
+   SET_MESSAGE((int)std::errc::not_a_stream                      ) QObject::tr("Not a stream");
+   SET_MESSAGE((int)std::errc::not_connected                     ) QObject::tr("Not connected");
+   SET_MESSAGE((int)std::errc::not_enough_memory                 ) QObject::tr("Not enough memory");
+   SET_MESSAGE((int)std::errc::not_supported                     ) QObject::tr("Not supported");
+   SET_MESSAGE((int)std::errc::operation_canceled                ) QObject::tr("Operation canceled");
+   SET_MESSAGE((int)std::errc::operation_in_progress             ) QObject::tr("Operation in progress");
+   SET_MESSAGE((int)std::errc::operation_not_permitted           ) QObject::tr("Operation not permitted");
+   SET_MESSAGE((int)std::errc::operation_not_supported           ) QObject::tr("Operation not supported");
+   SET_MESSAGE((int)std::errc::operation_would_block             ) QObject::tr("Operation would block");
+   SET_MESSAGE((int)std::errc::owner_dead                        ) QObject::tr("Owner dead");
+   SET_MESSAGE((int)std::errc::permission_denied                 ) QObject::tr("Permission denied");
+   SET_MESSAGE((int)std::errc::protocol_error                    ) QObject::tr("Protocol error");
+   SET_MESSAGE((int)std::errc::protocol_not_supported            ) QObject::tr("Protocol not supported");
+   SET_MESSAGE((int)std::errc::read_only_file_system             ) QObject::tr("Read only file system");
+   SET_MESSAGE((int)std::errc::resource_deadlock_would_occur     ) QObject::tr("Resource deadlock would occur");
+   SET_MESSAGE((int)std::errc::resource_unavailable_try_again    ) QObject::tr("Resource unavailable try again");
+   SET_MESSAGE((int)std::errc::result_out_of_range               ) QObject::tr("Result out of range");
+   SET_MESSAGE((int)std::errc::state_not_recoverable             ) QObject::tr("State not recoverable");
+   SET_MESSAGE((int)std::errc::stream_timeout                    ) QObject::tr("Stream timeout");
+   SET_MESSAGE((int)std::errc::text_file_busy                    ) QObject::tr("Text file busy");
+   SET_MESSAGE((int)std::errc::timed_out                         ) QObject::tr("Timed out");
+   SET_MESSAGE((int)std::errc::too_many_files_open_in_system     ) QObject::tr("Too many files open in system");
+   SET_MESSAGE((int)std::errc::too_many_files_open               ) QObject::tr("Too many files open");
+   SET_MESSAGE((int)std::errc::too_many_links                    ) QObject::tr("Too many links");
+   SET_MESSAGE((int)std::errc::too_many_symbolic_link_levels     ) QObject::tr("Too many symbolic link levels");
+   SET_MESSAGE((int)std::errc::value_too_large                   ) QObject::tr("Value too large");
+   SET_MESSAGE((int)std::errc::wrong_protocol_type               ) QObject::tr("Wrong protocol type");
 
    //This set represent the standard ietf error code used for SIP[S] and HTTP[S]
    SET_MESSAGE(100) QObject::tr("Trying"                                     );
