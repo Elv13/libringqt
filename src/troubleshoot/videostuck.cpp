@@ -53,11 +53,6 @@ bool Troubleshoot::VideoStuck::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
-bool Troubleshoot::VideoStuck::setSelection(int idx, Call* c)
-{
-    return false;
-}
-
 bool Troubleshoot::VideoStuck::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
     return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;

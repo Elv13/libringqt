@@ -18,13 +18,28 @@
  ***********************************************************************************/
 #include "callstate.h"
 
+// Qt
+#include <QtCore/QDateTime>
+
+// Ring
 #include <call.h>
+
+// POSIX
+#include <errno.h>
 
 namespace Troubleshoot {
 
 class CallStatePrivate
 {
-    //
+public:
+    enum class State {
+        NORMAL,
+        MISSED,
+        BUSY,
+        REFUSED,
+    } m_State {State::NORMAL};
+
+    QString m_MissedText;
 };
 
 }
@@ -40,12 +55,25 @@ Troubleshoot::CallState::~CallState()
 
 QString Troubleshoot::CallState::headerText() const
 {
+    static QString busy = tr("This contact is currently busy and can't puck up the call.");
+    static QString refused = tr("This contact refused the call.");
+
+    switch(d_ptr->m_State) {
+        case CallStatePrivate::State::NORMAL:
+            return {};
+        case CallStatePrivate::State::MISSED:
+            return d_ptr->m_MissedText;
+        case CallStatePrivate::State::BUSY:
+            return busy;
+        case CallStatePrivate::State::REFUSED:
+            return refused;
+    }
     return {};
 }
 
 Troubleshoot::Base::Severity Troubleshoot::CallState::severity() const
 {
-    return Base::Severity::WARNING;
+    return Base::Severity::ERROR;
 }
 
 bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
@@ -53,17 +81,68 @@ bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
-bool Troubleshoot::CallState::setSelection(int idx, Call* c)
-{
-    return false;
-}
-
 bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
-    return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;
+    if (!c)
+        return false;
+
+    auto cself = static_cast<Troubleshoot::CallState*>(self);
+    cself->d_ptr->m_MissedText.clear();
+
+    switch(c->direction()) {
+        case Call::Direction::INCOMING:
+            switch(c->state()) {
+                case Call::State::OVER:
+                    if (c->isMissed()) {
+                        cself->d_ptr->m_State = CallStatePrivate::State::MISSED;
+                        cself->d_ptr->m_MissedText = tr("<center><b>Missed call</b></center> <br />from: ")
+                            + c->formattedName() + "<br /><br />"+c->dateTime().toString();
+
+                        return true;
+                    }
+                default:
+                    break;
+            }
+        case Call::Direction::OUTGOING:
+            switch(c->state()) {
+                case Call::State::BUSY:
+                    cself->d_ptr->m_State = CallStatePrivate::State::BUSY;
+                    return true;
+                case Call::State::OVER:
+                    if (c->lastErrorCode() == ECONNABORTED && c->stopTimeStamp() == c->startTimeStamp()) {
+                        cself->d_ptr->m_State = CallStatePrivate::State::REFUSED;
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+    }
+
+    return false;
 }
 
 int Troubleshoot::CallState::timeout()
 {
     return 10;
 }
+
+void Troubleshoot::CallState::reset()
+{
+    d_ptr->m_State = CallStatePrivate::State::NORMAL;
+    d_ptr->m_MissedText.clear();
+    emit textChanged();
+}
+
+QVariant Troubleshoot::CallState::icon() const
+{
+    return {};
+}
+
+int Troubleshoot::CallState::autoDismissDelay() const
+{
+    return d_ptr->m_State == CallStatePrivate::State::MISSED ?
+        std::numeric_limits<int>::max() : -1;
+}
+
+

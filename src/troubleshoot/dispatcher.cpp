@@ -54,6 +54,8 @@ public:
 
     Call* m_pCall {nullptr};
 
+    QTimer* m_pAutoDismiss {new QTimer(this)};
+
     Dispatcher* q_ptr;
 
     template<class T> void registerAdapter();
@@ -76,6 +78,8 @@ Troubleshoot::Dispatcher::Dispatcher(QObject* parent) : QIdentityProxyModel(pare
     d_ptr(new DispatcherPrivate())
 {
     d_ptr->q_ptr = this;
+
+    connect(d_ptr->m_pAutoDismiss, &QTimer::timeout, this, &Dispatcher::dismiss);
 
     // The order *is* important. The first has the highest priority
     d_ptr->registerAdapter<Troubleshoot::VideoStuck>();
@@ -122,6 +126,9 @@ void Troubleshoot::DispatcherPrivate::setCurrentHolder(Holder* h)
     if (h == m_pCurrentHolder)
         return;
 
+    if (m_pAutoDismiss->isActive())
+        m_pAutoDismiss->stop();
+
     if (m_pCurrentHolder) {
         m_pCurrentHolder->m_pInstance->deactivate();
         m_pCurrentHolder->m_pInstance->reset();
@@ -131,17 +138,28 @@ void Troubleshoot::DispatcherPrivate::setCurrentHolder(Holder* h)
 
     if (m_pCurrentHolder) {
         m_pCurrentHolder->m_pInstance->activate();
+        const int autoDismiss = m_pCurrentHolder->m_pInstance->autoDismissDelay();
+
+        if (autoDismiss != -1) {
+            m_pAutoDismiss->setInterval(autoDismiss * 1000);
+            m_pAutoDismiss->start();
+        }
     }
 
     q_ptr->setSourceModel(h ? h->m_pInstance : nullptr);
 
     emit q_ptr->activechanged();
     emit q_ptr->textChanged();
+
 }
 
 void Troubleshoot::Dispatcher::setCall(Call* call)
 {
     if (call == d_ptr->m_pCall)
+        return;
+
+    // It will be dismissed later
+    if ((!call) && d_ptr->m_pCurrentHolder && d_ptr->m_pAutoDismiss->isActive())
         return;
 
     if (d_ptr->m_pCall)
@@ -165,18 +183,31 @@ void Troubleshoot::Dispatcher::setCall(Call* call)
 
 void Troubleshoot::DispatcherPrivate::slotStateChanged(Call::State newState, Call::State previousState)
 {
+    Q_UNUSED(newState)
+    Q_UNUSED(previousState)
+
     if (!m_pCall)
         return;
 
-    Holder* affected = nullptr;
+    //HACK The signal is sent quite early and many pieces of code are either
+    // connected to the signal or executed later in the Call internal state
+    // machine. These changes affect many error handling corner cases so they
+    // have to be executed first rather than at a random point after this
+    // class changes them.
+    QTimer::singleShot(0, [this]() {
+        if (!m_pCall)
+            return;
 
-    for (auto h = m_pFirstHolder; h; h = h->m_pNext) {
-        h->m_pTimer->stop();
-        h->m_pTimer->start();
-        affected = affected ? affected : h->m_fProbe(m_pCall, 0) ? h : nullptr;
-    }
+        Holder* affected = nullptr;
 
-    setCurrentHolder(affected);
+        for (auto h = m_pFirstHolder; h; h = h->m_pNext) {
+            h->m_pTimer->stop();
+            h->m_pTimer->start();
+            affected = affected ? affected : h->m_fProbe(m_pCall, 0) ? h : nullptr;
+        }
+
+        setCurrentHolder(affected);
+    });
 }
 
 void Troubleshoot::DispatcherPrivate::slotTimeout()
@@ -222,7 +253,6 @@ void Troubleshoot::DispatcherPrivate::registerAdapter()
         h->m_pTimer->setInterval(t * 1000);
     }
 
-
     m_pFirstHolder = m_pFirstHolder ? m_pFirstHolder : h;
 
     if (m_pLastHolder)
@@ -233,10 +263,15 @@ void Troubleshoot::DispatcherPrivate::registerAdapter()
 
 bool Troubleshoot::Dispatcher::setSelection(const QModelIndex& idx)
 {
+    if ((!d_ptr->m_pCurrentHolder) || !idx.isValid())
+        return false;
+
+    return d_ptr->m_pCurrentHolder->m_pInstance->setSelection(idx, call());
 }
 
 bool Troubleshoot::Dispatcher::setSelection(int idx)
 {
+    return setSelection(index(idx, 0));
 }
 
 void Troubleshoot::Dispatcher::dismiss()

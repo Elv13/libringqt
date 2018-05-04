@@ -909,6 +909,9 @@ FlagPack<Call::HoldFlags> Call::holdFlags() const
 ///Generate an human readable string from the difference between StartTimeStamp and StopTimeStamp (or 'now')
 QString Call::length() const
 {
+   if (!d_ptr->m_LegacyFields.m_pStopTimeStamp)
+      return {};
+
    if (d_ptr->m_LegacyFields.m_pStartTimeStamp == d_ptr->m_LegacyFields.m_pStopTimeStamp)
       return QString(); //Invalid
 

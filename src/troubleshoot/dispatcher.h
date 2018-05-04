@@ -53,13 +53,15 @@ public:
 
     Base* currentModule() const;
 
-    Q_INVOKABLE void dismiss();
     Q_INVOKABLE bool setSelection(const QModelIndex& idx);
     Q_INVOKABLE bool setSelection(int idx);
 
 Q_SIGNALS:
     void activechanged();
     void textChanged();
+
+public Q_SLOTS:
+    Q_INVOKABLE void dismiss();
 
 private:
     DispatcherPrivate* d_ptr;

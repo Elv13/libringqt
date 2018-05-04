@@ -27,11 +27,9 @@ namespace Troubleshoot {
 class GenericPrivate;
 
 /**
- * When things go wrong *during* a live media session, letting it fail is an
- * option, but very often it is possible to involve the user directly and offer
- * option and information about why it failed and how to fix it.
+ * The last fallback when something goes wrong.
  *
- * This is the base class of a chain of responsibility
+ * Display the error message and code.
  */
 class LIB_EXPORT Generic : public Base
 {
@@ -44,7 +42,8 @@ public:
     virtual Base::Severity severity() const override;
 
     virtual bool setSelection(const QModelIndex& idx, Call* c) override;
-    virtual bool setSelection(int idx, Call* c) override;
+
+    virtual void reset() override;
 
     /**
      * Called when the state or error code changes.

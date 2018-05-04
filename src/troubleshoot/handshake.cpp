@@ -53,11 +53,6 @@ bool Troubleshoot::Handshake::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
-bool Troubleshoot::Handshake::setSelection(int idx, Call* c)
-{
-    return false;
-}
-
 bool Troubleshoot::Handshake::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
     return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;

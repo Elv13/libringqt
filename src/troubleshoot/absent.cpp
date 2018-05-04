@@ -20,6 +20,7 @@
 
 // Ring
 #include <call.h>
+#include <callmodel.h>
 #include <account.h>
 #include <contactmethod.h>
 #include <troubleshoot/dispatcher.h>
@@ -37,6 +38,11 @@ public:
         NO_DEVICE,
         OFFLINE,
     } m_State {State::NO_DEVICE};
+
+    enum Buttons {
+        HANG_UP,
+        TRY_AGAIN,
+    };
 };
 
 }
@@ -78,27 +84,44 @@ QString Troubleshoot::Absent::headerText() const
 
 Troubleshoot::Base::Severity Troubleshoot::Absent::severity() const
 {
-    return Base::Severity::WARNING;
+    return d_ptr->m_State == AbsentPrivate::State::NO_DEVICE ?
+        Base::Severity::ERROR : Base::Severity::WARNING;
 }
 
 bool Troubleshoot::Absent::setSelection(const QModelIndex& idx, Call* c)
 {
-    return false;
-}
+    auto cm = c->peerContactMethod();
 
-bool Troubleshoot::Absent::setSelection(int idx, Call* c)
-{
+    switch((AbsentPrivate::Buttons) idx.row()) {
+        case AbsentPrivate::Buttons::HANG_UP:
+            c << Call::Action::REFUSE;
+            break;
+        case AbsentPrivate::Buttons::TRY_AGAIN:
+            c << Call::Action::REFUSE;
+            c = CallModel::instance().dialingCall(cm);
+            c << Call::Action::ACCEPT;
+            break;
+        default:
+            Q_ASSERT(false);
+    }
+
+    dispatcher()->dismiss();
+
     return false;
 }
 
 bool Troubleshoot::Absent::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    if (c->direction() == Call::Direction::INCOMING)
+        return false;
+
     auto cself = static_cast<Troubleshoot::Absent*>(self);
 
     cself->d_ptr->m_State = c->peerContactMethod()->isTracked() && !c->peerContactMethod()->isPresent() ?
         AbsentPrivate::State::OFFLINE : AbsentPrivate::State::NORMAL;
 
-    if (c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 5)
+    if (c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION
+      && c->state() != Call::State::RINGING && elapsedTime >= 5)
         return true;
 
     const bool isRing   = c->account()->protocol() == Account::Protocol::RING;
@@ -145,4 +168,9 @@ void Troubleshoot::Absent::deactivate()
 int Troubleshoot::Absent::timeout()
 {
     return 10;
+}
+
+int Troubleshoot::Absent::autoDismissDelay() const
+{
+    return 30;
 }

@@ -44,7 +44,6 @@ public:
     virtual Base::Severity severity() const override;
 
     virtual bool setSelection(const QModelIndex& idx, Call* c) override;
-    virtual bool setSelection(int idx, Call* c) override;
 
     /**
      * Called when the state or error code changes.

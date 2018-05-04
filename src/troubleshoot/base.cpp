@@ -44,11 +44,6 @@ bool Troubleshoot::Base::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
-bool Troubleshoot::Base::setSelection(int idx, Call* c)
-{
-    return false;
-}
-
 Troubleshoot::Dispatcher* Troubleshoot::Base::dispatcher() const
 {
     return d_ptr->m_pParent;
@@ -63,3 +58,12 @@ void Troubleshoot::Base::activate()
 void Troubleshoot::Base::deactivate()
 {}
 
+QVariant Troubleshoot::Base::icon() const
+{
+    return {};
+}
+
+int Troubleshoot::Base::autoDismissDelay() const
+{
+    return -1;
+}

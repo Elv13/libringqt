@@ -24,7 +24,8 @@ namespace Troubleshoot {
 
 class GenericPrivate
 {
-    //
+public:
+    QString m_Message;
 };
 
 }
@@ -40,7 +41,7 @@ Troubleshoot::Generic::~Generic()
 
 QString Troubleshoot::Generic::headerText() const
 {
-    return {};
+    return d_ptr->m_Message;
 }
 
 Troubleshoot::Base::Severity Troubleshoot::Generic::severity() const
@@ -53,17 +54,27 @@ bool Troubleshoot::Generic::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
-bool Troubleshoot::Generic::setSelection(int idx, Call* c)
-{
-    return false;
-}
-
 bool Troubleshoot::Generic::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
-    return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;
+    if (c->state() == Call::State::ERROR || c->state() == Call::State::FAILURE) {
+        if (c->lastErrorCode() >= 200 && c->lastErrorCode() < 300)
+            return false;
+
+        auto cself = static_cast<Troubleshoot::Generic*>(self);
+        cself->d_ptr->m_Message = c->lastErrorMessage()
+            + " (" + QString::number(c->lastErrorCode()) + ")";
+        return true;
+    }
+
+    return false;
 }
 
 int Troubleshoot::Generic::timeout()
 {
-    return 10;
+    return 0;
+}
+
+void Troubleshoot::Generic::reset()
+{
+    d_ptr->m_Message.clear();
 }

@@ -27,11 +27,8 @@ namespace Troubleshoot {
 class CallStatePrivate;
 
 /**
- * When things go wrong *during* a live media session, letting it fail is an
- * option, but very often it is possible to involve the user directly and offer
- * option and information about why it failed and how to fix it.
- *
- * This is the base class of a chain of responsibility
+ * Handle "normal" call failure such as "the line is currently busy",
+ * "missed calls" and manually dismissed calls.
  */
 class LIB_EXPORT CallState : public Base
 {
@@ -44,7 +41,12 @@ public:
     virtual Base::Severity severity() const override;
 
     virtual bool setSelection(const QModelIndex& idx, Call* c) override;
-    virtual bool setSelection(int idx, Call* c) override;
+
+    virtual void reset() override;
+
+    virtual QVariant icon() const override;
+
+    virtual int autoDismissDelay() const override;
 
     /**
      * Called when the state or error code changes.

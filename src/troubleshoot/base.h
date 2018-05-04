@@ -65,10 +65,12 @@ public:
     virtual void activate();
     virtual void deactivate();
 
+    virtual QVariant icon() const;
+    virtual int autoDismissDelay() const;
+
     virtual Base::Severity severity() const = 0;
 
     virtual bool setSelection(const QModelIndex& idx, Call* c);
-    virtual bool setSelection(int idx, Call* c);
 
 Q_SIGNALS:
     void textChanged();
