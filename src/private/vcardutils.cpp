@@ -170,11 +170,15 @@ struct VCardMapper final {
       // TODO: Currently we only support one type (the first on the line) TYPE=WORK,VOICE: <number>
       const QStringList categories = QString(type).split(',');
 
-      m_hDelayedCMInserts[c] << GetNumberFuture {
-         fn,
-         c,
-         categories.size()?categories[0]:QString()
-      };
+      static QMutex m; {
+         QMutexLocker l(&m);
+
+         m_hDelayedCMInserts[c] << GetNumberFuture {
+            fn,
+            c,
+            categories.size()?categories[0]:QString()
+         };
+      }
    }
 
    void addAddress(Person* c, const QString& key, const QByteArray& fn) {
