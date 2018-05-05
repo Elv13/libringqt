@@ -184,6 +184,8 @@ bool ShmRendererPrivate::getNewFrame(bool wait)
    frame_ptr->size = m_pShmArea->frameSize;
    m_FrameGen = m_pShmArea->frameGen;
 
+   emit q_ptr->frameAcquired();
+
    shmUnlock();
 
    ++m_fpsC;

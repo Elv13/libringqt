@@ -1033,6 +1033,16 @@ void CallPrivate::videoStopped()
     }
 }
 
+void CallPrivate::slotFrameAcquired()
+{
+    if (m_fCurrentIssues & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED) {
+        m_fCurrentIssues ^= Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED;
+        emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
+    }
+
+    m_VideoFrameCounter++;
+}
+
 void CallPrivate::registerRenderer(Video::Renderer* renderer)
 {
    #ifdef ENABLE_VIDEO
@@ -1042,7 +1052,13 @@ void CallPrivate::registerRenderer(Video::Renderer* renderer)
    for (const auto d : EnumIterator<Media::Media::Direction>())
       mediaFactory<Media::Video>(d);
 
-   connect(renderer, &Video::Renderer::stopped, this, &CallPrivate::videoStopped);
+   connect(renderer, &Video::Renderer::stopped,
+      this, &CallPrivate::videoStopped);
+
+   connect(renderer, &Video::Renderer::frameAcquired,
+      this, &CallPrivate::slotFrameAcquired);
+
+   m_VideoFrameCounter++;
 
    #else
    Q_UNUSED(renderer)
@@ -1054,6 +1070,13 @@ void CallPrivate::removeRenderer(Video::Renderer* renderer)
 {
    Q_UNUSED(renderer)
    //TODO handle removing the renderer during the call
+
+   disconnect(renderer, &Video::Renderer::frameAcquired,
+      this, &CallPrivate::slotFrameAcquired);
+
+   if (!q_ptr->videoRenderer())
+      m_VideoFrameCounter = -1;
+
    return;
 }
 
@@ -2219,7 +2242,22 @@ void Call::reset()
 
 void CallPrivate::updated()
 {
-   emit q_ptr->changed();
+    // If there is a video renderer, detect if no frame has been acquired for
+    // more than 5 seconds.
+    if (m_VideoFrameCounter != -1) {
+        m_VideoFrameCounter += 10000;
+
+        if (m_VideoFrameCounter >= 50000) {
+            if (m_VideoFrameCounter == 50000) {
+                m_fCurrentIssues |= Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED;
+                emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
+            }
+
+            m_VideoFrameCounter = 0;
+        }
+    }
+
+    emit q_ptr->changed();
 }
 
 UserActionModel* Call::userActionModel() const

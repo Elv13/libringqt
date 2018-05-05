@@ -98,7 +98,7 @@ public:
     QString                   m_FormattedDate;
     Call::State               m_CurrentState       {Call::State::ERROR       };
     Call::Type                m_Type               {Call::Type::CALL         };
-    bool                      m_History            {          false          };
+    bool                      m_History            {           false         };
     QTimer*                   m_pTimer             {          nullptr        };
     UserActionModel*          m_pUserActionModel   {          nullptr        };
     Certificate*              m_pCertificate       {          nullptr        };
@@ -106,6 +106,9 @@ public:
     QDateTime*                m_pDateTime          {          nullptr        };
     QDate*                    m_pDateOnly          {          nullptr        };
     int                       m_LastErrorCode      {            200          };
+    int                       m_VideoFrameCounter  {             0           };
+
+    FlagPack<Call::LiveMediaIssues> m_fCurrentIssues {Call::LiveMediaIssues::OK};
 
     /**
      * The event/calendar APIs move the time keeping responsability away from
@@ -276,4 +279,5 @@ private:
 private Q_SLOTS:
     void updated();
     void videoStopped();
+    void slotFrameAcquired();
 };

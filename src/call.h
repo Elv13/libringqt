@@ -218,6 +218,17 @@ public:
    };
    Q_ENUMS(LifeCycleState)
 
+   /// Categories of (live) Quality of Service issues
+   enum class LiveMediaIssues : uchar {
+      OK                       = 0x0 << 0, /*!< Everything is well                                */
+      VIDEO_ACQUISITION_FAILED = 0x1 << 0, /*!< Failed to get video frames for 5 seconds          */
+      HIGH_PACKET_LOSS         = 0x1 << 1, /*!< There more than 15 lost packet per report         */
+      RUNAWAY_PATCH_LOSS       = 0x1 << 2, /*!< There is more and more packet less in each report */
+      HIGH_LATENCY             = 0x1 << 3, /*!< The latency is non-optimal                        */
+      RUNAWAY_LATENCY          = 0x1 << 4, /*!< The latency is increasing                         */
+   };
+   Q_FLAGS(LiveMediaIssues)
+
    /** @enum Call::HoldFlags
     * Those flags help track the holding state of a call. Call::State::HOLD is
     * only used for outgoing holding.
@@ -408,6 +419,8 @@ Q_SIGNALS:
    void holdFlagsChanged(const FlagPack<HoldFlags>& current, const FlagPack<HoldFlags>& previous);
    /// When the last error code changed
    void errorChanged();
+   /// Notify when the live call is having problems
+   void liveMediaIssuesChanaged(const FlagPack<Call::LiveMediaIssues> issues);
 };
 
 Q_DECLARE_METATYPE(Call*)
@@ -418,6 +431,7 @@ Q_DECLARE_METATYPE(Call::Direction)
 Q_DECLARE_METATYPE(Call::LifeCycleState)
 
 DECLARE_ENUM_FLAGS(Call::HoldFlags)
+DECLARE_ENUM_FLAGS(Call::LiveMediaIssues)
 
 LIB_EXPORT Call* operator<<(Call* c, Call::Action a);
 LIB_EXPORT QDebug operator<<(QDebug dbg, const Call::State& c       );

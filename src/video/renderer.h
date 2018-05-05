@@ -99,9 +99,10 @@ public:
    void setSize(const QSize& size) const;
 
 Q_SIGNALS:
-   void frameUpdated(); // Emitted when a new frame is ready
-   void stopped     ();
-   void started     ();
+   void frameUpdated (); // Emitted when a new frame is ready
+   void stopped      ();
+   void started      ();
+   void frameAcquired(); // When a *new* frame was successfully imported
 
 public Q_SLOTS:
    virtual void startRendering() = 0;
