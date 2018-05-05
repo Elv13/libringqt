@@ -342,6 +342,8 @@ public:
    QSharedPointer<Event>    calendarEvent    () const;
    QSharedPointer<Individual> peer           () const;
 
+   FlagPack<Call::LiveMediaIssues> liveMediaIssues() const;
+
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;
    Q_INVOKABLE QMimeData* mimePayload      (         ) const;

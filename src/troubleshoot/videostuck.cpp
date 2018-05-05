@@ -40,7 +40,9 @@ Troubleshoot::VideoStuck::~VideoStuck()
 
 QString Troubleshoot::VideoStuck::headerText() const
 {
-    return {};
+    static QString message = tr("The video seems to have stopped");
+
+    return message;
 }
 
 Troubleshoot::Base::Severity Troubleshoot::VideoStuck::severity() const
@@ -55,7 +57,9 @@ bool Troubleshoot::VideoStuck::setSelection(const QModelIndex& idx, Call* c)
 
 bool Troubleshoot::VideoStuck::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
-    return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;
+    return c->lifeCycleState() == Call::LifeCycleState::PROGRESS && (
+        c->liveMediaIssues() & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED
+    );
 }
 
 int Troubleshoot::VideoStuck::timeout()

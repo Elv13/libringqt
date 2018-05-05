@@ -1026,6 +1026,12 @@ Video::Renderer* Call::videoRenderer() const
    #endif
 }
 
+
+FlagPack<Call::LiveMediaIssues> Call::liveMediaIssues() const
+{
+    return d_ptr->m_fCurrentIssues;
+}
+
 void CallPrivate::videoStopped()
 {
     if (auto renderer = qobject_cast<Video::Renderer*>(sender())) {
@@ -1036,7 +1042,7 @@ void CallPrivate::videoStopped()
 void CallPrivate::slotFrameAcquired()
 {
     if (m_fCurrentIssues & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED) {
-        m_fCurrentIssues ^= Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED;
+        m_fCurrentIssues = Call::LiveMediaIssues::OK;
         emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
     }
 
@@ -2244,12 +2250,13 @@ void CallPrivate::updated()
 {
     // If there is a video renderer, detect if no frame has been acquired for
     // more than 5 seconds.
-    if (m_VideoFrameCounter != -1) {
+    if (q_ptr->lifeCycleState() == Call::LifeCycleState::PROGRESS && m_VideoFrameCounter != -1) {
         m_VideoFrameCounter += 10000;
 
         if (m_VideoFrameCounter >= 50000) {
             if (m_VideoFrameCounter == 50000) {
                 m_fCurrentIssues |= Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED;
+                qDebug() << "Video acquisition stopped working" << q_ptr;
                 emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
             }
 

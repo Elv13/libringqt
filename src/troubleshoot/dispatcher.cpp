@@ -66,7 +66,7 @@ public:
     void setCurrentHolder(Holder* h);
 
 public Q_SLOTS:
-    void slotStateChanged(Call::State newState, Call::State previousState);
+    void slotStateChanged();
     void slotTimeout();
 };
 
@@ -162,14 +162,19 @@ void Troubleshoot::Dispatcher::setCall(Call* call)
     if ((!call) && d_ptr->m_pCurrentHolder && d_ptr->m_pAutoDismiss->isActive())
         return;
 
-    if (d_ptr->m_pCall)
+    if (d_ptr->m_pCall) {
         disconnect(d_ptr->m_pCall, &Call::stateChanged,
             d_ptr, &DispatcherPrivate::slotStateChanged);
+        disconnect(d_ptr->m_pCall, &Call::liveMediaIssuesChanaged,
+            d_ptr, &DispatcherPrivate::slotStateChanged);
+    }
 
     d_ptr->m_pCall = call;
 
     if (d_ptr->m_pCall) {
         connect(d_ptr->m_pCall, &Call::stateChanged,
+            d_ptr, &DispatcherPrivate::slotStateChanged);
+        connect(d_ptr->m_pCall, &Call::liveMediaIssuesChanaged,
             d_ptr, &DispatcherPrivate::slotStateChanged);
 
         for (auto h = d_ptr->m_pFirstHolder; h; h = h->m_pNext)
@@ -181,11 +186,8 @@ void Troubleshoot::Dispatcher::setCall(Call* call)
     d_ptr->setCurrentHolder(nullptr);
 }
 
-void Troubleshoot::DispatcherPrivate::slotStateChanged(Call::State newState, Call::State previousState)
+void Troubleshoot::DispatcherPrivate::slotStateChanged()
 {
-    Q_UNUSED(newState)
-    Q_UNUSED(previousState)
-
     if (!m_pCall)
         return;
 
