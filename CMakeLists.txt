@@ -411,6 +411,7 @@ SET(libringqt_card_LIB_HDRS
 
 SET(libringqt_troubleshoot_LIB_HDRS
   src/troubleshoot/dispatcher.h
+  src/troubleshoot/base.h
 )
 
 SET(libringqt_interface_LIB_HDRS
