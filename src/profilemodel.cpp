@@ -31,6 +31,7 @@
 #include "collectioninterface.h"
 #include "collectioneditor.h"
 #include "callmodel.h"
+#include "individual.h"
 #include "contactmethod.h"
 #include "person.h"
 #include "private/vcardutils.h"
@@ -147,8 +148,14 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
         qWarning() << "No profile selected or none exists, fall back tot the default";
 
         if (Q_UNLIKELY(!m_pDefaultProfile)) {
-            qWarning() << "Failed to set a profile: there is none";
-            return;
+            if (m_lProfiles.isEmpty()) {
+                qWarning() << "Failed to set a profile: there is none";
+                return;
+            }
+            else {
+                qWarning() << "No profile selected: Assigning profiles at random";
+                m_pDefaultProfile = m_lProfiles.first();
+            }
         }
 
         m_pDefaultProfile->m_pPerson->addCustomField(
@@ -330,6 +337,13 @@ QVariant ProfileModel::data(const QModelIndex& index, int role ) const
 
     switch (currentNode->type) {
         case ProfileNode::Type::PROFILE:
+            if (role == (int) Ring::Role::Object)
+                return QVariant::fromValue(
+                    currentNode->m_pPerson->individual().data()
+                );
+            else if (role == (int) Ring::Role::ObjectType)
+                return QVariant::fromValue(Ring::ObjectType::Individual);
+
             return currentNode->m_pPerson->roleData(role);
         case ProfileNode::Type::ACCOUNT:
             switch(role) {
