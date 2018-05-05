@@ -140,8 +140,11 @@ ProfileNode* ProfileModelPrivate::createNodeForAccount(Account* acc)
 
 void ProfileModelPrivate::slotAccountAdded(Account* acc)
 {
+    if (nodeForAccount(acc))
+        return;
+
     auto currentProfile = acc->profile();
-    qDebug() << "\n\n\nAccount added" << acc << currentProfile;
+    qDebug() << "Account added" << acc << currentProfile;
 
     if (Q_UNLIKELY(!m_pDefaultProfile)) {
         if (m_lProfiles.isEmpty()) {
@@ -304,7 +307,7 @@ void ProfileModelPrivate::slotAccountRemoved(Account* a)
 ProfileNode* ProfileModelPrivate::nodeForAccount(const Account* a) const
 {
     for (auto pro : qAsConst(m_lProfiles)) {
-        for (auto accNode : pro->children) {
+        for (auto accNode : qAsConst(pro->children)) {
             if (accNode->m_AccData.m_pAccount == a) {
                 return accNode;
             }
