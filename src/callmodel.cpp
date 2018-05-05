@@ -124,6 +124,7 @@ private Q_SLOTS:
     void slotAudioMuted         ( const QString& callId    , bool state             );
     void slotVideoMutex         ( const QString& callId    , bool state             );
     void slotPeerHold           ( const QString& callId    , bool state             );
+    void slotRtcpReportReceived ( const QString& callId    , const MapStringInt& m  );
 };
 
 
@@ -174,16 +175,17 @@ void CallModelPrivate::init()
 
     //SLOTS
     /*             SENDER                          SIGNAL                     RECEIVER                    SLOT                   */
-    /**/connect(&callManager, SIGNAL(callStateChanged(QString,QString,int))  , this , SLOT(slotCallStateChanged(QString,QString,int)), Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(incomingCall(QString,QString,QString))   , this , SLOT(slotIncomingCall(QString,QString)),        Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(conferenceCreated(QString))              , this , SLOT(slotIncomingConference(QString)),          Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(conferenceChanged(QString,QString))      , this , SLOT(slotChangingConference(QString,QString)),  Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(conferenceRemoved(QString))              , this , SLOT(slotConferenceRemoved(QString)),           Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(recordPlaybackFilepath(QString,QString)) , this , SLOT(slotNewRecordingAvail(QString,QString)),   Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(recordingStateChanged(QString,bool))     , this , SLOT(slotRecordStateChanged(QString,bool)),     Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(audioMuted(QString,bool))                , this , SLOT(slotAudioMuted(QString,bool)),             Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(videoMuted(QString,bool))                , this , SLOT(slotVideoMutex(QString,bool)),             Qt::QueuedConnection);
-    /**/connect(&callManager, SIGNAL(peerHold(QString,bool))                  , this , SLOT(slotPeerHold(QString,bool)),               Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(callStateChanged(QString,QString,int))     , this , SLOT(slotCallStateChanged(QString,QString,int)),    Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(incomingCall(QString,QString,QString))     , this , SLOT(slotIncomingCall(QString,QString)),            Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(conferenceCreated(QString))                , this , SLOT(slotIncomingConference(QString)),              Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(conferenceChanged(QString,QString))        , this , SLOT(slotChangingConference(QString,QString)),      Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(conferenceRemoved(QString))                , this , SLOT(slotConferenceRemoved(QString)),               Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(recordPlaybackFilepath(QString,QString))   , this , SLOT(slotNewRecordingAvail(QString,QString)),       Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(recordingStateChanged(QString,bool))       , this , SLOT(slotRecordStateChanged(QString,bool)),         Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(audioMuted(QString,bool))                  , this , SLOT(slotAudioMuted(QString,bool)),                 Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(videoMuted(QString,bool))                  , this , SLOT(slotVideoMutex(QString,bool)),                 Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(peerHold(QString,bool))                    , this , SLOT(slotPeerHold(QString,bool)),                   Qt::QueuedConnection);
+    /**/connect(&callManager, SIGNAL(onRtcpReportReceived(QString,MapStringInt)), this , SLOT(slotRtcpReportReceived(QString,MapStringInt)), Qt::QueuedConnection);
     /*                                                                                                                           */
 
     connect(&CategorizedHistoryModel::instance(),SIGNAL(newHistoryCall(Call*)),this,SLOT(slotAddPrivateCall(Call*)));
@@ -1800,6 +1802,10 @@ void CallModelPrivate::slotPeerHold( const QString& callId, bool state)
 {
     if (auto call = q_ptr->getCall(callId))
         call->d_ptr->peerHoldChanged(state);
+}
+
+void CallModelPrivate::slotRtcpReportReceived(const QString& callId, const MapStringInt& m)
+{
 }
 
 void CallModelPrivate::slotSelectionChanged(const QModelIndex& idx)
