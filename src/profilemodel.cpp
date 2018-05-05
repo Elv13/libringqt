@@ -141,22 +141,21 @@ ProfileNode* ProfileModelPrivate::createNodeForAccount(Account* acc)
 void ProfileModelPrivate::slotAccountAdded(Account* acc)
 {
     auto currentProfile = acc->profile();
-    qDebug() << "Account added" << acc << currentProfile;
+    qDebug() << "\n\n\nAccount added" << acc << currentProfile;
+
+    if (Q_UNLIKELY(!m_pDefaultProfile)) {
+        if (m_lProfiles.isEmpty()) {
+            qWarning() << "Failed to set a profile: there is none";
+        }
+        else {
+            qWarning() << "No profile selected: Assigning profiles at random";
+            m_pDefaultProfile = m_lProfiles.first();
+        }
+    }
 
     // Add the profile when the account is created
     if (!currentProfile) {
         qWarning() << "No profile selected or none exists, fall back tot the default";
-
-        if (Q_UNLIKELY(!m_pDefaultProfile)) {
-            if (m_lProfiles.isEmpty()) {
-                qWarning() << "Failed to set a profile: there is none";
-                return;
-            }
-            else {
-                qWarning() << "No profile selected: Assigning profiles at random";
-                m_pDefaultProfile = m_lProfiles.first();
-            }
-        }
 
         m_pDefaultProfile->m_pPerson->addCustomField(
             VCardUtils::Property::X_RINGACCOUNT, acc->id()
@@ -169,8 +168,20 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     auto currentNode = profileNodeById(currentProfile->uid());
 
     if (!currentNode) {
-        qWarning() << "Account must have a profile parent, doing nothing";
-        return;
+        if (currentProfile && currentProfile->isPlaceHolder()) {
+            qWarning() << "A profile was not found, using a random fallback" << acc << currentProfile;
+        }
+        else if (currentProfile && currentProfile->collection()) {
+            const auto collections = q_ptr->collections(CollectionInterface::SupportedFeatures::ADD);
+            if (collections.indexOf(currentProfile->collection()) == -1) {
+                qWarning() << "An account is attached to a system contact instead of a profile";
+                currentNode = profileNodeById(m_pDefaultProfile->m_pPerson->uid());
+            }
+        }
+        else {
+            qWarning() << "Account must have a profile parent, doing nothing" << acc << currentProfile;
+            return;
+        }
     }
 
     auto account_pro     = createNodeForAccount(acc);
