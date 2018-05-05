@@ -809,8 +809,6 @@ bool ProfileModel::addItemCallback(const Person* pro)
 
 bool ProfileModel::removeItemCallback(const Person* item)
 {
-    int nodeIdx = -1;
-
     auto profile = d_ptr->profileNodeById(item->uid());
 
     if (!profile)
@@ -818,7 +816,7 @@ bool ProfileModel::removeItemCallback(const Person* item)
 
     // Remove the profile
     beginRemoveRows({}, profile->m_Index, profile->m_Index);
-    d_ptr->m_lProfiles.removeAt(nodeIdx);
+    d_ptr->m_lProfiles.removeAt(profile->m_Index);
     d_ptr->updateIndexes();
     delete profile;
     endRemoveRows();
