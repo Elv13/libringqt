@@ -16,51 +16,57 @@
  *   License along with this library; if not, write to the Free Software            *
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
  ***********************************************************************************/
-#pragma once
+#include "unhold.h"
 
-#include <troubleshoot/base.h>
-
-class Call;
+#include <call.h>
 
 namespace Troubleshoot {
 
-class VideoStuckPrivate;
-
-/**
- * When things go wrong *during* a live media session, letting it fail is an
- * option, but very often it is possible to involve the user directly and offer
- * option and information about why it failed and how to fix it.
- *
- * This is the base class of a chain of responsibility
- */
-class LIB_EXPORT VideoStuck : public Base
+class UnholdPrivate
 {
-    Q_OBJECT
-public:
-    explicit VideoStuck(Dispatcher* parent = nullptr);
-    virtual ~VideoStuck();
-
-    virtual QString headerText() const override;
-    virtual Base::Severity severity() const override;
-
-    virtual void activate() override;
-    virtual void deactivate() override;
-
-    virtual bool setSelection(const QModelIndex& idx, Call* c) override;
-
-    /**
-     * Called when the state or error code changes.
-     */
-    static bool isAffected(Call* c, time_t elapsedTime = 0, Troubleshoot::Base* self = nullptr);
-
-    /**
-     * The time it takes in a state before `isAffected` has to be called again.
-     */
-    static int timeout();
-
-private:
-    VideoStuckPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(VideoStuck)
+    //
 };
 
+}
+
+Troubleshoot::Unhold::Unhold(Dispatcher* parent) :
+    Troubleshoot::Base(parent), d_ptr(new UnholdPrivate())
+{
+    static QStringList options {
+        tr( "Hang up this call" ),
+        tr( "Try again"         ),
+    };
+
+    setStringList(options);
+}
+
+Troubleshoot::Unhold::~Unhold()
+{
+    delete d_ptr;
+}
+
+QString Troubleshoot::Unhold::headerText() const
+{
+    static auto message = tr("The call failed to be removed from hold. This usually means the peer is no longer present");
+    return message;
+}
+
+Troubleshoot::Base::Severity Troubleshoot::Unhold::severity() const
+{
+    return Base::Severity::WARNING;
+}
+
+bool Troubleshoot::Unhold::setSelection(const QModelIndex& idx, Call* c)
+{
+    return false;
+}
+
+bool Troubleshoot::Unhold::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
+{
+    return c->liveMediaIssues() & Call::LiveMediaIssues::UNHOLD_FAILED;
+}
+
+int Troubleshoot::Unhold::timeout()
+{
+    return 10;
 }

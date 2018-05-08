@@ -223,9 +223,10 @@ public:
       OK                       = 0x0 << 0, /*!< Everything is well                                */
       VIDEO_ACQUISITION_FAILED = 0x1 << 0, /*!< Failed to get video frames for 5 seconds          */
       HIGH_PACKET_LOSS         = 0x1 << 1, /*!< There more than 15 lost packet per report         */
-      RUNAWAY_PATCH_LOSS       = 0x1 << 2, /*!< There is more and more packet less in each report */
+      RUNAWAY_PACKET_LOSS      = 0x1 << 2, /*!< There is more and more packet less in each report */
       HIGH_LATENCY             = 0x1 << 3, /*!< The latency is non-optimal                        */
       RUNAWAY_LATENCY          = 0x1 << 4, /*!< The latency is increasing                         */
+      UNHOLD_FAILED            = 0x1 << 5, /*!< The unholding does nothing after 5 seconds        */
    };
    Q_FLAGS(LiveMediaIssues)
 
@@ -347,6 +348,8 @@ public:
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;
    Q_INVOKABLE QMimeData* mimePayload      (         ) const;
+
+   Q_INVOKABLE bool hasIssue(Call::LiveMediaIssues issue) const;
 
    template<typename T>
    T* firstMedia(Media::Media::Direction direction) const;

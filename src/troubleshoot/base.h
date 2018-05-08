@@ -55,7 +55,7 @@ public:
         WARNING,
         ERROR
     };
-    Q_ENUM(Severity)
+    Q_ENUM(Base::Severity)
 
     Dispatcher* dispatcher() const;
 
@@ -82,3 +82,5 @@ private:
 };
 
 }
+
+Q_DECLARE_METATYPE(Troubleshoot::Base*)

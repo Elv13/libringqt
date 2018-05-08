@@ -35,9 +35,10 @@ class LIB_EXPORT Dispatcher : public QIdentityProxyModel
     Q_OBJECT
 public:
     Q_PROPERTY(Call*    call       READ call       WRITE  setCall      )
-    Q_PROPERTY(bool     isActive   READ isActive   NOTIFY activechanged)
+    Q_PROPERTY(bool     isActive   READ isActive   NOTIFY activeChanged)
     Q_PROPERTY(QString  headerText READ headerText NOTIFY textChanged  )
-    Q_PROPERTY(Base::Severity severity   READ severity   NOTIFY textChanged  )
+    Q_PROPERTY(int severity   READ severity   NOTIFY textChanged  )
+    Q_PROPERTY(QString currentIssue READ currentIssue NOTIFY activeChanged)
 
     Q_INVOKABLE explicit Dispatcher(QObject* parent = nullptr);
     virtual ~Dispatcher();
@@ -46,7 +47,9 @@ public:
 
     QString headerText() const;
 
-    Base::Severity severity() const;
+    int severity() const;
+
+    QString currentIssue() const;
 
     Call* call() const;
     void setCall(Call* call);
@@ -57,7 +60,7 @@ public:
     Q_INVOKABLE bool setSelection(int idx);
 
 Q_SIGNALS:
-    void activechanged();
+    void activeChanged();
     void textChanged();
 
 public Q_SLOTS:

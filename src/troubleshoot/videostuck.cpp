@@ -18,13 +18,27 @@
  ***********************************************************************************/
 #include "videostuck.h"
 
+// Qt
+#include <QtCore/QTimer>
+
+// Ring
 #include <call.h>
+#include <callmodel.h>
+#include <video/renderer.h>
+#include <media/video.h>
 
 namespace Troubleshoot {
 
 class VideoStuckPrivate
 {
-    //
+public:
+    enum class Mitigations {
+        HANG_UP,
+        MUTE_UNMUTE,
+        HOLD,
+        HOLD_UNHOLD,
+        CALL_AGAIN
+    };
 };
 
 }
@@ -40,7 +54,7 @@ Troubleshoot::VideoStuck::~VideoStuck()
 
 QString Troubleshoot::VideoStuck::headerText() const
 {
-    static QString message = tr("The video seems to have stopped");
+    static QString message = tr("The video seems to have stopped. It may resume at any time, but the following options may speed up recovery:");
 
     return message;
 }
@@ -52,17 +66,75 @@ Troubleshoot::Base::Severity Troubleshoot::VideoStuck::severity() const
 
 bool Troubleshoot::VideoStuck::setSelection(const QModelIndex& idx, Call* c)
 {
-    return false;
+    if ((!c) || !idx.isValid())
+        return false;
+
+    auto cm = c->peerContactMethod();
+
+    switch((VideoStuckPrivate::Mitigations) idx.row()) {
+        case VideoStuckPrivate::Mitigations::HANG_UP:
+            c << Call::Action::REFUSE;
+            break;
+        case VideoStuckPrivate::Mitigations::MUTE_UNMUTE:
+            // This mutes the **LOCAL** media, but the idea is that it will cause SIP to wake up anyway
+            if (auto videoOut = c->firstMedia<Media::Video>(Media::Media::Direction::OUT))
+                if (videoOut->mute())
+                    QTimer::singleShot(1000, [c]() {
+                        if (c->lifeCycleState() == Call::LifeCycleState::PROGRESS) {
+                            if (auto videoOut = c->firstMedia<Media::Video>(Media::Media::Direction::OUT))
+                                videoOut->unmute();
+                        }
+                    });
+
+            break;
+        case VideoStuckPrivate::Mitigations::HOLD:
+            c << Call::Action::HOLD;
+            break;
+        case VideoStuckPrivate::Mitigations::HOLD_UNHOLD:
+            c << Call::Action::HOLD;
+            QTimer::singleShot(1000, [c]() {
+                if (c->state() == Call::State::HOLD)
+                    c << Call::Action::HOLD;
+            });
+            break;
+        case VideoStuckPrivate::Mitigations::CALL_AGAIN:
+            c << Call::Action::REFUSE;
+            c = CallModel::instance().dialingCall(cm);
+            c << Call::Action::ACCEPT;
+            break;
+    }
+
+    return true;
 }
 
 bool Troubleshoot::VideoStuck::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
-    return c->lifeCycleState() == Call::LifeCycleState::PROGRESS && (
+    return c->state() == Call::State::CURRENT && c->videoRenderer() &&(
         c->liveMediaIssues() & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED
-    );
+    ) && c->videoRenderer()->hasAcquired();
 }
 
 int Troubleshoot::VideoStuck::timeout()
 {
-    return 10;
+    return 5;
+}
+
+void Troubleshoot::VideoStuck::activate()
+{
+    static QStringList options {
+        tr( "Hang up this call"               ),
+        tr( "Try to mute and unmute video"    ),
+        tr( "Put the call on hold"            ),
+        tr( "Renegotiate video (may hang up)" ),
+        tr( "Hang up and call again"          ),
+    };
+
+    setStringList(options);
+
+    emit textChanged();
+}
+
+void Troubleshoot::VideoStuck::deactivate()
+{
+    setStringList({});
 }

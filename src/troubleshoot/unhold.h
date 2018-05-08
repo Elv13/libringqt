@@ -24,7 +24,7 @@ class Call;
 
 namespace Troubleshoot {
 
-class VideoStuckPrivate;
+class UnholdPrivate;
 
 /**
  * When things go wrong *during* a live media session, letting it fail is an
@@ -33,18 +33,15 @@ class VideoStuckPrivate;
  *
  * This is the base class of a chain of responsibility
  */
-class LIB_EXPORT VideoStuck : public Base
+class LIB_EXPORT Unhold : public Base
 {
     Q_OBJECT
 public:
-    explicit VideoStuck(Dispatcher* parent = nullptr);
-    virtual ~VideoStuck();
+    explicit Unhold(Dispatcher* parent = nullptr);
+    virtual ~Unhold();
 
     virtual QString headerText() const override;
     virtual Base::Severity severity() const override;
-
-    virtual void activate() override;
-    virtual void deactivate() override;
 
     virtual bool setSelection(const QModelIndex& idx, Call* c) override;
 
@@ -59,8 +56,8 @@ public:
     static int timeout();
 
 private:
-    VideoStuckPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(VideoStuck)
+    UnholdPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(Unhold)
 };
 
 }

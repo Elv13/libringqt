@@ -195,6 +195,7 @@ SET( libringqt_LIB_SRCS
   src/troubleshoot/generic.cpp
   src/troubleshoot/callstate.cpp
   src/troubleshoot/absent.cpp
+  src/troubleshoot/unhold.cpp
 
   #Data collections
   src/transitionalpersonbackend.cpp

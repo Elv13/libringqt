@@ -1032,6 +1032,12 @@ FlagPack<Call::LiveMediaIssues> Call::liveMediaIssues() const
     return d_ptr->m_fCurrentIssues;
 }
 
+// Because QML don't like bitmasks
+bool Call::hasIssue(Call::LiveMediaIssues issue) const
+{
+    return d_ptr->m_fCurrentIssues & issue;
+}
+
 void CallPrivate::videoStopped()
 {
     if (auto renderer = qobject_cast<Video::Renderer*>(sender())) {
@@ -1043,6 +1049,9 @@ void CallPrivate::slotFrameAcquired()
 {
     if (m_fCurrentIssues & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED) {
         m_fCurrentIssues = Call::LiveMediaIssues::OK;
+        if (auto r = q_ptr->videoRenderer()) {
+            emit r->restored();
+        }
         emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
     }
 
@@ -1830,6 +1839,13 @@ void CallPrivate::hold()
       emit q_ptr->holdFlagsChanged(m_fHoldFlags, old);
    }
 
+   // Clear the video issue flag
+   if (m_VideoFrameCounter) {
+      m_VideoFrameCounter = 0;
+      m_fCurrentIssues = Call::LiveMediaIssues::OK;
+      emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
+   }
+
    if (q_ptr->type() != Call::Type::CONFERENCE)
       Q_NOREPLY callManager.hold(q_ptr->dringId());
    else
@@ -1964,6 +1980,9 @@ void CallPrivate::unhold()
       m_fHoldFlags ^= Call::HoldFlags::OUT;
       emit q_ptr->holdFlagsChanged(m_fHoldFlags, old);
    }
+
+   // ++ because if the user press too many time on the button, it will print the error
+   m_UnholdCounter++;
 
    if (q_ptr->type() != Call::Type::CONFERENCE)
       Q_NOREPLY callManager.unhold(q_ptr->dringId());
@@ -2250,18 +2269,41 @@ void CallPrivate::updated()
 {
     // If there is a video renderer, detect if no frame has been acquired for
     // more than 5 seconds.
-    if (q_ptr->lifeCycleState() == Call::LifeCycleState::PROGRESS && m_VideoFrameCounter != -1) {
+    if (q_ptr->state() == Call::State::CURRENT && m_VideoFrameCounter != -1) {
         m_VideoFrameCounter += 10000;
 
         if (m_VideoFrameCounter >= 50000) {
             if (m_VideoFrameCounter == 50000) {
                 m_fCurrentIssues |= Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED;
+                if (auto r = q_ptr->videoRenderer()) {
+
+                    emit r->failure();
+                }
                 qDebug() << "Video acquisition stopped working" << q_ptr;
                 emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
             }
 
             m_VideoFrameCounter = 0;
         }
+    }
+
+    // When removing a call from hold, wait a while before declaring it failed
+    if (m_UnholdCounter) {
+        if (q_ptr->state() != Call::State::HOLD) {
+            if (m_UnholdCounter > 5) {
+                m_fCurrentIssues = Call::LiveMediaIssues::OK;
+                emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
+            }
+            m_UnholdCounter = 0;
+        }
+        else if (m_UnholdCounter > 5) {
+            m_fCurrentIssues |= Call::LiveMediaIssues::UNHOLD_FAILED;
+            qDebug() << "Un-holding failed to resume the call" << q_ptr;
+            emit q_ptr->liveMediaIssuesChanaged(m_fCurrentIssues);
+            m_UnholdCounter = 1;
+        }
+        else
+            m_UnholdCounter++;
     }
 
     emit q_ptr->changed();

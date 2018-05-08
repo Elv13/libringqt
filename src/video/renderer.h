@@ -96,6 +96,9 @@ public:
    virtual QMutex*    mutex           () const;
    virtual ColorSpace colorSpace      () const = 0;
 
+   /// If this renderer ever managed to fetch a frame
+   bool hasAcquired() const;
+
    void setSize(const QSize& size) const;
 
 Q_SIGNALS:
@@ -103,6 +106,8 @@ Q_SIGNALS:
    void stopped      ();
    void started      ();
    void frameAcquired(); // When a *new* frame was successfully imported
+   void failure      (); // When the acquision has failed for 5 seconds
+   void restored     (); // When it gets data again
 
 public Q_SLOTS:
    virtual void startRendering() = 0;
@@ -115,3 +120,5 @@ private:
 };
 
 }
+
+Q_DECLARE_METATYPE(Video::Renderer*)

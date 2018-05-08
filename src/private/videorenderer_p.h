@@ -44,6 +44,7 @@ public:
     QMutex*              m_pMutex      ;
     QString              m_Id          ;
     QSize                m_pSize       ;
+    bool                 m_hasAcquired {false};
     std::shared_ptr<Frame> m_pFrame; // frame given by daemon for direct rendering
 private:
     Video::Renderer* q_ptr;

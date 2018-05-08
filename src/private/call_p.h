@@ -107,6 +107,7 @@ public:
     QDate*                    m_pDateOnly          {          nullptr        };
     int                       m_LastErrorCode      {            200          };
     int                       m_VideoFrameCounter  {             0           };
+    int                       m_UnholdCounter      {             0           };
 
     FlagPack<Call::LiveMediaIssues> m_fCurrentIssues {Call::LiveMediaIssues::OK};
 

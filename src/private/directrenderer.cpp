@@ -109,6 +109,7 @@ void Video::DirectRendererPrivate::onNewFrame(DRing::SinkTarget::FrameBufferPtr 
         daemonFramePtr_ = std::move(buf);
     }
 
+    q_ptr->Video::Renderer::d_ptr->m_hasAcquired = true;
     emit q_ptr->frameAcquired();
     emit q_ptr->frameUpdated ();
 }

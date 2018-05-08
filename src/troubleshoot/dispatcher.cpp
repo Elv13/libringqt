@@ -29,6 +29,7 @@
 #include "handshake.h"
 #include "videostuck.h"
 #include "generic.h"
+#include "unhold.h"
 #include "callstate.h"
 
 namespace Troubleshoot {
@@ -82,6 +83,7 @@ Troubleshoot::Dispatcher::Dispatcher(QObject* parent) : QIdentityProxyModel(pare
     connect(d_ptr->m_pAutoDismiss, &QTimer::timeout, this, &Dispatcher::dismiss);
 
     // The order *is* important. The first has the highest priority
+    d_ptr->registerAdapter<Troubleshoot::Unhold>    ();
     d_ptr->registerAdapter<Troubleshoot::VideoStuck>();
     d_ptr->registerAdapter<Troubleshoot::Handshake> ();
     d_ptr->registerAdapter<Troubleshoot::Absent>    ();
@@ -105,10 +107,11 @@ QString Troubleshoot::Dispatcher::headerText() const
         d_ptr->m_pCurrentHolder->m_pInstance->headerText() : QString();
 }
 
-Troubleshoot::Base::Severity Troubleshoot::Dispatcher::severity() const
+int Troubleshoot::Dispatcher::severity() const
 {
-    return d_ptr->m_pCurrentHolder ?
-        d_ptr->m_pCurrentHolder->m_pInstance->severity() : Base::Severity::NONE ;
+    // QML hates namespaces enums
+    return (int) (d_ptr->m_pCurrentHolder ?
+        d_ptr->m_pCurrentHolder->m_pInstance->severity() : Base::Severity::NONE);
 }
 
 Troubleshoot::Base* Troubleshoot::Dispatcher::currentModule() const
@@ -148,7 +151,7 @@ void Troubleshoot::DispatcherPrivate::setCurrentHolder(Holder* h)
 
     q_ptr->setSourceModel(h ? h->m_pInstance : nullptr);
 
-    emit q_ptr->activechanged();
+    emit q_ptr->activeChanged();
     emit q_ptr->textChanged();
 
 }
@@ -279,6 +282,14 @@ bool Troubleshoot::Dispatcher::setSelection(int idx)
 void Troubleshoot::Dispatcher::dismiss()
 {
     d_ptr->setCurrentHolder(nullptr);
+}
+
+QString Troubleshoot::Dispatcher::currentIssue() const
+{
+    if (!d_ptr->m_pCurrentHolder)
+        return {};
+
+    return d_ptr->m_pCurrentHolder->m_pInstance->metaObject()->className();
 }
 
 #include <dispatcher.moc>

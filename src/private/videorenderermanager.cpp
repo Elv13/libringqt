@@ -82,8 +82,8 @@ m_BufferSize(0),m_PreviewState(false)
 VideoRendererManager::VideoRendererManager():QObject(QCoreApplication::instance()), d_ptr(new VideoRendererManagerPrivate(this))
 {
    VideoManagerInterface& interface = VideoManager::instance();
-   connect( &interface , &VideoManagerInterface::startedDecoding, d_ptr.data(), &VideoRendererManagerPrivate::startedDecoding);
-   connect( &interface , &VideoManagerInterface::stoppedDecoding, d_ptr.data(), &VideoRendererManagerPrivate::stoppedDecoding);
+   connect( &interface , &VideoManagerInterface::startedDecoding, d_ptr.data(), &VideoRendererManagerPrivate::startedDecoding, Qt::QueuedConnection);
+   connect( &interface , &VideoManagerInterface::stoppedDecoding, d_ptr.data(), &VideoRendererManagerPrivate::stoppedDecoding, Qt::QueuedConnection);
 }
 
 

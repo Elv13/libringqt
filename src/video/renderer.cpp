@@ -67,6 +67,11 @@ QSize Video::Renderer::size() const
   return d_ptr->m_pSize;
 }
 
+bool Video::Renderer::hasAcquired() const
+{
+    d_ptr->m_hasAcquired;
+}
+
 /*****************************************************************************
  *                                                                           *
  *                                 Setters                                   *

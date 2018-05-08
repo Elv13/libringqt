@@ -29,6 +29,16 @@ class HandshakePrivate
 
 }
 
+/*
+ *   * Let the user know he/she/it can try to tweak various settings when
+ *     specific aspects of the handshake failed
+ *       * UPnP (then eventually open ports in the router)
+ *       * There is a codec mismatch
+ *          * Patch libring to disclose the peer codec list
+ *          * Add a button to enable some codecs and renegotiate the call
+ *          * Know when the peer voluntarily disabled video
+*/
+
 Troubleshoot::Handshake::Handshake(Dispatcher* parent) :
     Troubleshoot::Base(parent), d_ptr(new HandshakePrivate())
 {}
