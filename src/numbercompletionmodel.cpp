@@ -88,6 +88,7 @@ public:
    NumberCompletionModel::LookupStatus entryStatus(const ContactMethod* cm) const;
    QString entryStatusName(const ContactMethod* cm) const;
    NumberCompletionModel::EntrySource entrySource(const ContactMethod* cm) const;
+   bool isSelectable(const ContactMethod* cm) const;
 
 public Q_SLOTS:
    void setPrefix(const QString& str);
@@ -186,6 +187,7 @@ QHash<int,QByteArray> NumberCompletionModel::roleNames() const
       roles[Role::NAME_STATUS_SRING]= "nameStatusString";
       roles[Role::SUPPORTS_REGISTRY]= "supportsRegistry";
       roles[Role::ENTRY_SOURCE     ]= "entrySource"     ;
+      roles[Role::IS_SELECTABLE    ]= "selectable"      ;
    }
 
    return roles;
@@ -236,9 +238,11 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
                return d_ptr->entryStatusName(n);
             case static_cast<int>(Role::SUPPORTS_REGISTRY):
                return n->type() == ContactMethod::Type::TEMPORARY &&
-                  n->account() && n->account()->protocol() == Account::Protocol::RING;
+                  n->account() && n->account()->protocol() == Account::Protocol::RING && n->uri().protocolHint() != URI::ProtocolHint::RING;
             case static_cast<int>(Role::ENTRY_SOURCE):
                 return QVariant::fromValue(d_ptr->entrySource(n));
+            case static_cast<int>(Role::IS_SELECTABLE):
+                return d_ptr->isSelectable(n);
          };
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::NAME:
@@ -281,11 +285,9 @@ Qt::ItemFlags NumberCompletionModel::flags(const QModelIndex& index ) const
 
    const QMap<int,ContactMethod*>::iterator i = d_ptr->m_hNumbers.end()-1-index.row();
 
-   const auto status = d_ptr->entryStatus(i.value());
-
    return (
-      status == NumberCompletionModel::LookupStatus::FAILURE ?
-         Qt::NoItemFlags : Qt::ItemIsEnabled
+      d_ptr->isSelectable(i.value()) ?
+         Qt::ItemIsEnabled : Qt::NoItemFlags
       ) |Qt::ItemIsSelectable;
 }
 
@@ -333,7 +335,7 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
     }
 
     if (!m_Enabled) {
-        q_ptr->beginRemoveRows(QModelIndex(), 0, m_hNumbers.size()-1);
+        q_ptr->beginRemoveRows({}, 0, m_hNumbers.size()-1);
         m_hNumbers.clear();
         q_ptr->endRemoveRows();
     }
@@ -341,7 +343,7 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
     auto show = matchSipAndRing(m_Prefix);
 
     if (show.second) {
-        for(TemporaryContactMethod* cm : m_hRingTemporaryNumbers) {
+        for(TemporaryContactMethod* cm : qAsConst(m_hRingTemporaryNumbers)) {
             if (!cm)
                 continue;
 
@@ -362,19 +364,14 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
     }
 
     if (show.first) {
-        for(auto cm : m_hSipTemporaryNumbers) {
+        for(auto cm : qAsConst(m_hSipTemporaryNumbers)) {
             if (!cm)
                 continue;
 
             if (cm->account()->registrationState() != Account::RegistrationState::READY)
                 continue;
 
-            if (m_hNameCache.contains(m_Prefix) && m_hNameCache[m_Prefix] != QLatin1String("-1")) {
-                cm->setUri(m_hNameCache[m_Prefix]);
-                cm->setRegisteredName(m_Prefix);
-            }
-            else
-                cm->setUri(m_Prefix);
+            cm->setUri(m_Prefix);
         }
     }
 
@@ -420,7 +417,7 @@ QPair<bool, bool> NumberCompletionModelPrivate::matchSipAndRing(const URI& uri) 
 void NumberCompletionModelPrivate::updateModel()
 {
    QSet<ContactMethod*> numbers;
-   q_ptr->beginRemoveRows(QModelIndex(), 0, m_hNumbers.size()-1);
+   q_ptr->beginRemoveRows({}, 0, m_hNumbers.size()-1);
    m_hNumbers.clear();
    q_ptr->endRemoveRows();
 
@@ -437,7 +434,7 @@ void NumberCompletionModelPrivate::updateModel()
 
             const int weight = getWeight(cm);
             if (weight) {
-               q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+               q_ptr->beginInsertRows({}, m_hNumbers.size(), m_hNumbers.size());
                m_hNumbers.insert(weight,cm);
                q_ptr->endInsertRows();
             }
@@ -449,8 +446,9 @@ void NumberCompletionModelPrivate::updateModel()
             if (!cm) continue;
             if (perfectMatches1.contains(cm->account()) || perfectMatches2.contains(cm->account()))
                continue;
+
             if (auto weight = getWeight(cm)) {
-               q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+               q_ptr->beginInsertRows({}, m_hNumbers.size(), m_hNumbers.size());
                m_hNumbers.insert(weight, cm);
                q_ptr->endInsertRows();
             }
@@ -461,7 +459,7 @@ void NumberCompletionModelPrivate::updateModel()
          if (m_UseUnregisteredAccount || ((n->account() && n->account()->registrationState() == Account::RegistrationState::READY)
           || !n->account())) {
             if (auto weight = getWeight(n)) {
-                q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+                q_ptr->beginInsertRows({}, m_hNumbers.size(), m_hNumbers.size());
                 m_hNumbers.insert(weight, n);
                 q_ptr->endInsertRows();
             }
@@ -475,7 +473,7 @@ void NumberCompletionModelPrivate::updateModel()
       for (int i=0;i<((cl.size()>=10)?10:cl.size());i++) {
          ContactMethod* n = cl[i];
          if (auto weight = getWeight(n)) {
-            q_ptr->beginInsertRows(QModelIndex(), m_hNumbers.size(), m_hNumbers.size());
+            q_ptr->beginInsertRows({}, m_hNumbers.size(), m_hNumbers.size());
             m_hNumbers.insert(weight, n);
             q_ptr->endInsertRows();
          }
@@ -547,8 +545,15 @@ uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)
     // but not too much to avoid a bias on common names.
     const bool isDialingRing = m_Prefix.size() && number->account()
         && number->account()->protocol() == Account::Protocol::RING
-        && number->type() == ContactMethod::Type::TEMPORARY
-        && number->registeredName() == m_Prefix;
+        && number->type() == ContactMethod::Type::TEMPORARY;
+
+    // The name service never reply on those
+    if (isDialingRing && number->registeredName().isEmpty() && m_Prefix.size() < 3)
+        return 0;
+
+    // Invalid ring names (but allow hashes)
+    //if (isDialingRing && number->registeredName().isEmpty() && m_Prefix.size() < 40)
+    //    return 0;
 
     const auto account = number->account();
 
@@ -667,35 +672,34 @@ QItemSelectionModel* NumberCompletionModel::selectionModel() const
 
 bool NumberCompletionModelPrivate::accountAdded(Account* a)
 {
-   bool hasNonIp2Ip = false;
+    bool hasNonIp2Ip = false;
+    TemporaryContactMethod* cm = nullptr;
 
-   switch(a->protocol()) {
-      case Account::Protocol::SIP : {
-         hasNonIp2Ip = true;
-         TemporaryContactMethod* cm = new TemporaryContactMethod();
+    switch(a->protocol()) {
+        case Account::Protocol::SIP:
+            hasNonIp2Ip = a->isEnabled();
+            cm = new TemporaryContactMethod();
 
-         if (!m_pPreferredTemporaryNumbers[(int)a->protocol()])
-            m_pPreferredTemporaryNumbers[(int)a->protocol()] = cm;
+            if (!m_pPreferredTemporaryNumbers[(int)a->protocol()])
+                m_pPreferredTemporaryNumbers[(int)a->protocol()] = cm;
 
-         cm->setAccount(a);
-         m_hSipTemporaryNumbers[a] = cm;
-         }
-         break;
-      case Account::Protocol::RING: {
-         TemporaryContactMethod* cm = new TemporaryContactMethod();
-         cm->setAccount(a);
-         m_hRingTemporaryNumbers[a] = cm;
+            cm->setAccount(a);
+            m_hSipTemporaryNumbers[a] = cm;
+            break;
+        case Account::Protocol::RING:
+            cm = new TemporaryContactMethod();
+            cm->setAccount(a);
+            m_hRingTemporaryNumbers[a] = cm;
 
-         if (!m_pPreferredTemporaryNumbers[(int)Account::Protocol::RING])
-            m_pPreferredTemporaryNumbers[(int)Account::Protocol::RING] = cm;
+            if (!m_pPreferredTemporaryNumbers[(int)Account::Protocol::RING])
+                m_pPreferredTemporaryNumbers[(int)Account::Protocol::RING] = cm;
 
-         }
-         break;
-      case Account::Protocol::COUNT__:
-         break;
-   }
+            break;
+        case Account::Protocol::COUNT__:
+            break;
+    }
 
-   return hasNonIp2Ip;
+    return hasNonIp2Ip;
 }
 
 void NumberCompletionModelPrivate::accountRemoved(Account* a)
@@ -753,6 +757,9 @@ void NumberCompletionModelPrivate::slotClearNameCache()
 NumberCompletionModel::LookupStatus NumberCompletionModelPrivate::entryStatus(const ContactMethod* cm) const
 {
     if (cm->type() == ContactMethod::Type::TEMPORARY) {
+        if (cm->account() && cm->account()->protocol() != Account::Protocol::RING)
+            return NumberCompletionModel::LookupStatus::NOT_APPLICABLE;
+
         if (!cm->registeredName().isEmpty())
             return NumberCompletionModel::LookupStatus::SUCCESS;
 
@@ -770,6 +777,38 @@ NumberCompletionModel::LookupStatus NumberCompletionModelPrivate::entryStatus(co
         NumberCompletionModel::LookupStatus::SUCCESS;
 }
 
+// Detect if the element can be selected
+bool NumberCompletionModelPrivate::isSelectable(const ContactMethod* cm) const
+{
+    // Assume the homework were already done
+    if (cm->type() != ContactMethod::Type::TEMPORARY)
+        return true;
+
+    // That's not supposed to happen
+    if (cm->uri().isEmpty())
+        return false;
+
+    // There is no way to know
+    if (cm->account() && cm->account()->protocol() == Account::Protocol::SIP)
+        return true;
+
+    if (cm->account() && cm->account()->protocol() == Account::Protocol::RING) {
+        // Names under 3 chars are not allowed
+        if (cm->uri().size() < 3)
+            return false;
+
+        if (cm->uri().protocolHint() == URI::ProtocolHint::RING)
+            return true;
+
+        if (cm->registeredName().isEmpty() && entryStatus(cm) == NumberCompletionModel::LookupStatus::SUCCESS)
+            return true;
+
+        return false;
+    }
+
+    // There is no way to know
+    return true;
+}
 
 QString NumberCompletionModelPrivate::entryStatusName(const ContactMethod* cm) const
 {

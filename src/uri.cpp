@@ -160,6 +160,16 @@ void URIPrivate::commonCopyConstructor(const URI& o)
    (*static_cast<QString*>(q_ptr)) = o.d_ptr->m_Stripped;
 }
 
+void URI::resetChecks() const
+{
+    // The reason behind this is that copy constructors can sometime play little
+    // games and you end up with "parsed" strings, but from a different string.
+    // Adding more operator= overload helps, but never really protect against
+    // all vectors.
+    d_ptr->m_HintParsed = false;
+    d_ptr->m_Parsed     = false;
+}
+
 /// Copy operator, make sure the cache is also copied
 URI& URI::operator=(const URI& o)
 {
@@ -375,46 +385,48 @@ char URIPrivate::checkIp(const QString& str, const URI::SchemeType& scheme)
     if (!d_ptr->m_Parsed)
        const_cast<URI*>(this)->d_ptr->parse();
 
-    if (!d_ptr->m_HintParsed) {
-       URI::ProtocolHint hint;
+    if (d_ptr->m_HintParsed)
+        return d_ptr->m_ProtocolHint;
 
-       //Read the string to see what kind of chars are used
-       d_ptr->m_CharSet = URIPrivate::checkIp(
-          d_ptr->m_Userinfo, d_ptr->m_HeaderType
-       );
+    URI::ProtocolHint hint;
 
-       //Step 1: Check IP
-       if (d_ptr->m_CharSet & CharSet::IP) {
-           hint = URI::ProtocolHint::IP;
-       }
-       //Step 2: Check RING hash
-       else if (d_ptr->m_CharSet & CharSet::HASH) {
-           hint = URI::ProtocolHint::RING;
-       }
-       //Step 3: Not a hash but it begins with ring:. This is a username.
-       else if (d_ptr->m_HeaderType == URI::SchemeType::RING){
-           hint = URI::ProtocolHint::RING_USERNAME;
-       }
-       //Step 4: Check for SIP URIs
-       else if (d_ptr->m_HeaderType == URI::SchemeType::SIP) {
-           //Step 4.1: Check for SIP URI with hostname
-           if (d_ptr->m_HasAt) {
-               hint = URI::ProtocolHint::SIP_HOST;
-           }
-           //Step 4.2: Assume SIP URI without hostname
-           else {
-               hint = URI::ProtocolHint::SIP_OTHER;
-           }
-       }
-       //Step 5: Assume SIP
-       // it could also be registered names
-       else {
-           hint = URI::ProtocolHint::SIP_OTHER;
-       }
+    //Read the string to see what kind of chars are used
+    d_ptr->m_CharSet = URIPrivate::checkIp(
+        d_ptr->m_Userinfo, d_ptr->m_HeaderType
+    );
 
-       d_ptr->m_ProtocolHint = hint;
-       d_ptr->m_HintParsed   = true;
+    //Step 1: Check IP
+    if (d_ptr->m_CharSet & CharSet::IP) {
+        hint = URI::ProtocolHint::IP;
     }
+    //Step 2: Check RING hash
+    else if (d_ptr->m_CharSet & CharSet::HASH) {
+        hint = URI::ProtocolHint::RING;
+    }
+    //Step 3: Not a hash but it begins with ring:. This is a username.
+    else if (d_ptr->m_HeaderType == URI::SchemeType::RING){
+        hint = URI::ProtocolHint::RING_USERNAME;
+    }
+    //Step 4: Check for SIP URIs
+    else if (d_ptr->m_HeaderType == URI::SchemeType::SIP) {
+        //Step 4.1: Check for SIP URI with hostname
+        if (d_ptr->m_HasAt) {
+            hint = URI::ProtocolHint::SIP_HOST;
+        }
+        //Step 4.2: Assume SIP URI without hostname
+        else {
+            hint = URI::ProtocolHint::SIP_OTHER;
+        }
+    }
+    //Step 5: Assume SIP
+    // it could also be registered names
+    else {
+        hint = URI::ProtocolHint::SIP_OTHER;
+    }
+
+    d_ptr->m_ProtocolHint = hint;
+    d_ptr->m_HintParsed   = true;
+
     return d_ptr->m_ProtocolHint;
  }
 

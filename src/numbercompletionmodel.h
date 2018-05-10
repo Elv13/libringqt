@@ -76,6 +76,7 @@ public:
       NAME_STATUS_SRING  ,
       SUPPORTS_REGISTRY  ,
       ENTRY_SOURCE       ,
+      IS_SELECTABLE      ,
    };
 
    explicit NumberCompletionModel();

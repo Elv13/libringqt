@@ -83,6 +83,7 @@ bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
 
 bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    Q_UNUSED(elapsedTime)
     if (!c)
         return false;
 
@@ -100,6 +101,7 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
 
                         return true;
                     }
+                    break;
                 default:
                     break;
             }

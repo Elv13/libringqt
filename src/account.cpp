@@ -1604,6 +1604,9 @@ bool Account::registerName(const QString& password, const QString& name) const
 //Lookup a name
 bool Account::lookupName(const QString& name) const
 {
+    if (protocol() != Account::Protocol::RING)
+        return false;
+
     return NameDirectory::instance().lookupName(this, QString(), name);
 }
 

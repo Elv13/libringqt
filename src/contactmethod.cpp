@@ -1470,6 +1470,7 @@ void TemporaryContactMethod::setUri(const URI& u)
       ContactMethod::d_ptr->m_RegisteredName.clear();
 
    ContactMethod::d_ptr->m_Uri = u;
+   ContactMethod::d_ptr->m_Uri.resetChecks();
 
    //The sha1 is no longer valid
    ContactMethod::d_ptr->m_Sha1.clear();

@@ -102,6 +102,10 @@ bool NameDirectory::registerName(const Account* account, const QString& password
 bool NameDirectory::lookupName(const Account* account, const QString& nameServiceURL, const QString& name) const
 {
     Q_ASSERT(!name.isEmpty());
+
+    if (account && account->protocol() != Account::Protocol::RING)
+        return false;
+
     QString accountId = account ? account->id() : QString();
     return ConfigurationManager::instance().lookupName(accountId, nameServiceURL, name);
 }
@@ -109,6 +113,9 @@ bool NameDirectory::lookupName(const Account* account, const QString& nameServic
 //Lookup an address
 bool NameDirectory::lookupAddress(const Account* account, const QString& nameServiceURL, const QString& address) const
 {
+    if (account && account->protocol() != Account::Protocol::RING)
+        return false;
+
     QString accountId = account ? account->id() : QString();
     return ConfigurationManager::instance().lookupAddress(accountId, nameServiceURL, address);
 }

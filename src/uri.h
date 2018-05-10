@@ -209,6 +209,8 @@ public:
     */
    QString full() const;
 
+   void resetChecks() const;
+
    URI& operator=(const URI&);
 
 private:
