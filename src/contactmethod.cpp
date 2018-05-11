@@ -903,6 +903,7 @@ bool ContactMethod::setRoleData(const QVariant &value, int role)
 
 QSharedPointer<Individual> ContactMethod::individual() const
 {
+    Q_ASSERT(type() != ContactMethod::Type::BLANK);
     if (contact())
         return contact()->individual();
 
