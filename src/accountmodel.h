@@ -115,7 +115,7 @@ public:
    Q_INVOKABLE Account* add      ( const QString& alias, const QModelIndex&      protocol                         );
    Q_INVOKABLE void     remove   ( Account* account                                                               );
    void                 remove   ( const QModelIndex& index                                                       );
-   void                 save     (                                                                                );
+   Q_INVOKABLE void     save     (                                                                                );
    Q_INVOKABLE void     cancel   (                                                                                );
    int                  exportAccounts(const QStringList& accountIDs, const QString& filePath, const QString& password);
    int                  importAccounts(const QString& filePath, const QString& password);
