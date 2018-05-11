@@ -2695,7 +2695,12 @@ void AccountPrivate::reload()
             disconnect(m_pAccountNumber,SIGNAL(presentChanged(bool)),this,SLOT(slotPresentChanged(bool)));
          }
 
+         const auto old = m_pAccountNumber;
+
          m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, q_ptr);
+
+         if (m_pAccountNumber != old)
+            emit q_ptr->contactMethodChanged(m_pAccountNumber);
 
          Q_ASSERT(m_pAccountNumber->uri() != '@');
          m_pAccountNumber->d_ptr->setType(ContactMethod::Type::ACCOUNT);

@@ -162,7 +162,7 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(time_t         lastUsed                     READ lastUsed                      NOTIFY changed                                     )
    Q_PROPERTY(bool           canCall                      READ canCall                       NOTIFY canCallChanged                              )
    Q_PROPERTY(bool           canVideoCall                 READ canVideoCall                  NOTIFY canVideoCallChanged                         )
-   Q_PROPERTY(ContactMethod* contactMethod                READ contactMethod                 CONSTANT                                           )
+   Q_PROPERTY(ContactMethod* contactMethod                READ contactMethod                 NOTIFY contactMethodChanged                        )
    Q_PROPERTY(QModelIndex    index                        READ index                                                                            )
 
    Q_PROPERTY(bool           allowIncomingFromHistory     READ allowIncomingFromHistory      WRITE setAllowIncomingFromHistory    NOTIFY changed)
@@ -614,6 +614,7 @@ class LIB_EXPORT Account : public ItemBase {
       /// When the ability to call changed.
       void canCallChanged(bool status);
       void canVideoCallChanged(bool status);
+      void contactMethodChanged(ContactMethod* cm);
 };
 Q_DECLARE_METATYPE(Account*)
 Q_DECLARE_METATYPE(const Account*)
