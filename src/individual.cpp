@@ -1264,6 +1264,11 @@ QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>
     return ind;
 }
 
+Individual* Individual::getRawIndividual(Person* p)
+{
+    return getIndividual(p).data();
+}
+
 // QSharedPointer<EventAggregate> Individual::events(FlagPack<Event::EventCategory> categories)
 // {
 //     return {};

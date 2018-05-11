@@ -194,6 +194,9 @@ public:
     static QSharedPointer<Individual> getIndividual(const QList<ContactMethod*>& cms);
     Q_INVOKABLE static QSharedPointer<Individual> getIndividual(Individual* cm);
 
+    // Because QML hates shared pointers
+    Q_INVOKABLE static Individual* getRawIndividual(Person* cm);
+
 Q_SIGNALS:
     void hasEditRowChanged(bool v);
     ///The number of and/or the contact methods themselves have changed

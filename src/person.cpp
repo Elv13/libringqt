@@ -287,6 +287,12 @@ QSharedPointer<Individual> Person::individual() const
     return d_ptr->m_pIndividual;
 }
 
+// QML is buggy
+Individual* Person::rawIndividual() const
+{
+    return individual().data();
+}
+
 ContactMethod* Person::lastUsedContactMethod() const
 {
     return individual()->lastUsedContactMethod();
