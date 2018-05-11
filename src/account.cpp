@@ -1023,8 +1023,20 @@ Account::Protocol Account::protocol() const
 ///Return the contact method associated with this account
 ContactMethod* Account::contactMethod() const
 {
-   if (!d_ptr->m_pAccountNumber)
-      d_ptr->reload();
+   if (!d_ptr->m_pAccountNumber) {
+      //HACK: This is necessary because if code called during reload checks
+      // a ContactMethod "isSelf()", it will dead lock in the phone directory
+      // model because the "self" CM will be created "twice". For now just
+      // assume it is the case even if it is wrong.
+      if (!d_ptr->m_ReloadLock.try_lock()) {
+          qCritical() << "Trying to reload an account recursively, it will crash";
+          return const_cast<ContactMethod*>(ContactMethod::BLANK());
+      }
+      else {
+         d_ptr->m_ReloadLock.unlock();
+         d_ptr->reload();
+      }
+   }
 
    Q_ASSERT(d_ptr->m_pAccountNumber->uri() != '@');
 
@@ -1619,9 +1631,11 @@ bool Account::lookupAddress(const QString& address) const
 /// Automatically create a profile based on the account name
 bool Account::createProfile()
 {
-    qDebug() << "\n\nCREATING PROFILE!" << ProfileModel::instance().rowCount();
-    auto name = registeredName().isEmpty() ? alias() : registeredName();
+    const auto name = registeredName().isEmpty() ? alias() : registeredName();
     setProfile(ProfileModel::instance().add(name));
+    qDebug() << "\n\nPROFILE CREATED" << profile() << profile()->individual();
+    Q_ASSERT(profile()->individual() == contactMethod()->individual());
+    return true;
 }
 
 ///Set the account username, everything is valid, some might be rejected by the PBX server
@@ -2613,6 +2627,11 @@ void AccountPrivate::save()
 void AccountPrivate::reload()
 {
    if (!q_ptr->isNew()) {
+      if (!m_ReloadLock.try_lock()) {
+          qWarning() << "Recursive account reloading detected, this is a bug";
+          return;
+      }
+
       if (m_hAccountDetails.size())
          qDebug() << "Reloading" << q_ptr->id() << q_ptr->alias();
 
@@ -2687,6 +2706,8 @@ void AccountPrivate::reload()
       updateState();
 
       AccountModel::instance().d_ptr->slotVolatileAccountDetailsChange(q_ptr->id(),configurationManager.getVolatileAccountDetails(q_ptr->id()));
+
+      m_ReloadLock.unlock();
    }
 }
 

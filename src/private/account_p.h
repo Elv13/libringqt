@@ -74,6 +74,7 @@ public:
     QMetaObject::Connection    m_cTlsCert                 {};
     QMetaObject::Connection    m_cTlsCaCert               {};
     Account::ContactMethods    m_NumbersFromDaemon        {};
+    QMutex                     m_ReloadLock               {};
 
     //Factory
     static Account* buildExistingAccountFromId(const QByteArray& _accountId);
