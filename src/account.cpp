@@ -201,7 +201,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
    a->setProtocol(proto);
    a->d_ptr->m_hAccountDetails.clear();
    a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
-   a->d_ptr->m_pAccountNumber = const_cast<ContactMethod*>(ContactMethod::BLANK());
+   a->d_ptr->m_pAccountNumber = nullptr;
 
    MapStringString tmp;
    switch (proto) {
@@ -234,6 +234,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
    a->d_ptr->setAccountProperty(DRing::Account::ConfProperties::ALIAS,alias);
    a->d_ptr->m_RemoteEnabledState = a->isEnabled();
    //a->setObjectName(a->id());
+
    return a;
 }
 
@@ -1038,6 +1039,13 @@ ContactMethod* Account::contactMethod() const
       }
    }
 
+   // Registration can take a while and there cannot be a CM until it's done
+   if (!d_ptr->m_pAccountNumber) {
+       qWarning() << "Trying to get a contact method of an account undergoing registration" << this;
+       return const_cast<ContactMethod*>(ContactMethod::BLANK());
+   }
+
+   Q_ASSERT(d_ptr->m_pAccountNumber->type() != ContactMethod::Type::BLANK);
    Q_ASSERT(d_ptr->m_pAccountNumber->uri() != '@');
 
    return d_ptr->m_pAccountNumber;
@@ -1052,12 +1060,12 @@ DtmfType Account::DTMFType() const
 
 bool Account::presenceStatus() const
 {
-   return d_ptr->m_pAccountNumber->isPresent();
+   return contactMethod()->isPresent();
 }
 
 QString Account::presenceMessage() const
 {
-   return d_ptr->m_pAccountNumber->presenceMessage();
+   return contactMethod()->presenceMessage();
 }
 
 bool Account::supportPresencePublish() const
@@ -1633,7 +1641,10 @@ bool Account::createProfile()
 {
     const auto name = registeredName().isEmpty() ? alias() : registeredName();
     setProfile(ProfileModel::instance().add(name));
-    qDebug() << "\n\nPROFILE CREATED" << profile() << profile()->individual();
+
+    // Saving will break
+    Q_ASSERT(profile()->collection()->id() != "trcb");
+
     Q_ASSERT(profile()->individual() == contactMethod()->individual());
     return true;
 }
@@ -2678,7 +2689,7 @@ void AccountPrivate::reload()
 
       const QString currentUri = buildUri();
 
-      if (!m_pAccountNumber || (m_pAccountNumber && m_pAccountNumber->uri() != currentUri)) {
+      if ((!m_pAccountNumber) || m_pAccountNumber->uri() != currentUri) {
          if (m_pAccountNumber) {
             disconnect(m_pAccountNumber,SIGNAL(presenceMessageChanged(QString)),this,SLOT(slotPresenceMessageChanged(QString)));
             disconnect(m_pAccountNumber,SIGNAL(presentChanged(bool)),this,SLOT(slotPresentChanged(bool)));
