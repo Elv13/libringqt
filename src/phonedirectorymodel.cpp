@@ -589,13 +589,14 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, 
 ///Return/create a number when no information is available
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& type)
 {
-   QMutexLocker locker(&d_ptr->m_DirectoryAccess);
+   d_ptr->m_DirectoryAccess.lock();
 
    if (const auto wrap = d_ptr->m_hDirectory.value(uri)) {
       ContactMethod* nb = wrap->numbers[0];
       if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
          nb->setCategory(NumberCategoryModel::instance().getCategory(type));
       }
+      d_ptr->m_DirectoryAccess.unlock();
       return nb;
    }
 
@@ -604,8 +605,18 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    number->dir_d_ptr = new ContactMethodDirectoryPrivate;
    number->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
 
+   auto wrap = new NumberWrapper(uri);
+   d_ptr->m_hDirectory[uri] = wrap;
+   d_ptr->m_hSortedNumbers[uri] = wrap;
+   wrap->numbers << number;
+
+   d_ptr->m_DirectoryAccess.unlock();
+
    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
-   d_ptr->m_lNumbers << number;
+   {
+      QMutexLocker l(&d_ptr->m_DirectoryAccess);
+      d_ptr->m_lNumbers << number;
+   }
    endInsertRows();
 
    connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
@@ -614,16 +625,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged);
    connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
 
-   const QString hn = number->uri().hostname();
-
-   auto wrap = new NumberWrapper(uri);
-   d_ptr->m_hDirectory[uri] = wrap;
-   d_ptr->m_hSortedNumbers[uri] = wrap;
-   wrap->numbers << number;
-
    // perform a username lookup for new CM with RingID
    if (number->uri().protocolHint() == URI::ProtocolHint::RING)
-      NameDirectory::instance().lookupAddress(number->account(), QString(), number->uri().userinfo());
+      NameDirectory::instance().lookupAddress(number->account(), {}, number->uri().userinfo());
 
    return number;
 }
@@ -687,7 +691,7 @@ void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, A
 ///Create a number when a more information is available duplicated ones
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
-   QMutexLocker locker(&d_ptr->m_DirectoryAccess);
+   d_ptr->m_DirectoryAccess.lock();
 
    //One cause of duplicate is when something like ring:foo happen on SIP accounts.
    ensureValidity(uri, account);
@@ -712,8 +716,10 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
       // Attempt an early candidate using the extended URI. The later
       // `confirmedCandidate2` will attempt a similar, but less likely case.
       if ((wrap2 = d_ptr->m_hDirectory.value(extendedUri))) {
-         if (auto cm = d_ptr->fillDetails(wrap2, extendedUri, account, contact, type))
+         if (auto cm = d_ptr->fillDetails(wrap2, extendedUri, account, contact, type)) {
+            d_ptr->m_DirectoryAccess.unlock();
             return cm;
+         }
       }
    }
 
@@ -762,12 +768,18 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    //Empirical testing resulted in this as the best return order
    //The merge may have failed either in the "if" above or in the merging code
-   if (confirmedCandidate2)
+   if (confirmedCandidate2) {
+      d_ptr->m_DirectoryAccess.unlock();
       return confirmedCandidate2;
-   if (confirmedCandidate)
+   }
+   if (confirmedCandidate) {
+      d_ptr->m_DirectoryAccess.unlock();
       return confirmedCandidate;
-   if (confirmedCandidate3)
+   }
+   if (confirmedCandidate3) {
+      d_ptr->m_DirectoryAccess.unlock();
       return confirmedCandidate3;
+   }
 
    //No better candidates were found than the original assumption, use it
    if (wrap) {
@@ -778,6 +790,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
             if (contact && (!number->contact() || (contact->uid() == number->contact()->uid())))
                number->setPerson(contact);
 
+            d_ptr->m_DirectoryAccess.unlock();
             return number;
          }
       }
@@ -791,13 +804,6 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    number->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
    if (contact)
       number->setPerson(contact);
-
-   connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
-   connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
-   connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
-   connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged );
-   connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
-
    if (!wrap) {
       wrap = new NumberWrapper(uri);
       d_ptr->m_hDirectory    [uri] = wrap;
@@ -809,8 +815,19 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    wrap->numbers << number;
 
+   d_ptr->m_DirectoryAccess.unlock();
+
+   connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
+   connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
+   connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
+   connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged );
+   connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
+
    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
-   d_ptr->m_lNumbers << number;
+   {
+      QMutexLocker l(&d_ptr->m_DirectoryAccess);
+      d_ptr->m_lNumbers << number;
+   }
    endInsertRows();
 
    // perform a username lookup for new CM with RingID
