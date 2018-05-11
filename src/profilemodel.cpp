@@ -143,6 +143,15 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     if (nodeForAccount(acc))
         return;
 
+    // Trying to set a profile this early is going to fail
+    if (acc->contactMethod()->type() == ContactMethod::Type::BLANK) {
+        // Do it later
+        connect(acc, &Account::contactMethodChanged, this, [acc, this]() {
+            slotAccountAdded(acc);
+        });
+        return;
+    }
+
     auto currentProfile = acc->profile();
     qDebug() << "Account added" << acc << currentProfile;
 
@@ -866,6 +875,8 @@ bool ProfileModel::remove(const QModelIndex& idx)
 
 Person* ProfileModelPrivate::addProfile(Person* person, const QString& name, CollectionInterface* col)
 {
+    Q_ASSERT(col && col->id() != "trcb");
+
     if (!col) {
         qWarning() << "Can't add profile, no collection specified";
         return nullptr;
@@ -880,6 +891,9 @@ Person* ProfileModelPrivate::addProfile(Person* person, const QString& name, Col
     }
 
     col->editor<Person>()->addNew(person);
+
+    person->setCollection(col);
+    Q_ASSERT(person->collection() == col);
 
     return person;
 }
