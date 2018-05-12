@@ -996,7 +996,6 @@ bool VContext::_test_raw(const char* content)
         }
 
         if ((!currentObject()) || (!isActive())) {
-            std::cout << "COMPLETE!\n";
             return true;
         }
     }
@@ -1066,10 +1065,6 @@ bool VContext::readFile(const char* path)
     }
 
     file2.close();
-
-    if ((!currentObject()) || (!isActive())) {
-        std::cout << "COMPLETE!\n";
-    }
 
     return true;
 }
