@@ -107,8 +107,11 @@ public Q_SLOTS:
 };
 
 Individual::Individual(Person* parent) :
-    QAbstractListModel(const_cast<Person*>(parent)), d_ptr(new IndividualPrivate)
+    QAbstractListModel(nullptr)
 {
+    moveToThread(QCoreApplication::instance()->thread());
+    setParent(parent);
+    d_ptr = new IndividualPrivate();
     d_ptr->m_pPerson  = parent;
     d_ptr->q_ptr      = this;
 

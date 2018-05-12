@@ -118,6 +118,7 @@ void PersonPrivate::statusChanged  ( bool s )
 PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
    q_ptr(contact)
 {
+    Q_ASSERT(contact->thread() == QCoreApplication::instance()->thread());
    moveToThread(QCoreApplication::instance()->thread());
    setParent(contact);
 }
@@ -129,9 +130,10 @@ PersonPrivate::~PersonPrivate()
 }
 
 ///Constructor
-Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance()),
-   d_ptr(new PersonPrivate(this))
+Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance())
 {
+   moveToThread(QCoreApplication::instance()->thread());
+   d_ptr = new PersonPrivate(this);
    setCollection(parent ? parent : &TransitionalPersonBackend::instance());
 
    d_ptr->m_isPlaceHolder = false;
@@ -139,8 +141,10 @@ Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance()),
 }
 
 Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionInterface* parent)
- : ItemBase(&PersonModel::instance()), d_ptr(new PersonPrivate(this))
+ : ItemBase(&PersonModel::instance())
 {
+   moveToThread(QCoreApplication::instance()->thread());
+   d_ptr = new PersonPrivate(this);
    setCollection(parent ? parent : &TransitionalPersonBackend::instance());
    d_ptr->m_isPlaceHolder = false;
    d_ptr->m_lParents << this;
@@ -166,9 +170,10 @@ Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionI
  * multiple person with multiple collection is currently not supported (but
  * would be easy to enable if the need arise).
  */
-Person::Person(const Person& other) noexcept : ItemBase(&PersonModel::instance()),
-d_ptr(new PersonPrivate(this))
+Person::Person(const Person& other) noexcept : ItemBase(&PersonModel::instance())
 {
+   moveToThread(QCoreApplication::instance()->thread());
+   d_ptr = new PersonPrivate(this);
    d_ptr->m_FirstName            = other.d_ptr->m_FirstName           ;
    d_ptr->m_SecondName           = other.d_ptr->m_SecondName          ;
    d_ptr->m_NickName             = other.d_ptr->m_NickName            ;
