@@ -109,6 +109,7 @@ public:
    Q_INVOKABLE const QByteArray toVCard(QList<Account*> accounts = {}) const;
    Q_INVOKABLE QList<QByteArray> getCustomFields(const QByteArray& name) const;
    Q_INVOKABLE bool hasCustomField(const QByteArray& name) const;
+   Q_INVOKABLE bool hasCustomField(const QByteArray& name, const QByteArray& value) const;
 
 protected:
    //The D-Pointer can be shared if a PlaceHolderPerson is merged with a real one

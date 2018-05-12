@@ -685,6 +685,18 @@ bool Person::hasCustomField(const QByteArray& name) const
     return d_ptr->m_lCustomAttributes.contains(name);
 }
 
+/// Return if the person has a (or more) custom field called `name` matching `value`
+bool Person::hasCustomField(const QByteArray& name, const QByteArray& value) const
+{
+    const auto fields = getCustomFields(name);
+    for (const auto v : qAsConst(fields)) {
+        if (v == value)
+            return true;
+    }
+
+    return false;
+}
+
 ///Add custom fields for contact profiles
 void Person::addCustomField(const QByteArray& key, const QByteArray& value)
 {
