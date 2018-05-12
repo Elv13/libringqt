@@ -689,11 +689,11 @@ QJsonObject ContactMethod::toJson() const
     o[QStringLiteral("uri" )] = uri ();
     o[QStringLiteral("sha1")] = QString(sha1());
 
-    if (account())
-        o[QStringLiteral("accountId")] = QString(account()->id());
+    if (auto a = account())
+        o[QStringLiteral("accountId")] = QString(a->id());
 
-    if (contact())
-        o[QStringLiteral("personUID")] = QString(contact()->uid());
+    if (auto p = contact())
+        o[QStringLiteral("personUID")] = QString(p->uid());
 
     return o;
 }

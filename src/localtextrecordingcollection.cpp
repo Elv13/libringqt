@@ -304,7 +304,8 @@ bool LocalTextRecordingCollection::load()
                     cm->d_ptr->setTextRecording(r);
                 }
                 else{
-                    qWarning() << "CM already has text recording" << cm;
+                    // Useful, but too noisy, it will happen as contacts are added
+                    //qWarning() << "CM already has text recording" << cm;
                     cm->d_ptr->addAlternativeTextRecording(r);
                 }
             }

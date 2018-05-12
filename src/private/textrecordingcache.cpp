@@ -359,13 +359,15 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
 
         fallback.insert(cm);
 
-        if (!a && cm)
+        if ((!a) && cm)
             a = cm->account();
     }
 
     // It can happen if the accounts were deleted
     if (!a) {
-        qWarning() << "Could not find a viable account for existing chat conversation";
+        // Too noisy, it happens with deleted accounts because once the file
+        // is saved again, the accountId is no longer there.
+        //qWarning() << "Could not find a viable account for existing chat conversation";
         a = AvailableAccountModel::instance().currentDefaultAccount();
     }
 
