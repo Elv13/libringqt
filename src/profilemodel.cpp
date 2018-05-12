@@ -638,7 +638,9 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 
     Q_ASSERT((!oldProfile) || accNode == oldProfile->children.at(accNode->m_Index));
 
-    qDebug() << "Moving:" << accNode->m_AccData.m_pAccount->alias();
+    // Do not warn when first setting the profile
+    if (oldParentIdx.isValid())
+        qDebug() << "Moving profile:" << accNode->m_AccData.m_pAccount->alias();
 
     const bool ret = oldProfile ? oldProfile->m_pPerson->removeCustomField(
         VCardUtils::Property::X_RINGACCOUNT,
@@ -657,12 +659,14 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 
     updateIndexes();
 
-    proNode->m_pPerson->addCustomField(
-        VCardUtils::Property::X_RINGACCOUNT,
-        accNode->m_AccData.m_pAccount->id()
-    );
+    if (!proNode->m_pPerson->hasCustomField(VCardUtils::Property::X_RINGACCOUNT, accNode->m_AccData.m_pAccount->id())) {
+        proNode->m_pPerson->addCustomField(
+            VCardUtils::Property::X_RINGACCOUNT,
+            accNode->m_AccData.m_pAccount->id()
+        );
 
-    proNode->m_pPerson->save();
+        proNode->m_pPerson->save();
+    }
 
     if (oldProfile)
         oldProfile->m_pPerson->save();
