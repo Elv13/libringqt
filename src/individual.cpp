@@ -694,8 +694,10 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
             static_cast<TemporaryContactMethod*>(cm)
         );
 
-    if (!d_ptr->m_pPerson)
-        qDebug() << "Trying to add a new phone number without a contact" << cm;
+    // Useful for debugging, but normal for Individual created using
+    // cm->individual()
+    //if (!d_ptr->m_pPerson)
+    //    qDebug() << "Trying to add a new phone number without a contact" << cm;
 
     if (Q_UNLIKELY(cm->contact() && !(*cm->contact() == *d_ptr->m_pPerson))) {
         qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
