@@ -642,17 +642,16 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
     if (oldParentIdx.isValid())
         qDebug() << "Moving profile:" << accNode->m_AccData.m_pAccount->alias();
 
-    const bool ret = oldProfile ? oldProfile->m_pPerson->removeCustomField(
-        VCardUtils::Property::X_RINGACCOUNT,
-        accNode->m_AccData.m_pAccount->id()
-    ) : true;
 
-    if (Q_UNLIKELY(!ret)) {
-        qWarning() << "Removing from the old profile failed, ignoring";
-    }
+    if (oldProfile) {
+        if(Q_UNLIKELY(!oldProfile->m_pPerson->removeCustomField(
+            VCardUtils::Property::X_RINGACCOUNT,
+            accNode->m_AccData.m_pAccount->id()
+        )))
+            qWarning() << "Removing from the old profile failed, ignoring";
 
-    if (oldProfile)
         oldProfile->children.remove(accNode->m_Index);
+    }
 
     accNode->parent = proNode;
     proNode->children.insert(0, accNode);
@@ -668,11 +667,10 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
         proNode->m_pPerson->save();
     }
 
-    if (oldProfile)
+    if (oldProfile) {
         oldProfile->m_pPerson->save();
-
-    if (oldProfile)
         q_ptr->endMoveRows();
+    }
     else
         q_ptr->endInsertRows();
 }
