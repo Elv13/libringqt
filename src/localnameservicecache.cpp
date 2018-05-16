@@ -137,8 +137,6 @@ bool LocalNameServiceEditor::save(const ContactMethod* number)
             }
 
             file.close();
-
-            return false;
         }
         else
             qWarning() << "Unable to save the registered names";
