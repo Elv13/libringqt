@@ -616,6 +616,7 @@ bool ProfileModel::setProfile(Account* a, Person* p)
     a->contactMethod()->setPerson(p);
 
     d_ptr->setProfile(accNode, proNode);
+    return true;
 }
 
 void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
