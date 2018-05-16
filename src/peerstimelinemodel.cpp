@@ -589,6 +589,23 @@ QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
     return createIndex(n->m_Index, 0, n);
 }
 
+QModelIndex PeersTimelineModel::individualIndex(QSharedPointer<Individual> i) const
+{
+    if (!i)
+        return {};
+
+    const auto cm = i->lastUsedContactMethod();
+
+    if (!cm)
+        return {};
+
+    auto m = deduplicatedTimelineModel();
+
+    QSharedPointer<RecentCmModel> p = d_ptr->m_MostRecentCMPtr;
+
+    return p->mapFromSource(contactMethodIndex(cm));
+}
+
 class PeersTimelineSelectionModelPrivate
 {
 public:

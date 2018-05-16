@@ -93,6 +93,7 @@ public:
     QSharedPointer<Individual> mostRecentIndividual() const;
 
     QModelIndex contactMethodIndex(ContactMethod* cm) const;
+    QModelIndex individualIndex(QSharedPointer<Individual> i) const;
 
 Q_SIGNALS:
     void headChanged();
