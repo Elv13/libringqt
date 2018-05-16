@@ -74,7 +74,7 @@ public:
 
     QSharedPointer<EventAggregate> m_pEventAggregate;
 
-    QSharedPointer<Individual> m_pWeakRef {nullptr};
+    QWeakPointer<Individual> m_pWeakRef {nullptr};
 
     // Helpers
     void connectContactMethod(ContactMethod* cm);
@@ -1143,7 +1143,7 @@ bool Individual::hasBookmarks() const
 
 QSharedPointer<Individual> Individual::getIndividual(Individual* cm)
 {
-    return cm ? cm->d_ptr->m_pWeakRef : nullptr;
+    return cm ? cm->d_ptr->m_pWeakRef.toStrongRef() : nullptr;
 }
 
 Person* Individual::buildPerson() const
