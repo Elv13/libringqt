@@ -800,7 +800,7 @@ bool NumberCompletionModelPrivate::isSelectable(const ContactMethod* cm) const
         if (cm->uri().protocolHint() == URI::ProtocolHint::RING)
             return true;
 
-        if (cm->registeredName().isEmpty() && entryStatus(cm) == NumberCompletionModel::LookupStatus::SUCCESS)
+        if ((!cm->registeredName().isEmpty()) || entryStatus(cm) == NumberCompletionModel::LookupStatus::SUCCESS)
             return true;
 
         return false;
