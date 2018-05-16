@@ -525,6 +525,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::registeredNameSet, this,
         &IndividualPrivate::slotRegisteredName);
 
+    connect(m, &ContactMethod::primaryNameChanged, this,
+        &IndividualPrivate::slotRegisteredName);
+
     connect(m, &ContactMethod::bookmarkedChanged, this,
         &IndividualPrivate::slotBookmark);
 
@@ -569,6 +572,9 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::changed, this,
         &IndividualPrivate::slotChanged);
+
+    disconnect(m, &ContactMethod::primaryNameChanged, this,
+        &IndividualPrivate::slotRegisteredName);
 
     disconnect(m, &ContactMethod::registeredNameSet, this,
         &IndividualPrivate::slotRegisteredName);

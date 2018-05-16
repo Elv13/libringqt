@@ -46,6 +46,7 @@
 #include "media/textrecording.h"
 #include "localnameservicecache.h"
 #include "categorizedbookmarkmodel.h"
+#include "individual.h"
 
 //Private
 #include "private/phonedirectorymodel_p.h"
@@ -184,6 +185,12 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                 return number->isDuplicate() ? QStringLiteral("Is duplicate") : QString();
             default:
                 return number->roleData(role);
+         }
+         break;
+      case PhoneDirectoryModelPrivate::Columns::BEST_NAME:
+         switch (role) {
+            case Qt::DisplayRole:
+               return number->individual()->bestName();
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::TYPE:
@@ -347,7 +354,7 @@ int PhoneDirectoryModel::rowCount(const QModelIndex& parent ) const
 
 int PhoneDirectoryModel::columnCount(const QModelIndex& parent ) const
 {
-   return parent.isValid() ? 0 : 21;
+   return parent.isValid() ? 0 : 22;
 }
 
 Qt::ItemFlags PhoneDirectoryModel::flags(const QModelIndex& index ) const
@@ -387,6 +394,7 @@ QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientatio
 
    static const QString headers[] = {
       tr("URI"),
+      tr("Best name"),
       tr("Type"),
       tr("Person"),
       tr("Is self"),

@@ -161,6 +161,12 @@ void ContactMethodPrivate::accountChanged()
       emit n->accountChanged(m_pAccount);
 }
 
+void ContactMethodPrivate::contactChanged(Person* p1,Person* p2)
+{
+    foreach (ContactMethod* n, m_lParents)
+      emit n->contactChanged(p1, p2);
+}
+
 const ContactMethod* ContactMethod::BLANK()
 {
     static auto instance = []{
@@ -349,7 +355,7 @@ void ContactMethod::setPerson(Person* contact)
    }
    d_ptr->changed();
 
-   emit contactChanged(contact, old);
+   d_ptr->contactChanged(contact, old);
 }
 
 void ContactMethod::setCategory(NumberCategory* cat)
@@ -1057,14 +1063,17 @@ void ContactMethod::incrementAlternativeName(const QString& name, const time_t l
    if (d_ptr->m_hNames[name].second < lastUsed)
       d_ptr->m_hNames[name].second = lastUsed;
    d_ptr->m_hNames[name].first++;
+
    if (needReIndexing && d_ptr->m_Type != ContactMethod::Type::TEMPORARY) {
       PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+(d_ptr->m_pPerson?(QStringList(d_ptr->m_pPerson->formattedName())):QStringList()));
       //Invalid m_PrimaryName_cache
-      if (!d_ptr->m_pPerson)
+      if (!d_ptr->m_pPerson) {
          d_ptr->m_PrimaryName_cache.clear();
+         d_ptr->primaryNameChanged(primaryName());
+      }
    }
 
-   emit changed();
+   d_ptr->changed();
 }
 
 void ContactMethodPrivate::slotAccountDestroyed(QObject* o)
@@ -1152,8 +1161,8 @@ bool ContactMethod::merge(ContactMethod* other)
    else
       other->d_ptr->m_lOtherURIs << currentD->m_Uri;
 
-   emit changed();
-   emit rebased(other);
+   d_ptr->changed();
+   d_ptr->rebased(other);
 
    if (oldName != primaryName())
       d_ptr->primaryNameChanged(primaryName());

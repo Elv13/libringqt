@@ -104,6 +104,7 @@ public:
    void registeredNameSet(const QString& registeredName);
    void bookmarkedChanged(bool);
    void accountChanged();
+   void contactChanged(Person*,Person*);
 
    //Helpers
    void addActiveCall(Call* c);
