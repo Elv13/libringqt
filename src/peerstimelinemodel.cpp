@@ -560,16 +560,21 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
 
 QSharedPointer<Individual> PeersTimelineModel::mostRecentIndividual() const
 {
-    if (!d_ptr->m_lRows.size())
-        return nullptr;
+    int idx = d_ptr->m_lRows.size();
 
-    auto i = d_ptr->m_lRows[d_ptr->m_lRows.size()-1];
+    // Do not return the user own individual, that's not the intent
+    while (idx--) {
+        auto i = d_ptr->m_lRows[idx];
 
-    // Lazy load the individuals as late as possible to avoid wasteful deduplication
-    if (!i->m_pInd)
-        i->m_pInd = i->m_pCM->individual();
+        // Lazy load the individuals as late as possible to avoid wasteful deduplication
+        if (!i->m_pInd)
+            i->m_pInd = i->m_pCM->individual();
 
-    return i->m_pInd;
+        if ((!i->m_pInd->hasProperty<&ContactMethod::isSelf>()) && i->m_pInd->lastUsedTime())
+            return i->m_pInd;
+    }
+
+    return {};
 }
 
 QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
