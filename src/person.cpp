@@ -210,6 +210,8 @@ Person::~Person()
 
    if (d_ptr->m_lParents.isEmpty()) {
       d_ptr->setParent(nullptr);
+      if (d_ptr->m_pIndividual)
+         d_ptr->m_pIndividual->setParent(nullptr);
       delete d_ptr;
    }
 }
