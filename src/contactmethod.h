@@ -157,6 +157,8 @@ public:
    Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
+   Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
+
 
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
@@ -212,7 +214,6 @@ public:
    uint                  trimCount       () const;
    bool                  haveCalled      () const;
    const QList<Call*>    calls           () const;
-   Call*                 firstOutgoingCall() const;
    QHash<QString, QPair<int, time_t>> alternativeNames() const;
    QString               primaryName     () const;
    bool                  isBookmarked    () const;
@@ -235,6 +236,7 @@ public:
    bool                  hasInitCall     () const;
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
+   Call*                 firstOutgoingCall() const;
    Call*                 firstActiveCall () const;
 
    /// Opaque pointer to be used as a deduplicated identifier
