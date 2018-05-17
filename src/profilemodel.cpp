@@ -612,7 +612,7 @@ bool ProfileModel::setProfile(Account* a, Person* p)
 
     Q_ASSERT(proNode);
 
-    Q_ASSERT(a->contactMethod()->isSelf());
+    Q_ASSERT(a->isNew() || a->contactMethod()->isSelf());
     a->contactMethod()->setPerson(p);
 
     d_ptr->setProfile(accNode, proNode);
@@ -985,8 +985,18 @@ QItemSelectionModel* ProfileModel::getAccountSelectionModel(Account* a) const
     auto an = d_ptr->nodeForAccount(a);
 
     if (Q_UNLIKELY(!an)) {
-        qWarning() << "Account not found";
-        return nullptr;
+        qWarning() << "Account not found, setting default profile";
+        if (d_ptr->m_pDefaultProfile) {
+            const_cast<ProfileModel*>(this)->setProfile(a, d_ptr->m_pDefaultProfile->m_pPerson);
+            if (!(an = d_ptr->nodeForAccount(a))) {
+                qWarning() << "Setting default profile failed";
+                return nullptr;
+            }
+        }
+        else {
+            qWarning() << "There is no profile for the account to be attached to";
+            return nullptr;
+        }
     }
 
     Q_ASSERT(an->type == ProfileNode::Type::ACCOUNT);
