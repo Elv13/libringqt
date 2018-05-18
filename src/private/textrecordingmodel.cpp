@@ -71,6 +71,9 @@ QHash<int,QByteArray> TextRecordingModel::roleNames() const
         roles.insert((int)Media::TextRecording::Role::FormattedHtml       , "formattedHtml"       );
         roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
         roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
+        roles.insert((int)Media::TextRecording::Role::ContactMethod       , "contactMethod"       );
+        roles.insert((int)Media::TextRecording::Role::HTML                , "HTML"                );
+        roles.insert((int)Media::TextRecording::Role::HasText             , "hasText"             );
     }
     return roles;
 }

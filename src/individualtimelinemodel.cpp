@@ -247,6 +247,9 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
         roles.insert((int)Media::TextRecording::Role::FormattedHtml       , "formattedHtml"       );
         roles.insert((int)Media::TextRecording::Role::LinkList            , "linkList"            );
         roles.insert((int)Media::TextRecording::Role::Id                  , "id"                  );
+        roles.insert((int)Media::TextRecording::Role::ContactMethod       , "contactMethod"       );
+        roles.insert((int)Media::TextRecording::Role::HTML                , "HTML"                );
+        roles.insert((int)Media::TextRecording::Role::HasText             , "hasText"             );
 
         roles.insert((int)IndividualTimelineModel::Role::NodeType         , "nodeType"            );
         roles.insert((int)IndividualTimelineModel::Role::CategoryEntries  , "categoryEntries"     );
