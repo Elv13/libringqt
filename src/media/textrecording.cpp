@@ -763,7 +763,12 @@ QVariant TextMessageNode::roleData(int role) const
         case (int)Media::TextRecording::Role::HasText              :
             return m_pMessage->hasText();
         case (int)Media::TextRecording::Role::ContactMethod        :
-            return QVariant::fromValue(m_pContactMethod);
+            if (m_pMessage->direction() == Media::Media::Direction::IN)
+                return QVariant::fromValue(m_pContactMethod);
+            else if (m_pContactMethod->account())
+                return QVariant::fromValue(m_pContactMethod->account()->contactMethod());
+            else
+                return QVariant::fromValue((ContactMethod*)nullptr);
         case (int)Media::TextRecording::Role::DeliveryStatus       :
             return QVariant::fromValue(m_pMessage->status());
         case (int)Media::TextRecording::Role::FormattedHtml        :
