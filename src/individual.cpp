@@ -895,6 +895,56 @@ ContactMethod* Individual::mainContactMethod() const
     return phoneNumbers().first();
 }
 
+ContactMethod* Individual::preferredContactMethod(int m) const
+{
+    if (m < 0 || m >= (int)Media::Media::Type::COUNT__)
+        return nullptr;
+
+    return preferredContactMethod((Media::Media::Type)m);
+}
+
+ContactMethod* Individual::preferredContactMethod(Media::Media::Type m) const
+{
+    ContactMethod* ret = nullptr;
+
+    auto check = [m, &ret](ContactMethod* cm) {
+        if (!cm)
+            return;
+
+        switch (m) {
+            case Media::Media::Type::AUDIO:
+                if (cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
+                    ret = cm;
+                break;
+            case Media::Media::Type::VIDEO:
+                if (cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
+                    ret = cm;
+                break;
+            case Media::Media::Type::TEXT:
+                if (cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE)
+                    ret = cm;
+                break;
+            case Media::Media::Type::FILE:
+            case Media::Media::Type::COUNT__:
+                break;
+        }
+    };
+
+    check(mainContactMethod());
+
+    if (ret)
+        return ret;
+
+    forAllNumbers([m, &ret, check](ContactMethod* cm) {
+        if (ret)
+            return;
+
+        check(cm);
+    });
+
+    return ret;
+}
+
 bool Individual::requireUserSelection() const
 {
     return !mainContactMethod();

@@ -107,6 +107,7 @@ private:
 
 Q_DECLARE_METATYPE(Media::Media*)
 Q_DECLARE_METATYPE(Media::Media::Direction)
+Q_DECLARE_METATYPE(Media::Media::Type)
 
 Media::Media* operator<<(Media::Media* m, Media::Media::Action a);
 

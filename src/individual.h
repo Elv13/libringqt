@@ -22,6 +22,7 @@
 
 // Ring
 #include <contactmethod.h>
+#include <media/media.h>
 #include <typedefs.h>
 class Person;
 class Call;
@@ -106,6 +107,17 @@ public:
     bool requireUserSelection() const;
 
     Call* firstActiveCall() const;
+
+    /**
+     * The most recently used ContactMethos that supports outgoing media `m`.
+     *
+     * It will match `mainContactMethod` when possible then fallback if it's
+     * not available.
+     *
+     * @see mainContactMethod
+     */
+    ContactMethod* preferredContactMethod(Media::Media::Type m) const;
+    Q_INVOKABLE ContactMethod* preferredContactMethod(int m) const; //QTBUG-58454
 
     /**
      * A more specialized version of the presence that returns true when the
