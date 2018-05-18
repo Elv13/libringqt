@@ -400,8 +400,8 @@ bool IndividualTimelineModel::setData(const QModelIndex& idx, const QVariant &va
             const bool ret = n->m_pMessage->m_pRecording->d_ptr->performMessageAction(
                 n->m_pMessage->m_pMessage,
                 value.toBool() ?
-                    MimeMessage::Actions::READ :
-                    MimeMessage::Actions::UNREAD
+                    Media::MimeMessage::Actions::READ :
+                    Media::MimeMessage::Actions::UNREAD
             );
 
             if (ret)
@@ -502,7 +502,7 @@ IndividualTimelineNode* IndividualTimelineModelPrivate::getGroup(TextMessageNode
     auto cat = getCategory(message->m_pMessage->timestamp());
 
     // Snapshot have their own look and feel
-    const auto type = g->type == MimeMessage::Type::SNAPSHOT ?
+    const auto type = g->type == Media::MimeMessage::Type::SNAPSHOT ?
         IndividualTimelineModel::NodeType::SNAPSHOT_GROUP :
         IndividualTimelineModel::NodeType::SECTION_DELIMITER;
 
@@ -529,7 +529,7 @@ IndividualTimelineNode* IndividualTimelineModelPrivate::getGroup(TextMessageNode
 
 void IndividualTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 {
-    const auto messageType = message->m_pMessage->type() == MimeMessage::Type::SNAPSHOT ?
+    const auto messageType = message->m_pMessage->type() == Media::MimeMessage::Type::SNAPSHOT ?
         IndividualTimelineModel::NodeType::SNAPSHOT :
         IndividualTimelineModel::NodeType::TEXT_MESSAGE;
 

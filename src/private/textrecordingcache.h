@@ -65,7 +65,7 @@ public:
     ///If the conversion add new participants, a new file will be created
     QString nextGroupSha1;
     ///The group type
-    MimeMessage::Type type {MimeMessage::Type::CHAT};
+    Media::MimeMessage::Type type {Media::MimeMessage::Type::CHAT};
     ///This is the group identifier in the file described by `nextGroupSha1`
     int nextGroupId;
     ///The unique identifier of the event associated with this text message group
@@ -75,10 +75,10 @@ public:
     mutable Account* m_pAccount {nullptr};
 
     QSharedPointer<Event> event(bool allowPlaceholders = true) const;
-    void addMessage(MimeMessage* m, ContactMethod* peer);
+    void addMessage(Media::MimeMessage* m, ContactMethod* peer);
 
     /// Prevent the list from being modified directly.
-    const QList<QPair<MimeMessage*, ContactMethod*> >& messagesRef() const;
+    const QList<QPair<Media::MimeMessage*, ContactMethod*> >& messagesRef() const;
 
     QPair<time_t, time_t> timeRange() const;
 
@@ -113,7 +113,7 @@ private:
     QString m_Path;
 
     ///All messages from this chunk (the ContactMethod is the author of incoming messages)
-    QList< QPair<MimeMessage*, ContactMethod*> > messages;
+    QList< QPair<Media::MimeMessage*, ContactMethod*> > messages;
 
     ///Due to complex ownership, give no direct access
     mutable QSharedPointer<Event> m_pEvent;

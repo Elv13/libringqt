@@ -20,9 +20,8 @@
 
 // Ring
 #include <media/media.h>
+#include <typedefs.h>
 class ContactMethod;
-
-class MimeMessagePrivate;
 
 namespace DRing {namespace Account {
     enum class MessageStates;
@@ -32,15 +31,17 @@ namespace Serializable {
     class Group;
 }
 namespace Media {
-    class TextRecordingPrivate;
-    class TextRecording;
-}
 
-class MimeMessage
+class MimeMessagePrivate;
+
+class TextRecordingPrivate;
+class TextRecording;
+
+class LIB_EXPORT MimeMessage
 {
     friend class Serializable::Group; // existing object factory
-    friend class Media::TextRecordingPrivate; // new object factory
-    friend class Media::TextRecording; //::setAllRead perform action
+    friend class TextRecordingPrivate; // new object factory
+    friend class TextRecording; //::setAllRead perform action
 
 public:
 
@@ -98,7 +99,7 @@ public:
     QString plainText() const;
     QString html() const;
     QList<QUrl> linkList() const;
-    Media::Media::Direction direction() const;
+    Media::Direction direction() const;
     uint64_t id() const;
     Type type() const;
     State status() const;
@@ -116,7 +117,7 @@ private:
     static MimeMessage* buildExisting(const QJsonObject &json);
     static MimeMessage* buildNew(
         const QMap<QString,QString>& message,
-        Media::Media::Direction direction,
+        Media::Direction direction,
         uint64_t id
     );
 
@@ -130,4 +131,6 @@ private:
     Q_DECLARE_PRIVATE(MimeMessage);
 };
 
-Q_DECLARE_METATYPE(MimeMessage::State)
+} // Media::
+
+Q_DECLARE_METATYPE(Media::MimeMessage::State)

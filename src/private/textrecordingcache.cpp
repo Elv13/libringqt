@@ -170,7 +170,7 @@ Serializable::Group::~Group()
         delete m.first;
 }
 
-const QList< QPair<MimeMessage*, ContactMethod*> >& Serializable::Group::messagesRef() const
+const QList< QPair<Media::MimeMessage*, ContactMethod*> >& Serializable::Group::messagesRef() const
 {
     return messages;
 }
@@ -180,7 +180,7 @@ int Serializable::Group::size() const
     return messages.size();
 }
 
-void Serializable::Group::addMessage(MimeMessage* m, ContactMethod* peer)
+void Serializable::Group::addMessage(Media::MimeMessage* m, ContactMethod* peer)
 {
     // Brute force back the timestamp. While it wastes a few CPU cycles,
     // it avoids having to keep track of it internally.
@@ -248,7 +248,7 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
     nextGroupSha1 = json[QStringLiteral("nextGroupSha1")].toString();
     nextGroupId   = json[QStringLiteral("nextGroupId")  ].toInt   ();
     eventUid      = json[QStringLiteral("eventUid")     ].toString().toLatin1();
-    type          = static_cast<MimeMessage::Type>(json[QStringLiteral("type")].toInt());
+    type          = static_cast<Media::MimeMessage::Type>(json[QStringLiteral("type")].toInt());
     m_Path        = path;
 
     QJsonArray a = json[QStringLiteral("messages")].toArray();
@@ -266,7 +266,7 @@ void Serializable::Group::read (const QJsonObject &json, const QHash<QString,Con
             cm = sha1s[sha1];
         }
 
-        addMessage(MimeMessage::buildExisting(o), cm);
+        addMessage(Media::MimeMessage::buildExisting(o), cm);
     }
 }
 

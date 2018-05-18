@@ -32,6 +32,7 @@
 #include "textrecording.h"
 #include "avrecording.h"
 #include "media.h"
+#include "mimemessage.h"
 #include "call.h"
 #include "localtextrecordingcollection.h"
 
@@ -391,8 +392,11 @@ bool Media::RecordingModel::addItemCallback(const Recording* item)
     endInsertRows();
 
     if (item->type() == Recording::Type::TEXT) {
-        const TextRecording* r = static_cast<const TextRecording*>(item);
+        auto r = const_cast<TextRecording*>(static_cast<const TextRecording*>(item));
         connect(r, &TextRecording::unreadCountChange, d_ptr, &RecordingModelPrivate::updateUnreadCount);
+        connect(r, &TextRecording::mimeMessageInserted, this, [this, r](MimeMessage* message, ContactMethod* cm) {
+            emit mimeMessageInserted(message, r, cm);
+        });
         connect(r, &TextRecording::messageInserted, this, [n, this, parent](
             const QMap<QString,QString>&, ContactMethod* cm, Media::Media::Direction d
         ){

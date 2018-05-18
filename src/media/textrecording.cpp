@@ -594,6 +594,8 @@ void Media::TextRecordingPrivate::insertNewSnapshot(Call* call, const QString& p
         {{RingMimes::SNAPSHOT, path}}, n->m_pContactMethod, m->direction()
     );
 
+    emit q_ptr->mimeMessageInserted(m, n->m_pContactMethod );
+
     emit q_ptr->messageStateChanged();
 
     emit messageAdded(n);
@@ -657,6 +659,9 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
     m_LastUsed = std::max(m_LastUsed, m->timestamp());
 
     emit q_ptr->messageInserted(message, const_cast<ContactMethod*>(cm), direction);
+
+    emit q_ptr->mimeMessageInserted(m, n->m_pContactMethod );
+
     if (m->status() != MimeMessage::State::READ) { //FIXME
         m_UnreadCount += 1;
         emit q_ptr->unreadCountChange(1);
@@ -669,7 +674,7 @@ void Media::TextRecordingPrivate::insertNewMessage(const QMap<QString,QString>& 
     emit messageAdded(n);
 }
 
-MimeMessage* Media::TextRecording::messageAt(int row) const
+Media::MimeMessage* Media::TextRecording::messageAt(int row) const
 {
     if (row >= d_ptr->m_lNodes.size() || row < 0)
         return nullptr;
@@ -707,7 +712,7 @@ QVariant TextMessageNode::snapshotRoleData(int role) const
 
 QVariant TextMessageNode::roleData(int role) const
 {
-    if (m_pMessage->type() == MimeMessage::Type::SNAPSHOT)
+    if (m_pMessage->type() == Media::MimeMessage::Type::SNAPSHOT)
         return snapshotRoleData(role);
 
     switch (role) {
@@ -748,11 +753,11 @@ QVariant TextMessageNode::roleData(int role) const
         case (int)Media::TextRecording::Role::Timestamp            :
             return (uint)m_pMessage->timestamp();
         case (int)Media::TextRecording::Role::IsRead               :
-            return m_pMessage->status() != MimeMessage::State::UNREAD;
+            return m_pMessage->status() != Media::MimeMessage::State::UNREAD;
         case (int)Media::TextRecording::Role::FormattedDate        :
             return QDateTime::fromTime_t(m_pMessage->timestamp()).toString();
         case (int)Media::TextRecording::Role::IsStatus             :
-            return m_pMessage->type() == MimeMessage::Type::STATUS;
+            return m_pMessage->type() == Media::MimeMessage::Type::STATUS;
         case (int)Media::TextRecording::Role::HTML                 :
             return QVariant(m_pMessage->html());
         case (int)Media::TextRecording::Role::HasText              :

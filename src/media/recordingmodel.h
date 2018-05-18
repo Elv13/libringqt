@@ -37,6 +37,7 @@ namespace Media {
    class TextRecording;
    class AVRecording;
    class RecordingModelPrivate;
+   class MimeMessage;
 
 /**
  * This model host the Ring recordings. Recording sessions span one or
@@ -102,6 +103,7 @@ public:
 
 Q_SIGNALS:
     void newTextMessage(::Media::TextRecording* t, ContactMethod* cm);
+    void mimeMessageInserted(MimeMessage* message, ::Media::TextRecording* t, ContactMethod* cm);
     void unreadMessagesCountChanged(int unreadCount);
     void currentRecordingChanged(Recording* r);
 

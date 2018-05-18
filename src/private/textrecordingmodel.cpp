@@ -27,7 +27,7 @@ TextRecordingModel::TextRecordingModel(Media::TextRecording* recording) : QAbstr
 {
     connect(recording, &Media::TextRecording::aboutToInsertMessage, this, [this]() {
         const int rc = rowCount();
-        beginInsertRows(QModelIndex(),rc,rc);
+        beginInsertRows({}, rc, rc);
     });
 
     connect(recording, &Media::TextRecording::messageInserted, this, [this]() {
@@ -114,8 +114,8 @@ bool TextRecordingModel::setData(const QModelIndex& idx, const QVariant &value, 
     switch (role) {
         case (int)Media::TextRecording::Role::IsRead               :
             //TODO delegate that logic to MimeMessage::
-            if ((value.toBool() && m->status() != MimeMessage::State::READ)
-              || ((!value.toBool()) && m->status() != MimeMessage::State::UNREAD)
+            if ((value.toBool() && m->status() != Media::MimeMessage::State::READ)
+              || ((!value.toBool()) && m->status() != Media::MimeMessage::State::UNREAD)
             ) {
 
                 if (value.toBool())

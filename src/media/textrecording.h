@@ -31,7 +31,6 @@ class LocalTextRecordingEditor;
 class ContactMethod;
 class IndividualTimelineModel;
 class IndividualTimelineModelPrivate;
-class MimeMessage;
 class LocalHistoryCollection;
 class Calendar;
 
@@ -43,6 +42,7 @@ namespace Media {
 
 class TextRecordingPrivate;
 class Text;
+class MimeMessage;
 
 /**
  * The chat message container.
@@ -146,7 +146,8 @@ protected:
 
 Q_SIGNALS:
    void aboutToInsertMessage(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
-   void messageInserted(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction);
+   void messageInserted(const QMap<QString,QString>& message, ContactMethod* cm, Media::Media::Direction direction); //DEPRECATED
+   void mimeMessageInserted(MimeMessage* message, ContactMethod* cm);
    void unreadCountChange(int count);
    void messageStateChanged();
    void aboutToClear();

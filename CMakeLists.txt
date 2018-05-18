@@ -398,6 +398,7 @@ SET(libringqt_media_LIB_HDRS
   src/media/recording.h
   src/media/avrecording.h
   src/media/textrecording.h
+  src/media/mimemessage.h
   src/media/recordingmodel.h
   src/media/availabilitytracker.h
 )

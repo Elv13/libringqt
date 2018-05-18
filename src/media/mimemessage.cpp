@@ -32,6 +32,7 @@
 #include "libcard/matrixutils.h"
 #include "account_const.h"
 
+namespace Media {
 
 class MimeMessagePrivate
 {
@@ -44,10 +45,10 @@ public:
     time_t                       m_TimeStamp;
     QList<MimeMessage::Payload*> m_lPayloads;
     QString                      authorSha1;
-    Media::Media::Direction      m_Direction { Media::Media::Direction::OUT };
-    MimeMessage::Type            m_Type      { MimeMessage::Type::CHAT      };
-    MimeMessage::State           m_Status    { MimeMessage::State::UNKNOWN  };
-    uint64_t                     m_Id        {               0              };
+    Media::Direction             m_Direction { Media::Direction::OUT       };
+    MimeMessage::Type            m_Type      { MimeMessage::Type::CHAT     };
+    MimeMessage::State           m_Status    { MimeMessage::State::UNKNOWN };
+    uint64_t                     m_Id        {               0             };
 
 
     //Cache the most common payload to avoid lookup
@@ -133,7 +134,7 @@ MimeMessage* MimeMessage::buildFromSnapshot(const QString& path)
     ::time(&currentTime);
 
     ret->d_ptr->m_HasSnapshot = true;
-    ret->d_ptr->m_Direction   = Media::Media::Direction::IN;
+    ret->d_ptr->m_Direction   = Media::Direction::IN;
     ret->d_ptr->m_Type        = MimeMessage::Type::SNAPSHOT;
     ret->d_ptr->m_Id          = currentTime^qrand();
     ret->d_ptr->m_TimeStamp   = currentTime;
@@ -147,7 +148,7 @@ MimeMessage* MimeMessage::buildFromSnapshot(const QString& path)
     return ret;
 }
 
-MimeMessage* MimeMessage::buildNew(const QMap<QString,QString>& message, Media::Media::Direction direction, uint64_t id)
+MimeMessage* MimeMessage::buildNew(const QMap<QString,QString>& message, Media::Direction direction, uint64_t id)
 {
     auto m = new MimeMessage();
 
@@ -160,7 +161,7 @@ MimeMessage* MimeMessage::buildNew(const QMap<QString,QString>& message, Media::
     m->d_ptr->m_Type      = MimeMessage::Type::CHAT;
     m->d_ptr->m_Id        = id;
 
-    if (direction == Media::Media::Direction::IN)
+    if (direction == Media::Direction::IN)
         m->d_ptr->m_Status = MimeMessage::State::UNREAD;
     else if (id)
         m->d_ptr->m_Status = MimeMessage::State::SENDING;
@@ -200,7 +201,7 @@ MimeMessage* MimeMessage::buildExisting(const QJsonObject& json)
 {
     auto m = new MimeMessage();
 
-    const auto dir = static_cast<Media::Media::Direction>(
+    const auto dir = static_cast<Media::Direction>(
         json[QStringLiteral("direction")].toInt()
     );
 
@@ -217,14 +218,14 @@ MimeMessage* MimeMessage::buildExisting(const QJsonObject& json)
 
     Q_ASSERT((int) dir < 2 && (int) dir >= 0);
     switch(dir) {
-        case Media::Media::Direction::IN:
+        case Media::Direction::IN:
             st = json[QStringLiteral("isRead")].toBool() ?
                 State::READ : State::UNREAD;
             break;
-        case Media::Media::Direction::OUT:
+        case Media::Direction::OUT:
             st = State::UNKNOWN;
             break;
-        case Media::Media::Direction::COUNT__:
+        case Media::Direction::COUNT__:
             break;
     }
 
@@ -235,7 +236,7 @@ MimeMessage* MimeMessage::buildExisting(const QJsonObject& json)
     m->d_ptr->m_Id        = json[QStringLiteral("id")].toVariant().value<uint64_t>();
     m->d_ptr->m_Status    = st;
 
-    if (dir == Media::Media::Direction::IN)
+    if (dir == Media::Direction::IN)
         Q_ASSERT(st != State::UNKNOWN);
 
     QJsonArray a = json[QStringLiteral("payloads")].toArray();
@@ -279,13 +280,13 @@ bool MimeMessage::performAction(const MimeMessage::Actions action)
     const auto st = d_ptr->m_Status;
 
     switch(d_ptr->m_Direction) {
-        case Media::Media::Direction::IN:
+        case Media::Direction::IN:
             d_ptr->m_Status = d_ptr->m_mStateMapIn[d_ptr->m_Status][action];
             break;
-        case Media::Media::Direction::OUT:
+        case Media::Direction::OUT:
             d_ptr->m_Status = d_ptr->m_mStateMapOut[d_ptr->m_Status][action];
             break;
-        case Media::Media::Direction::COUNT__:
+        case Media::Direction::COUNT__:
             break;
     }
 
@@ -294,7 +295,7 @@ bool MimeMessage::performAction(const MimeMessage::Actions action)
 
 bool MimeMessage::performAction(const DRing::Account::MessageStates daemonState)
 {
-    Q_ASSERT(d_ptr->m_Direction == Media::Media::Direction::OUT);
+    Q_ASSERT(d_ptr->m_Direction == Media::Direction::OUT);
 
     Q_ASSERT((int)d_ptr->m_Status < (int)MimeMessage::State::COUNT__);
     Q_ASSERT((int)daemonState < 5 && (int)daemonState >= 0);
@@ -389,7 +390,7 @@ QList<QUrl> MimeMessage::linkList() const
     return d_ptr->m_LinkList;
 }
 
-Media::Media::Direction MimeMessage::direction() const
+Media::Direction MimeMessage::direction() const
 {
     return d_ptr->m_Direction;
 }
@@ -431,3 +432,4 @@ void MimeMessage::Payload::write(QJsonObject& json) const
    json[QStringLiteral("mimeType")] = mimeType;
 }
 
+} //Media::

@@ -108,7 +108,7 @@ struct TextMessageNode
 {
     explicit TextMessageNode(Media::TextRecording* rec) : m_pRecording(rec) {}
 
-    MimeMessage*          m_pMessage      {nullptr};
+    Media::MimeMessage*   m_pMessage      {nullptr};
     ContactMethod*        m_pContactMethod{nullptr}; //TODO remove
     ContactMethod*        m_pCM           {nullptr};
     TextMessageNode*      m_pNext         {nullptr};
