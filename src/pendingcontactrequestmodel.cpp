@@ -22,6 +22,7 @@
 
 //Ring
 #include <contactrequest.h>
+#include <accountmodel.h>
 #include <certificate.h>
 #include <account.h>
 #include "private/pendingcontactrequestmodel_p.h"
@@ -29,19 +30,58 @@
 #include "personmodel.h"
 #include "individual.h"
 #include "contactmethod.h"
+#include "phonedirectorymodel.h"
+#include "private/vcardutils.h"
+#include "dbus/configurationmanager.h"
 #include "uri.h"
 
-PendingContactRequestModelPrivate::PendingContactRequestModelPrivate(PendingContactRequestModel* p) : q_ptr(p)
+
+class IncomingContactRequestManager : public QObject
+{
+    Q_OBJECT
+public:
+    explicit IncomingContactRequestManager();
+    virtual ~IncomingContactRequestManager();
+
+    static IncomingContactRequestManager& instance();
+
+public Q_SLOTS:
+    void slotIncomingContactRequest(const QString& accountId, const QString& hash, const QByteArray& payload, time_t time);
+};
+
+PendingContactRequestModelPrivate::PendingContactRequestModelPrivate(PendingContactRequestModel* p) : QObject(p), q_ptr(p)
 {}
 
 PendingContactRequestModel::PendingContactRequestModel(QObject* parent) : QAbstractTableModel(parent),
 d_ptr(new PendingContactRequestModelPrivate(this))
 {
+   ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
+
+   IncomingContactRequestManager& m = IncomingContactRequestManager::instance();
+
+    connect(&configurationManager, &ConfigurationManagerInterface::incomingTrustRequest, &m,
+        &IncomingContactRequestManager::slotIncomingContactRequest, Qt::QueuedConnection);
 }
 
 PendingContactRequestModel::~PendingContactRequestModel()
 {
-   delete d_ptr;
+}
+
+IncomingContactRequestManager::IncomingContactRequestManager() : QObject(QCoreApplication::instance())
+{
+    //
+}
+
+IncomingContactRequestManager::~IncomingContactRequestManager()
+{
+    //
+}
+
+IncomingContactRequestManager& IncomingContactRequestManager::instance()
+{
+    auto ins = new IncomingContactRequestManager();
+
+    return *ins;
 }
 
 QVariant PendingContactRequestModel::data( const QModelIndex& index, int role ) const
@@ -49,15 +89,29 @@ QVariant PendingContactRequestModel::data( const QModelIndex& index, int role ) 
    if (!index.isValid())
       return {};
 
-   const auto cr =d_ptr->m_lRequests[index.row()];
+   const auto cr = d_ptr->m_lRequests[index.row()];
+
+   switch (role) {
+        case (int) Ring::Role::Object:
+            return QVariant::fromValue(cr);
+        case (int) Ring::Role::ObjectType:
+            return QVariant::fromValue(Ring::ObjectType::ContactRequest);
+        case (int) Role::Person:
+            return QVariant::fromValue(cr->peer());
+        case (int) Role::Account:
+            return QVariant::fromValue(cr->account());
+        case (int) Role::DateTime:
+            return cr->date();
+
+   }
 
    switch(index.column()) {
-      case Columns::PEER_ID:
-         switch(role) {
-            case Qt::DisplayRole:
-            return d_ptr->m_lRequests[index.row()]->peer()->individual()->phoneNumbers().first()->bestId();
-         }
-         break;
+     case Columns::PEER_ID:
+          switch(role) {
+             case Qt::DisplayRole:
+             return d_ptr->m_lRequests[index.row()]->peer()->individual()->phoneNumbers().first()->bestId();
+          }
+          break;
       case Columns::TIME:
          switch(role) {
             case Qt::DisplayRole:
@@ -110,8 +164,16 @@ bool PendingContactRequestModel::setData( const QModelIndex& index, const QVaria
 
 QHash<int,QByteArray> PendingContactRequestModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = PersonModel::instance().roleNames();
-   return roles;
+    static QHash<int, QByteArray> roles = PersonModel::instance().roleNames();
+
+    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    if (!init_flag.test_and_set()) {
+        roles[ (int)Role::Person   ] = QByteArray("person"  );
+        roles[ (int)Role::Account  ] = QByteArray("account" );
+        roles[ (int)Role::DateTime ] = QByteArray("dateTime");
+    }
+
+    return roles;
 }
 
 void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
@@ -130,11 +192,11 @@ void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
     if(iter)
         removeRequest(*iter);
 
-   q_ptr->beginInsertRows(QModelIndex(),m_lRequests.size(),m_lRequests.size());
+   q_ptr->beginInsertRows({}, m_lRequests.size(),m_lRequests.size());
    m_lRequests << r;
    q_ptr->endInsertRows();
 
-    QObject::connect(r, &ContactRequest::requestAccepted, [this,r]() {
+    QObject::connect(r, &ContactRequest::requestAccepted, this, [this,r]() {
         // the request was handled so it can be removed, from the pending list
         removeRequest(r);
 
@@ -142,7 +204,7 @@ void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
         emit q_ptr->requestAccepted(r);
     });
 
-    QObject::connect(r, &ContactRequest::requestDiscarded, [this,r]() {
+    QObject::connect(r, &ContactRequest::requestDiscarded, this, [this,r]() {
         // the request was handled so it can be removed, from the pending list
         removeRequest(r);
 
@@ -150,12 +212,13 @@ void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
         emit q_ptr->requestDiscarded(r);
     });
 
-    QObject::connect(r, &ContactRequest::requestBlocked, [this,r]() {
+    QObject::connect(r, &ContactRequest::requestBlocked, this, [this,r]() {
         // the request was handled so it can be removed, from the pending list
         removeRequest(r);
     });
 
     emit q_ptr->requestAdded(r);
+    emit q_ptr->countChanged();
 }
 
 void PendingContactRequestModelPrivate::removeRequest(ContactRequest* r)
@@ -168,14 +231,47 @@ void PendingContactRequestModelPrivate::removeRequest(ContactRequest* r)
    q_ptr->beginRemoveRows(QModelIndex(), index, index);
    m_lRequests.removeAt(index);
    q_ptr->endRemoveRows();
+
+   emit q_ptr->countChanged();
+}
+
+int PendingContactRequestModel::size() const
+{
+    return rowCount();
 }
 
 ContactRequest*
 PendingContactRequestModel::findContactRequestFrom(const ContactMethod* cm) const
 {
-    auto iter = std::find_if(d_ptr->m_lRequests.begin(), d_ptr->m_lRequests.end(),
+    auto iter = std::find_if(d_ptr->m_lRequests.constBegin(), d_ptr->m_lRequests.constEnd(),
                              [&](ContactRequest* r){ return r->certificate()->remoteId() == cm->uri(); });
-    if (iter != std::end(d_ptr->m_lRequests))
-        return *iter;
-    return nullptr;
+
+    return (iter != d_ptr->m_lRequests.constEnd()) ? *iter : nullptr;
 }
+
+///When a Ring-DHT trust request arrive
+void IncomingContactRequestManager::slotIncomingContactRequest(const QString& accountId, const QString& ringID, const QByteArray& payload, time_t time)
+{
+   Q_UNUSED(payload);
+
+   auto a = AccountModel::instance().getById(accountId.toLatin1());
+
+   if (!a) {
+      qWarning() << "Incoming trust request for unknown account" << accountId;
+      return;
+   }
+
+   /* do not pass a person before the contact request was added to his model */
+   auto r = new ContactRequest(a, ringID, time);
+   a->pendingContactRequestModel()->d_ptr->addRequest(r);
+
+   /* Also keep a global list of incoming requests */
+   qobject_cast<PendingContactRequestModel*>(
+       AccountModel::instance().incomingContactRequestModel()
+   )->d_ptr->addRequest(r);
+
+   auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
+   r->setPeer(VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload));
+}
+
+#include <pendingcontactrequestmodel.moc>

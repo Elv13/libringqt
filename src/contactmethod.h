@@ -44,6 +44,7 @@ class Certificate;
 class UsageStatistics;
 class Individual;
 class EventAggregate;
+class ContactRequest;
 
 namespace Media {
    class TextRecording;
@@ -156,6 +157,7 @@ public:
    Q_PROPERTY(QString           bestId           READ bestId                                          )
    Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
+   Q_PROPERTY(ContactRequest*   request          READ request           NOTIFY contactRequestChanged  )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
 
@@ -236,6 +238,7 @@ public:
    bool                  hasInitCall     () const;
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
+   ContactRequest*       request         () const;
    Call*                 firstOutgoingCall() const;
    Call*                 firstActiveCall () const;
 
@@ -365,6 +368,8 @@ Q_SIGNALS:
    void eventAdded(QSharedPointer<Event> e);
    /// When an event is detached from a ContactMethod
    void eventDetached(QSharedPointer<Event> e);
+   /// When the status of the ContactRequest changes.
+   void contactRequestChanged();
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

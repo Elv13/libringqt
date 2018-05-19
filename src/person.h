@@ -66,6 +66,7 @@ public:
       PrimaryName       ,
       NickName          ,
       Filter            , //All roles, all at once
+      UserRole          ,
       DropState         = static_cast<int>(Ring::Role::DropState), //State for drag and drop
    };
 

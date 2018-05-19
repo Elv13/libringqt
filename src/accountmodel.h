@@ -55,7 +55,7 @@ public:
    Q_PROPERTY(bool           hasAvailableAccounts       READ hasAvailableAccounts   NOTIFY hasAvailableAccountsChanged)
    Q_PROPERTY(bool           hasEnabledAccounts         READ hasEnabledAccounts   NOTIFY hasEnabledAccountsChanged)
 
-   Q_PROPERTY(QAbstractItemModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT       )
+   Q_PROPERTY(PendingContactRequestModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT)
 
    friend class AccountPrivate;
 
@@ -96,7 +96,8 @@ public:
 
    QItemSelectionModel* selectionModel              (                                      ) const;
    QItemSelectionModel* userSelectionModel          (                                      ) const;
-   QAbstractItemModel*  incomingContactRequestModel (                                      ) const;
+
+   PendingContactRequestModel* incomingContactRequestModel (                               ) const;
 
    //Abstract model accessors
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;

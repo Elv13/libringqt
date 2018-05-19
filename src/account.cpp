@@ -162,11 +162,13 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
       emit a->contactRequestAccepted(r);
    });
 
-   // Load the contacts associated from the daemon and create the cms.
-   const auto account_contacts = static_cast<QVector<QMap<QString, QString>>>(ConfigurationManager::instance()
-                                                                                          .getContacts(a->id().data()));
 
    if (a->protocol() == Account::Protocol::RING) {
+
+      // Load the contacts associated from the daemon and create the cms.
+      const QVector<QMap<QString, QString>> account_contacts = ConfigurationManager::instance()
+         .getContacts(a->id().data());
+
       for (auto contact_info : account_contacts) {
          auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
          a->d_ptr->m_NumbersFromDaemon << cm;

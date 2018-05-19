@@ -50,6 +50,7 @@
 #include "usagestatistics.h"
 #include "globalinstances.h"
 #include "callmodel.h"
+#include "pendingcontactrequestmodel.h"
 #include "interfaces/pixmapmanipulatori.h"
 
 //Private
@@ -291,6 +292,14 @@ time_t ContactMethod::lastUsed() const
 UsageStatistics* ContactMethod::usageStatistics() const
 {
    return d_ptr->m_pUsageStats;
+}
+
+ContactRequest* ContactMethod::request() const
+{
+    if (!account())
+        return nullptr;
+
+    return account()->pendingContactRequestModel()->findContactRequestFrom(this);
 }
 
 ///Set this number default account

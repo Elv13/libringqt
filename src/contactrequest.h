@@ -32,11 +32,15 @@ class LIB_EXPORT ContactRequest : public QObject
 {
    Q_OBJECT
 
-friend class Account;
-friend class AccountModelPrivate;
-friend class AccountPrivate;
+    friend class Account;
+    friend class AccountPrivate;
+    friend class IncomingContactRequestManager; // factory
 
 public:
+   Q_PROPERTY(Certificate* certificate READ certificate CONSTANT)
+   Q_PROPERTY(QDateTime    date        READ date        CONSTANT)
+   Q_PROPERTY(Person*      peer        READ peer        CONSTANT)
+   Q_PROPERTY(Account*     account     READ account     CONSTANT)
 
    //Getter
    Certificate* certificate() const;

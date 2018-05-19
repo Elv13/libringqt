@@ -19,6 +19,7 @@
 
 #include <QtCore/QAbstractTableModel>
 #include <typedefs.h>
+#include <person.h>
 
 class Account;
 class PendingContactRequestModelPrivate;
@@ -33,16 +34,24 @@ class LIB_EXPORT PendingContactRequestModel : public QAbstractTableModel
    Q_OBJECT
 
    friend class Account;
-   friend class AccountModel;
+   friend class AccountModel; // factory
    friend class AccountPrivate;
-   friend class AccountModelPrivate;
+//    friend class AccountModelPrivate;
+   friend class IncomingContactRequestManager; //manager
 public:
+    Q_PROPERTY(int size READ size NOTIFY countChanged);
 
    enum Columns {
       PEER_ID,
       TIME,
       FORMATTED_NAME,
       COUNT__
+   };
+
+   enum class Role {
+       Person = static_cast<int>(Person::Role::UserRole)+1,
+       DateTime,
+       Account,
    };
 
    //Model functions
@@ -52,6 +61,9 @@ public:
    virtual Qt::ItemFlags flags       ( const QModelIndex& index                                 ) const override;
    virtual bool          setData     ( const QModelIndex& index, const QVariant &value, int role)       override;
    virtual QHash<int,QByteArray> roleNames() const override;
+
+   // Getters
+   int size() const;
 
    // Helper
    ContactRequest* findContactRequestFrom(const ContactMethod* cm) const;
@@ -67,6 +79,7 @@ Q_SIGNALS:
    void requestAccepted (ContactRequest* r);
    void requestDiscarded(ContactRequest* r);
    void requestAdded(ContactRequest* r);
+   void countChanged();
 };
 
 Q_DECLARE_METATYPE(PendingContactRequestModel*)

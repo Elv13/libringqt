@@ -85,8 +85,6 @@ void AccountModelPrivate::init()
             SLOT(slotVolatileAccountDetailsChange(QString,MapStringString)), Qt::QueuedConnection);
     connect(&configurationManager, SIGNAL(mediaParametersChanged(QString))                 ,this ,
             SLOT(slotMediaParametersChanged(QString)), Qt::QueuedConnection);
-    connect(&configurationManager, &ConfigurationManagerInterface::incomingTrustRequest, this,
-            &AccountModelPrivate::slotIncomingContactRequest, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::knownDevicesChanged, this,
             &AccountModelPrivate::slotKownDevicesChanged, Qt::QueuedConnection);
     connect(&configurationManager, &ConfigurationManagerInterface::exportOnRingEnded, this,
@@ -262,7 +260,7 @@ QItemSelectionModel* AccountModel::userSelectionModel() const
    return d_ptr->m_pUserSelectionModel;
 }
 
-QAbstractItemModel* AccountModel::incomingContactRequestModel() const
+PendingContactRequestModel* AccountModel::incomingContactRequestModel() const
 {
     if (!d_ptr->m_pPendingIncomingRequests) {
         d_ptr->m_pPendingIncomingRequests = new PendingContactRequestModel(
@@ -464,30 +462,6 @@ void AccountModelPrivate::slotVolatileAccountDetailsChange(const QString& accoun
 
       slotAvailabilityStatusChanged();
    }
-}
-
-///When a Ring-DHT trust request arrive
-void AccountModelPrivate::slotIncomingContactRequest(const QString& accountId, const QString& ringID, const QByteArray& payload, time_t time)
-{
-   Q_UNUSED(payload);
-
-   Account* a = q_ptr->getById(accountId.toLatin1());
-
-   if (!a) {
-      qWarning() << "Incoming trust request for unknown account" << accountId;
-      return;
-   }
-
-   /* do not pass a person before the contact request was added to his model */
-   ContactRequest* r = new ContactRequest(a, ringID, time);
-   a->pendingContactRequestModel()->d_ptr->addRequest(r);
-
-   /* Also keep a global list of incoming requests */
-   q_ptr->incomingContactRequestModel();
-   m_pPendingIncomingRequests->d_ptr->addRequest(r);
-
-   auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
-   r->setPeer(VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload));
 }
 
 ///Known Ring devices have changed

@@ -20,7 +20,7 @@
 class PendingContactRequestModel;
 class ContactRequest;
 
-class PendingContactRequestModelPrivate
+class PendingContactRequestModelPrivate : public QObject
 {
 public:
    //Constructor
