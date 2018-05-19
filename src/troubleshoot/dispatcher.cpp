@@ -29,6 +29,7 @@
 #include "handshake.h"
 #include "videostuck.h"
 #include "generic.h"
+#include "crequest.h"
 #include "unhold.h"
 #include "callstate.h"
 
@@ -88,6 +89,7 @@ Troubleshoot::Dispatcher::Dispatcher(QObject* parent) : QIdentityProxyModel(pare
     d_ptr->registerAdapter<Troubleshoot::Handshake> ();
     d_ptr->registerAdapter<Troubleshoot::Absent>    ();
     d_ptr->registerAdapter<Troubleshoot::CallState> ();
+    d_ptr->registerAdapter<Troubleshoot::CRequest>  ();
     d_ptr->registerAdapter<Troubleshoot::Generic>   ();
 }
 

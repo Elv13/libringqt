@@ -193,6 +193,7 @@ SET( libringqt_LIB_SRCS
   src/troubleshoot/handshake.cpp
   src/troubleshoot/videostuck.cpp
   src/troubleshoot/generic.cpp
+  src/troubleshoot/crequest.cpp
   src/troubleshoot/callstate.cpp
   src/troubleshoot/absent.cpp
   src/troubleshoot/unhold.cpp
