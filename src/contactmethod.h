@@ -102,6 +102,7 @@ public:
    friend class Media::TextRecordingPrivate; // update last used
    friend class EventModelPrivate; // manage the CM Events, emit signals and so on
    friend class EventModel; // manage the CM Events, emit signals and so on
+   friend class IncomingContactRequestManager; // manage the confirmation status
 
     // To synchronize the timeline weak pointers
     friend class Person;
@@ -158,6 +159,7 @@ public:
    Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(ContactRequest*   request          READ request           NOTIFY contactRequestChanged  )
+   Q_PROPERTY(bool              confirmed        READ isConfirmed       NOTIFY confirmedChanged       )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
 
@@ -238,9 +240,12 @@ public:
    bool                  hasInitCall     () const;
    bool                  hasActiveVideo  () const;
    UsageStatistics*      usageStatistics () const;
-   ContactRequest*       request         () const;
    Call*                 firstOutgoingCall() const;
    Call*                 firstActiveCall () const;
+
+   // ContactRequest
+   ContactRequest* request() const;
+   bool isConfirmed() const;
 
    /// Opaque pointer to be used as a deduplicated identifier
    ContactMethodPrivate* d() const;
@@ -370,6 +375,8 @@ Q_SIGNALS:
    void eventDetached(QSharedPointer<Event> e);
    /// When the status of the ContactRequest changes.
    void contactRequestChanged();
+   /// When the daemon confirms the ContactMethod to be accepted by the peer
+   void confirmedChanged(bool accepted);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)

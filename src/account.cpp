@@ -169,9 +169,9 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
       const QVector<QMap<QString, QString>> account_contacts = ConfigurationManager::instance()
          .getContacts(a->id().data());
 
-      for (auto contact_info : account_contacts) {
+      for (const auto& contact_info : qAsConst(account_contacts)) {
          auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
-         a->d_ptr->m_NumbersFromDaemon << cm;
+         cm->d_ptr->m_IsConfirmed = contact_info["confirmed"] == QStringLiteral("true");
       }
    }
 
@@ -732,16 +732,6 @@ bool Account::needsMigration() const
     const MapStringString details = ConfigurationManager::instance().getVolatileAccountDetails(id());
     const QString status = details[DRing::Account::VolatileProperties::Registration::STATUS];
     return status == DRing::Account::States::ERROR_NEED_MIGRATION;
-}
-
-/**
- * return all ContactsMethod from @this account
- * @return Account::ContactMethods a.k.a. QVector<ContactMethod*>
- */
-const Account::ContactMethods&
-Account::getContacts() const
-{
-    return d_ptr->m_NumbersFromDaemon;
 }
 
 ///Return the account user name

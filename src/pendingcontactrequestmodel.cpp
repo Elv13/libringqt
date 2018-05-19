@@ -30,6 +30,7 @@
 #include "personmodel.h"
 #include "individual.h"
 #include "contactmethod.h"
+#include "private/contactmethod_p.h"
 #include "phonedirectorymodel.h"
 #include "private/vcardutils.h"
 #include "dbus/configurationmanager.h"
@@ -47,6 +48,7 @@ public:
 
 public Q_SLOTS:
     void slotIncomingContactRequest(const QString& accountId, const QString& hash, const QByteArray& payload, time_t time);
+    void slotContactAdded(const QString& accountId, const QString& hash, bool confirm);
 };
 
 PendingContactRequestModelPrivate::PendingContactRequestModelPrivate(PendingContactRequestModel* p) : QObject(p), q_ptr(p)
@@ -61,6 +63,9 @@ d_ptr(new PendingContactRequestModelPrivate(this))
 
     connect(&configurationManager, &ConfigurationManagerInterface::incomingTrustRequest, &m,
         &IncomingContactRequestManager::slotIncomingContactRequest, Qt::QueuedConnection);
+
+    connect(&configurationManager, &ConfigurationManagerInterface::contactAdded, &m,
+        &IncomingContactRequestManager::slotContactAdded, Qt::QueuedConnection);
 }
 
 PendingContactRequestModel::~PendingContactRequestModel()
@@ -272,6 +277,21 @@ void IncomingContactRequestManager::slotIncomingContactRequest(const QString& ac
 
    auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
    r->setPeer(VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload));
+}
+
+void IncomingContactRequestManager::slotContactAdded(const QString& accountId, const QString& hash, bool confirm)
+{
+    auto a = AccountModel::instance().getById(accountId.toLatin1());
+
+    if (!a) {
+        qWarning() << "Incoming trust request for unknown account" << accountId;
+        return;
+    }
+
+    auto contactMethod = PhoneDirectoryModel::instance().getNumber(hash, a);
+
+    contactMethod->d_ptr->m_IsConfirmed = confirm;
+    emit contactMethod->confirmedChanged(confirm);
 }
 
 #include <pendingcontactrequestmodel.moc>

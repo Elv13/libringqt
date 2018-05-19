@@ -73,7 +73,6 @@ public:
     Account::Protocol          m_Protocol                 {Account::Protocol::COUNT__};
     QMetaObject::Connection    m_cTlsCert                 {};
     QMetaObject::Connection    m_cTlsCaCert               {};
-    Account::ContactMethods    m_NumbersFromDaemon        {};
     QMutex                     m_ReloadLock               {};
 
     //Factory

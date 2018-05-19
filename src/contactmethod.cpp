@@ -302,6 +302,11 @@ ContactRequest* ContactMethod::request() const
     return account()->pendingContactRequestModel()->findContactRequestFrom(this);
 }
 
+bool ContactMethod::isConfirmed() const
+{
+    return d_ptr->m_IsConfirmed;
+}
+
 ///Set this number default account
 void ContactMethod::setAccount(Account* account)
 {

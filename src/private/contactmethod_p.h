@@ -64,6 +64,7 @@ public:
    Certificate*       m_pCertificate      {nullptr};
    QString            m_RegisteredName             ;
    UsageStatistics*   m_pUsageStats       {nullptr};
+   bool               m_IsConfirmed       { false };
    QVector<Media::TextRecording*> m_lAltTR;
 
    /**
