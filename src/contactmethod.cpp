@@ -302,9 +302,20 @@ ContactRequest* ContactMethod::request() const
     return account()->pendingContactRequestModel()->findContactRequestFrom(this);
 }
 
-bool ContactMethod::isConfirmed() const
+ContactMethod::ConfirmationStatus ContactMethod::confirmationStatus() const
 {
-    return d_ptr->m_IsConfirmed;
+    if (d_ptr->m_ConfirmationStatus == ConfirmationStatus::NOT_APPLICABLE) {
+       if (account() && account()->protocol() == Account::Protocol::RING) {
+          d_ptr->m_ConfirmationStatus = ConfirmationStatus::UNCONFIRMED;
+           emit const_cast<ContactMethod*>(this)->confirmationChanged(confirmationStatus());
+       }
+       else if ((!account()) && uri().protocolHint() == URI::ProtocolHint::RING) {
+           d_ptr->m_ConfirmationStatus = ConfirmationStatus::NO_ACCOUNT;
+           emit const_cast<ContactMethod*>(this)->confirmationChanged(confirmationStatus());
+       }
+    }
+
+    return d_ptr->m_ConfirmationStatus;
 }
 
 ///Set this number default account
@@ -332,6 +343,11 @@ void ContactMethod::setAccount(Account* account)
    //Track Ring contacts by default
    if (this->protocolHint() == URI::ProtocolHint::RING || this->protocolHint() == URI::ProtocolHint::RING_USERNAME)
        setTracked(true);
+
+   if (account && account->protocol() == Account::Protocol::RING
+    && (d_ptr->m_ConfirmationStatus == ConfirmationStatus::NOT_APPLICABLE
+    || d_ptr->m_ConfirmationStatus == ConfirmationStatus::NO_ACCOUNT))
+      d_ptr->m_ConfirmationStatus = ConfirmationStatus::UNCONFIRMED;
 
    d_ptr->changed();
    d_ptr->accountChanged();
@@ -420,6 +436,9 @@ bool ContactMethodPrivate::setType(ContactMethod::Type t)
             break;
          case Account::Protocol::RING:
             m_Uri.setSchemeType(URI::SchemeType::RING);
+            break;
+         case Account::Protocol::COUNT__:
+             Q_ASSERT(false);
       }
 
       if (q_ptr->account()->supportPresenceSubscribe()) {

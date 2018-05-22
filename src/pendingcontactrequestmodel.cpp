@@ -290,8 +290,11 @@ void IncomingContactRequestManager::slotContactAdded(const QString& accountId, c
 
     auto contactMethod = PhoneDirectoryModel::instance().getNumber(hash, a);
 
-    contactMethod->d_ptr->m_IsConfirmed = confirm;
-    emit contactMethod->confirmedChanged(confirm);
+    contactMethod->d_ptr->m_ConfirmationStatus = confirm ?
+        ContactMethod::ConfirmationStatus::CONFIRMED :
+        ContactMethod::ConfirmationStatus::PENDING;
+
+    emit contactMethod->confirmationChanged(contactMethod->confirmationStatus());
 }
 
 #include <pendingcontactrequestmodel.moc>

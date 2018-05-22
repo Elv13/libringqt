@@ -171,7 +171,9 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 
       for (const auto& contact_info : qAsConst(account_contacts)) {
          auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
-         cm->d_ptr->m_IsConfirmed = contact_info["confirmed"] == QStringLiteral("true");
+         cm->d_ptr->m_ConfirmationStatus = contact_info["confirmed"] == QStringLiteral("true") ?
+            ContactMethod::ConfirmationStatus::CONFIRMED :
+            ContactMethod::ConfirmationStatus::PENDING;
       }
    }
 

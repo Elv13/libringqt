@@ -65,12 +65,18 @@ bool Troubleshoot::CRequest::setSelection(const QModelIndex& idx, Call* c)
 
 bool Troubleshoot::CRequest::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    const auto st = c->peerContactMethod()->confirmationStatus();
+
     return (elapsedTime >= 5 && c->state() == Call::State::ERROR
       || c->state() == Call::State::FAILURE
       || c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION
-    ) &&
+    ) && c->direction() == Call::Direction::OUTGOING &&
+        c->state() != Call::State::RINGING &&
         c->account()->protocol() == Account::Protocol::RING &&
-        !c->peerContactMethod()->isConfirmed();
+        !(
+            st == ContactMethod::ConfirmationStatus::CONFIRMED ||
+            st == ContactMethod::ConfirmationStatus::PENDING
+         );
 }
 
 int Troubleshoot::CRequest::timeout()

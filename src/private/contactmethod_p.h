@@ -64,8 +64,8 @@ public:
    Certificate*       m_pCertificate      {nullptr};
    QString            m_RegisteredName             ;
    UsageStatistics*   m_pUsageStats       {nullptr};
-   bool               m_IsConfirmed       { false };
    QVector<Media::TextRecording*> m_lAltTR;
+   ContactMethod::ConfirmationStatus m_ConfirmationStatus { ContactMethod::ConfirmationStatus::NOT_APPLICABLE };
 
    /**
     * Cache some relevant events to make insertion and eventually sorting

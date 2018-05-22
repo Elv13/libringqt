@@ -159,10 +159,9 @@ public:
    Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(ContactRequest*   request          READ request           NOTIFY contactRequestChanged  )
-   Q_PROPERTY(bool              confirmed        READ isConfirmed       NOTIFY confirmedChanged       )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
-
+   Q_PROPERTY(ConfirmationStatus confirmationStatus READ confirmationStatus NOTIFY confirmationChanged)
 
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
@@ -171,8 +170,6 @@ public:
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
    Q_PROPERTY(QSharedPointer<Individual> individual READ individual)
-
-//    Q_PROPERTY(QHash<QString,int> alternativeNames READ alternativeNames         )
 
    ///@enum Type: Is this temporary, blank, used or unused
    enum class Type {
@@ -201,6 +198,21 @@ public:
        COUNT__
    };
    Q_ENUM(MediaAvailailityStatus)
+
+   /**
+    * Ring accounts support contact (and/or firends) requests.
+    *
+    * Those requests allow to "trust" a RingID for incoming calls and also
+    * synchronize the public profile and presence.
+    */
+   enum class ConfirmationStatus : char {
+       NOT_APPLICABLE, /*!< This CM isn't for the Ring protocol                    */
+       NO_ACCOUNT    , /*!< This is a Ring CM, but there is no account             */
+       UNCONFIRMED   , /*!< The contact request has not been sent since startup    */
+       PENDING       , /*!< The contact request has been sent, but is not accepted */
+       CONFIRMED     , /*!< The contact request has been confirmed                 */
+   };
+   Q_ENUM(ConfirmationStatus)
 
    //Getters
    const URI&            uri             () const;
@@ -245,7 +257,7 @@ public:
 
    // ContactRequest
    ContactRequest* request() const;
-   bool isConfirmed() const;
+   ConfirmationStatus confirmationStatus() const;
 
    /// Opaque pointer to be used as a deduplicated identifier
    ContactMethodPrivate* d() const;
@@ -376,7 +388,7 @@ Q_SIGNALS:
    /// When the status of the ContactRequest changes.
    void contactRequestChanged();
    /// When the daemon confirms the ContactMethod to be accepted by the peer
-   void confirmedChanged(bool accepted);
+   void confirmationChanged(ConfirmationStatus status);
 };
 
 Q_DECLARE_METATYPE(ContactMethod*)
