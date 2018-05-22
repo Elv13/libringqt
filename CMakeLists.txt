@@ -234,7 +234,7 @@ SET( libringqt_LIB_SRCS
   src/dbuserrorhandlerdefault.cpp
 
   #Other
-  src/itemdataroles.h # Because namespaced MOC need this as of CMake 3.10
+  src/itemdataroles.cpp # Because namespaced MOC need this as of CMake 3.10
   src/hookmanager.cpp
   src/namedirectory.cpp
   src/itembase.cpp
