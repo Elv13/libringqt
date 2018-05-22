@@ -579,6 +579,12 @@ QString URI::userinfo() const
 void URI::setSchemeType(SchemeType t)
 {
     d_ptr->m_HeaderType = t;
+
+    // Make sure the scheme matches the hint now that there is no ambiguity
+    if ((!d_ptr->m_HintParsed) && d_ptr->m_HeaderType == SchemeType::RING) {
+        d_ptr->m_HintParsed = true;
+        d_ptr->m_ProtocolHint = ProtocolHint::RING;
+    }
 }
 
 /**
