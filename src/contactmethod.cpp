@@ -304,6 +304,11 @@ ContactRequest* ContactMethod::request() const
 
 ContactMethod::ConfirmationStatus ContactMethod::confirmationStatus() const
 {
+    // Do not set m_ConfirmationStatus since it's status would be lost when
+    // isConfirmationEnabled is toggled.
+    if (!d_ptr->m_IsConfirmationEnabled)
+        return ConfirmationStatus::DISABLED;
+
     if (d_ptr->m_ConfirmationStatus == ConfirmationStatus::NOT_APPLICABLE) {
        if (account() && account()->protocol() == Account::Protocol::RING) {
           d_ptr->m_ConfirmationStatus = ConfirmationStatus::UNCONFIRMED;
@@ -316,6 +321,17 @@ ContactMethod::ConfirmationStatus ContactMethod::confirmationStatus() const
     }
 
     return d_ptr->m_ConfirmationStatus;
+}
+
+bool ContactMethod::isConfirmationEnabled() const
+{
+    return d_ptr->m_IsConfirmationEnabled;
+}
+
+void ContactMethod::setConfirmationEnabled(bool enabled)
+{
+    d_ptr->m_IsConfirmationEnabled = enabled;
+    emit confirmationChanged(confirmationStatus());
 }
 
 ///Set this number default account

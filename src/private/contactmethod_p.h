@@ -65,6 +65,9 @@ public:
    QString            m_RegisteredName             ;
    UsageStatistics*   m_pUsageStats       {nullptr};
    QVector<Media::TextRecording*> m_lAltTR;
+
+   // ContactRequests
+   bool m_IsConfirmationEnabled {true};
    ContactMethod::ConfirmationStatus m_ConfirmationStatus { ContactMethod::ConfirmationStatus::NOT_APPLICABLE };
 
    /**

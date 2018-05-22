@@ -161,8 +161,12 @@ public:
    Q_PROPERTY(ContactRequest*   request          READ request           NOTIFY contactRequestChanged  )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
+
+   // Contact requests
+   Q_PROPERTY(bool confirmationEnabled READ isConfirmationEnabled WRITE setConfirmationEnabled NOTIFY confirmationChanged)
    Q_PROPERTY(ConfirmationStatus confirmationStatus READ confirmationStatus NOTIFY confirmationChanged)
 
+   // Media availability
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canSendTexts READ canSendTexts NOTIFY mediaAvailabilityChanged )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canCall      READ canCall      NOTIFY mediaAvailabilityChanged )
    Q_PROPERTY(ContactMethod::MediaAvailailityStatus canVideoCall READ canVideoCall NOTIFY mediaAvailabilityChanged )
@@ -211,6 +215,7 @@ public:
        UNCONFIRMED   , /*!< The contact request has not been sent since startup    */
        PENDING       , /*!< The contact request has been sent, but is not accepted */
        CONFIRMED     , /*!< The contact request has been confirmed                 */
+       DISABLED      , /*!< The user asked not to be asked for this CM again       */
    };
    Q_ENUM(ConfirmationStatus)
 
@@ -258,6 +263,8 @@ public:
    // ContactRequest
    ContactRequest* request() const;
    ConfirmationStatus confirmationStatus() const;
+   bool isConfirmationEnabled() const;
+   void setConfirmationEnabled(bool enabled);
 
    /// Opaque pointer to be used as a deduplicated identifier
    ContactMethodPrivate* d() const;
