@@ -265,6 +265,7 @@ public:
    ConfirmationStatus confirmationStatus() const;
    bool isConfirmationEnabled() const;
    void setConfirmationEnabled(bool enabled);
+   Q_INVOKABLE bool sendContactRequest() const;
 
    /// Opaque pointer to be used as a deduplicated identifier
    ContactMethodPrivate* d() const;

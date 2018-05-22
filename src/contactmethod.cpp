@@ -334,6 +334,17 @@ void ContactMethod::setConfirmationEnabled(bool enabled)
     emit confirmationChanged(confirmationStatus());
 }
 
+bool ContactMethod::sendContactRequest() const
+{
+    if (!account())
+        return false;
+
+    if (account()->protocol() != Account::Protocol::RING)
+        return false;
+
+    return account()->sendContactRequest(this);
+}
+
 ///Set this number default account
 void ContactMethod::setAccount(Account* account)
 {
