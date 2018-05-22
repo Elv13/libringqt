@@ -17,7 +17,12 @@
  ***************************************************************************/
 #pragma once
 
-namespace Ring {
+#include <QtGlobal>
+#include <QObject> //BUG As of Qt 5.9.5, Q_NAMESPACE isn't in QtGlobal
+#include <QtCore/QHash>
+
+namespace Q_DECL_EXPORT Ring {
+Q_NAMESPACE
 
 /**
  * The purpose of this enum class is to mimic/extend the Qt::ItemDataRole in LRC so that the same
@@ -96,7 +101,7 @@ enum class ObjectType
     Individual,
     COUNT__
 };
-Q_ENUMS(ObjectType)
+Q_ENUM_NS(ObjectType)
 
 } // namespace Ring
 

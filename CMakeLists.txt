@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 PROJECT(ringqt)
 SET(GENERIC_LIB_VERSION "1.0.0")
+SET(QT_MIN_VERSION  "5.9.0" )
 
 IF(POLICY CMP0053)
    CMAKE_POLICY(SET CMP0053 NEW)
@@ -59,8 +60,8 @@ ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-FIND_PACKAGE(Ring             REQUIRED)
-FIND_PACKAGE(Qt5Core          REQUIRED)
+FIND_PACKAGE(Ring REQUIRED)
+FIND_PACKAGE(Qt5Core ${QT_MIN_VERSION} REQUIRED)
 FIND_PACKAGE(Qt5LinguistTools QUIET   ) # translations
 
 IF(NOT ENABLE_LIBWRAP)
@@ -233,6 +234,7 @@ SET( libringqt_LIB_SRCS
   src/dbuserrorhandlerdefault.cpp
 
   #Other
+  src/itemdataroles.h # Because namespaced MOC need this as of CMake 3.10
   src/hookmanager.cpp
   src/namedirectory.cpp
   src/itembase.cpp
