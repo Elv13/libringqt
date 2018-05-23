@@ -446,7 +446,7 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
       }
       else {
          //After all this, it is possible the number is now a duplicate
-         foreach(ContactMethod* n, wrap->numbers) {
+         for (auto n : qAsConst(wrap->numbers)) {
             if (n != number && n->account() && n->account() == number->account()) {
                number->merge(n);
             }
@@ -751,7 +751,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    //candidate has an account.
    if (hasAtSign && account && uri.hostname() == account->hostname()) {
      if ((wrap3 = d_ptr->m_hDirectory.value(uri.userinfo()))) {
-         foreach(ContactMethod* number, wrap3->numbers) {
+         for (auto number : qAsConst(wrap3->numbers)) {
             if (number->account() == account) {
                if (contact && ((!number->contact()) || (contact->uid() == number->contact()->uid())))
                   number->setPerson(contact); //TODO Check all cases from fillDetails()
@@ -791,7 +791,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    //No better candidates were found than the original assumption, use it
    if (wrap) {
-      foreach(ContactMethod* number, wrap->numbers) {
+      for (auto number : qAsConst(wrap->numbers)) {
          if (((!account) || number->account() == account) && ((!contact) || ((*contact) == number->contact()) || (!number->contact()))) {
             //Assume this is valid until a smarter solution is implemented to merge both
             //For a short time, a placeholder contact and a contact can coexist, drop the placeholder
@@ -1049,11 +1049,11 @@ void PhoneDirectoryModelPrivate::slotNewBuddySubscription(const QString& account
 ///Make sure the indexes are still valid for those names
 void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStringList &names)
 {
-   foreach(const QString& name, names) {
+   for (const QString& name : qAsConst(names)) {
       const QString lower = name.toLower();
       const QStringList split = lower.split(' ');
       if (split.size() > 1) {
-         foreach(const QString& chunk, split) {
+         for (const QString& chunk : qAsConst(split)) {
             NumberWrapper* wrap = m_hNumbersByNames[chunk];
             if (!wrap) {
                wrap = new NumberWrapper(chunk);
@@ -1110,11 +1110,13 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
     // update relevant contact methods
     const URI strippedUri(address);
 
-    //See if the number is already loaded
-    auto wrap  = m_hDirectory.value(strippedUri);
+    // Keep a CM to later merge the duplicated existing CMs using the registered
+    // name as their URI.
+    ContactMethod* defaultCm = nullptr;
 
-    if (wrap) {
-        foreach (ContactMethod* cm, wrap->numbers) {
+    //See if the number is already loaded
+    if (auto wrap = m_hDirectory.value(strippedUri)) {
+        for (auto cm : qAsConst(wrap->numbers)) {
             // Not true 100% of the time, but close enough. As of 2017, there
             // is only 1 name service. //TODO support multiple name service,
             // but only when there *is* multiple ones being used.
@@ -1140,34 +1142,14 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
                     m_hSortedNumbers[name] = wrap2;
                     wrap2->numbers << cm;
                 }
-                else {
-                    auto wrapper = m_hDirectory.value(name);
-                    // Merge the existing CMs now that it is known that the RingId match the username
-                    foreach(ContactMethod* n, wrapper->numbers) {
-
-                        // If the account is the same and (as we know) it is a registered name
-                        // there is 100% porbability of match
-                        const bool compAccount = n->account() &&
-                            n->account() == cm->account();
-
-                        // Less certain, but close enough. We have a contact with a phone
-                        // number corresponding with a registeredName and `ring:` in front.
-                        // it *could* use a different name service. Anyway, for now this
-                        // isn't widespread enough to care.
-                        const bool compContact = (!n->account()) && n->contact() &&
-                            n->uri().schemeType() == URI::SchemeType::RING;
-
-                        if (n != cm && (compAccount || compContact)) {
-                            n->merge(cm);
-                        }
-                    }
-                }
 
                 // Only add it once
                 if (!m_hDirectory[name]->numbers.indexOf(cm)) {
                     //TODO check if some deduplication can be performed
                     m_hDirectory[name]->numbers << cm;
                 }
+
+                defaultCm = cm;
             }
             else {
                 // too noisy
@@ -1178,6 +1160,37 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
         // got a registered name for a CM which hasn't been created yet
         // This can be left as-is to save memory. Those CMs are never freed.
         // It is generally preferred to create as little as possible.
+    }
+
+    // Check if the name already has a compatible ContactMethod and merge them.
+    // This will happen, for example, if an external contact has a Ring
+    // registered name in its phone numbers.
+    if (auto wrap = m_hDirectory.value(name)) {
+
+        // Only the registered name existed but it was never contacted.
+        // This is fine, so lets create a new CM then deduplicate the existing
+        // one. This takes more memory, but changing the URI or existing CMs is
+        // forbidden.
+        if (!defaultCm)
+            defaultCm = q_ptr->getNumber(address, account);
+
+        for (auto n : qAsConst(wrap->numbers)) {
+            // If the account is the same and (as we know) it is a registered name
+            // there is 100% porbability of match
+            const bool compAccount = n->account() &&
+                n->account() == defaultCm->account();
+
+            // Less certain, but close enough. We have a contact with a phone
+            // number corresponding with a registeredName and `ring:` in front.
+            // it *could* use a different name service. Anyway, for now this
+            // isn't widespread enough to care.
+            const bool compContact = (!n->account()) && n->contact() &&
+                n->uri().schemeType() == URI::SchemeType::RING;
+
+            if (n != defaultCm && (compAccount || compContact)) {
+                n->merge(defaultCm);
+            }
+        }
     }
 }
 
