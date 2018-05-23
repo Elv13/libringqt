@@ -1015,9 +1015,14 @@ void IndividualPrivate::slotUnreadCountChanged()
 void IndividualPrivate::slotCmDestroyed()
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
-    Q_ASSERT(cm);
 
-    disconnectContactMethod(cm);
+    // Some Qt versions emit this "too late" and the metaObject is already
+    // deleted. It's not a bug, just an implementation detail. All slots
+    // are already disconnected.
+    if (!cm)
+        cm = static_cast<ContactMethod*>(sender());
+    else
+        disconnectContactMethod(cm);
 
     m_HiddenContactMethods.removeAll(cm);
     m_Numbers.removeAll(cm);
