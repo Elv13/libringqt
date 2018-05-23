@@ -91,7 +91,7 @@ public:
 
 
 private:
-    explicit IndividualTimelineModel(QSharedPointer<Individual> ind);
+    explicit IndividualTimelineModel(Individual* ind);
 
     // Mutator
     void addContactMethod(ContactMethod* cm);

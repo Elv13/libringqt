@@ -89,7 +89,7 @@ public:
    ContactMethodIndividualData* m_pIndividualData {nullptr};
 
    QWeakPointer<QAbstractItemModel> m_CallsModel;
-   QWeakPointer<Individual> m_pIndividual;
+   Individual* m_pIndividual {nullptr};
    QSharedPointer<EventAggregate> m_pEventAggregate;
 
    //Parents

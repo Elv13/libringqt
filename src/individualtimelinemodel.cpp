@@ -96,7 +96,7 @@ public:
     explicit IndividualTimelineModelPrivate(IndividualTimelineModel* parent);
 
     // Attributes
-    QSharedPointer<Individual> m_pIndividual;
+    Individual* m_pIndividual {nullptr};
 
     std::vector<IndividualTimelineNode*> m_lTimeCategories;
     QHash<int, IndividualTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
@@ -167,26 +167,26 @@ IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelin
 
 void IndividualTimelineModelPrivate::init()
 {
-    connect(m_pIndividual.data(), &Individual::eventAdded,
+    connect(m_pIndividual, &Individual::eventAdded,
         this, &IndividualTimelineModelPrivate::slotEventAdded);
 
-    connect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
+    connect(m_pIndividual, &Individual::relatedContactMethodsAdded,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-    connect(m_pIndividual.data(), &Individual::phoneNumbersChanged,
+    connect(m_pIndividual, &Individual::phoneNumbersChanged,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-    connect(m_pIndividual.data(), &Individual::childrenContactChanged,
+    connect(m_pIndividual, &Individual::childrenContactChanged,
         this, &IndividualTimelineModelPrivate::slotContactChanged);
 
-    connect(m_pIndividual.data(), &Individual::childrenRebased,
+    connect(m_pIndividual, &Individual::childrenRebased,
         this, &IndividualTimelineModelPrivate::slotRebased);
 
-    connect(m_pIndividual.data(), &Individual::textRecordingAdded,
+    connect(m_pIndividual, &Individual::textRecordingAdded,
         this, &IndividualTimelineModelPrivate::slotTextRecordingAdded);
 
-    auto cms = m_pIndividual.data()->relatedContactMethods();
-    cms.append(m_pIndividual.data()->phoneNumbers());
+    auto cms = m_pIndividual->relatedContactMethods();
+    cms.append(m_pIndividual->phoneNumbers());
 
     for (auto cm : qAsConst(cms))
         q_ptr->addContactMethod(cm);
@@ -201,12 +201,12 @@ void IndividualTimelineModelPrivate::init()
         slotTextRecordingAdded(t);
 }
 
-IndividualTimelineModel::IndividualTimelineModel(QSharedPointer<Individual> ind) : QAbstractItemModel(ind.data()), d_ptr(new IndividualTimelineModelPrivate(this))
+IndividualTimelineModel::IndividualTimelineModel(Individual* ind) : QAbstractItemModel(ind), d_ptr(new IndividualTimelineModelPrivate(this))
 {
     d_ptr->m_pIndividual = ind;
 
     if (ind)
-        connect(d_ptr->m_pIndividual.data(), &QObject::destroyed, d_ptr,
+        connect(d_ptr->m_pIndividual, &QObject::destroyed, d_ptr,
             &IndividualTimelineModelPrivate::slotIndividualDestroyed);
 
     d_ptr->init();
@@ -644,7 +644,7 @@ void IndividualTimelineModelPrivate::slotPhoneNumberChanged()
 void IndividualTimelineModelPrivate::slotPersonDestroyed()
 {
     if (m_pIndividual)
-        disconnect(m_pIndividual.data(), &QObject::destroyed, this,
+        disconnect(m_pIndividual, &QObject::destroyed, this,
             &IndividualTimelineModelPrivate::slotIndividualDestroyed);
 
     // The slots will be disconnected by QObject
@@ -677,7 +677,7 @@ void IndividualTimelineModelPrivate::slotIndividualDestroyed()
 
     disconnectOldCms();
 
-    disconnect(m_pIndividual.data(), &QObject::destroyed, this,
+    disconnect(m_pIndividual, &QObject::destroyed, this,
         &IndividualTimelineModelPrivate::slotIndividualDestroyed);
 
     m_pIndividual = nullptr;
@@ -740,22 +740,22 @@ void IndividualTimelineModelPrivate::disconnectOldCms()
     // Both m_pPerson and m_pCM can be null if the smart pointer race condition
     // inside of Qt5::Quick happens
 
-    disconnect(m_pIndividual.data(), &Individual::eventAdded,
+    disconnect(m_pIndividual, &Individual::eventAdded,
         this, &IndividualTimelineModelPrivate::slotEventAdded);
 
-    disconnect(m_pIndividual.data(), &Individual::relatedContactMethodsAdded,
+    disconnect(m_pIndividual, &Individual::relatedContactMethodsAdded,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-    disconnect(m_pIndividual.data(), &Individual::phoneNumbersChanged,
+    disconnect(m_pIndividual, &Individual::phoneNumbersChanged,
         this, &IndividualTimelineModelPrivate::slotPhoneNumberChanged);
 
-    disconnect(m_pIndividual.data(), &Individual::childrenContactChanged,
+    disconnect(m_pIndividual, &Individual::childrenContactChanged,
         this, &IndividualTimelineModelPrivate::slotContactChanged);
 
-    disconnect(m_pIndividual.data(), &Individual::textRecordingAdded,
+    disconnect(m_pIndividual, &Individual::textRecordingAdded,
         this, &IndividualTimelineModelPrivate::slotTextRecordingAdded);
 
-    disconnect(m_pIndividual.data(), &Individual::childrenRebased,
+    disconnect(m_pIndividual, &Individual::childrenRebased,
         this, &IndividualTimelineModelPrivate::slotRebased);
 
     // Add both phone number and whatever links to this person

@@ -282,7 +282,7 @@ UsageStatistics* Person::usageStatistics() const
     return d_ptr->m_pStats;
 }
 
-QSharedPointer<Individual> Person::individual() const
+Individual* Person::individual() const
 {
     if (!d_ptr->m_pIndividual)
         Individual::getIndividual(const_cast<Person*>(this));
@@ -290,12 +290,6 @@ QSharedPointer<Individual> Person::individual() const
     Q_ASSERT(d_ptr->m_pIndividual);
 
     return d_ptr->m_pIndividual;
-}
-
-// QML is buggy
-Individual* Person::rawIndividual() const
-{
-    return individual().data();
 }
 
 ContactMethod* Person::lastUsedContactMethod() const

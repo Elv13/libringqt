@@ -41,8 +41,7 @@ public:
     Q_PROPERTY(bool canSendTexts READ canSendTexts NOTIFY changed)
     Q_PROPERTY(bool hasWarning READ hasWarning NOTIFY changed)
     Q_PROPERTY(QString warningMessage READ warningMessage NOTIFY changed)
-    Q_PROPERTY(QSharedPointer<Individual> individual READ individual WRITE setIndividual)
-    Q_PROPERTY(Individual* rawIndividual READ rawIndividual WRITE setRawIndividual)
+    Q_PROPERTY(Individual* individual READ individual WRITE setIndividual)
 
     explicit AvailabilityTracker(QObject* parent = nullptr);
     virtual ~AvailabilityTracker();
@@ -55,11 +54,8 @@ public:
 
     QString warningMessage() const;
 
-    QSharedPointer<Individual> individual() const;
-    void setIndividual(const QSharedPointer<Individual>& ind);
-
-    Individual* rawIndividual() const;
-    void setRawIndividual(Individual* ind);
+    Individual* individual() const;
+    void setIndividual(Individual* ind);
 
 Q_SIGNALS:
     void changed();

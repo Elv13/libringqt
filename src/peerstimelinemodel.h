@@ -61,7 +61,7 @@ class LIB_EXPORT PeersTimelineModel : public QAbstractListModel
 public:
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel READ deduplicatedTimelineModel CONSTANT)
-    Q_PROPERTY(QSharedPointer<Individual>  mostRecentIndividual READ mostRecentIndividual NOTIFY headChanged)
+    Q_PROPERTY(Individual*  mostRecentIndividual READ mostRecentIndividual NOTIFY headChanged)
 
     /// Roles used in the `timelineSumaryModel`
     enum class SummaryRoles {
@@ -90,10 +90,10 @@ public:
 
     QSharedPointer<QAbstractItemModel> bookmarkedTimelineModel() const;
 
-    QSharedPointer<Individual> mostRecentIndividual() const;
+    Individual* mostRecentIndividual() const;
 
     QModelIndex contactMethodIndex(ContactMethod* cm) const;
-    QModelIndex individualIndex(QSharedPointer<Individual> i) const;
+    QModelIndex individualIndex(Individual* i) const;
 
 Q_SIGNALS:
     void headChanged();

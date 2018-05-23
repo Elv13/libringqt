@@ -511,7 +511,7 @@ QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, Cont
     return {};
 }
 
-QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const
+QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, const Individual* cm) const
 {
     return {};
 }
@@ -521,7 +521,7 @@ QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, 
     return {};
 }
 
-QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const
+QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, const Individual* cm) const
 {
     return {};
 }

@@ -32,7 +32,7 @@ class AvailabilityTrackerPrivate : public QObject
 {
     Q_OBJECT
 public:
-    QWeakPointer<Individual> m_pIndividual;
+    Individual* m_pIndividual {nullptr};
 
     // Helpers
     ContactMethod::MediaAvailailityStatus getFirstIssue() const;
@@ -74,25 +74,25 @@ AvailabilityTracker::~AvailabilityTracker()
 
 bool AvailabilityTracker::canCall() const
 {
-    const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
+    const Individual* i = d_ptr->m_pIndividual;
     return i ? i->canCall() : false;
 }
 
 bool AvailabilityTracker::canVideoCall() const
 {
-    const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
+    const Individual* i = d_ptr->m_pIndividual;
     return i ? i->canVideoCall() : false;
 }
 
 bool AvailabilityTracker::canSendTexts() const
 {
-    const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
+    const Individual* i = d_ptr->m_pIndividual;
     return i ? i->canSendTexts() : false;
 }
 
 bool AvailabilityTracker::hasWarning() const
 {
-    const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
+    const Individual* i = d_ptr->m_pIndividual;
     return !(
         (i) && canCall() && canVideoCall() && canSendTexts() && !i->isOffline()
     );
@@ -105,7 +105,7 @@ ContactMethod::MediaAvailailityStatus AvailabilityTrackerPrivate::getFirstIssue(
 
     auto ret = ContactMethod::MediaAvailailityStatus::AVAILABLE;
 
-    const QSharedPointer<Individual> i = m_pIndividual;
+    const Individual* i = m_pIndividual;
 
 //     bool hasFineCM = false;
 
@@ -135,7 +135,7 @@ QString AvailabilityTracker::warningMessage() const
 
     const auto ma = d_ptr->getFirstIssue();
 
-    const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
+    const Individual* i = d_ptr->m_pIndividual;
 
     if (!i)
         return tr("No contact has been selected");
@@ -146,36 +146,26 @@ QString AvailabilityTracker::warningMessage() const
     return d_ptr->m_mCMMASNames[d_ptr->getFirstIssue()];
 }
 
-QSharedPointer<Individual> AvailabilityTracker::individual() const
+Individual* AvailabilityTracker::individual() const
 {
     return d_ptr->m_pIndividual;
 }
 
-void AvailabilityTracker::setIndividual(const QSharedPointer<Individual>& ind)
+void AvailabilityTracker::setIndividual(Individual* ind)
 {
     if (d_ptr->m_pIndividual) {
-        const QSharedPointer<Individual> i = d_ptr->m_pIndividual;
-        disconnect(i.data(), &Individual::mediaAvailabilityChanged,
+        const Individual* i = d_ptr->m_pIndividual;
+        disconnect(i, &Individual::mediaAvailabilityChanged,
             d_ptr, &AvailabilityTrackerPrivate::slotIndividualChanged);
     }
 
     d_ptr->m_pIndividual = ind;
 
     if (ind)
-        connect(ind.data(), &Individual::mediaAvailabilityChanged,
+        connect(ind, &Individual::mediaAvailabilityChanged,
             d_ptr, &AvailabilityTrackerPrivate::slotIndividualChanged);
 
     d_ptr->slotIndividualChanged();
-}
-
-Individual* AvailabilityTracker::rawIndividual() const
-{
-    return d_ptr->m_pIndividual ? d_ptr->m_pIndividual.data() : nullptr;
-}
-
-void AvailabilityTracker::setRawIndividual(Individual* ind)
-{
-    setIndividual(Individual::getIndividual(ind));
 }
 
 void AvailabilityTrackerPrivate::slotCanCallChanged()

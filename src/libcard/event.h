@@ -250,7 +250,7 @@ public:
     /**
      * Convenience method to determine if someone attended this event.
      */
-    bool hasAttendee(QSharedPointer<Individual> cm) const;
+    bool hasAttendee(Individual* ind) const;
 
     /**
      * Add an attendee to this event.
@@ -320,9 +320,9 @@ public:
 Q_SIGNALS:
     void syncStateChanged(SyncState newState, SyncState oldState);
     void attendeeAdded(ContactMethod* cm);
-    void attendeeAdded(QSharedPointer<Individual> ind);
+    void attendeeAdded(Individual* ind);
     void attendeeRemoved(ContactMethod* cm);
-    void attendeeRemoved(QSharedPointer<Individual> ind);
+    void attendeeRemoved(Individual* ind);
     void changed();
 
 private:

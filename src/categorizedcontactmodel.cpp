@@ -124,8 +124,8 @@ ContactTreeNode::ContactTreeNode(const Person* ct, CategorizedContactModel* pare
 {
    m_Visible = m_pContact->isActive() && ((!parent->d_ptr->m_UnreachableHidden) || m_pContact->isReachable());
    m_lConections << QObject::connect(m_pContact,&Person::changed                  ,[this](){ slotChanged                    (); });
-   m_lConections << QObject::connect(m_pContact->individual().data(),&Individual::phoneNumbersChanged      ,[this](){ slotContactMethodsChanged      (); });
-   m_lConections << QObject::connect(m_pContact->individual().data(),&Individual::phoneNumbersAboutToChange,[this](){ slotContactMethodsAboutToChange(); });
+   m_lConections << QObject::connect(m_pContact->individual(),&Individual::phoneNumbersChanged      ,[this](){ slotContactMethodsChanged      (); });
+   m_lConections << QObject::connect(m_pContact->individual(),&Individual::phoneNumbersAboutToChange,[this](){ slotContactMethodsAboutToChange(); });
 }
 
 ContactTreeNode::ContactTreeNode(ContactMethod* cm, CategorizedContactModel* parent) :

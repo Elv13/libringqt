@@ -362,7 +362,7 @@ QVariant ProfileModel::data(const QModelIndex& index, int role ) const
         case ProfileNode::Type::PROFILE:
             if (role == (int) Ring::Role::Object)
                 return QVariant::fromValue(
-                    currentNode->m_pPerson->individual().data()
+                    currentNode->m_pPerson->individual()
                 );
             else if (role == (int) Ring::Role::ObjectType)
                 return QVariant::fromValue(Ring::ObjectType::Individual);

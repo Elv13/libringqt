@@ -74,13 +74,11 @@ public:
 
     QSharedPointer<EventAggregate> m_pEventAggregate;
 
-    QSharedPointer<Individual> m_pWeakRef {nullptr};
-
     // Helpers
     void connectContactMethod(ContactMethod* cm);
     void disconnectContactMethod(ContactMethod* cm);
     InfoTemplate* infoTemplate();
-    bool merge(QSharedPointer<Individual> other);
+    bool merge(Individual* other);
     bool contains(ContactMethod* cm, bool includeHidden = true) const;
 
     QList<Individual*> m_lParents;
@@ -171,11 +169,11 @@ bool IndividualPrivate::contains(ContactMethod* cm, bool includeHidden) const
  * swapping the d_ptr. Once the QSharedPointer<Individual> loses it's last
  * references it gets deleted and everyone is happy.
  */
-bool IndividualPrivate::merge(QSharedPointer<Individual> other)
+bool IndividualPrivate::merge(Individual* other)
 {
     // It will happen when the Person re-use the first individual it finds.
     // (it's done on purpose)
-    if (other.data()->d_ptr == this)
+    if (other->d_ptr == this)
         return false;
 
     if (Q_UNLIKELY(m_pPerson && other->d_ptr->m_pPerson && !(*m_pPerson == *other->d_ptr->m_pPerson))) {
@@ -309,7 +307,7 @@ QHash<int,QByteArray> Individual::roleNames() const
 
 Call* Individual::firstActiveCall() const
 {
-    return CallModel::instance().firstActiveCall(d_ptr->m_pWeakRef);
+    return CallModel::instance().firstActiveCall(const_cast<Individual*>(this));
 }
 
 
@@ -350,6 +348,8 @@ QString Individual::bestName() const
         d_ptr->m_BestName = tr("Unknown");
 
     Q_ASSERT(!d_ptr->m_BestName.isEmpty());
+
+    d_ptr->q_ptr->setObjectName(d_ptr->m_BestName);
 
     return d_ptr->m_BestName;
 }
@@ -483,7 +483,7 @@ QSharedPointer<EventAggregate> Individual::eventAggregate() const
 {
     if (!d_ptr->m_pEventAggregate) {
         d_ptr->m_pEventAggregate = EventAggregate::build(
-            const_cast<Individual*>(this)->d_ptr->m_pWeakRef
+            const_cast<Individual*>(this)
         );
     }
 
@@ -741,15 +741,15 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         emit relatedContactMethodsRemoved(cm);
     }
 
-    if (Q_UNLIKELY(cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual.data()->d_ptr != d_ptr)) {
+    if (Q_UNLIKELY(cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual->d_ptr != d_ptr)) {
         qWarning() << cm << "already has an individual attached" << cm->d_ptr->m_pIndividual <<
             "cannot set" << this;
     }
     else if (!cm->d_ptr->m_pIndividual)
-        cm->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
-    else if (cm->d_ptr->m_pIndividual != d_ptr->m_pWeakRef) {
+        cm->d_ptr->m_pIndividual = this;
+    else if (cm->d_ptr->m_pIndividual->d_ptr != d_ptr) {
         if (d_ptr->m_pPerson && ((!cm->contact()) || cm->contact()->d_ptr == d_ptr->m_pPerson->d_ptr)) {
-            QSharedPointer<Individual> ind = cm->d_ptr->m_pIndividual;
+            Individual* ind = cm->d_ptr->m_pIndividual;
             ind->d_ptr->merge(d_ptr->m_pPerson->individual());
         }
         else
@@ -964,7 +964,9 @@ bool Individual::hasHiddenContactMethods() const
 QSharedPointer<QAbstractItemModel> Individual::timelineModel() const
 {
     if (!d_ptr->m_TimelineModel) {
-        auto p = QSharedPointer<IndividualTimelineModel>(new IndividualTimelineModel(d_ptr->m_pWeakRef));
+        auto p = QSharedPointer<IndividualTimelineModel>(new IndividualTimelineModel(
+            const_cast<Individual*>(this)
+        ));
         d_ptr->m_TimelineModel = p;
         return p;
     }
@@ -1047,7 +1049,7 @@ void IndividualPrivate::slotContactChanged()
 
     if ((!m_pPerson) && cm->contact())
         merge(cm->contact()->individual());
-    else if (QSharedPointer<Individual> ind = cm->d_ptr->m_pIndividual) {
+    else if (Individual* ind = cm->d_ptr->m_pIndividual) {
         if (m_pPerson)
             ind->d_ptr->merge(m_pPerson->individual());
     }
@@ -1191,11 +1193,6 @@ bool Individual::hasBookmarks() const
     return hasProperty<&ContactMethod::isBookmarked>();
 }
 
-QSharedPointer<Individual> Individual::getIndividual(Individual* cm)
-{
-    return cm ? cm->d_ptr->m_pWeakRef : nullptr;
-}
-
 Person* Individual::buildPerson() const
 {
     if (d_ptr->m_pPerson)
@@ -1210,7 +1207,7 @@ Person* Individual::buildPerson() const
 
     if (!p) {
         p = new Person();
-        p->d_ptr->m_pIndividual = d_ptr->m_pWeakRef;
+        p->d_ptr->m_pIndividual = const_cast<Individual*>(this);
         d_ptr->m_pPerson = p;
     }
 
@@ -1222,7 +1219,7 @@ Person* Individual::buildPerson() const
     return p;
 }
 
-QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
+Individual* Individual::getIndividual(ContactMethod* cm)
 {
     if (auto i = cm->d_ptr->m_pIndividual)
         return i;
@@ -1230,10 +1227,7 @@ QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
     if (cm->contact())
         return getIndividual(cm->contact());
 
-    auto i = QSharedPointer<Individual>(
-        new Individual()
-    );
-    i->d_ptr->m_pWeakRef = i;
+    auto i = new Individual();
 
     // need to be done after WeakRef is set, do not move to constructor
     i->addPhoneNumber(cm);
@@ -1241,29 +1235,26 @@ QSharedPointer<Individual> Individual::getIndividual(ContactMethod* cm)
     return i;
 }
 
-QSharedPointer<Individual> Individual::getIndividual(Person* p)
+Individual* Individual::getIndividual(Person* p)
 {
     if (auto i = p->d_ptr->m_pIndividual)
         return i;
 
     // strong ref
-    p->d_ptr->m_pIndividual = QSharedPointer<Individual>(
-        new Individual(p)
-    );
-    p->d_ptr->m_pIndividual->d_ptr->m_pWeakRef = p->d_ptr->m_pIndividual;
+    p->d_ptr->m_pIndividual = new Individual(p);
 
     return p->d_ptr->m_pIndividual;
 }
 
-QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>& cms)
+Individual* Individual::getIndividual(const QList<ContactMethod*>& cms)
 {
     if (cms.isEmpty())
         return {};
 
-    QSharedPointer<Individual> ind;
+    Individual* ind {nullptr};
 
     QSet<Account*> accs;
-    QHash<QSharedPointer<Individual>, int> existing;
+    QHash<Individual*, int> existing;
     QSet<Person*> persons;
 
     // Find the most common Individual for deduplication purpose
@@ -1323,11 +1314,6 @@ QSharedPointer<Individual> Individual::getIndividual(const QList<ContactMethod*>
     }
 
     return ind;
-}
-
-Individual* Individual::getRawIndividual(Person* p)
-{
-    return getIndividual(p).data();
 }
 
 // QSharedPointer<EventAggregate> Individual::events(FlagPack<Event::EventCategory> categories)
@@ -1423,6 +1409,11 @@ bool Individual::isOffline() const
             ret = false;
 
     }, false);
+}
+
+void* Individual::d() const
+{
+    return d_ptr;
 }
 
 #include <individual.moc>

@@ -783,7 +783,7 @@ Call* ContactMethod::firstOutgoingCall() const
 
 Call* ContactMethod::firstActiveCall() const
 {
-    return CallModel::instance().firstActiveCall(this);
+    return CallModel::instance().firstActiveCall(const_cast<ContactMethod*>(this));
 }
 
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const
@@ -967,7 +967,7 @@ bool ContactMethod::setRoleData(const QVariant &value, int role)
     return false;
 }
 
-QSharedPointer<Individual> ContactMethod::individual() const
+Individual* ContactMethod::individual() const
 {
     Q_ASSERT(type() != ContactMethod::Type::BLANK);
     if (contact())

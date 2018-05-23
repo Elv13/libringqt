@@ -53,7 +53,7 @@ public:
 
     QMultiMap<QByteArray, QByteArray>  m_lCustomAttributes;
 
-    QSharedPointer<Individual> m_pIndividual {nullptr};
+    Individual* m_pIndividual {nullptr};
 
     QWeakPointer<QAbstractItemModel> m_pAddressModel;
 

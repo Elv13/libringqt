@@ -159,6 +159,7 @@ public:
    Q_PROPERTY(QString           bestName         READ bestName          NOTIFY primaryNameChanged     )
    Q_PROPERTY(Type              type             READ type                                            )
    Q_PROPERTY(ContactRequest*   request          READ request           NOTIFY contactRequestChanged  )
+   Q_PROPERTY(Individual*       individual       READ individual        CONSTANT                      )
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
 
@@ -173,7 +174,6 @@ public:
    Q_PROPERTY(bool                                  isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
 
    Q_PROPERTY(Media::TextRecording* textRecording READ textRecording CONSTANT)
-   Q_PROPERTY(QSharedPointer<Individual> individual READ individual)
 
    ///@enum Type: Is this temporary, blank, used or unused
    enum class Type {
@@ -281,7 +281,7 @@ public:
 
    QSharedPointer<EventAggregate> eventAggregate() const;
 
-   QSharedPointer<Individual> individual() const;
+   Individual* individual() const;
 
    /*
     * Returns roles associated on ContactMethod based on Call::Roles

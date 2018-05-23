@@ -73,7 +73,7 @@ private:
     explicit EventAggregate();
 
     static QSharedPointer<EventAggregate> build(ContactMethod* cm);
-    static QSharedPointer<EventAggregate> build(QSharedPointer<Individual> ind);
+    static QSharedPointer<EventAggregate> build(Individual* ind);
 
     QSharedPointer<EventAggregatePrivate> d_ptr;
     Q_DECLARE_PRIVATE(EventAggregate)

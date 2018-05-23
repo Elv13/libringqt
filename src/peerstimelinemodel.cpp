@@ -49,7 +49,7 @@ struct CMTimelineNode final
     time_t         m_Time   {  0      };
     int            m_CatHead{ -1      };
     ContactMethod* m_pCM    { nullptr };
-    QSharedPointer<Individual> m_pInd { nullptr };
+    Individual*    m_pInd   { nullptr };
 };
 
 class PeersTimelineModelPrivate final : public QObject
@@ -558,7 +558,7 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
     return d_ptr->m_BookmarkedCMPtr;
 }
 
-QSharedPointer<Individual> PeersTimelineModel::mostRecentIndividual() const
+Individual* PeersTimelineModel::mostRecentIndividual() const
 {
     int idx = d_ptr->m_lRows.size();
 
@@ -589,7 +589,7 @@ QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
     return createIndex(n->m_Index, 0, n);
 }
 
-QModelIndex PeersTimelineModel::individualIndex(QSharedPointer<Individual> i) const
+QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 {
     if (!i)
         return {};

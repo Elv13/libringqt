@@ -851,7 +851,7 @@ ContactMethod* Call::peerContactMethod() const
 }
 
 
-QSharedPointer<Individual> Call::peer() const
+Individual* Call::peer() const
 {
     if (peerContactMethod()->type() == ContactMethod::Type::TEMPORARY)
         return nullptr;

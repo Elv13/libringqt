@@ -236,7 +236,7 @@ QSharedPointer<EventAggregate> EventAggregate::build(ContactMethod* cm)
     return ret;
 }
 
-QSharedPointer<EventAggregate> EventAggregate::build(QSharedPointer<Individual> ind)
+QSharedPointer<EventAggregate> EventAggregate::build(Individual* ind)
 {
     Q_ASSERT(ind);
     auto ret = QSharedPointer<EventAggregate>(new EventAggregate);
@@ -251,8 +251,8 @@ QSharedPointer<EventAggregate> EventAggregate::build(QSharedPointer<Individual> 
     for (auto e : qAsConst(ret->d_ptr->m_lAllEvents))
         e->setProperty("__singleAggregate", i++); //HACK it has to work-ish ASAP at any cost
 
-    connect(ind.data(), &Individual::eventAdded, ret->d_ptr.data(), &EventAggregatePrivate::slotEventAdded);
-    connect(ind.data(), &Individual::eventDetached, ret->d_ptr.data(), &EventAggregatePrivate::slotEventDetached);
+    connect(ind, &Individual::eventAdded, ret->d_ptr.data(), &EventAggregatePrivate::slotEventAdded);
+    connect(ind, &Individual::eventDetached, ret->d_ptr.data(), &EventAggregatePrivate::slotEventDetached);
 
     return ret;
 }

@@ -201,13 +201,12 @@ public:
     void registerContactMethod(ContactMethod* m);
 
     // Factory
-    static QSharedPointer<Individual> getIndividual(ContactMethod* cm);
-    static QSharedPointer<Individual> getIndividual(Person* cm);
-    static QSharedPointer<Individual> getIndividual(const QList<ContactMethod*>& cms);
-    Q_INVOKABLE static QSharedPointer<Individual> getIndividual(Individual* cm);
+    static Individual* getIndividual(ContactMethod* cm);
+    static Individual* getIndividual(Person* cm);
+    static Individual* getIndividual(const QList<ContactMethod*>& cms);
 
-    // Because QML hates shared pointers
-    Q_INVOKABLE static Individual* getRawIndividual(Person* cm);
+    // Check deduplication
+    void* d() const;
 
 Q_SIGNALS:
     void hasEditRowChanged(bool v);
@@ -252,5 +251,3 @@ private:
 };
 
 Q_DECLARE_METATYPE(Individual*)
-
-Q_DECLARE_METATYPE(QSharedPointer<Individual>)

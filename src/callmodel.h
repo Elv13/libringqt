@@ -121,9 +121,8 @@ public:
    Q_INVOKABLE Call* getCall ( const QModelIndex& idx ) const;
    Q_INVOKABLE QList<Call*> getConferenceParticipants(Call *conf) const;
 
-   Q_INVOKABLE Call* firstActiveCall(const QSharedPointer<Individual>& ind) const;
-   Q_INVOKABLE Call* firstActiveCall(Individual* ind) const;
-   Q_INVOKABLE Call* firstActiveCall(const ContactMethod* cm) const;
+   Q_INVOKABLE Call* firstActiveCall(Individual*    ind) const;
+   Q_INVOKABLE Call* firstActiveCall(ContactMethod* cm ) const;
 
    // Setters
    void setAudoCleanDelay(int delay);

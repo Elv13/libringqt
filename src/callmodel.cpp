@@ -467,7 +467,7 @@ Call* CallModel::getCall( const QString& callId ) const
     return nullptr;
 }
 
-Call* CallModel::firstActiveCall(const QSharedPointer<Individual>& ind) const
+Call* CallModel::firstActiveCall(Individual* ind) const
 {
     if (!ind)
         return nullptr;
@@ -475,20 +475,15 @@ Call* CallModel::firstActiveCall(const QSharedPointer<Individual>& ind) const
     foreach (Call* call, getActiveCalls()) {
         if (call->lifeCycleState() != Call::LifeCycleState::FINISHED
           && call->state() != Call::State::DIALING
-          && call->peer() == ind)
+          && call->peer() && call->peer()->d() == ind->d()) {
             return call;
+        }
     }
 
     return nullptr;
 }
 
-/// Because QML is horrible at handling shared pointers
-Call* CallModel::firstActiveCall(Individual* ind) const
-{
-    return firstActiveCall(Individual::getIndividual(ind));
-}
-
-Call* CallModel::firstActiveCall(const ContactMethod* cm) const
+Call* CallModel::firstActiveCall(ContactMethod* cm) const
 {
     if (!cm)
         return nullptr;

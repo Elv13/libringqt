@@ -97,10 +97,9 @@ public:
 
    Q_PROPERTY( ContactMethod*        lastUsedContactMethod READ lastUsedContactMethod)
 
-   Q_PROPERTY( QSharedPointer<Individual> individual READ individual CONSTANT)
+   Q_PROPERTY( Individual* individual READ individual CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> addressesModel    READ addressesModel CONSTANT)
    Q_PROPERTY( QSharedPointer<QAbstractItemModel> timelineModel     READ timelineModel CONSTANT)
-   Q_PROPERTY( Individual* rawIndividual READ rawIndividual CONSTANT)
 
    //Mutator
    Q_INVOKABLE void addAddress(Address* addr);
@@ -144,10 +143,7 @@ public:
    QList<Address*> addresses        () const;
    QMultiMap<QByteArray, QByteArray> otherFields() const;
 
-   QSharedPointer<Individual>  individual() const;
-
-   // QML is buggy
-   Individual* rawIndividual() const;
+   Individual* individual() const;
 
    QSharedPointer<QAbstractItemModel> addressesModel() const;
    QSharedPointer<QAbstractItemModel> timelineModel() const;

@@ -63,9 +63,9 @@ public:
 
     // Keep event sorting centralized
     inline QSharedPointer<Event> nextEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const;
-    inline QSharedPointer<Event> nextEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const;
+    inline QSharedPointer<Event> nextEvent(const QSharedPointer<Event>& e, const Individual* cm) const;
     inline QSharedPointer<Event> previousEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const;
-    inline QSharedPointer<Event> previousEvent(const QSharedPointer<Event>& e, const QSharedPointer<Individual>& cm) const;
+    inline QSharedPointer<Event> previousEvent(const QSharedPointer<Event>& e, const Individual* cm) const;
 
     QSharedPointer<Event> oldest(const ContactMethod* cm) const;
     QSharedPointer<Event> newest(const ContactMethod* cm) const;

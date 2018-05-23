@@ -479,7 +479,7 @@ bool Event::hasAttendee(ContactMethod* cm) const
     }) != e;
 }
 
-bool Event::hasAttendee(QSharedPointer<Individual> ind) const
+bool Event::hasAttendee(Individual* ind) const
 {
     const auto b(d_ptr->m_lAttendees.constBegin()), e(d_ptr->m_lAttendees.constEnd());
     return std::find_if(b, e, [ind](const QPair<ContactMethod*, QString>& other) {
