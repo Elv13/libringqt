@@ -634,7 +634,7 @@ QString ContactMethod::bestName() const
 /// Returns the registered username otherwise returns an empty QString
 QString ContactMethod::registeredName() const
 {
-   return d_ptr->m_RegisteredName.isEmpty()? QString() : d_ptr->m_RegisteredName;
+   return d_ptr->m_RegisteredName;
 }
 
 /// Returns if this contact method is currently involved in a recording
