@@ -583,7 +583,14 @@ void URI::setSchemeType(SchemeType t)
     // Make sure the scheme matches the hint now that there is no ambiguity
     if ((!d_ptr->m_HintParsed) && d_ptr->m_HeaderType == SchemeType::RING) {
         d_ptr->m_HintParsed = true;
-        d_ptr->m_ProtocolHint = ProtocolHint::RING;
+
+        // Save some parsing work now that the possibilities are narrow.
+        // This avoid them being tagged as SIP accidentally.
+        d_ptr->m_ProtocolHint = (size() != 40 && size() != 45) ?
+            ProtocolHint::RING_USERNAME : (
+            protocolHint() == ProtocolHint::RING ?
+                ProtocolHint::RING : ProtocolHint::RING_USERNAME
+        );
     }
 }
 
