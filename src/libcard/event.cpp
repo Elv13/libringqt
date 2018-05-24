@@ -64,6 +64,7 @@ struct EventInternals
     static const Matrix2D<Event::SyncState, EditActions, Event::SyncState> m_StateMap;
 
     // Helper
+    void updateRevisionTime();
 };
 
 #define ST Event::SyncState::
@@ -116,6 +117,14 @@ Event::~Event()
     delete d_ptr;
 }
 
+
+void EventInternals::updateRevisionTime()
+{
+    time_t curTime;
+    ::time(&curTime);
+    q_ptr->d_ptr->m_RevTimeStamp = curTime;
+}
+
 void Event::setStopTimeStamp(time_t t)
 {
     if (syncState() == Event::SyncState::PLACEHOLDER) {
@@ -129,6 +138,9 @@ void Event::setStopTimeStamp(time_t t)
     d_ptr->m_pInternals->m_SyncState = Event::SyncState::RESCHEDULED;
 
     d_ptr->m_StopTimeStamp = t;
+
+    d_ptr->m_pInternals->updateRevisionTime();
+
     emit changed();
 }
 

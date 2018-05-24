@@ -33,6 +33,7 @@
 #include <eventmodel.h>
 #include <phonedirectorymodel.h>
 #include <media/avrecording.h>
+#include "../private/call_p.h"
 #include "libcard/private/event_p.h"
 #include "libcard/private/icsbuilder.h"
 #include "libcard/private/icsloader.h"
@@ -388,6 +389,19 @@ Account* Calendar::account() const
     return d_ptr->m_pAccount;
 }
 
+static void updateEvent(Event* e, Call* c)
+{
+    //bool updated = false;
+
+    if (c->stopTimeStamp() > e->stopTimeStamp()) {
+        e->setStopTimeStamp(c->stopTimeStamp());
+        //updated = true;
+    }
+
+    //TODO
+
+}
+
 QSharedPointer<Event> Calendar::addEvent(Call* c)
 {
     if (!c)
@@ -396,9 +410,9 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     if (c->lifeCycleState() != Call::LifeCycleState::FINISHED)
         return nullptr;
 
-    if (c->calendarEvent()) {
-        Q_ASSERT(false);
-        return c->calendarEvent();
+    if (auto e = c->calendarEvent()) {
+        updateEvent(e.data(), c);
+        return e;
     }
 
     EventPrivate b;
@@ -435,6 +449,8 @@ QSharedPointer<Event> Calendar::addEvent(Call* c)
     }
 
     editor<Event>()->addNew(e);
+
+    c->d_ptr->m_LegacyFields.m_pEvent = e->d_ptr->m_pStrongRef;
 
     return e->d_ptr->m_pStrongRef;
 }

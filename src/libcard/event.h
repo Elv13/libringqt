@@ -71,6 +71,7 @@ class LIB_EXPORT Event : public ItemBase
     friend class Serializable::Group; // update the timestamps on new messages
     friend class EventModel; // manager
     friend class EventModelPrivate; // manager
+    friend class EventInternals; // itself
 
 public:
     Q_PROPERTY(time_t startTimeStamp READ startTimeStamp CONSTANT)

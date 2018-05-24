@@ -97,6 +97,7 @@ public:
    friend class Media::Text;
    friend class MediaTypeInference;
    friend class IMConversationManagerPrivate;
+   friend class Calendar; // Manage the events
    friend QMimeData* RingMimes::payload(const Call*, const ContactMethod*, const Person*);
 
    //Enum

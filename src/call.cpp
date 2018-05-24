@@ -891,7 +891,7 @@ Video::SourceModel* Call::sourceModel() const
 
 QSharedPointer<Event> Call::calendarEvent() const
 {
-    return {};
+    return d_ptr->m_LegacyFields.m_pEvent;
 }
 
 ///If this call is encrypted, return the certificate associated with it

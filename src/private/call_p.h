@@ -123,6 +123,8 @@ public:
         Call::Direction m_Direction          {Call::Direction::OUTGOING};
         Account*        m_Account            {          nullptr        };
         ContactMethod*  m_pPeerContactMethod {          nullptr        };
+
+        QSharedPointer<Event> m_pEvent {nullptr};
     } m_LegacyFields;
 
     //Cache
