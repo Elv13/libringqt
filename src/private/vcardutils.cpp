@@ -170,8 +170,8 @@ struct VCardMapper final {
       // TODO: Currently we only support one type (the first on the line) TYPE=WORK,VOICE: <number>
       const QStringList categories = QString(type).split(',');
 
-      static QMutex m; {
-         QMutexLocker l(&m);
+      {
+         QMutexLocker l(m_pMutex);
 
          m_hDelayedCMInserts[c] << GetNumberFuture {
             fn,
