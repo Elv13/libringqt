@@ -64,7 +64,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::peer(ContactMetho
         return nullptr;
 
     const QByteArray sha1 = cm->sha1();
-    QSharedPointer<Serializable::Peers> p = m_hPeers[sha1];
+    QSharedPointer<Serializable::Peers> p = m_hPeers.value(sha1);
 
     if (!p) {
         p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
@@ -120,7 +120,7 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::peers(const QSet<
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::fromSha1(const QByteArray& sha1)
 {
-    return m_hPeers[sha1];
+    return m_hPeers.value(sha1);
 }
 
 QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJsonObject& json, const QString& path, ContactMethod* cm)
@@ -141,12 +141,13 @@ QSharedPointer<Serializable::Peers> SerializableEntityManager::fromJson(const QJ
         sha1 = mashSha1s(sha1List);
     }
 
-    if (m_hPeers[sha1])
+    if (m_hPeers.contains(sha1))
         return m_hPeers[sha1];
 
     //Load from json
     QSharedPointer<Serializable::Peers> p = QSharedPointer<Serializable::Peers>(new Serializable::Peers());
     p->read(json, path);
+    m_hPeers[sha1] = p;
 
     //TODO Remove in 2016
     //Some older versions of the file don't store necessary values, fix that
