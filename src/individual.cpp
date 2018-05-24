@@ -91,7 +91,6 @@ public Q_SLOTS:
     void slotCallAdded          ( Call *call              );
     void slotUnreadCountChanged (                         );
     void slotCmDestroyed        (                         );
-    void slotCmEventAdded       ( QSharedPointer<Event> e );
     void slotContactChanged     (                         );
     void slotChanged            (                         );
     void slotRegisteredName     (                         );
@@ -501,9 +500,6 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::callAdded, this,
         &IndividualPrivate::slotCallAdded);
 
-    connect(m, &ContactMethod::eventAdded, this,
-        &IndividualPrivate::slotCmEventAdded);
-
     connect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
 
@@ -551,9 +547,6 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::callAdded, this,
         &IndividualPrivate::slotCallAdded);
-
-    disconnect(m, &ContactMethod::eventAdded, this,
-        &IndividualPrivate::slotCmEventAdded);
 
     disconnect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
@@ -1000,11 +993,6 @@ void IndividualPrivate::slotLastContactMethod(ContactMethod* cm)
 void IndividualPrivate::slotCallAdded(Call *call)
 {
     emit q_ptr->callAdded(call);
-}
-
-void IndividualPrivate::slotCmEventAdded( QSharedPointer<Event> e )
-{
-    emit q_ptr->eventAdded(e);
 }
 
 void IndividualPrivate::slotUnreadCountChanged()
