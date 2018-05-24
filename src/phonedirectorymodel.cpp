@@ -858,7 +858,7 @@ ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
     Q_ASSERT(ret);
 
     if ((!number->registeredName().isEmpty()) && number->uri() == ret->uri())
-        ret->d_ptr->m_RegisteredName = number->registeredName();
+        ret->d_ptr->setRegisteredName(number->registeredName());
 
     return ret;
 }
