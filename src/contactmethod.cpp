@@ -1209,8 +1209,10 @@ bool ContactMethod::merge(ContactMethod* other)
    ContactMethodPrivate* currentD = d_ptr;
 
    //Replace the D-Pointer
-   this->d_ptr= other->d_ptr;
-   d_ptr->m_lParents << this;
+   for (auto p : qAsConst(currentD->m_lParents)) {
+      d_ptr->m_lParents << p;
+      p->d_ptr = other->d_ptr;
+   }
 
    //In case the URI is different, take the longest and most precise
    //TODO keep a log of all URI used
@@ -1227,9 +1229,7 @@ bool ContactMethod::merge(ContactMethod* other)
    if (oldName != primaryName())
       d_ptr->primaryNameChanged(primaryName());
 
-   currentD->m_lParents.remove(this);
-   if (currentD->m_lParents.isEmpty())
-      delete currentD;
+   delete currentD;
 
    return true;
 }
