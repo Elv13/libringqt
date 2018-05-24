@@ -259,6 +259,7 @@ public:
    UsageStatistics*      usageStatistics () const;
    Call*                 firstOutgoingCall() const;
    Call*                 firstActiveCall () const;
+   bool                  hasTextRecordings() const;
 
    // ContactRequest
    ContactRequest* request() const;

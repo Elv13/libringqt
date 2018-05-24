@@ -89,6 +89,8 @@ public:
     QAbstractItemModel*  audioRecordingModel() const;
     QAbstractItemModel*  textRecordingModel () const;
 
+    bool hasTextRecordings(const ContactMethod* cm) const;
+
     //Setter
     void setAlwaysRecording ( bool            record );
     void setRecordPath      ( const QString&  path   );

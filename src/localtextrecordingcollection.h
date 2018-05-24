@@ -50,6 +50,8 @@ public:
    Media::TextRecording* fetchFor (const ContactMethod* cm);
    Media::TextRecording* createFor(const ContactMethod* cm);
 
+   bool exists(const ContactMethod* cm) const;
+
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
    static QString pathForCm(ContactMethod* cm);

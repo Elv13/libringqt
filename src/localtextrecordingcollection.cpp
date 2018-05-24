@@ -426,6 +426,12 @@ Media::TextRecording* LocalTextRecordingCollection::createFor(const ContactMetho
     return r;
 }
 
+bool LocalTextRecordingCollection::exists(const ContactMethod* cm) const
+{
+    const auto e = static_cast<LocalTextRecordingEditor*>(editor<Media::Recording>());
+    return QFile::exists(e->path(cm->sha1()));
+}
+
 void LocalTextRecordingCollection::saveEverything() const
 {
     const auto itms = items<Media::Recording>();

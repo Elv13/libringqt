@@ -898,8 +898,8 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Call::Role::LifeCycleState):
          return QVariant::fromValue(Call::LifeCycleState::FINISHED);
       case static_cast<int>(Ring::Role::UnreadTextMessageCount):
-         if (auto rec = textRecording())
-            cat = rec->unreadCount();
+         if (hasTextRecordings())
+            cat = textRecording()->unreadCount();
          else
             cat = 0;
          break;
@@ -1261,6 +1261,12 @@ Media::TextRecording* ContactMethod::textRecording() const
     }
 
     return d_ptr->m_pTextRecording;
+}
+
+bool ContactMethod::hasTextRecordings() const
+{
+    return d_ptr->m_pTextRecording ||
+        Media::RecordingModel::instance().hasTextRecordings(this);
 }
 
 bool ContactMethod::isReachable() const

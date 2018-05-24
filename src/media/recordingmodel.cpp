@@ -486,6 +486,11 @@ Media::TextRecording* Media::RecordingModel::createTextRecording(const ContactMe
     return r;
 }
 
+bool Media::RecordingModel::hasTextRecordings(const ContactMethod* cm) const
+{
+    return d_ptr->m_pTextRecordingCollection->exists(cm);
+}
+
 QItemSelectionModel* Media::RecordingModel::selectionModel() const
 {
     if (!d_ptr->m_pSelectionModel) {

@@ -446,10 +446,12 @@ int Individual::unreadTextMessageCount() const
     QSet<Media::TextRecording*> trs;
 
     forAllNumbers([&unread, &trs](ContactMethod* cm) {
-        auto rec = cm->textRecording();
-        if ((!rec) || !trs.contains(rec)) {
-            unread += rec->unreadCount();
-            trs << rec;
+        if (cm->hasTextRecordings()) {
+            auto rec = cm->textRecording();
+            if ((!rec) || !trs.contains(rec)) {
+                unread += rec->unreadCount();
+                trs << rec;
+            }
         }
     });
 
@@ -616,8 +618,8 @@ QVector<Media::TextRecording*> Individual::textRecordings() const
         d_ptr->m_RecordingsInit = true;
 
         forAllNumbers([this](ContactMethod* cm) {
-            if (auto r = cm->textRecording())
-                d_ptr->slotChildrenTextRecordingAdded(r);
+            if (cm->hasTextRecordings())
+                d_ptr->slotChildrenTextRecordingAdded(cm->textRecording());
 
             const auto trs = cm->alternativeTextRecordings();
 
