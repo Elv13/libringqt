@@ -260,6 +260,7 @@ QSharedPointer<EventAggregate> EventAggregate::build(Individual* ind)
 
 QSharedPointer<EventAggregate> EventAggregate::merge(const QList<QSharedPointer<EventAggregate> >& source)
 {
+    Q_ASSERT(false);
     auto ret =  QSharedPointer<EventAggregate>(new EventAggregate);
 
     return ret;

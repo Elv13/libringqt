@@ -200,6 +200,8 @@ bool IndividualPrivate::merge(Individual* other)
             other->registerContactMethod(cm);
     }
 
+    //TODO merge the event aggregates
+
     m_lParents.removeAll(q_ptr);
 
     // Marge all the copies
@@ -1033,6 +1035,12 @@ void IndividualPrivate::slotChildrenTextRecordingAdded(Media::TextRecording* t)
 void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
+
+    // Merge the individual. This assume the contacts are the same
+    if (cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual->d_ptr == this) {
+        merge(cm->d_ptr->m_pIndividual);
+    }
+
     emit q_ptr->childrenRebased(cm, other);
 }
 
