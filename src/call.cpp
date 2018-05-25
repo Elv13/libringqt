@@ -909,11 +909,12 @@ FlagPack<Call::HoldFlags> Call::holdFlags() const
 ///Generate an human readable string from the difference between StartTimeStamp and StopTimeStamp (or 'now')
 QString Call::length() const
 {
-   if (!d_ptr->m_LegacyFields.m_pStopTimeStamp)
+   if (lifeCycleState() == Call::LifeCycleState::FINISHED && !d_ptr->m_LegacyFields.m_pStopTimeStamp)
       return {};
 
-   if (d_ptr->m_LegacyFields.m_pStartTimeStamp == d_ptr->m_LegacyFields.m_pStopTimeStamp)
-      return QString(); //Invalid
+   if (lifeCycleState() == Call::LifeCycleState::FINISHED &&
+    d_ptr->m_LegacyFields.m_pStartTimeStamp == d_ptr->m_LegacyFields.m_pStopTimeStamp)
+      return {}; //Invalid
 
    int nsec =0;
    if (d_ptr->m_LegacyFields.m_pStopTimeStamp)
@@ -2325,12 +2326,18 @@ void CallPrivate::initTimer()
          m_pTimer = new QTimer(this);
          m_pTimer->setInterval(1000);
          connect(m_pTimer,SIGNAL(timeout()),this,SLOT(updated()));
+         connect(m_pTimer, &QTimer::timeout, this, [this]() {
+            emit q_ptr->lengthChanged();
+         });
       }
-      if (!m_pTimer->isActive())
+      if (!m_pTimer->isActive()) {
          m_pTimer->start();
+         emit q_ptr->lengthChanged();
+      }
    }
    else if (m_pTimer && q_ptr->lifeCycleState() != Call::LifeCycleState::PROGRESS) {
       m_pTimer->stop();
+      emit q_ptr->lengthChanged();
       delete m_pTimer;
       m_pTimer = nullptr;
    }

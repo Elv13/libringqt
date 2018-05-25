@@ -282,7 +282,7 @@ public:
    Q_PROPERTY( bool               isSecure           READ isSecure                                  )
    Q_PROPERTY( Video::Renderer*   videoRenderer      READ videoRenderer     NOTIFY videoStarted     )
    Q_PROPERTY( QString            formattedName      READ formattedName                             )
-   Q_PROPERTY( QString            length             READ length                                    )
+   Q_PROPERTY( QString            length             READ length            NOTIFY lengthChanged    )
    Q_PROPERTY( bool               recordingAV        READ isAVRecording                             )
    Q_PROPERTY( UserActionModel*   userActionModel    READ userActionModel   CONSTANT                )
    Q_PROPERTY( QString            toHumanStateName   READ toHumanStateName  NOTIFY stateChanged     )
@@ -427,6 +427,8 @@ Q_SIGNALS:
    void errorChanged();
    /// Notify when the live call is having problems
    void liveMediaIssuesChanaged(const FlagPack<Call::LiveMediaIssues> issues);
+   /// Void length changed
+   void lengthChanged();
 };
 
 Q_DECLARE_METATYPE(Call*)
