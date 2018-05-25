@@ -186,6 +186,9 @@ QString URIPrivate::strip(const QStringRef& uri, URI::SchemeType& scheme)
    /* remove whitespace at the start and end */
    auto uriTrimmed = uri.trimmed();
 
+   if (uriTrimmed.isEmpty())
+      return {};
+
    int start(uriTrimmed[0] == '<'?1:0),end(uriTrimmed.size()-1); //Other type of comparisons were too slow
 
    if (start == end+1)
