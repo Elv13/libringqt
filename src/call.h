@@ -297,7 +297,7 @@ public:
    Q_PROPERTY( QSharedPointer<Event> calendarEvent   READ calendarEvent     CONSTANT                )
 
    //Read/write properties
-   Q_PROPERTY( ContactMethod*     peerContactMethod  READ peerContactMethod WRITE setPeerContactMethod)
+   Q_PROPERTY( ContactMethod*     peerContactMethod  READ peerContactMethod WRITE setPeerContactMethod NOTIFY dialNumberChanged)
    Q_PROPERTY( QString            peerName           READ peerName          WRITE setPeerName       )
    Q_PROPERTY( QString            transferNumber     READ transferNumber    WRITE setTransferNumber )
    Q_PROPERTY( QString            dialNumber         READ dialNumber        WRITE setDialNumber      NOTIFY dialNumberChanged(QString))
