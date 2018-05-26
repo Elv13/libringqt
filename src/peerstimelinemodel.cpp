@@ -542,6 +542,10 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::deduplicatedTimelineModel
         QSharedPointer<RecentCmModel> m = QSharedPointer<RecentCmModel>(new RecentCmModel(d_ptr));
         m->setSourceModel(const_cast<PeersTimelineModel*>(this));
         d_ptr->m_MostRecentCMPtr = m;
+
+        // Extra checks will be performed and the result may change
+        emit const_cast<PeersTimelineModel*>(this)->headChanged();
+
         return m;
     }
 
@@ -558,6 +562,14 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
     }
 
     return d_ptr->m_BookmarkedCMPtr;
+}
+
+bool PeersTimelineModel::isEmpty() const
+{
+    if (auto m = d_ptr->m_MostRecentCMPtr.toStrongRef())
+        return !m->rowCount();
+
+    return !rowCount();
 }
 
 Individual* PeersTimelineModel::mostRecentIndividual() const

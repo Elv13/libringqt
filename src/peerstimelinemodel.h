@@ -62,6 +62,7 @@ public:
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel READ deduplicatedTimelineModel CONSTANT)
     Q_PROPERTY(Individual*  mostRecentIndividual READ mostRecentIndividual NOTIFY headChanged)
+    Q_PROPERTY(bool empty READ isEmpty  NOTIFY headChanged)
 
     /// Roles used in the `timelineSumaryModel`
     enum class SummaryRoles {
@@ -91,6 +92,7 @@ public:
     QSharedPointer<QAbstractItemModel> bookmarkedTimelineModel() const;
 
     Individual* mostRecentIndividual() const;
+    bool isEmpty() const;
 
     QModelIndex contactMethodIndex(ContactMethod* cm) const;
     QModelIndex individualIndex(Individual* i) const;
