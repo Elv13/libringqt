@@ -376,6 +376,8 @@ int PeersTimelineModelPrivate::init()
 
     if (m_pSummaryModel) m_pSummaryModel->reloadCategories();
 
+    emit q_ptr->headChanged();
+
     return m_lRows.size();
 }
 
