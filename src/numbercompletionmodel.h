@@ -41,6 +41,7 @@ public:
    Q_PROPERTY(QString prefix READ prefix)
    Q_PROPERTY(bool displayMostUsedNumbers READ displayMostUsedNumbers WRITE setDisplayMostUsedNumbers)
    Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
+   Q_PROPERTY(ContactMethod* selectedContactMethod READ selectedContactMethod NOTIFY selectionChanged)
 
    enum class LookupStatus {
        NOT_APPLICABLE,
@@ -102,6 +103,7 @@ public:
    QString prefix() const;
    bool displayMostUsedNumbers() const;
    QItemSelectionModel* selectionModel() const;
+   ContactMethod* selectedContactMethod() const;
 
 private:
    NumberCompletionModelPrivate* d_ptr;
@@ -112,6 +114,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
    void enabled(bool);
+   void selectionChanged();
 
 };
 

@@ -628,6 +628,7 @@ void NumberCompletionModelPrivate::slotSelectionChanged(const QModelIndex& sel, 
    Q_UNUSED(sel)
    Q_UNUSED(prev)
    m_HasCustomSelection = true;
+   emit q_ptr->selectionChanged();
 }
 
 bool NumberCompletionModel::callSelectedNumber()
@@ -668,6 +669,15 @@ QItemSelectionModel* NumberCompletionModel::selectionModel() const
    }
 
    return d_ptr->m_pSelectionModel;
+}
+
+// Simplify accessing selection from QML
+ContactMethod* NumberCompletionModel::selectedContactMethod() const
+{
+    if (!d_ptr->m_pSelectionModel)
+        return nullptr;
+
+    return number(d_ptr->m_pSelectionModel->currentIndex());
 }
 
 bool NumberCompletionModelPrivate::accountAdded(Account* a)
