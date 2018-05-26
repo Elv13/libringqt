@@ -124,6 +124,9 @@ bool Troubleshoot::Absent::isAffected(Call* c, time_t elapsedTime, Troubleshoot:
       && c->state() != Call::State::RINGING && elapsedTime >= 5)
         return true;
 
+    if (!c->account())
+        return false;
+
     const bool isRing   = c->account()->protocol() == Account::Protocol::RING;
     const bool isAbsent = c->lastErrorCode() == (int) std::errc::no_such_device_or_address;
 

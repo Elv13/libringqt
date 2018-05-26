@@ -67,6 +67,9 @@ bool Troubleshoot::CRequest::isAffected(Call* c, time_t elapsedTime, Troubleshoo
 {
     const auto st = c->peerContactMethod()->confirmationStatus();
 
+    if (!c->account())
+        return false;
+
     return (elapsedTime >= 5 && c->state() == Call::State::ERROR
       || c->state() == Call::State::FAILURE
       || c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION
