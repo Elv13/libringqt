@@ -97,6 +97,11 @@ public:
     QModelIndex contactMethodIndex(ContactMethod* cm) const;
     QModelIndex individualIndex(Individual* i) const;
 
+    // Mutator
+
+    // Display in the timeline even if it was never contacted
+    void whiteList(Individual* ind);
+
 Q_SIGNALS:
     void headChanged();
 

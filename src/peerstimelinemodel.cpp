@@ -45,11 +45,12 @@ struct CMTimelineNode final
     };
 
     explicit CMTimelineNode(ContactMethod* cm, time_t t=0):m_pCM(cm),m_Time(t) {}
-    int            m_Index  { -1      };
-    time_t         m_Time   {  0      };
-    int            m_CatHead{ -1      };
-    ContactMethod* m_pCM    { nullptr };
-    Individual*    m_pInd   { nullptr };
+    bool           m_WhiteList {  false  };
+    int            m_Index     { -1      };
+    time_t         m_Time      {  0      };
+    int            m_CatHead   { -1      };
+    ContactMethod* m_pCM       { nullptr };
+    Individual*    m_pInd      { nullptr };
 };
 
 class PeersTimelineModelPrivate final : public QObject
@@ -510,6 +511,7 @@ bool RecentCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) con
     // were first inserted.
     return (!n->m_pCM->isDuplicate()) && (!n->m_pCM->isSelf()) && (
            (!n->m_pCM->contact())
+        || (n->m_WhiteList)
         || (!n->m_pCM->contact()->lastUsedContactMethod()) // that would be a bug
         || (*n->m_pCM->contact()->lastUsedContactMethod()) == (*n->m_pCM)
     );
@@ -618,6 +620,22 @@ QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
     QSharedPointer<RecentCmModel> p = d_ptr->m_MostRecentCMPtr;
 
     return p->mapFromSource(contactMethodIndex(cm));
+}
+
+void PeersTimelineModel::whiteList(Individual* ind)
+{
+    const auto map = d_ptr->m_hMapping;
+    ind->forAllNumbers([map, this, ind](ContactMethod* cm) {
+        auto n = map.value(cm);
+        if (!n)
+            return;
+
+        n->m_WhiteList = true;
+
+
+        const auto idx = createIndex(n->m_Index, 0, n);
+        emit dataChanged(idx, idx);
+    });
 }
 
 class PeersTimelineSelectionModelPrivate
