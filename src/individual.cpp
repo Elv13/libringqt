@@ -1210,9 +1210,11 @@ Person* Individual::buildPerson() const
 
     if (!p) {
         p = new Person();
+        p->setFormattedName(bestName());
         p->d_ptr->m_pIndividual = const_cast<Individual*>(this);
-        d_ptr->m_pPerson = p;
     }
+
+    d_ptr->m_pPerson = p;
 
     for (auto cm : qAsConst(d_ptr->m_Numbers)) {
         if (!cm->contact())
