@@ -90,6 +90,9 @@ bool LocalNameServiceCache::load()
             const auto lines = content.split('\n');
 
             for (const auto& line : qAsConst(lines)) {
+                if (line.isEmpty())
+                    continue;
+
                 const auto fields = line.split('\t');
                 if (fields.count() != 2) {
                     qWarning() << "The registered name cache is corrupted";
