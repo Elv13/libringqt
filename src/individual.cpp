@@ -1196,6 +1196,18 @@ bool Individual::hasBookmarks() const
     return hasProperty<&ContactMethod::isBookmarked>();
 }
 
+ContactMethod* Individual::firstBookmark() const
+{
+    ContactMethod* cm = nullptr;
+
+    forAllNumbers([&cm](ContactMethod* cm2) {
+        if ((!cm) && cm2->isBookmarked())
+            cm = cm2;
+    });
+
+    return cm;
+}
+
 Person* Individual::buildPerson() const
 {
     if (d_ptr->m_pPerson)

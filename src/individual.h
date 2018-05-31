@@ -50,6 +50,7 @@ public:
     Q_PROPERTY(QString bestName READ bestName NOTIFY changed)
     Q_PROPERTY(QString lastUsedUri READ lastUsedUri NOTIFY lastUsedTimeChanged)
     Q_PROPERTY(ContactMethod* lastUsedContactMethod READ lastUsedContactMethod NOTIFY lastUsedTimeChanged)
+    Q_PROPERTY(ContactMethod* firstBookmark READ firstBookmark NOTIFY bookmarkedChanged)
     Q_PROPERTY(bool hasBookmarks READ hasBookmarks NOTIFY bookmarkedChanged)
     Q_PROPERTY(Person* person READ person CONSTANT)
     Q_PROPERTY(Call* firstActiveCall READ firstActiveCall NOTIFY hasActiveCallChanged)
@@ -101,6 +102,7 @@ public:
     int totalSpentTime() const;
 
     bool hasBookmarks() const;
+    ContactMethod* firstBookmark() const;
 
     bool hasHiddenContactMethods() const;
 
