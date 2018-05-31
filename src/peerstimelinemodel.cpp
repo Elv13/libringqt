@@ -317,6 +317,14 @@ slotDataChanged(const QModelIndex& tl, const QModelIndex& br)
             const auto idx = q_ptr->index(i->m_Index, 0);
             emit q_ptr->dataChanged(idx, idx);
         }
+
+        // For the filters, also take into account the most recent
+        cm = cm->individual()->lastUsedContactMethod();
+        if (auto i = m_hMapping.value(cm)) {
+            const auto idx = q_ptr->index(i->m_Index, 0);
+            emit q_ptr->dataChanged(idx, idx);
+        }
+
     }, tl.row(), br.row());
 }
 
