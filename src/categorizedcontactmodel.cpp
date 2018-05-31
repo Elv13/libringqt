@@ -292,15 +292,7 @@ CategorizedContactModel& CategorizedContactModel::instance()
 
 QHash<int,QByteArray> CategorizedContactModel::roleNames() const
 {
-    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-    static bool initRoles = false;
-    if (!initRoles) {
-        QHash<int, QByteArray>::const_iterator i;
-        for (i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); ++i)
-            roles[i.key()] = i.value();
-    }
-
-    return roles;
+    return PersonModel::instance().roleNames();
 }
 
 ContactTreeNode* CategorizedContactModelPrivate::getContactTopLevelItem(const QString& category)
