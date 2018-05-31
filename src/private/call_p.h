@@ -111,6 +111,10 @@ public:
 
     FlagPack<Call::LiveMediaIssues> m_fCurrentIssues {Call::LiveMediaIssues::OK};
 
+    FlagPack<Media::Media::TypeFlags> m_DefaultMediaFlags {
+        Media::Media::TypeFlags::VIDEO | Media::Media::TypeFlags::AUDIO
+    };
+
     /**
      * The event/calendar APIs move the time keeping responsability away from
      * the call object. To make the transition progressive, these fields are

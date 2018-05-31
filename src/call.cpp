@@ -1106,6 +1106,26 @@ bool Call::hasMedia(Media::Media::Type type, Media::Media::Direction direction) 
    return d_ptr->m_mMedias[type][direction]->size();
 }
 
+FlagPack<Media::Media::TypeFlags> Call::defaultMediaFlags() const
+{
+    return d_ptr->m_DefaultMediaFlags;
+}
+
+void Call::removeMedia(Media::Media::Type m)
+{
+    if (!(d_ptr->m_DefaultMediaFlags & Media::Media::toFlags(m)))
+        return;
+
+    d_ptr->m_DefaultMediaFlags ^= Media::Media::toFlags(m);
+
+    Q_ASSERT(!(d_ptr->m_DefaultMediaFlags & Media::Media::toFlags(m)));
+}
+
+void Call::addMedia(Media::Media::Type m)
+{
+    d_ptr->m_DefaultMediaFlags |= Media::Media::toFlags(m);
+}
+
 bool Call::hasRecording(Media::Media::Type type, Media::Media::Direction direction) const
 {
    return d_ptr->m_mRecordings[type][direction]->size();
@@ -1933,7 +1953,19 @@ void CallPrivate::call()
        qWarning() << "The URI isn't a RingId. It is possible the call wont work" << uri.full();
     }
 
-    m_DringId = CallManager::instance().placeCall(m_LegacyFields.m_Account->id(), uri.full());
+    if (q_ptr->defaultMediaFlags() & Media::Media::TypeFlags::VIDEO) {
+        m_DringId = CallManager::instance().placeCall(
+            m_LegacyFields.m_Account->id(), uri.full()
+        );
+    }
+    else {
+        m_DringId = CallManager::instance().placeCallWithDetails(
+            m_LegacyFields.m_Account->id(),
+            uri.full(),
+            MapStringString {{"AUDIO_ONLY", "true"}}
+        );
+    }
+
 
     // This can happen when the daemon cannot allocate memory
     if (m_DringId.isEmpty()) {

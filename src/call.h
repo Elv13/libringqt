@@ -344,7 +344,11 @@ public:
    QSharedPointer<Event>    calendarEvent    () const;
    Individual*              peer             () const;
 
-   FlagPack<Call::LiveMediaIssues> liveMediaIssues() const;
+   FlagPack<Call::LiveMediaIssues>   liveMediaIssues  () const;
+   FlagPack<Media::Media::TypeFlags> defaultMediaFlags() const;
+
+   Q_INVOKABLE void removeMedia(Media::Media::Type m);
+   Q_INVOKABLE void addMedia(Media::Media::Type m);
 
    Q_INVOKABLE QVariant   roleData         (int  role) const;
    Q_INVOKABLE QVariant   roleData         (Role role) const;

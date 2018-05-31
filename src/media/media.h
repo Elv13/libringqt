@@ -20,6 +20,7 @@
 #include <QtCore/QObject>
 
 #include "typedefs.h"
+#include <libcard/flagutils.h>
 
 class Call;
 class CallModelPrivate;
@@ -46,6 +47,16 @@ public:
       COUNT__
    };
    Q_ENUMS(Type)
+
+   /// Media flags to be able to easily add and remove media from builders.
+   enum class TypeFlags {
+      NONE  = 0x0 << 0, /*!< */
+      AUDIO = 0x1 << 0, /*!< */
+      VIDEO = 0x1 << 1, /*!< */
+      TEXT  = 0x1 << 2, /*!< */
+      FILE  = 0x1 << 3, /*!< */
+      COUNT__
+   };
 
    enum class State {
       ACTIVE = 0, /*!< The media is currently in progress       */
@@ -85,6 +96,8 @@ public:
 
    virtual ~Media();
 
+   static TypeFlags toFlags(Type t);
+
 protected:
 
    //Protected mutators
@@ -108,6 +121,8 @@ private:
 Q_DECLARE_METATYPE(Media::Media*)
 Q_DECLARE_METATYPE(Media::Media::Direction)
 Q_DECLARE_METATYPE(Media::Media::Type)
+
+DECLARE_ENUM_FLAGS(Media::Media::TypeFlags)
 
 Media::Media* operator<<(Media::Media* m, Media::Media::Action a);
 

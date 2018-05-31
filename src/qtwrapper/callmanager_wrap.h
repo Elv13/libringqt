@@ -284,13 +284,13 @@ public Q_SLOTS: // METHODS
         return temp;
     }
 
-    QString placeCall(const QString &accountID,
+    QString placeCallWithDetails(const QString &accountID,
                       const QString &to,
-                      const std::map<std::string, std::string>& volatileCallDetails)
+                      const MapStringString& volatileCallDetails)
     {
         QString temp(DRing::placeCall(accountID.toStdString(),
                                        to.toStdString(),
-                                       volatileCallDetails).c_str());
+                                       convertMap(volatileCallDetails)).c_str());
         return temp;
     }
 

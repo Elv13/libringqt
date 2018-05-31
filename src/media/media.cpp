@@ -167,3 +167,22 @@ void Media::MediaPrivate::unmuteConfirmed()
          break;
    };
 }
+
+Media::Media::TypeFlags Media::Media::toFlags(Media::Media::Type t)
+{
+    switch(t) {
+      case Media::Media::Type::AUDIO:
+          return Media::Media::TypeFlags::AUDIO;
+      case Media::Media::Type::VIDEO:
+          return Media::Media::TypeFlags::VIDEO;
+      case Media::Media::Type::FILE:
+          return Media::Media::TypeFlags::FILE;
+      case Media::Media::Type::TEXT:
+          return Media::Media::TypeFlags::TEXT;
+      case Media::Media::Type::COUNT__:
+         break;
+   };
+
+   Q_ASSERT(false);
+   return Media::Media::TypeFlags::NONE;
+}
