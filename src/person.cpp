@@ -516,6 +516,10 @@ QVariant Person::roleData(int role) const
 {
     switch (role) {
         case Qt::DisplayRole:
+            if (formattedName().isEmpty())
+                return individual()->bestName();
+
+            [[clang::fallthrough]];
         case Qt::EditRole:
         case static_cast<int>(Ring::Role::Name):
         case static_cast<int>(Person::Role::FormattedName):
@@ -558,6 +562,8 @@ QVariant Person::roleData(int role) const
             return firstName();
         case static_cast<int>(Person::Role::NickName):
             return nickName();
+        case static_cast<int>(Person::Role::Individual):
+            return QVariant::fromValue(individual());
         case static_cast<int>(Person::Role::IdOfLastCMUsed):
             {
                 auto cm = lastUsedContactMethod();
