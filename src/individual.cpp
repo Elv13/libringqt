@@ -1191,6 +1191,11 @@ int Individual::totalSpentTime() const
     return propertySum<&ContactMethod::totalSpentTime>();
 }
 
+bool Individual::hasPhoneNumbers() const
+{
+    return !d_ptr->m_Numbers.isEmpty();
+}
+
 bool Individual::hasBookmarks() const
 {
     return hasProperty<&ContactMethod::isBookmarked>();

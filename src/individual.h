@@ -52,6 +52,7 @@ public:
     Q_PROPERTY(ContactMethod* lastUsedContactMethod READ lastUsedContactMethod NOTIFY lastUsedTimeChanged)
     Q_PROPERTY(ContactMethod* firstBookmark READ firstBookmark NOTIFY bookmarkedChanged)
     Q_PROPERTY(bool hasBookmarks READ hasBookmarks NOTIFY bookmarkedChanged)
+    Q_PROPERTY(bool hasPhoneNumbers READ hasPhoneNumbers NOTIFY phoneNumbersChanged)
     Q_PROPERTY(Person* person READ person CONSTANT)
     Q_PROPERTY(Call* firstActiveCall READ firstActiveCall NOTIFY hasActiveCallChanged)
     Q_PROPERTY(ContactMethod* mainContactMethod READ mainContactMethod NOTIFY relatedContactMethodsAdded)
@@ -100,6 +101,8 @@ public:
     int callCount() const;
     int textMessageCount() const;
     int totalSpentTime() const;
+
+    bool hasPhoneNumbers() const;
 
     bool hasBookmarks() const;
     ContactMethod* firstBookmark() const;
