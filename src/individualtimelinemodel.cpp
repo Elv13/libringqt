@@ -256,6 +256,7 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
         roles.insert((int)IndividualTimelineModel::Role::TotalEntries     , "totalEntries"        );
         roles.insert((int)IndividualTimelineModel::Role::ActiveCategories , "activeCategories"    );
         roles.insert((int)IndividualTimelineModel::Role::EndAt            , "endAt"               );
+        roles.insert((int)IndividualTimelineModel::Role::CallCount        , "callCount"           );
     }
     return roles;
 }
@@ -300,6 +301,9 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
             return (int) d_ptr->m_lTimeCategories.size();
         case (int) Role::EndAt:
             return QDateTime::fromTime_t(n->m_EndTime);
+        case (int) Role::CallCount:
+            return n->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP ?
+                rowCount(idx) : 0;
     }
 
     switch(n->m_Type) {
@@ -611,7 +615,14 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
         m_pCurrentCallGroup->m_pParent->m_Index, 0, m_pCurrentCallGroup->m_pParent
     );
 
+    // For the CallCount
+    const auto gidx = q_ptr->createIndex(
+        m_pCurrentCallGroup->m_Index, 0, m_pCurrentCallGroup
+    );
+
     emit q_ptr->dataChanged(idx, idx);
+
+    emit q_ptr->dataChanged(gidx, gidx);
 }
 
 /// To use with extreme restrict, this isn't really intended to be used directly

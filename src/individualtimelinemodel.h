@@ -73,6 +73,7 @@ public:
         CategoryEntries,
         TotalEntries,
         ActiveCategories,
+        CallCount,
         EndAt,
     };
 
