@@ -199,7 +199,13 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 ///Build an account from it's name / alias
 Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const QString& alias)
 {
+   QString al = alias;
    qDebug() << "Building an account from alias: " << alias;
+
+   if (al.isEmpty()) {
+       al = tr("New account");
+   }
+
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
    Account* a = new Account();
    a->setProtocol(proto);
@@ -703,6 +709,11 @@ time_t Account::lastUsed() const
 
 void Account::setAlias(const QString& detail)
 {
+   if (detail.isEmpty() && !alias().isEmpty()) {
+      qWarning() << "Trying to set an empty account alias, this is forbidden";
+      return;
+   }
+
    const bool accChanged = detail != alias();
    d_ptr->setAccountProperty(DRing::Account::ConfProperties::ALIAS,detail);
 
