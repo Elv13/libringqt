@@ -238,6 +238,9 @@ public:
     bool hasAttachment(Media::Attachment::BuiltInTypes t) const;
     bool hasAttachment(const QUrl& path) const;
 
+    /// Return true when the event have the same type and participants
+    bool isSibling(const QSharedPointer<Event>& other) const;
+
     /**
      * Each attendees with the name they used for that event
      */
@@ -247,6 +250,12 @@ public:
      * Convenience method to determine if someone attended this event.
      */
     bool hasAttendee(ContactMethod* cm) const;
+
+    /**
+     * Convenience method to determine if someone attended this event.
+     */
+    bool hasAttendees(const QList<ContactMethod*>& cms) const;
+    bool hasAttendees(const QList< QPair<ContactMethod*, QString> >& cms) const;
 
     /**
      * Convenience method to determine if someone attended this event.
@@ -303,6 +312,14 @@ public:
      * Return a strong reference.
      */
     QSharedPointer<Event> ref() const;
+
+    /**
+     * Some events are repeated, like calling back after missing a call.
+     *
+     * This property is true only when there is no prior events directly
+     * associated with this one.
+     */
+    bool isGroupHead() const; //TODO find a better name
 
     // ItemBase override
     Q_INVOKABLE virtual bool save  () const override;

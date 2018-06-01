@@ -67,6 +67,9 @@ public:
     Event::Type m_Type {Event::Type::VJOURNAL};
     QList< QPair<ContactMethod*, QString> > m_lAttendees;
 
+    // Set by the event model
+    bool m_IsGroupHead {true};
+
     /**
      * Either the call was from this session or it's an imported Call from the
      * old sflphone history.

@@ -573,7 +573,7 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
     // are expected to arrive ordered by time_t, so this allows to take a
     // little shortcut and skip proper lookup. If this is to ever become a false
     // assumption, then this code will need to be updated.
-    if ((!m_pCurrentCallGroup) || (m_pCurrentCallGroup->m_pParent != cat)) {
+    if ((!m_pCurrentCallGroup) || (m_pCurrentCallGroup->m_pParent != cat) || event->isGroupHead()) {
         m_pCurrentCallGroup = new IndividualTimelineNode;
         m_pCurrentTextGroup = nullptr;
 

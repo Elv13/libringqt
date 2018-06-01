@@ -165,6 +165,11 @@ QTimeZone* Event::timezone() const
     return &tz;
 }
 
+bool Event::isGroupHead() const
+{
+    return d_ptr->m_IsGroupHead;
+}
+
 Call* Event::toHistoryCall() const
 {
     return nullptr;
@@ -406,6 +411,16 @@ bool Event::hasAttachment(Media::Attachment::BuiltInTypes t) const
     return false;
 }
 
+bool Event::isSibling(const QSharedPointer<Event>& other) const
+{
+    if (!other)
+        return false;
+
+    return type() == other->type() &&
+        attendees().size() == other->attendees().size() &&
+        other->hasAttendees(attendees());
+}
+
 bool Event::hasAttachment(const QUrl& path) const
 {
     for (auto a : qAsConst(d_ptr->m_lAttachedFiles)) {
@@ -489,6 +504,26 @@ bool Event::hasAttendee(ContactMethod* cm) const
     return std::find_if(b, e, [cm](const QPair<ContactMethod*, QString>& other) {
         return cm->d() == other.first->d();
     }) != e;
+}
+
+bool Event::hasAttendees(const QList<ContactMethod*>& cms) const
+{
+    for (const auto cm : qAsConst(cms)) {
+        if (!hasAttendee(cm))
+            return false;
+    }
+
+    return d_ptr->m_lAttendees.size() >= cms.size();
+}
+
+bool Event::hasAttendees(const QList< QPair<ContactMethod*, QString> >& cms) const
+{
+    for (const auto pair : qAsConst(cms)) {
+        if (!hasAttendee(pair.first))
+            return false;
+    }
+
+    return d_ptr->m_lAttendees.size() >= cms.size();
 }
 
 bool Event::hasAttendee(Individual* ind) const

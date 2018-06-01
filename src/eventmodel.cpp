@@ -315,6 +315,12 @@ bool EventModel::addItemCallback(const Event* item)
         nullptr
     };
 
+    // Check if the event is a direct sibling
+    if (!d_ptr->m_lEvent.isEmpty()) {
+        const auto prev = d_ptr->m_lEvent.constLast()->m_pEvent;
+        item->d_ptr->m_IsGroupHead = !prev->isSibling(item->d_ptr->m_pStrongRef);
+    }
+
     d_ptr->m_lEvent << n;
 
     item->d_ptr->m_pTracker = n;
