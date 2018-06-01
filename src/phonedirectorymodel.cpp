@@ -857,8 +857,13 @@ ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
 
     Q_ASSERT(ret);
 
-    if ((!number->registeredName().isEmpty()) && number->uri() == ret->uri())
+    if ((!number->registeredName().isEmpty()) && number->uri() == ret->uri()) {
         ret->d_ptr->setRegisteredName(number->registeredName());
+
+        // There is a potential race condition, for now ignore it, the cache isn't critical
+        if (d_ptr->m_pNameServiceCache)
+            d_ptr->m_pNameServiceCache->editor<ContactMethod>()->addExisting(ret);
+    }
 
     return ret;
 }
