@@ -381,7 +381,7 @@ Q_SIGNALS:
    /// Emitted when the timeline is merged into another
    void timelineMerged();
    /// When a new alternative TextRecording is added
-   void alternativeTextRecordingAdded(Media::TextRecording* t);
+   void textRecordingAdded(Media::TextRecording* t);
    /// When the capacity to send text messages changes.
    void mediaAvailabilityChanged();
    /// When one or more call is in progress.

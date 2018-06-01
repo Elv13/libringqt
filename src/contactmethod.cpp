@@ -1260,7 +1260,7 @@ Media::TextRecording* ContactMethod::textRecording() const
         d_ptr->m_pTextRecording = Media::RecordingModel::instance().createTextRecording(this);
 
         for (auto n : qAsConst(d_ptr->m_lParents))
-            emit n->alternativeTextRecordingAdded(d_ptr->m_pTextRecording);
+            emit n->textRecordingAdded(d_ptr->m_pTextRecording);
     }
 
     return d_ptr->m_pTextRecording;
@@ -1349,7 +1349,7 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
 
     m_lAltTR << recording;
     foreach (ContactMethod* n, m_lParents)
-        emit n->alternativeTextRecordingAdded(recording);
+        emit n->textRecordingAdded(recording);
 }
 
 /**

@@ -507,7 +507,7 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
 
-    connect(m, &ContactMethod::alternativeTextRecordingAdded, this,
+    connect(m, &ContactMethod::textRecordingAdded, this,
         &IndividualPrivate::slotChildrenTextRecordingAdded);
 
     connect(m, &ContactMethod::rebased, this,
@@ -555,7 +555,7 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
     disconnect(m, &ContactMethod::contactChanged, this,
         &IndividualPrivate::slotChildrenContactChanged);
 
-    disconnect(m, &ContactMethod::alternativeTextRecordingAdded, this,
+    disconnect(m, &ContactMethod::textRecordingAdded, this,
         &IndividualPrivate::slotChildrenTextRecordingAdded);
 
     disconnect(m, &ContactMethod::rebased, this,
