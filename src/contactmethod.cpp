@@ -1258,6 +1258,9 @@ Media::TextRecording* ContactMethod::textRecording() const
 {
     if (!d_ptr->m_pTextRecording) {
         d_ptr->m_pTextRecording = Media::RecordingModel::instance().createTextRecording(this);
+
+        for (auto n : qAsConst(d_ptr->m_lParents))
+            emit n->alternativeTextRecordingAdded(d_ptr->m_pTextRecording);
     }
 
     return d_ptr->m_pTextRecording;
