@@ -311,4 +311,16 @@ void Video::SourceModelPrivate::devicesReloaded()
     }
 }
 
+bool Video::SourceModel::matches(ExtendedDeviceList t) const
+{
+    switch(t) {
+        case ExtendedDeviceList::NONE   :
+        case ExtendedDeviceList::SCREEN :
+        case ExtendedDeviceList::FILE   :
+            return activeIndex() == (int) t;
+    }
+
+    return false;
+}
+
 #include <sourcemodel.moc>

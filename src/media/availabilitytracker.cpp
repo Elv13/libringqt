@@ -21,6 +21,10 @@
 #include "contactmethod.h"
 #include "accountmodel.h"
 #include "individual.h"
+#include "video/renderer.h"
+#include "video/sourcemodel.h"
+#include "call.h"
+#include "callmodel.h"
 #include "libcard/matrixutils.h"
 
 // libstdc++
@@ -32,10 +36,18 @@ class AvailabilityTrackerPrivate : public QObject
 {
     Q_OBJECT
 public:
+    enum class CallMode {
+        NONE,
+        AUDIO,
+        VIDEO,
+        SCREEN,
+    };
+
     Individual* m_pIndividual {nullptr};
 
     // Helpers
     ContactMethod::MediaAvailailityStatus getFirstIssue() const;
+    CallMode getCallMode() const;
 
     static const Matrix1D<ContactMethod::MediaAvailailityStatus ,QString> m_mCMMASNames;
 
@@ -65,6 +77,10 @@ AvailabilityTracker::AvailabilityTracker(QObject* parent) : QObject(parent),
     connect(&AccountModel::instance(), &AccountModel::canCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
     connect(&AccountModel::instance(), &AccountModel::registrationChanged, d_ptr, &AvailabilityTrackerPrivate::slotRegistrationChanged);
     connect(&AccountModel::instance(), &AccountModel::canVideoCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanVideoCallChanged);
+
+    connect(&CallModel::instance(), &CallModel::callStateChanged , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(&CallModel::instance(), &CallModel::rendererAdded    , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(&CallModel::instance(), &CallModel::rendererRemoved  , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
 }
 
 AvailabilityTracker::~AvailabilityTracker()
@@ -128,6 +144,34 @@ ContactMethod::MediaAvailailityStatus AvailabilityTrackerPrivate::getFirstIssue(
     return ret;
 }
 
+AvailabilityTrackerPrivate::CallMode AvailabilityTrackerPrivate::getCallMode() const
+{
+    if (!m_pIndividual)
+        return CallMode::NONE;
+
+    const auto c = CallModel::instance().firstActiveCall(m_pIndividual);
+
+    if (!c)
+        return CallMode::NONE;
+
+    if (c->lifeCycleState() != Call::LifeCycleState::PROGRESS
+      && c->lifeCycleState() != Call::LifeCycleState::INITIALIZATION)
+        return CallMode::NONE;
+
+    const auto r = c->videoRenderer();
+
+    if (!r)
+        return CallMode::AUDIO;
+
+    const auto sm = c->sourceModel();
+
+    if (!r)
+        return CallMode::AUDIO;
+
+    return sm->matches(::Video::SourceModel::ExtendedDeviceList::SCREEN) ?
+        CallMode::SCREEN : CallMode::VIDEO;
+}
+
 QString AvailabilityTracker::warningMessage() const
 {
     if (!hasWarning())
@@ -187,6 +231,80 @@ void AvailabilityTrackerPrivate::slotIndividualChanged()
 {
     emit q_ptr->changed();
 }
+
+
+AvailabilityTracker::ControlState AvailabilityTracker::audioCallControlState() const
+{
+    typedef AvailabilityTrackerPrivate::CallMode CallMode;
+
+    if (!canCall())
+        return ControlState::HIDDEN;
+
+    switch (d_ptr->getCallMode()) {
+        case CallMode::AUDIO:
+            return ControlState::CHECKED;
+        case CallMode::VIDEO:
+        case CallMode::SCREEN:
+        case CallMode::NONE:
+            return ControlState::NORMAL;
+    }
+
+    return ControlState::NORMAL;
+}
+
+AvailabilityTracker::ControlState AvailabilityTracker::videoCallControlState() const
+{
+    typedef AvailabilityTrackerPrivate::CallMode CallMode;
+
+    if (!canVideoCall())
+        return ControlState::HIDDEN;
+
+    switch (d_ptr->getCallMode()) {
+        case CallMode::VIDEO:
+            return ControlState::CHECKED;
+        case CallMode::AUDIO:
+        case CallMode::SCREEN:
+        case CallMode::NONE:
+            return ControlState::NORMAL;
+    }
+
+    return ControlState::NORMAL;
+}
+
+AvailabilityTracker::ControlState AvailabilityTracker::screenSharingControlState() const
+{
+    typedef AvailabilityTrackerPrivate::CallMode CallMode;
+
+    if (!canVideoCall())
+        return ControlState::HIDDEN;
+
+    switch (d_ptr->getCallMode()) {
+        case CallMode::SCREEN:
+            return ControlState::CHECKED;
+        case CallMode::AUDIO:
+        case CallMode::VIDEO:
+        case CallMode::NONE:
+            return ControlState::NORMAL;
+    }
+
+    return ControlState::NORMAL;
+}
+
+AvailabilityTracker::ControlState AvailabilityTracker::textMessagesControlState() const
+{
+    if (!canSendTexts())
+        return ControlState::HIDDEN;
+
+    return ControlState::NORMAL;
+}
+
+
+AvailabilityTracker::ControlState AvailabilityTracker::hangUpControlState() const
+{
+    return CallModel::instance().firstActiveCall(d_ptr->m_pIndividual) ?
+        ControlState::NORMAL : ControlState::HIDDEN;
+}
+
 
 }
 

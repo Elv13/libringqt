@@ -51,6 +51,8 @@ public:
 
    Device* deviceAt(const QModelIndex& idx) const;
 
+   bool matches(ExtendedDeviceList t) const;
+
    int activeIndex() const;
 
    int getDeviceIndex(Video::Device* device);

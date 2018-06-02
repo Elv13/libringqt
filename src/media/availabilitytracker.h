@@ -42,6 +42,22 @@ public:
     Q_PROPERTY(bool hasWarning READ hasWarning NOTIFY changed)
     Q_PROPERTY(QString warningMessage READ warningMessage NOTIFY changed)
     Q_PROPERTY(Individual* individual READ individual WRITE setIndividual)
+    Q_PROPERTY(ControlState audioCallControlState     READ audioCallControlState     NOTIFY changed)
+    Q_PROPERTY(ControlState videoCallControlState     READ videoCallControlState     NOTIFY changed)
+    Q_PROPERTY(ControlState screenSharingControlState READ screenSharingControlState NOTIFY changed)
+    Q_PROPERTY(ControlState textMessagesControlState  READ textMessagesControlState  NOTIFY changed)
+    Q_PROPERTY(ControlState hangUpControlState        READ hangUpControlState        NOTIFY changed)
+
+    /**
+     * How the button should be displayed
+     */
+    enum class ControlState {
+        NORMAL  , /*!< Everything is ok, the call can be performed    */
+        DISABLED, /*!< Some existing live media block this button     */
+        CHECKED , /*!< This live media is in progress                 */
+        HIDDEN  , /*!< The media is unavailable, the button is hidden */
+    };
+    Q_ENUM(ControlState)
 
     explicit AvailabilityTracker(QObject* parent = nullptr);
     virtual ~AvailabilityTracker();
@@ -49,6 +65,12 @@ public:
     bool canCall() const;
     bool canVideoCall() const;
     bool canSendTexts() const;
+
+    ControlState audioCallControlState    () const;
+    ControlState videoCallControlState    () const;
+    ControlState screenSharingControlState() const;
+    ControlState textMessagesControlState () const;
+    ControlState hangUpControlState       () const;
 
     bool hasWarning() const;
 
