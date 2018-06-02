@@ -632,6 +632,9 @@ QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 
 void PeersTimelineModel::whiteList(Individual* ind)
 {
+    if (ind->lastUsedTime())
+        return;
+
     const auto map = d_ptr->m_hMapping;
     ind->forAllNumbers([map, this, ind](ContactMethod* cm) {
         auto n = map.value(cm);
