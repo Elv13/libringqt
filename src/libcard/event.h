@@ -106,6 +106,8 @@ public:
         DIRECTION       ,
         HAS_AV_RECORDING,
         STATUS          ,
+        FORMATTED_DATE  ,
+        BEST_NAME       ,
     };
 
     /**

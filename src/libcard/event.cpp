@@ -440,15 +440,19 @@ QVariant Event::roleData(int role) const
 {
     switch(role) {
         case (int) Ring::Role::Object:
-            return QVariant::fromValue(ref());
+            return QVariant::fromValue(const_cast<Event*>(this));
 
         case (int) Ring::Role::ObjectType:
             return QVariant::fromValue(Ring::ObjectType::Event);
         case (int) Ring::Role::FormattedLastUsed:
-            return HistoryTimeCategoryModel::timeToHistoryCategory(stopTimeStamp());
+            return HistoryTimeCategoryModel::timeToHistoryCategory(
+                stopTimeStamp() ? stopTimeStamp() : startTimeStamp()
+            );
         case (int) Ring::Role::IndexedLastUsed:
             return QVariant(static_cast<int>(
-                HistoryTimeCategoryModel::timeToHistoryConst(stopTimeStamp())
+                HistoryTimeCategoryModel::timeToHistoryConst(
+                    stopTimeStamp() ? stopTimeStamp() : startTimeStamp()
+                )
             ));
         case (int) Ring::Role::Length:
             return length();
@@ -484,6 +488,13 @@ QVariant Event::roleData(int role) const
             return hasAttachment(Media::Attachment::BuiltInTypes::AUDIO_RECORDING);
         case Event::Roles::STATUS:
             return QVariant::fromValue(status());
+        case Event::Roles::FORMATTED_DATE:
+            return QDateTime::fromTime_t(
+                stopTimeStamp() ? stopTimeStamp() : startTimeStamp()
+            );
+        case Event::Roles::BEST_NAME:
+            //FIXME That's wrong but multi party isn't implemented, so the other case never happen
+            return attendees().size() ? attendees().constFirst().first->bestName() : QString();
         case (int) Ring::Role::State:
         case (int) Ring::Role::FormattedState:
         case (int) Ring::Role::DropState:

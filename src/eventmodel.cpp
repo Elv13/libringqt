@@ -265,6 +265,8 @@ QHash<int,QByteArray> EventModel::roleNames() const
         roles[Event::Roles::DIRECTION       ] = "direction";
         roles[Event::Roles::HAS_AV_RECORDING] = "hasAVRecording";
         roles[Event::Roles::STATUS          ] = "status";
+        roles[Event::Roles::FORMATTED_DATE  ] = "formattedDate";
+        roles[Event::Roles::BEST_NAME       ] = "bestName";
     }
 
     return roles;
