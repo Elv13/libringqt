@@ -203,6 +203,11 @@ void Serializable::Group::addMessage(Media::MimeMessage* m, ContactMethod* peer)
         m->timestamp(), end
     );
 
+    if (m->direction() == Media::Media::Direction::IN)
+        m_IncomingCount++;
+    else
+        m_OutgoingCount++;
+
     addPeer(peer);
 
     messages.append({m, peer});

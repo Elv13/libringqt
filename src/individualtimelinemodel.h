@@ -75,6 +75,8 @@ public:
         ActiveCategories,
         CallCount,
         EndAt,
+        IncomingEntryCount,
+        OutgoingEntryCount,
     };
 
     virtual ~IndividualTimelineModel();

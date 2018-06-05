@@ -257,6 +257,8 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
         roles.insert((int)IndividualTimelineModel::Role::ActiveCategories , "activeCategories"    );
         roles.insert((int)IndividualTimelineModel::Role::EndAt            , "endAt"               );
         roles.insert((int)IndividualTimelineModel::Role::CallCount        , "callCount"           );
+        roles.insert((int)IndividualTimelineModel::Role::IncomingEntryCount, "incomingEntryCount" );
+        roles.insert((int)IndividualTimelineModel::Role::OutgoingEntryCount, "outgoingEntryCount" );
     }
     return roles;
 }
@@ -273,9 +275,22 @@ QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* g
                 group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_OUT]
             );
 
+    if (group->m_Type == IndividualTimelineModel::NodeType::SECTION_DELIMITER) {
+        switch (role) {
+            case (int)IndividualTimelineModel::Role::IncomingEntryCount:
+                return group->m_pGroup->m_IncomingCount;
+            case (int)IndividualTimelineModel::Role::OutgoingEntryCount:
+                return group->m_pGroup->m_OutgoingCount;
+        }
+    }
+
     switch(role) {
         case Qt::DisplayRole:
             return QDateTime::fromTime_t(group->m_StartTime).toString();
+        case (int)Media::TextRecording::Role::FormattedDate:
+            return QDateTime::fromTime_t(
+                    group->m_EndTime
+            );
     }
 
     return {};
@@ -314,8 +329,16 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
         case IndividualTimelineModel::NodeType::TEXT_MESSAGE:
             return n->m_pMessage->roleData(role);
         case IndividualTimelineModel::NodeType::TIME_CATEGORY:
-            return role == Qt::DisplayRole ?
-                HistoryTimeCategoryModel::indexToName((int)n->m_pTimeCat->m_Cat) : QVariant();
+            switch(role) {
+                case Qt::DisplayRole:
+                    return HistoryTimeCategoryModel::indexToName((int)n->m_pTimeCat->m_Cat);
+                case (int)Media::TextRecording::Role::FormattedDate:
+                    return QDateTime::fromTime_t(
+                         n->m_EndTime
+                    );
+                default:
+                    return QVariant();
+            }
         case IndividualTimelineModel::NodeType::CALL:
             return n->m_pCall->roleData(role);
         case IndividualTimelineModel::NodeType::AUDIO_RECORDING:
@@ -558,6 +581,7 @@ void IndividualTimelineModelPrivate::slotMessageAdded(TextMessageNode* message)
 
     // Update the group timelapse
     group->m_EndTime = std::max(ret->m_StartTime, group->m_EndTime);
+
     const auto idx   = q_ptr->createIndex(group->m_Index, 0, group);
     emit q_ptr->dataChanged(idx, idx);
 }

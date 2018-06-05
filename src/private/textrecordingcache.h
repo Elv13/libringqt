@@ -104,6 +104,9 @@ public:
      */
     static bool warnOfRaceCondition;
 
+    int m_IncomingCount {0};
+    int m_OutgoingCount {0};
+
 private:
     ///The timestamp of the first group entry
     time_t begin {0};
@@ -117,6 +120,7 @@ private:
 
     ///Due to complex ownership, give no direct access
     mutable QSharedPointer<Event> m_pEvent;
+
 };
 
 class Peers {
