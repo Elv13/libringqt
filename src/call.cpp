@@ -66,6 +66,7 @@
 #include "media/video.h"
 #include "media/text.h"
 #include "media/textrecording.h"
+#include "media/avrecording.h"
 #include "media/file.h"
 
 #include "securityevaluationmodel.h"
@@ -1303,7 +1304,7 @@ void CallPrivate::setRecordingPath(const QString& path)
 {
    if (!path.isEmpty() && QFile::exists(path)) {
 
-      Media::Recording* rec = LocalRecordingCollection::instance().addFromPath(path);
+      Media::AVRecording* rec = LocalRecordingCollection::instance().addFromPath(path);
       rec->setCall(q_ptr);
       (*m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::IN ]) << rec;
       (*m_mRecordings[Media::Media::Type::AUDIO][Media::Media::Direction::OUT]) << rec;

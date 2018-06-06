@@ -64,6 +64,7 @@ public:
         SNAPSHOT_GROUP    , /*!< A group of video frames from the same call */
         SNAPSHOT          , /*!< Saved frames from the video stream */
         EMAIL, //TODO
+        RECORDINGS,
         COUNT__
     };
     Q_ENUMS(NodeType);

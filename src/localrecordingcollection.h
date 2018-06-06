@@ -23,6 +23,7 @@
 
 namespace Media {
    class Recording;
+   class AVRecording;
 }
 
 class LIB_EXPORT LocalRecordingCollection : public CollectionInterface
@@ -44,7 +45,7 @@ public:
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
 
    //Mutator
-   Media::Recording* addFromPath(const QString& path);
+   Media::AVRecording* addFromPath(const QString& path);
 
    static LocalRecordingCollection& instance();
 

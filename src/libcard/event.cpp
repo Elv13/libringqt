@@ -96,6 +96,7 @@ Event::Event(const EventPrivate& attrs, Event::SyncState st) : ItemBase(nullptr)
     d_ptr->m_pInternals = new EventInternals();
     d_ptr->m_pInternals->q_ptr = this;
     d_ptr->m_pInternals->m_SyncState = st;
+    d_ptr->m_lAttachedFiles = attrs.m_lAttachedFiles;
 
     if (!d_ptr->m_UID.isEmpty())
         setObjectName("Event: " + d_ptr->m_UID);

@@ -32,6 +32,7 @@
 #include <personmodel.h>
 #include <eventmodel.h>
 #include <phonedirectorymodel.h>
+#include <localrecordingcollection.h>
 #include <media/avrecording.h>
 #include "../private/call_p.h"
 #include "libcard/private/event_p.h"
@@ -182,6 +183,24 @@ bool Calendar::load()
 
     eventAdapter->addPropertyHandler("UID", []ARGS {
         self->m_UID = value.data();
+    });
+
+    // Import the autio recordings
+    eventAdapter->addPropertyHandler("ATTACH", []ARGS {
+        if (self->m_EventCategory == Event::EventCategory::CALL) {
+            Media::AVRecording* rec = nullptr;
+            for (auto param : params) {
+                if (param.first == "FMTTYPE" && param.second == "audio/x-wav") {
+                    rec = LocalRecordingCollection::instance().addFromPath(
+                        value.data()
+                    );
+
+                    self->m_lAttachedFiles << rec;
+
+                    Q_ASSERT(rec->type() == Media::Attachment::BuiltInTypes::AUDIO_RECORDING);
+                }
+            }
+        }
     });
 
     // All events are part of this calendar file, so assume it can be ignored

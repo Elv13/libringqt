@@ -73,7 +73,7 @@ struct IndividualTimelineNode final {
         // Type::SECTION_DELIMITER and Type::SNAPSHOT_GROUP
         Serializable::Group* m_pGroup;
 
-        //CALL_GROUP
+        //CALL_GROUP and RECORDINGS
         ushort m_lSummary[4];
 
         // Type::CALL
@@ -149,6 +149,7 @@ const Matrix1D<IndividualTimelineModel::NodeType, QString> IndividualTimelineMod
     { IndividualTimelineModel::NodeType::SNAPSHOT_GROUP    , QStringLiteral( "snapshotGroup"    )},
     { IndividualTimelineModel::NodeType::SNAPSHOT          , QStringLiteral( "snapshot"         )},
     { IndividualTimelineModel::NodeType::EMAIL             , QStringLiteral( "email"            )},
+    { IndividualTimelineModel::NodeType::RECORDINGS        , QStringLiteral( "recordings"       )},
 };
 
 IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelineModel* parent) : q_ptr(parent)
@@ -265,7 +266,10 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
 
 QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* group, int role)
 {
-    if (role == Qt::DisplayRole && group->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP)
+    if (role == Qt::DisplayRole && (
+      group->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP ||
+      group->m_Type == IndividualTimelineModel::NodeType::RECORDINGS)
+    )
         return QStringLiteral("%1 (%2 incoming, %3 outgoing, %4 missed)")
             .arg(QDateTime::fromTime_t(group->m_StartTime).toString())
             .arg(group->m_lSummary[IndividualTimelineNode::SumaryEntries::INCOMING])
@@ -317,13 +321,14 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
         case (int) Role::EndAt:
             return QDateTime::fromTime_t(n->m_EndTime);
         case (int) Role::CallCount:
-            return n->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP ?
-                rowCount(idx) : 0;
+            return n->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP ? rowCount(idx) :
+                    (n->m_Type == IndividualTimelineModel::NodeType::RECORDINGS ? 1 : 0);
     }
 
     switch(n->m_Type) {
         case IndividualTimelineModel::NodeType::SECTION_DELIMITER:
         case IndividualTimelineModel::NodeType::CALL_GROUP:
+        case IndividualTimelineModel::NodeType::RECORDINGS:
             return d_ptr->groupRoleData(n, role);
         case IndividualTimelineModel::NodeType::SNAPSHOT:
         case IndividualTimelineModel::NodeType::TEXT_MESSAGE:
@@ -593,15 +598,30 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
 
     auto cat = getCategory(event->startTimeStamp());
 
+    // Only allow 1 item per group when there is a recording to make room for the
+    // playback controls.
+    const bool hasRec = event->hasAttachment(
+        Media::Attachment::BuiltInTypes::AUDIO_RECORDING
+    );
+
+    const bool wasRec = m_pCurrentCallGroup && m_pCurrentCallGroup->m_Type ==
+        IndividualTimelineModel::NodeType::RECORDINGS;
+
+    const bool hasNewCat = (!m_pCurrentCallGroup)
+        || (m_pCurrentCallGroup->m_pParent != cat);
+
     // This abuses a bit of implementation details of the history. The calls
     // are expected to arrive ordered by time_t, so this allows to take a
     // little shortcut and skip proper lookup. If this is to ever become a false
     // assumption, then this code will need to be updated.
-    if ((!m_pCurrentCallGroup) || (m_pCurrentCallGroup->m_pParent != cat) || event->isGroupHead()) {
+    if (hasNewCat || hasRec || wasRec || event->isGroupHead()) {
         m_pCurrentCallGroup = new IndividualTimelineNode;
         m_pCurrentTextGroup = nullptr;
 
-        m_pCurrentCallGroup->m_Type      = IndividualTimelineModel::NodeType::CALL_GROUP;
+        m_pCurrentCallGroup->m_Type = hasRec ?
+            IndividualTimelineModel::NodeType::RECORDINGS :
+                IndividualTimelineModel::NodeType::CALL_GROUP;
+
         m_pCurrentCallGroup->m_StartTime = event->startTimeStamp();
         m_pCurrentCallGroup->m_EndTime   = event->stopTimeStamp ();
 
@@ -614,6 +634,9 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
             q_ptr->createIndex(cat->m_Index, 0, cat)
         );
     }
+
+    if (m_pCurrentCallGroup->m_Type == IndividualTimelineModel::NodeType::RECORDINGS)
+        Q_ASSERT(!m_pCurrentCallGroup->m_lChildren.size());
 
     auto ret         = new IndividualTimelineNode;
     ret->m_pCall     = event.data(); //FIXME
