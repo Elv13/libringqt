@@ -2043,12 +2043,14 @@ void CallPrivate::toggleAudioRecord()
 {
    CallManagerInterface & callManager = CallManager::instance();
    const bool wasRecording = m_mIsRecording[ Media::Media::Type::AUDIO ][Media::Media::Direction::IN];
-   qDebug() << "Setting record " << !wasRecording << " for call. callId : " << q_ptr  << "ConfId:" << q_ptr;
 
    const bool isRec = callManager.toggleRecording(q_ptr->dringId());
 
    m_mIsRecording[ Media::Media::Type::AUDIO ].setAt( Media::Media::Direction::IN  , isRec);
    m_mIsRecording[ Media::Media::Type::AUDIO ].setAt( Media::Media::Direction::OUT , isRec);
+
+   emit q_ptr->recordingChanged();
+   qDebug() << "Setting record " << !wasRecording << " for call. callId : " << q_ptr  << "ConfId:" << q_ptr;
 }
 
 ///Record the call
@@ -2057,12 +2059,14 @@ void CallPrivate::toggleVideoRecord()
    //TODO upgrade once the video recording is implemented
    CallManagerInterface & callManager = CallManager::instance();
    const bool wasRecording = m_mIsRecording[ Media::Media::Type::VIDEO ][Media::Media::Direction::IN];
-   qDebug() << "Setting record " << !wasRecording << " for call. callId : " << q_ptr  << "ConfId:" << q_ptr;
 
    const bool isRec = callManager.toggleRecording(q_ptr->dringId());
 
    m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::IN  , isRec);
    m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::OUT , isRec);
+
+   emit q_ptr->recordingChanged();
+   qDebug() << "Setting record " << !wasRecording << " for call. callId : " << q_ptr  << "ConfId:" << q_ptr;
 }
 
 ///Start the timer

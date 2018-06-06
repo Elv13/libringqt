@@ -1764,10 +1764,13 @@ void CallModelPrivate::slotRecordStateChanged (const QString& callId, bool state
     if (auto call = q_ptr->getCall(callId)) {
         call->d_ptr->m_mIsRecording[ Media::Media::Type::AUDIO ].setAt( Media::Media::Direction::IN  , state);
         call->d_ptr->m_mIsRecording[ Media::Media::Type::AUDIO ].setAt( Media::Media::Direction::OUT , state);
-        call->d_ptr->m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::IN  , state);
-        call->d_ptr->m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::OUT , state);
+
+        // Video recording isn't supported and there is no way to know
+        //call->d_ptr->m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::IN  , state);
+        //call->d_ptr->m_mIsRecording[ Media::Media::Type::VIDEO ].setAt( Media::Media::Direction::OUT , state);
 
         emit call->changed();
+        emit call->recordingChanged();
     }
 }
 

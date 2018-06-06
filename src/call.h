@@ -283,7 +283,7 @@ public:
    Q_PROPERTY( Video::Renderer*   videoRenderer      READ videoRenderer     NOTIFY videoStarted     )
    Q_PROPERTY( QString            formattedName      READ formattedName                             )
    Q_PROPERTY( QString            length             READ length            NOTIFY lengthChanged    )
-   Q_PROPERTY( bool               recordingAV        READ isAVRecording                             )
+   Q_PROPERTY( bool               recordingAV        READ isAVRecording     NOTIFY recordingChanged )
    Q_PROPERTY( UserActionModel*   userActionModel    READ userActionModel   CONSTANT                )
    Q_PROPERTY( QString            toHumanStateName   READ toHumanStateName  NOTIFY stateChanged     )
    Q_PROPERTY( bool               missed             READ isMissed          NOTIFY changed          )
@@ -433,6 +433,8 @@ Q_SIGNALS:
    void liveMediaIssuesChanaged(const FlagPack<Call::LiveMediaIssues> issues);
    /// Void length changed
    void lengthChanged();
+   /// When one of the recording changed
+   void recordingChanged();
 };
 
 Q_DECLARE_METATYPE(Call*)
