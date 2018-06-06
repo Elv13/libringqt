@@ -37,6 +37,7 @@
 #include "historytimecategorymodel.h"
 #include "private/textrecording_p.h"
 #include "libcard/matrixutils.h"
+#include <media/avrecording.h>
 
 struct TimeCategoryData
 {
@@ -260,6 +261,7 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
         roles.insert((int)IndividualTimelineModel::Role::CallCount        , "callCount"           );
         roles.insert((int)IndividualTimelineModel::Role::IncomingEntryCount, "incomingEntryCount" );
         roles.insert((int)IndividualTimelineModel::Role::OutgoingEntryCount, "outgoingEntryCount" );
+        roles.insert((int)IndividualTimelineModel::Role::AudioRecording    , "audioRecording"     );
     }
     return roles;
 }
@@ -278,6 +280,15 @@ QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* g
                 group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_IN] +
                 group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_OUT]
             );
+
+    if (group->m_Type == IndividualTimelineModel::NodeType::RECORDINGS &&
+      role == (int)IndividualTimelineModel::Role::AudioRecording && !group->m_lChildren.empty()) {
+        return QVariant::fromValue(static_cast<Media::AVRecording*> (
+            group->m_lChildren[0]->m_pCall->attachment(
+                Media::Attachment::BuiltInTypes::AUDIO_RECORDING
+        )));
+
+    }
 
     if (group->m_Type == IndividualTimelineModel::NodeType::SECTION_DELIMITER) {
         switch (role) {
@@ -345,6 +356,14 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
                     return QVariant();
             }
         case IndividualTimelineModel::NodeType::CALL:
+            if (role == (int)IndividualTimelineModel::Role::AudioRecording &&
+                  n->m_pParent &&
+                  n->m_pParent->m_Type == IndividualTimelineModel::NodeType::RECORDINGS
+            )
+                return QVariant::fromValue(static_cast<Media::AVRecording*> (
+                    n->m_pCall->attachment(Media::Attachment::BuiltInTypes::AUDIO_RECORDING)
+                ));
+
             return n->m_pCall->roleData(role);
         case IndividualTimelineModel::NodeType::AUDIO_RECORDING:
         case IndividualTimelineModel::NodeType::SNAPSHOT_GROUP:

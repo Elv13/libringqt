@@ -78,6 +78,7 @@ public:
         EndAt,
         IncomingEntryCount,
         OutgoingEntryCount,
+        AudioRecording,
     };
 
     virtual ~IndividualTimelineModel();

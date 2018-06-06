@@ -412,6 +412,16 @@ bool Event::hasAttachment(Media::Attachment::BuiltInTypes t) const
     return false;
 }
 
+Media::Attachment* Event::attachment(Media::Attachment::BuiltInTypes t) const
+{
+    for (auto a : qAsConst(d_ptr->m_lAttachedFiles)) {
+        if (a->type() == t)
+            return a;
+    }
+
+    return nullptr;
+}
+
 bool Event::isSibling(const QSharedPointer<Event>& other) const
 {
     if (!other)

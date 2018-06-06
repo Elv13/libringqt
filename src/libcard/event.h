@@ -240,6 +240,8 @@ public:
     bool hasAttachment(Media::Attachment::BuiltInTypes t) const;
     bool hasAttachment(const QUrl& path) const;
 
+    Media::Attachment* attachment(Media::Attachment::BuiltInTypes t) const;
+
     /// Return true when the event have the same type and participants
     bool isSibling(const QSharedPointer<Event>& other) const;
 
