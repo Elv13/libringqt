@@ -150,7 +150,6 @@ SET( libringqt_LIB_SRCS
   src/ringtonemodel.cpp
   src/infotemplatemanager.cpp
   src/eventmodel.cpp
-  src/lastusednumbermodel.cpp
   src/securityevaluationmodel.cpp
   src/personmodel.cpp
   src/collectionmodel.cpp
@@ -312,7 +311,6 @@ SET( libringqt_LIB_HDRS
   src/localprofilecollection.h
   src/localtextrecordingcollection.h
   src/peerprofilecollection2.h
-  src/lastusednumbermodel.h
   src/securityevaluationmodel.h
   src/certificate.h
   src/personmodel.h

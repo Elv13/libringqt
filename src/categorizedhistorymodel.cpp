@@ -35,7 +35,6 @@
 #include "callmodel.h"
 #include "collectioneditor.h"
 #include "historytimecategorymodel.h"
-#include "lastusednumbermodel.h"
 #include "collectioninterface.h"
 
 /*****************************************************************************
@@ -285,7 +284,6 @@ void CategorizedHistoryModelPrivate::add(Call* call)
    m_sHistoryCalls[(call->startTimeStamp() << 10)+qrand()%1024] = call;
    q_ptr->endInsertRows();
 
-   LastUsedNumberModel::instance().addCall(call);
    emit q_ptr->historyChanged();
 
    //When the categories goes from 0 items to many, its conceptual state change
