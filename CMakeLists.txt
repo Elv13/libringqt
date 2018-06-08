@@ -554,6 +554,7 @@ SET(libringqt_PRIVATE_HDRS
    src/private/certificatemodel_p.h
    src/usagestatistics.h
    src/private/personstatistics.hpp
+   src/itemdataroles.h
 )
 
 QT5_WRAP_CPP(LIB_HEADER_MOC ${libringqt_PRIVATE_HDRS})

@@ -21,8 +21,17 @@
 #include <QObject> //BUG As of Qt 5.9.5, Q_NAMESPACE isn't in QtGlobal
 #include <QtCore/QHash>
 
-namespace Q_DECL_EXPORT Ring {
+
+//HACK Q_NAMESPACE requies to be exported. Newer C++ variants can export
+// namespaces by placing Q_DECL_EXPORT in front. Older cannot. This uses
+// __attribute__ to prevent the moc from doing magic.
+namespace Ring __attribute__ ((visibility ("default")))  {
+
+// #pragma GCC visibility push(default)
+
 Q_NAMESPACE
+
+// #pragma GCC visibility pop
 
 /**
  * The purpose of this enum class is to mimic/extend the Qt::ItemDataRole in LRC so that the same
