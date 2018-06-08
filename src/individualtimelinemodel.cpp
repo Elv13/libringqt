@@ -305,7 +305,7 @@ QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* g
         case (int)Media::TextRecording::Role::FormattedDate:
             return QDateTime::fromTime_t(
                     group->m_EndTime
-            );
+            ).toString();
     }
 
     return {};
@@ -330,7 +330,7 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
         case (int) Role::ActiveCategories:
             return (int) d_ptr->m_lTimeCategories.size();
         case (int) Role::EndAt:
-            return QDateTime::fromTime_t(n->m_EndTime);
+            return QDateTime::fromTime_t(n->m_EndTime).toString();
         case (int) Role::CallCount:
             return n->m_Type == IndividualTimelineModel::NodeType::CALL_GROUP ? rowCount(idx) :
                     (n->m_Type == IndividualTimelineModel::NodeType::RECORDINGS ? 1 : 0);
@@ -350,7 +350,8 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
                     return HistoryTimeCategoryModel::indexToName((int)n->m_pTimeCat->m_Cat);
                 case (int)Media::TextRecording::Role::FormattedDate:
                     return QDateTime::fromTime_t(
-                         n->m_EndTime
+                         n->m_lChildren.empty() ?
+                            0 : n->m_lChildren[n->m_lChildren.size()-1]->m_EndTime
                     );
                 default:
                     return QVariant();
@@ -363,6 +364,13 @@ QVariant IndividualTimelineModel::data( const QModelIndex& idx, int role) const
                 return QVariant::fromValue(static_cast<Media::AVRecording*> (
                     n->m_pCall->attachment(Media::Attachment::BuiltInTypes::AUDIO_RECORDING)
                 ));
+
+            switch (role) {
+                case (int)Media::TextRecording::Role::FormattedDate:
+                    return QDateTime::fromTime_t(
+                         n->m_EndTime
+                    ).toString();
+            }
 
             return n->m_pCall->roleData(role);
         case IndividualTimelineModel::NodeType::AUDIO_RECORDING:

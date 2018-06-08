@@ -331,7 +331,7 @@ bool Event::isSaved() const
 QString Event::length() const
 {
    if (stopTimeStamp() == startTimeStamp())
-      return QString(); //Invalid
+      return QStringLiteral("N/A "); //Invalid
 
    int nsec =0;
    if (stopTimeStamp())
@@ -488,7 +488,7 @@ QVariant Event::roleData(int role) const
             return QVariant::fromValue(startTimeStamp());
         case Event::Roles::END_TIMESTAMP   :
         case (int) Ring::Role::LastUsed:
-            return QVariant::fromValue(stopTimeStamp());
+            return QVariant::fromValue(stopTimeStamp() ? stopTimeStamp() : startTimeStamp());
         case Event::Roles::UPDATE_TIMESTAMP:
             return QVariant::fromValue(revTimeStamp());
         case Event::Roles::EVENT_CATEGORY  :
