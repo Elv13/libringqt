@@ -1494,6 +1494,9 @@ bool Account::sendContactRequest( const URI& uri )
    if (uri.isEmpty())
        return false;
 
+   if (!profile())
+       return false;
+
    QByteArray payload;
 
    // Send our VCard as payload
