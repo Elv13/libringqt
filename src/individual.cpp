@@ -1022,6 +1022,7 @@ void IndividualPrivate::slotCmDestroyed()
 
 void IndividualPrivate::slotChildrenContactChanged(Person* newContact, Person* oldContact)
 {
+    m_BestName.clear();
     auto cm = qobject_cast<ContactMethod*>(sender());
     emit q_ptr->childrenContactChanged(cm, newContact, oldContact);
 }
