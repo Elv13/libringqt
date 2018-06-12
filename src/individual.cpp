@@ -1257,6 +1257,19 @@ Person* Individual::buildPerson() const
     return p;
 }
 
+bool Individual::markAsRead()
+{
+    forAllNumbers([](ContactMethod* cm) {
+        if (cm->hasTextRecordings()) {
+            auto rec = cm->textRecording();
+            if (rec && rec->unreadCount())
+                rec->setAllRead();
+        }
+    });
+
+    return true;
+}
+
 Individual* Individual::getIndividual(ContactMethod* cm)
 {
     if (auto i = cm->d_ptr->m_pIndividual)

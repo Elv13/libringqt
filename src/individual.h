@@ -157,6 +157,8 @@ public:
 
     Q_INVOKABLE Person* buildPerson() const;
 
+    Q_INVOKABLE bool markAsRead();
+
     QVector<ContactMethod*> phoneNumbers() const;
     QVector<ContactMethod*> relatedContactMethods() const;
     QVector<Media::TextRecording*> textRecordings() const;
