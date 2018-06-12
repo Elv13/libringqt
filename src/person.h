@@ -208,6 +208,8 @@ Q_SIGNALS:
    void callAdded                 ( Call* call     );
    ///When the photo changed
    void photoChanged();
+   ///When the formatted name changes
+   void formattedNameChanged();
 };
 
 class LIB_EXPORT PersonPlaceHolder : public Person {

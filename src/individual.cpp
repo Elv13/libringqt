@@ -118,6 +118,9 @@ Individual::Individual(Person* parent) :
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
     setObjectName(parent->formattedName());
+
+    connect(parent, &Person::formattedNameChanged, d_ptr,
+        &IndividualPrivate::slotRegisteredName);
 }
 
 Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
@@ -335,17 +338,20 @@ QString Individual::bestName() const
             display = cm->primaryName();
     });
 
+    if (d_ptr->m_pPerson && !p)
+        p = d_ptr->m_pPerson;
+
     // Can be empty for new contacts
     if (p)
         d_ptr->m_BestName = p->formattedName();
 
     if (d_ptr->m_BestName.isEmpty() && !firstRegisteredName.isEmpty())
         d_ptr->m_BestName = firstRegisteredName;
-    else if (!display.isEmpty())
+    else if (d_ptr->m_BestName.isEmpty() && !display.isEmpty())
         d_ptr->m_BestName = display;
-    else if (!firstUri.isEmpty())
+    else if (d_ptr->m_BestName.isEmpty() && !firstUri.isEmpty())
         d_ptr->m_BestName = firstUri;
-    else
+    else if (d_ptr->m_BestName.isEmpty())
         d_ptr->m_BestName = tr("Unknown");
 
     Q_ASSERT(!d_ptr->m_BestName.isEmpty());
@@ -716,6 +722,8 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         d_ptr->slotLastContactMethod(cm);
 
     if (cm->d_ptr->m_pIndividualData) {
+        //Note: There is a race condition here when 2 thread load 2 contacts with
+        // the same phone number.
         Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
         cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = d_ptr->m_Numbers.size();
     }
@@ -1233,6 +1241,9 @@ Person* Individual::buildPerson() const
     }
 
     d_ptr->m_pPerson = p;
+
+    connect(p, &Person::formattedNameChanged, d_ptr,
+        &IndividualPrivate::slotRegisteredName);
 
     for (auto cm : qAsConst(d_ptr->m_Numbers)) {
         if (!cm->contact())

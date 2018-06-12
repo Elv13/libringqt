@@ -82,7 +82,7 @@ public:
     void statusChanged            ( bool           );
     void changed                  (                );
     void photoChanged             (                );
-
+    void formattedNameChanged     (                );
 public Q_SLOTS:
     void slotTrackedChanged();
     void slotPresenceChanged();

@@ -408,6 +408,10 @@ void ContactMethod::setPerson(Person* contact)
       PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+QStringList(contact->formattedName()));
       d_ptr->m_PrimaryName_cache = contact->formattedName();
       d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
+
+      connect(contact, &Person::formattedNameChanged, d_ptr,
+         &ContactMethodPrivate::slotNameChanged);
+
       connect(contact,SIGNAL(rebased(Person*)), d_ptr,SLOT(slotContactRebased(Person*)));
    }
    d_ptr->changed();
@@ -1156,6 +1160,19 @@ void ContactMethodPrivate::slotContactRebased(Person* other)
 
    changed();
    rebased(q_ptr);
+}
+
+
+void ContactMethodPrivate::slotNameChanged()
+{
+   if (!q_ptr->contact())
+      m_PrimaryName_cache.clear();
+   else
+      m_PrimaryName_cache = q_ptr->contact()->formattedName();
+
+   primaryNameChanged(q_ptr->primaryName());
+
+   changed();
 }
 
 /**

@@ -77,6 +77,12 @@ void PersonPrivate::photoChanged()
         emit c->photoChanged();
 }
 
+void PersonPrivate::formattedNameChanged()
+{
+    for (Person* c : qAsConst(m_lParents))
+        emit c->formattedNameChanged();
+}
+
 void PersonPrivate::changed()
 {
     m_CachedFilterString.clear();
@@ -360,6 +366,12 @@ void Person::setFormattedName(const QString& name)
    d_ptr->m_FormattedName = name;
    setObjectName(name);
    d_ptr->changed();
+
+   d_ptr->formattedNameChanged();
+
+   // Make sure the cache is updated now
+   if (individual()->bestName() != name && !name.isEmpty())
+      qWarning() << "Failed to change the contact name, this is a bug";
 }
 
 ///Set the organisation / business

@@ -127,6 +127,7 @@ public:
 public Q_SLOTS:
    void slotAccountDestroyed(QObject* o);
    void slotContactRebased(Person* other);
+   void slotNameChanged();
 
  private:
    ContactMethod* q_ptr;
