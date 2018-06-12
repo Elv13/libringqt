@@ -722,9 +722,13 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         d_ptr->slotLastContactMethod(cm);
 
     if (cm->d_ptr->m_pIndividualData) {
-        //Note: There is a race condition here when 2 thread load 2 contacts with
-        // the same phone number.
-        Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
+        //Note: There is a race condition here when 2 thread load 2 contacts
+        if (cm->d_ptr->m_pIndividualData->d_ptr != d_ptr) {
+            if (cm->individual()->person() == person())
+                d_ptr->merge(cm->individual());
+            else
+                Q_ASSERT(false);
+        }
         cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = d_ptr->m_Numbers.size();
     }
     else
