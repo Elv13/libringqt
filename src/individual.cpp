@@ -227,6 +227,8 @@ bool IndividualPrivate::merge(Individual* other)
 
     emit q_ptr->layoutChanged();
 
+    emit PhoneDirectoryModel::instance().individualMerged(q_ptr, other);
+
     delete this;
 
     return true;
@@ -1175,6 +1177,16 @@ void Individual::forAllNumbers(const std::function<void(ContactMethod*)> functor
     }
 }
 
+
+bool Individual::isSelf() const
+{
+    return hasProperty<&ContactMethod::isSelf>();
+}
+
+bool Individual::isDuplicate() const
+{
+    return d_ptr->q_ptr != this;
+}
 
 /** Get the last time this person was contacted.
  * This method returns zero when the person was never contacted.

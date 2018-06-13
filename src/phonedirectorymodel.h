@@ -28,9 +28,10 @@
 
 //Ring
 #include "uri.h"
-class ContactMethod         ;
+class ContactMethod       ;
 class Person              ;
 class Account             ;
+class Individual          ;
 class Call                ;
 class TemporaryContactMethod;
 class NumberTreeBackend;
@@ -116,7 +117,9 @@ public Q_SLOTS:
 
 Q_SIGNALS:
    void lastUsedChanged(ContactMethod* cm, time_t t);
+   void lastUsedIndividualChanged(Individual* cm, time_t t);
    void contactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
    void contactMethodMerged(ContactMethod* cm, ContactMethod* into);
+   void individualMerged(Individual* oldInd, Individual* mergedInto);
 };
 Q_DECLARE_METATYPE(PhoneDirectoryModel*)

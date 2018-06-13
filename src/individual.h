@@ -113,6 +113,9 @@ public:
 
     Call* firstActiveCall() const;
 
+    bool isSelf() const;
+    bool isDuplicate() const;
+
     /**
      * The most recently used ContactMethos that supports outgoing media `m`.
      *

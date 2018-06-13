@@ -1037,8 +1037,20 @@ void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
 {
    ContactMethod* cm = qobject_cast<ContactMethod*>(QObject::sender());
 
-   if (cm)
+   if (cm) {
       emit q_ptr->lastUsedChanged(cm, t);
+
+      if (cm->type() == ContactMethod::Type::TEMPORARY)
+         return;
+
+      if (cm->type() == ContactMethod::Type::BLANK)
+         return;
+
+      const auto cm2 = cm->individual()->lastUsedContactMethod();
+
+      if (cm2 && cm2->d() == cm->d() || t >= cm->individual()->lastUsedTime())
+          emit q_ptr->lastUsedIndividualChanged(cm->individual(), t);
+   }
 }
 
 void PhoneDirectoryModelPrivate::slotContactChanged(Person* newContact, Person* oldContact)
