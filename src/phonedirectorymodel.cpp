@@ -191,6 +191,8 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
          switch (role) {
             case Qt::DisplayRole:
                return number->individual()->bestName();
+            case Qt::ToolTipRole:
+               return number->bestName();
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::TYPE:
@@ -205,12 +207,16 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
          switch (role) {
             case Qt::DisplayRole:
                return number->contact()?number->contact()->formattedName():QVariant();
+            case Qt::ToolTipRole:
+                return number->individual()->objectName() + " " + QString::number(
+                    (long long) number->individual()->d(), 16
+                );
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::IS_SELF:
          switch (role) {
-            case Qt::DisplayRole:
-               return number->isSelf();
+            case Qt::CheckStateRole:
+               return number->isSelf()?Qt::Checked:Qt::Unchecked;;
          }
          break;
       case PhoneDirectoryModelPrivate::Columns::ACCOUNT:
