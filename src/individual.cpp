@@ -56,6 +56,11 @@ class IndividualPrivate final : public QObject
     Q_OBJECT
 public:
 
+    explicit IndividualPrivate() {
+        moveToThread(QCoreApplication::instance()->thread());
+        setParent(&PhoneDirectoryModel::instance());
+    }
+
     // This is a private class, no need for d_ptr
     Person* m_pPerson {nullptr};
     bool m_RecordingsInit {false};
@@ -118,6 +123,7 @@ Individual::Individual(Person* parent) :
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
     setObjectName(parent->formattedName());
+
 
     connect(parent, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
@@ -184,6 +190,7 @@ bool IndividualPrivate::merge(Individual* other)
     }
 
     other->d_ptr->m_lParents << q_ptr;
+    other->d_ptr->m_BestName.clear();
 
     if ((!other->d_ptr->m_LastUsedCM) || (m_LastUsedCM && m_LastUsedCM->lastUsed() > other->d_ptr->m_LastUsedCM->lastUsed()))
         other->d_ptr->m_LastUsedCM =  m_LastUsedCM;
@@ -872,6 +879,9 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
     emit dataChanged(midx, midx);
 
     d_ptr->m_HiddenContactMethods << newCm;
+    d_ptr->connectContactMethod(newCm);
+    d_ptr->disconnectContactMethod(old);
+
     d_ptr->m_BestName.clear();
 
     emit relatedContactMethodsAdded(old);
