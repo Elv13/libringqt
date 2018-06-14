@@ -120,6 +120,8 @@ Q_SIGNALS:
    void lastUsedIndividualChanged(Individual* cm, time_t t);
    void contactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
    void contactMethodMerged(ContactMethod* cm, ContactMethod* into);
-   void individualMerged(Individual* oldInd, Individual* mergedInto);
+   void individualMerged(Individual* oldInd, Individual* mergedInto); //TODO move that to the peersTimelineModel
+   void individualAdded(Individual* ind); //TODO move that to the peersTimelineModel
+   void individualChanged(Individual* ind); //TODO move that to the peersTimelineModel
 };
 Q_DECLARE_METATYPE(PhoneDirectoryModel*)

@@ -1039,7 +1039,7 @@ void ContactMethod::addCall(Call* call)
    d_ptr->setLastUsed(time);
 
    //Update the contact method statistics
-   d_ptr->m_pUsageStats->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp(), Event::EventCategory::CALL);
+   d_ptr->addTimeRange(call->startTimeStamp(), call->stopTimeStamp(), Event::EventCategory::CALL);
    if (d_ptr->m_pAccount)
       d_ptr->m_pAccount->usageStatistics()->d_ptr->update(call->startTimeStamp(), call->stopTimeStamp(), Event::EventCategory::CALL);
 
@@ -1666,7 +1666,11 @@ void UsageStatisticsPrivate::update(time_t start, time_t stop, Event::EventCateg
 
 void ContactMethodPrivate::addTimeRange(time_t start, time_t end, Event::EventCategory c)
 {
+    if (end > m_pUsageStats->lastUsed()) {
+        setLastUsed(end);
+    }
     m_pUsageStats->d_ptr->update(start, end, c);
+
 }
 
 /// \brief Use this method to update lastUsed time by a new time only if sooner.

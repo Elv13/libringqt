@@ -29,6 +29,7 @@
 #include <infotemplatemanager.h>
 #include <infotemplate.h>
 #include <accountmodel.h>
+#include <peerstimelinemodel.h>
 #include <individualeditor.h>
 #include <certificatemodel.h>
 #include <individualtimelinemodel.h>
@@ -124,6 +125,8 @@ Individual::Individual(Person* parent) :
     moveToThread(QCoreApplication::instance()->thread());
     setObjectName(parent->formattedName());
 
+    PeersTimelineModel::instance();
+    emit PhoneDirectoryModel::instance().individualAdded(this);
 
     connect(parent, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
@@ -134,6 +137,8 @@ Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()),
     d_ptr->q_ptr = this;
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
+    PeersTimelineModel::instance();
+    emit PhoneDirectoryModel::instance().individualAdded(this);
 }
 
 Individual::~Individual()
@@ -179,6 +184,8 @@ bool IndividualPrivate::contains(ContactMethod* cm, bool includeHidden) const
  */
 bool IndividualPrivate::merge(Individual* other)
 {
+    other = other->d_ptr->q_ptr;
+
     // It will happen when the Person re-use the first individual it finds.
     // (it's done on purpose)
     if (other->d_ptr == this)
@@ -1124,9 +1131,8 @@ void IndividualPrivate::slotChanged()
 //
 //     blocked = false;
 
-
-
     emit q_ptr->changed();
+    emit PhoneDirectoryModel::instance().individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotRegisteredName()
@@ -1186,6 +1192,11 @@ bool Individual::isSelf() const
 bool Individual::isDuplicate() const
 {
     return d_ptr->q_ptr != this;
+}
+
+Individual* Individual::masterObject() const
+{
+    return d_ptr->q_ptr;
 }
 
 /** Get the last time this person was contacted.

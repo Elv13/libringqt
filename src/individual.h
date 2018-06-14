@@ -115,6 +115,7 @@ public:
 
     bool isSelf() const;
     bool isDuplicate() const;
+    Individual* masterObject() const;
 
     /**
      * The most recently used ContactMethos that supports outgoing media `m`.
