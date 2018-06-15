@@ -81,17 +81,26 @@ bool Media::TextRecordingPrivate::performMessageAction(MimeMessage* m, MimeMessa
         m_mMessageCounter.setAt(m->status(), m_mMessageCounter[ m->status() ]+1);
         emit q_ptr->messageStateChanged();
 
-        if (m->status() == MimeMessage::State::UNREAD) {
-            emit q_ptr->unreadCountChange(1);
-            //emit n->m_pContactMethod->unreadTextMessageCountChanged(); //FIXME
-            //emit n->m_pContactMethod->changed();
-        }
-        else if (m->status() == MimeMessage::State::READ && st == MimeMessage::State::UNREAD) {
-            emit q_ptr->unreadCountChange(-1);
-            //emit n->m_pContactMethod->unreadTextMessageCountChanged(); //FIXME
-            //emit n->m_pContactMethod->changed();
-        }
+        int delta = 0;
 
+        if (m->status() == MimeMessage::State::UNREAD)
+            delta = 1;
+        else if (m->status() == MimeMessage::State::READ && st == MimeMessage::State::UNREAD)
+            delta = -1;
+
+        // Make sure all CMs and individuals are notified. Note that it
+        // emits the signals directly to prevent 200 lines of boilerplate
+        // in both contactmethod.cpp and individual.cpp
+        if (delta) {
+            const auto prs = q_ptr->peers();
+
+            for (auto cm : qAsConst(prs)) {
+                emit cm->unreadTextMessageCountChanged();
+                emit cm->changed();
+            }
+
+            emit q_ptr->unreadCountChange(delta);
+        }
         //TODO async save
         q_ptr->save();
 

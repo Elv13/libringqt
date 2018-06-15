@@ -466,10 +466,8 @@ bool IndividualTimelineModel::setData(const QModelIndex& idx, const QVariant &va
                     Media::MimeMessage::Actions::UNREAD
             );
 
-            if (ret) {
-                qDebug() << "\n\nACCEPT READ!" << idx.data();
+            if (ret)
                 emit dataChanged(idx, idx);
-            }
 
             return ret;
         }

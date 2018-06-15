@@ -228,7 +228,7 @@ Q_SIGNALS:
     void phoneNumbersAboutToChange (                );
     void relatedContactMethodsAdded( ContactMethod* cm );
     void relatedContactMethodsRemoved( ContactMethod* cm );
-    void unreadCountChanged(int count);
+    void unreadCountChanged();
     void callAdded(Call* call);
     void lastUsedTimeChanged(time_t time);
 

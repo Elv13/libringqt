@@ -1037,7 +1037,7 @@ void IndividualPrivate::slotCallAdded(Call *call)
 
 void IndividualPrivate::slotUnreadCountChanged()
 {
-    emit q_ptr->unreadCountChanged(q_ptr->unreadTextMessageCount());
+    emit q_ptr->unreadCountChanged();
 }
 
 void IndividualPrivate::slotCmDestroyed()
