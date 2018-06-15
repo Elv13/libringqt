@@ -184,6 +184,9 @@ bool IndividualPrivate::contains(ContactMethod* cm, bool includeHidden) const
  */
 bool IndividualPrivate::merge(Individual* other)
 {
+    if (!other)
+        return false;
+
     other = other->d_ptr->q_ptr;
 
     // It will happen when the Person re-use the first individual it finds.
@@ -398,8 +401,7 @@ QVariant Individual::roleData(int role) const
                 GlobalInstances::pixmapManipulator().decorationRole(d_ptr->m_pPerson) : QVariant();
         case static_cast<int>(Ring::Role::LastUsed):
         case static_cast<int>(Call::Role::Date):
-            return lastUsedContactMethod() ?
-                QVariant::fromValue(lastUsedContactMethod()->lastUsed()) : QVariant::fromValue((time_t)0);
+            return QVariant::fromValue(lastUsedTime());
         case static_cast<int>(Ring::Role::FormattedLastUsed):
         case static_cast<int>(Call::Role::FormattedDate):
         case static_cast<int>(Call::Role::FuzzyDate):
@@ -616,6 +618,8 @@ void Individual::registerContactMethod(ContactMethod* m)
     d_ptr->m_HiddenContactMethods << m;
     d_ptr->m_BestName.clear();
 
+    d_ptr->merge(m->d_ptr->m_pIndividual);
+
     emit relatedContactMethodsAdded(m);
 
     d_ptr->connectContactMethod(m);
@@ -724,7 +728,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     //if (!d_ptr->m_pPerson)
     //    qDebug() << "Trying to add a new phone number without a contact" << cm;
 
-    if (Q_UNLIKELY(cm->contact() && !(*cm->contact() == *d_ptr->m_pPerson))) {
+    if (Q_UNLIKELY(cm->contact() && d_ptr->m_pPerson && !(*cm->contact() == *d_ptr->m_pPerson))) {
         qWarning() << "Adding a phone number to" << this << "already owned by" << cm->contact();
         Q_ASSERT(false);
     }
@@ -741,7 +745,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         //Note: There is a race condition here when 2 thread load 2 contacts
         if (cm->d_ptr->m_pIndividualData->d_ptr != d_ptr) {
             if (cm->individual()->person() == person())
-                d_ptr->merge(cm->individual());
+                d_ptr->merge(cm->d_ptr->m_pIndividual);
             else
                 Q_ASSERT(false);
         }
