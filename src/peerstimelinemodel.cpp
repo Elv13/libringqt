@@ -153,11 +153,11 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication:
 {
     d_ptr->q_ptr = this;
 
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualAdded,
+    connect(this, &PeersTimelineModel::individualAdded,
         d_ptr, &PeersTimelineModelPrivate::slotIndividualAdded);
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualChanged,
+    connect(this, &PeersTimelineModel::individualChanged,
         d_ptr, &PeersTimelineModelPrivate::slotDataChanged);
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualMerged,
+    connect(this, &PeersTimelineModel::individualMerged,
         d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged);
 }
 

@@ -103,6 +103,10 @@ public:
 
 Q_SIGNALS:
     void headChanged();
+    void lastUsedIndividualChanged(Individual* cm, time_t t);
+    void individualMerged(Individual* oldInd, Individual* mergedInto);
+    void individualAdded(Individual* ind);
+    void individualChanged(Individual* ind);
 
 private:
     explicit PeersTimelineModel();

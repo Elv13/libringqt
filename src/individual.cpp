@@ -125,7 +125,7 @@ Individual::Individual(Person* parent) :
     setObjectName(parent->formattedName());
 
     PeersTimelineModel::instance();
-    emit PhoneDirectoryModel::instance().individualAdded(this);
+    emit PeersTimelineModel::instance().individualAdded(this);
 
     connect(parent, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
@@ -137,7 +137,7 @@ Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()),
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
     PeersTimelineModel::instance();
-    emit PhoneDirectoryModel::instance().individualAdded(this);
+    emit PeersTimelineModel::instance().individualAdded(this);
 }
 
 Individual::~Individual()
@@ -239,7 +239,7 @@ bool Individual::merge(Individual* other)
 
     emit layoutChanged();
 
-    emit PhoneDirectoryModel::instance().individualMerged(this, other);
+    emit PeersTimelineModel::instance().individualMerged(this, other);
 
 
     return true;
@@ -1137,7 +1137,7 @@ void IndividualPrivate::slotChanged()
 //     blocked = false;
 
     emit q_ptr->changed();
-    emit PhoneDirectoryModel::instance().individualChanged(q_ptr->masterObject());
+    emit PeersTimelineModel::instance().individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotRegisteredName()
