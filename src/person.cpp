@@ -370,7 +370,7 @@ void Person::setFormattedName(const QString& name)
    d_ptr->formattedNameChanged();
 
    // Make sure the cache is updated now
-   if (individual()->bestName() != name && !name.isEmpty())
+   if (d_ptr->m_pIndividual && individual()->bestName() != name && !name.isEmpty())
       qWarning() << "Failed to change the contact name, this is a bug";
 }
 
@@ -634,6 +634,7 @@ bool PersonPlaceHolder::merge(Person* contact)
 
     currentD->m_lParents.removeAll(this);
 
+
     if (currentD->m_lParents.isEmpty())
         delete currentD;
 
@@ -649,8 +650,18 @@ void Person::replaceDPointer(Person* c)
         emit c->lastUsedTimeChanged(individual()->lastUsedContactMethod()->lastUsed());
     }
 
+    auto oldI = d_ptr->m_pIndividual;
+
     this->Person::d_ptr = c->Person::d_ptr;
     d_ptr->m_lParents << this;
+
+    // Prevent zombie individuals
+    if (oldI && !c->d_ptr->m_pIndividual) {
+        c->d_ptr->m_pIndividual = oldI;
+    }
+    else if (oldI)
+        oldI->merge(c->d_ptr->m_pIndividual);
+
     emit changed();
     emit rebased(c);
 }

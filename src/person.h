@@ -33,6 +33,7 @@ class Account;
 class CollectionInterface;
 class UsageStatistics;
 class Address;
+class PersonPlaceHolder;
 class Individual;
 
 #include "typedefs.h"
