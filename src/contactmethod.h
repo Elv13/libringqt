@@ -122,6 +122,7 @@ public:
       Type             ,
       CategoryKey      ,
       Account          ,
+      RegisteredName   ,
       UserData, // This has to stay the last role, see itemdataroles.h
       //TODO implement all others
    };

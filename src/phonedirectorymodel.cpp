@@ -163,6 +163,7 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
         roles[ static_cast<int>(ContactMethod::Role::Type) ] = "type";
         roles[ static_cast<int>(ContactMethod::Role::CategoryKey) ] = "categoryKey";
         roles[ static_cast<int>(ContactMethod::Role::Account) ] = "account";
+        roles[ static_cast<int>(ContactMethod::Role::RegisteredName) ] = "registeredName";
 
     }
 

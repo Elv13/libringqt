@@ -814,6 +814,8 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Role::Uri):
          cat = uri();
          break;
+      case static_cast<int>(Role::RegisteredName):
+          return registeredName();
       case Qt::DisplayRole:
       case Qt::EditRole:
       case static_cast<int>(Ring::Role::Number):
