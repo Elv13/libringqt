@@ -38,19 +38,18 @@ class SummaryModel;
 class RecentCmModel;
 class BookmarkedCmModel;
 
-struct CMTimelineNode final
+struct ITLNode final
 {
     enum InsertStatus {
         NEW = -1
     };
 
-    explicit CMTimelineNode(ContactMethod* cm, time_t t=0):m_pCM(cm),m_Time(t) {}
-    bool           m_WhiteList {  false  };
-    int            m_Index     { -1      };
-    time_t         m_Time      {  0      };
-    int            m_CatHead   { -1      };
-    ContactMethod* m_pCM       { nullptr };
-    Individual*    m_pInd      { nullptr };
+    explicit ITLNode(Individual* ind, time_t t=0):m_pInd(ind),m_Time(t) {}
+    bool        m_WhiteList {  false  };
+    int         m_Index     { -1      };
+    time_t      m_Time      {  0      };
+    int         m_CatHead   { -1      };
+    Individual* m_pInd      { nullptr };
 };
 
 class PeersTimelineModelPrivate final : public QObject
@@ -58,12 +57,12 @@ class PeersTimelineModelPrivate final : public QObject
     Q_OBJECT
 public:
     // Attributes
-    std::vector<CMTimelineNode*> m_lRows;
-    QHash<ContactMethod*, CMTimelineNode*> m_hMapping;
+    std::vector<ITLNode*> m_lRows;
+    QHash<Individual*, ITLNode*> m_hMapping;
     bool m_IsInit {false};
     SummaryModel* m_pSummaryModel;
     QSharedPointer<QAbstractItemModel> m_SummaryPtr {nullptr};
-    std::vector<CMTimelineNode*> m_lSummaryHead;
+    std::vector<ITLNode*> m_lSummaryHead;
     QWeakPointer<RecentCmModel> m_MostRecentCMPtr;
     QWeakPointer<BookmarkedCmModel> m_BookmarkedCMPtr;
 
@@ -77,15 +76,15 @@ public:
     inline int realIndex(int effective) {return m_lRows.size() - effective - 1;}
 
     // Get the next index *based on the current list*
-    std::vector<CMTimelineNode*>::iterator getNextIndex(time_t t);
+    std::vector<ITLNode*>::iterator getNextIndex(time_t t);
 
     PeersTimelineModel* q_ptr;
 
 public Q_SLOTS:
-    void slotLatestUsageChanged(ContactMethod* cm, time_t t);
-    void slotContactMethodAdded(const QModelIndex& i, int first, int last);
-    void slotContactMethodMerged(ContactMethod*, ContactMethod*);
-    void slotDataChanged(const QModelIndex& tl, const QModelIndex& br);
+    void slotLatestUsageChanged(Individual* cm, time_t t);
+    void slotIndividualAdded(Individual* ind);
+    void slotDataChanged(Individual* i);
+    void slotIndividualMerged(Individual*, Individual*);
 };
 
 /// Create a categorized "table of content" of the entries
@@ -97,7 +96,7 @@ public:
     virtual ~SummaryModel();
     virtual QVariant data(const QModelIndex& idx, int role ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
-    void updateCategories(CMTimelineNode* node, time_t t);
+    void updateCategories(ITLNode* node, time_t t);
 
     PeersTimelineModelPrivate* d_ptr;
 public slots:
@@ -149,21 +148,17 @@ PeersTimelineModel& PeersTimelineModel::instance()
     return *m_sInstance;
 }
 
-PeersTimelineModel::PeersTimelineModel() : QAbstractListModel(QCoreApplication::instance()),
+PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication::instance()),
     d_ptr(new PeersTimelineModelPrivate())
 {
     d_ptr->q_ptr = this;
 
-    d_ptr->init();
-
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::lastUsedChanged,
-        d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged);
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::rowsInserted,
-        d_ptr, &PeersTimelineModelPrivate::slotContactMethodAdded);
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::contactMethodMerged,
-        d_ptr, &PeersTimelineModelPrivate::slotContactMethodMerged);
-    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::dataChanged,
+    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualAdded,
+        d_ptr, &PeersTimelineModelPrivate::slotIndividualAdded);
+    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualChanged,
         d_ptr, &PeersTimelineModelPrivate::slotDataChanged);
+    connect(&PhoneDirectoryModel::instance(), &PhoneDirectoryModel::individualMerged,
+        d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged);
 }
 
 PeersTimelineModel::~PeersTimelineModel()
@@ -179,24 +174,23 @@ QHash<int,QByteArray> PeersTimelineModel::roleNames() const
     return PhoneDirectoryModel::instance().roleNames();
 }
 
-bool PeersTimelineModel::setData( const QModelIndex& idx, const QVariant &value, int role)
-{
-    if (!idx.isValid()) return false;
-    return static_cast<CMTimelineNode*>(idx.internalPointer())->m_pCM->setRoleData(value, role);
-}
-
 QVariant PeersTimelineModel::data( const QModelIndex& idx, int role) const
 {
-    if (!idx.isValid())
+    if ((!idx.isValid()) || (idx.column() && role != Qt::DisplayRole))
         return {};
 
-    auto i = static_cast<CMTimelineNode*>(idx.internalPointer());
+    const auto node = d_ptr->m_lRows[d_ptr->realIndex(idx.row())];
 
-    // Lazy load the individuals as late as possible to avoid wasteful deduplication
-    if (!i->m_pInd)
-        i->m_pInd = i->m_pCM->individual();
+    switch(idx.column()) {
+        case 1:
+            return node->m_pInd->isSelf();
+        case 2:
+            return (int)node->m_Time;
+        case 3:
+            return (int)node->m_pInd->lastUsedTime();
+    }
 
-    return i->m_pInd->roleData(role);
+    return node->m_pInd->roleData(role);
 }
 
 int PeersTimelineModel::rowCount( const QModelIndex& parent) const
@@ -204,25 +198,23 @@ int PeersTimelineModel::rowCount( const QModelIndex& parent) const
     return parent.isValid() ? 0 : d_ptr->init();
 }
 
-QModelIndex PeersTimelineModel::index( int row, int column, const QModelIndex& parent) const
+int PeersTimelineModel::columnCount( const QModelIndex& parent) const
 {
-    if (row < 0 || column || parent.isValid() || row >= (int) d_ptr->m_lRows.size())
-        return {};
-
-    return createIndex(row, 0, d_ptr->m_lRows[d_ptr->realIndex(row)]);
+    d_ptr->init();
+    return parent.isValid() ? 0 : 4;
 }
 
 /// Get the best position for the CM
-std::vector<CMTimelineNode*>::iterator PeersTimelineModelPrivate::getNextIndex(time_t t)
+std::vector<ITLNode*>::iterator PeersTimelineModelPrivate::getNextIndex(time_t t)
 {
     if (m_lRows.empty())
         return m_lRows.begin();
 
-    static CMTimelineNode fake(nullptr);
+    static ITLNode fake(nullptr);
     fake.m_Time = static_cast<long int>(t);
 
     return std::upper_bound(m_lRows.begin(), m_lRows.end(), &fake,
-        [t](const CMTimelineNode* a, const CMTimelineNode* t2) -> bool {
+        [t](const ITLNode* a, const ITLNode* t2) -> bool {
             return a->m_Time < t2->m_Time;
     });
 }
@@ -233,8 +225,8 @@ void PeersTimelineModelPrivate::debugState()
 #ifdef ENABLE_TEST_ASSERTS
     bool correct(true), correct2(true), correct3(true);
     for (uint i = 0; i < m_lRows.size()  - 1; i++) {
-        correct2 &= m_lRows[i]->m_Time  <= m_lRows[i+1]->m_Time;
-        correct  &= m_lRows[i]->m_Index == m_lRows[i+1]->m_Index+1;
+        correct  &= m_lRows[i]->m_Time  <= m_lRows[i+1]->m_Time;
+        correct2 &= m_lRows[i]->m_Index == m_lRows[i+1]->m_Index+1;
         correct3 &= m_lRows[i]->m_Index == (int) realIndex(i);
     }
     Q_ASSERT(correct );
@@ -243,33 +235,25 @@ void PeersTimelineModelPrivate::debugState()
 #endif
 }
 
-
 /**
  * Insert or move contact methods in the model
  */
-void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t t)
+void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t)
 {
-    if (cm->type() == ContactMethod::Type::TEMPORARY || cm->type() == ContactMethod::Type::BLANK)
-        return;
+    auto i = m_hMapping.value(ind);
+    Q_ASSERT(i);
 
-    auto i = m_hMapping.value(cm);
-    if (!i) {
-        i = new CMTimelineNode(cm);
-        m_hMapping[cm] = i;
-    }
-
-    if (t && t == i->m_Time)
+    if ((!m_IsInit) || (t > 0 && t <= i->m_Time))
         return;
 
     const auto it    = getNextIndex(t);
     const auto dtEnd = std::distance(it, m_lRows.end());
     i->m_Time        = t;
 
-    if (i->m_Index == CMTimelineNode::NEW || it == m_lRows.begin()) {
+    if (i->m_Index == ITLNode::NEW || it == m_lRows.begin()) {
         i->m_Index = dtEnd;
-
         q_ptr->beginInsertRows({}, dtEnd, dtEnd);
-        std::for_each(m_lRows.begin(), it, [](CMTimelineNode* n) {n->m_Index++;});
+        std::for_each(m_lRows.begin(), it, [](ITLNode* n) {n->m_Index++;});
         m_lRows.insert(it, i);
         q_ptr->endInsertRows();
     } else {
@@ -277,7 +261,7 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t
         const int start(std::distance(curIt, m_lRows.end()));
 
         q_ptr->beginMoveRows({}, start, start, {}, dtEnd);
-        std::for_each(curIt+1, it, [](CMTimelineNode* n) {n->m_Index++;});
+        std::for_each(curIt+1, it, [](ITLNode* n) {n->m_Index++;});
         std::rotate(curIt, curIt+1, it);
         i->m_Index = dtEnd;
         q_ptr->endMoveRows();
@@ -292,59 +276,48 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(ContactMethod* cm, time_t
     debugState();
 }
 
+
 void PeersTimelineModelPrivate::
-slotContactMethodAdded(const QModelIndex& i, int first, int last)
+slotIndividualAdded(Individual* ind)
 {
-    if (i.isValid())
+    if (ind->isDuplicate())
         return;
 
-    const auto m = &PhoneDirectoryModel::instance();
-    const auto r = static_cast<int>(PhoneDirectoryModel::Role::Object);
-
-    ModelUtils::for_each_role<ContactMethod*>(m, r, [this](ContactMethod* cm) {
-        slotLatestUsageChanged(cm, cm->lastUsed());
-    }, first, last);
+    m_hMapping[ind] = new ITLNode(ind);
+    slotLatestUsageChanged(ind, ind->lastUsedTime());
 }
 
 void PeersTimelineModelPrivate::
-slotDataChanged(const QModelIndex& tl, const QModelIndex& br)
+slotDataChanged(Individual* ind)
 {
-    const auto m = &PhoneDirectoryModel::instance();
-    const auto r = static_cast<int>(PhoneDirectoryModel::Role::Object);
+    const auto i = m_hMapping.value(ind->masterObject());
+    if (!i) return;
 
-    ModelUtils::for_each_role<ContactMethod*>(m, r, [this](ContactMethod* cm) {
-        if (auto i = m_hMapping.value(cm)) {
-            const auto idx = q_ptr->index(i->m_Index, 0);
-            emit q_ptr->dataChanged(idx, idx);
-        }
-
-        // For the filters, also take into account the most recent
-        cm = cm->individual()->lastUsedContactMethod();
-        if (auto i = m_hMapping.value(cm)) {
-            const auto idx = q_ptr->index(i->m_Index, 0);
-            emit q_ptr->dataChanged(idx, idx);
-        }
-
-    }, tl.row(), br.row());
+    const auto idx = q_ptr->index(i->m_Index, 0);
+    emit q_ptr->dataChanged(idx, idx);
 }
 
 /// Remove the duplicated CMs from the timeline
-void PeersTimelineModelPrivate::slotContactMethodMerged(ContactMethod* cm, ContactMethod*)
+void PeersTimelineModelPrivate::slotIndividualMerged(Individual* old, Individual* into)
 {
-    Q_ASSERT(cm->isDuplicate());
-    if ((!m_IsInit) || !m_hMapping.contains(cm))
+    Q_ASSERT(old->isDuplicate() && !into->isDuplicate() && into->masterObject() == into);
+    auto entry = m_hMapping.take(old);
+
+    if (!m_IsInit)
+        delete entry;
+
+    if ((!m_IsInit) || !entry)
         return;
 
-    auto entry   = m_hMapping.value(cm);
     auto realIdx = m_lRows.begin()+realIndex(entry->m_Index);
     Q_ASSERT(entry == *realIdx);
 
     q_ptr->beginRemoveRows({}, entry->m_Index, entry->m_Index);
-    std::for_each(m_lRows.begin(), realIdx, [](CMTimelineNode* n) { n->m_Index--; });
+    std::for_each(m_lRows.begin(), realIdx, [](ITLNode* n) { n->m_Index--; });
     m_lRows.erase(realIdx);
     q_ptr->endRemoveRows();
 
-    m_hMapping.remove(cm);
+    slotLatestUsageChanged(into, into->lastUsedTime());
 
     // Not as efficient as it can be, but simple and rare
     if (entry->m_CatHead != -1 && m_pSummaryModel)
@@ -355,7 +328,10 @@ void PeersTimelineModelPrivate::slotContactMethodMerged(ContactMethod* cm, Conta
     debugState();
 }
 
-/// Get the current contact methods and sort them
+// Moving elements requires rotating the m_lRows vector. It is very expensive
+// and happens a lot of time during initialization. However it's useless as
+// long as nothing is displayed. This method allows to delay and batch those
+// rotation after initialization.
 int PeersTimelineModelPrivate::init()
 {
     if (m_IsInit)
@@ -364,26 +340,28 @@ int PeersTimelineModelPrivate::init()
     m_IsInit = true;
 
     // Create a QList for the easy insertion, then convert it to a model
-    QMultiMap<time_t, ContactMethod*> map;
-    const auto m = &PhoneDirectoryModel::instance();
-    const auto r = static_cast<int>(PhoneDirectoryModel::Role::Object);
+    QMultiMap<time_t, ITLNode*> map;
 
-    ModelUtils::for_each_role<ContactMethod*>(m, r, [&map](ContactMethod* cm) {
-        map.insert(cm->lastUsed(), cm);
-    });
+    for (auto i : qAsConst(m_hMapping)) {
+        i->m_Time  = i->m_pInd->lastUsedTime();
+        map.insert(i->m_Time, i);
+    }
 
     int pos(map.size());
 
-    for (auto cm : qAsConst(map)) {
-        auto i         = new CMTimelineNode(cm, cm->lastUsed());
-        i->m_Index     = --pos;
-        m_hMapping[cm] = i;
-        m_lRows.push_back(i);
+    q_ptr->beginResetModel();
+
+    for (auto node : qAsConst(map)) {
+        node->m_Index = --pos;
+        m_lRows.push_back(node);
     }
+
+    q_ptr->endResetModel();
 
     debugState();
 
-    if (m_pSummaryModel) m_pSummaryModel->reloadCategories();
+    if (m_pSummaryModel)
+        m_pSummaryModel->reloadCategories();
 
     emit q_ptr->headChanged();
 
@@ -470,7 +448,7 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::timelineSummaryModel() co
 }
 
 /// Maintains a secondary index of summary categories
-void SummaryModel::updateCategories(CMTimelineNode* node, time_t t)
+void SummaryModel::updateCategories(ITLNode* node, time_t t)
 {
     const uint cat = (int) HistoryTimeCategoryModel::timeToHistoryConst(t);
 
@@ -504,44 +482,29 @@ bool SummaryModelProxy::filterAcceptsRow (int row, const QModelIndex & srcParent
 /// Remove all categories without entries
 bool RecentCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) const
 {
-    if (srcParent.isValid())
-        return false;
-
-    if (row > (int) d_ptr->m_lRows.size())
+    if (srcParent.isValid() || row > (int) d_ptr->m_lRows.size())
         return false;
 
     auto n = d_ptr->m_lRows[d_ptr->realIndex(row)];
 
-    //FIXME There's still duplicate if the person was never contacted but has
-    // multiple contact methods
-
     // Also flush is "myself" entries that could have become true after they
     // were first inserted.
-    return (!n->m_pCM->isDuplicate()) && (!n->m_pCM->isSelf()) && (
-           (!n->m_pCM->contact())
-        || (n->m_WhiteList)
-        || (!n->m_pCM->contact()->lastUsedContactMethod()) // that would be a bug
-        || (*n->m_pCM->contact()->lastUsedContactMethod()) == (*n->m_pCM)
+    return true; (!n->m_pInd->isSelf()) && (
+        n->m_pInd->person() || n->m_WhiteList || n->m_pInd->lastUsedTime()
     );
 }
 
 /// Remove all categories without entries
 bool BookmarkedCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) const
 {
-    if (srcParent.isValid())
-        return false;
-
-    if (row > (int) d_ptr->m_lRows.size())
+    if (srcParent.isValid() || row > (int) d_ptr->m_lRows.size())
         return false;
 
     auto n = d_ptr->m_lRows[d_ptr->realIndex(row)];
 
-    //FIXME There's still duplicate if the person was never contacted but has
-    // multiple contact methods
-
     // Also flush is "myself" entries that could have become true after they
     // were first inserted.
-    return n->m_pCM->isBookmarked();
+    return n->m_pInd->hasBookmarks();
 }
 
 
@@ -576,6 +539,9 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
 
 bool PeersTimelineModel::isEmpty() const
 {
+    if (!d_ptr->m_IsInit)
+        return false;
+
     if (auto m = d_ptr->m_MostRecentCMPtr.toStrongRef())
         return !m->rowCount();
 
@@ -590,10 +556,6 @@ Individual* PeersTimelineModel::mostRecentIndividual() const
     while (idx--) {
         auto i = d_ptr->m_lRows[idx];
 
-        // Lazy load the individuals as late as possible to avoid wasteful deduplication
-        if (!i->m_pInd)
-            i->m_pInd = i->m_pCM->individual();
-
         if ((!i->m_pInd->hasProperty<&ContactMethod::isSelf>()) && i->m_pInd->lastUsedTime())
             return i->m_pInd;
     }
@@ -606,7 +568,8 @@ QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
     if (!cm)
         return {};
 
-    auto n = d_ptr->m_hMapping.value(cm);
+    auto n = d_ptr->m_hMapping.value(cm->individual()->masterObject());
+
     if (!n)
         return {};
 
@@ -615,19 +578,12 @@ QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
 
 QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 {
-    if (!i)
+    if (!i || !i->lastUsedContactMethod())
         return {};
 
-    const auto cm = i->lastUsedContactMethod();
+    auto m = qSharedPointerCast<RecentCmModel>(deduplicatedTimelineModel());
 
-    if (!cm)
-        return {};
-
-    auto m = deduplicatedTimelineModel();
-
-    QSharedPointer<RecentCmModel> p = d_ptr->m_MostRecentCMPtr;
-
-    return p->mapFromSource(contactMethodIndex(cm));
+    return m->mapFromSource(contactMethodIndex(i->lastUsedContactMethod()));
 }
 
 void PeersTimelineModel::whiteList(Individual* ind)
@@ -635,18 +591,12 @@ void PeersTimelineModel::whiteList(Individual* ind)
     if (ind->lastUsedTime())
         return;
 
-    const auto map = d_ptr->m_hMapping;
-    ind->forAllNumbers([map, this, ind](ContactMethod* cm) {
-        auto n = map.value(cm);
-        if (!n)
-            return;
+    auto i = d_ptr->m_hMapping.value(ind->masterObject());
+    Q_ASSERT(i);
 
-        n->m_WhiteList = true;
-
-
-        const auto idx = createIndex(n->m_Index, 0, n);
-        emit dataChanged(idx, idx);
-    });
+    i->m_WhiteList = true;
+    const auto idx = createIndex(i->m_Index, 0, i);
+    emit dataChanged(idx, idx);
 }
 
 class PeersTimelineSelectionModelPrivate
@@ -681,8 +631,7 @@ ContactMethod* PeersTimelineSelectionModel::contactMethod() const
 
 void PeersTimelineSelectionModel::setContactMethod(ContactMethod* cm)
 {
-    auto idx = PeersTimelineModel::instance().contactMethodIndex(cm);
-
+    auto idx  = PeersTimelineModel::instance().contactMethodIndex(cm);
     auto pidx = qobject_cast<RecentCmModel*>(d_ptr->m_pModel.data())->mapFromSource(idx);
 
     setCurrentIndex(pidx, QItemSelectionModel::ClearAndSelect);

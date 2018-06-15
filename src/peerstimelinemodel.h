@@ -18,7 +18,7 @@
  ***********************************************************************************/
 #pragma once
 
-#include <QtCore/QAbstractListModel>
+#include <QtCore/QAbstractTableModel>
 #include <QtCore/QItemSelectionModel>
 
 #include "typedefs.h"
@@ -54,7 +54,7 @@ class PeersTimelineModelPrivate;
  *    ((!contact()) || contact()->mostRecentContactMethod())
  *
  */
-class LIB_EXPORT PeersTimelineModel : public QAbstractListModel
+class LIB_EXPORT PeersTimelineModel : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -79,10 +79,9 @@ public:
     virtual ~PeersTimelineModel();
 
     // Model re-implementation
-    virtual bool        setData ( const QModelIndex& index, const QVariant &value, int role ) override;
     virtual QVariant    data    ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;
     virtual int         rowCount( const QModelIndex& parent = {}                            ) const override;
-    virtual QModelIndex index   ( int row, int column, const QModelIndex& parent= {}        ) const override;
+    virtual int         columnCount( const QModelIndex& parent = {}                         ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
 
     QSharedPointer<QAbstractItemModel> timelineSummaryModel() const;
