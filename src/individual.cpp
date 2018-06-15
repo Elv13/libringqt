@@ -84,7 +84,6 @@ public:
     void connectContactMethod(ContactMethod* cm);
     void disconnectContactMethod(ContactMethod* cm);
     InfoTemplate* infoTemplate();
-    bool merge(Individual* other);
     bool contains(ContactMethod* cm, bool includeHidden = true) const;
 
     QList<Individual*> m_lParents;
@@ -182,31 +181,32 @@ bool IndividualPrivate::contains(ContactMethod* cm, bool includeHidden) const
  * swapping the d_ptr. Once the QSharedPointer<Individual> loses it's last
  * references it gets deleted and everyone is happy.
  */
-bool IndividualPrivate::merge(Individual* other)
+bool Individual::merge(Individual* other)
 {
     if (!other)
         return false;
 
+    // Make sure it's the master object and not a proxy
     other = other->d_ptr->q_ptr;
 
     // It will happen when the Person re-use the first individual it finds.
     // (it's done on purpose)
-    if (other->d_ptr == this)
+    if (other->d_ptr == d_ptr)
         return false;
 
-    if (Q_UNLIKELY(m_pPerson && other->d_ptr->m_pPerson && !(*m_pPerson == *other->d_ptr->m_pPerson))) {
+    if (Q_UNLIKELY(d_ptr->m_pPerson && other->d_ptr->m_pPerson && !(*d_ptr->m_pPerson == *other->d_ptr->m_pPerson))) {
         qWarning() << "Trying to merge 2 incompatible individuals";
         return false;
     }
 
-    other->d_ptr->m_lParents << q_ptr;
+    other->d_ptr->m_lParents << this;
     other->d_ptr->m_BestName.clear();
 
-    if ((!other->d_ptr->m_LastUsedCM) || (m_LastUsedCM && m_LastUsedCM->lastUsed() > other->d_ptr->m_LastUsedCM->lastUsed()))
-        other->d_ptr->m_LastUsedCM =  m_LastUsedCM;
+    if ((!other->d_ptr->m_LastUsedCM) || (d_ptr->m_LastUsedCM && d_ptr->m_LastUsedCM->lastUsed() > other->d_ptr->m_LastUsedCM->lastUsed()))
+        other->d_ptr->m_LastUsedCM = d_ptr->m_LastUsedCM;
 
-    for (auto cm : qAsConst(m_Numbers)) {
-        if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == this) {
+    for (auto cm : qAsConst(d_ptr->m_Numbers)) {
+        if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == d_ptr) {
             delete cm->d_ptr->m_pIndividualData;
             cm->d_ptr->m_pIndividualData = nullptr;
         }
@@ -215,31 +215,32 @@ bool IndividualPrivate::merge(Individual* other)
             other->addPhoneNumber(cm);
     }
 
-    for (auto cm : qAsConst(m_HiddenContactMethods)) {
+    for (auto cm : qAsConst(d_ptr->m_HiddenContactMethods)) {
         if (!other->d_ptr->contains(cm))
             other->registerContactMethod(cm);
     }
 
     //TODO merge the event aggregates
 
-    m_lParents.removeAll(q_ptr);
+    d_ptr->m_lParents.removeAll(this);
 
     // Marge all the copies
-    for (auto q : qAsConst(m_lParents)) {
+    for (auto q : qAsConst(d_ptr->m_lParents)) {
         if (other->d_ptr->m_lParents.indexOf(q) == -1) {
             other->d_ptr->m_lParents << q;
             q->d_ptr = other->d_ptr;
-            emit q_ptr->layoutChanged();
+            emit layoutChanged();
         }
     }
 
-    q_ptr->d_ptr = other->d_ptr;
+    delete d_ptr;
 
-    emit q_ptr->layoutChanged();
+    d_ptr = other->d_ptr;
 
-    emit PhoneDirectoryModel::instance().individualMerged(q_ptr, other);
+    emit layoutChanged();
 
-    delete this;
+    emit PhoneDirectoryModel::instance().individualMerged(this, other);
+
 
     return true;
 }
@@ -618,7 +619,7 @@ void Individual::registerContactMethod(ContactMethod* m)
     d_ptr->m_HiddenContactMethods << m;
     d_ptr->m_BestName.clear();
 
-    d_ptr->merge(m->d_ptr->m_pIndividual);
+    merge(m->d_ptr->m_pIndividual);
 
     emit relatedContactMethodsAdded(m);
 
@@ -745,7 +746,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         //Note: There is a race condition here when 2 thread load 2 contacts
         if (cm->d_ptr->m_pIndividualData->d_ptr != d_ptr) {
             if (cm->individual()->person() == person())
-                d_ptr->merge(cm->d_ptr->m_pIndividual);
+                merge(cm->d_ptr->m_pIndividual);
             else
                 Q_ASSERT(false);
         }
@@ -779,7 +780,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     else if (cm->d_ptr->m_pIndividual->d_ptr != d_ptr) {
         if (d_ptr->m_pPerson && ((!cm->contact()) || cm->contact()->d_ptr == d_ptr->m_pPerson->d_ptr)) {
             Individual* ind = cm->d_ptr->m_pIndividual;
-            ind->d_ptr->merge(d_ptr->m_pPerson->individual());
+            ind->merge(d_ptr->m_pPerson->individual());
         }
         else
             Q_ASSERT(false);
@@ -1076,7 +1077,7 @@ void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
 
     // Merge the individual. This assume the contacts are the same
     if (cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual->d_ptr == this) {
-        merge(cm->d_ptr->m_pIndividual);
+        q_ptr->merge(cm->d_ptr->m_pIndividual);
     }
 
     emit q_ptr->childrenRebased(cm, other);
@@ -1087,10 +1088,10 @@ void IndividualPrivate::slotContactChanged()
     auto cm = qobject_cast<ContactMethod*>(sender());
 
     if ((!m_pPerson) && cm->contact())
-        merge(cm->contact()->individual());
+        q_ptr->merge(cm->contact()->individual());
     else if (Individual* ind = cm->d_ptr->m_pIndividual) {
         if (m_pPerson)
-            ind->d_ptr->merge(m_pPerson->individual());
+            ind->merge(m_pPerson->individual());
     }
 
     if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr != this) {
