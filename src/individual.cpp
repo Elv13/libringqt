@@ -313,7 +313,8 @@ bool Individual::removeRows(int row, int count, const QModelIndex &parent)
 
     setPhoneNumbers(pn);
 
-    emit layoutChanged();
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->layoutChanged();
 
     return true;
 }
@@ -504,7 +505,8 @@ void Individual::setEditRow(bool v)
         endRemoveRows();
     }
 
-    emit hasEditRowChanged(hasEditRow());
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->hasEditRowChanged(hasEditRow());
 }
 
 QSharedPointer<EventAggregate> Individual::eventAggregate() const
@@ -621,7 +623,8 @@ void Individual::registerContactMethod(ContactMethod* m)
 
     merge(m->d_ptr->m_pIndividual);
 
-    emit relatedContactMethodsAdded(m);
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->relatedContactMethodsAdded(m);
 
     d_ptr->connectContactMethod(m);
 
@@ -676,7 +679,8 @@ void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
     //TODO make a diff instead of full reload
     const auto dedup = QSet<ContactMethod*>::fromList(numbers.toList());
 
-    emit phoneNumbersAboutToChange();
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->phoneNumbersAboutToChange();
 
     for (ContactMethod* n : qAsConst(d_ptr->m_Numbers))
         d_ptr->disconnectContactMethod(n);
@@ -686,7 +690,8 @@ void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
     for (ContactMethod* n : qAsConst(d_ptr->m_Numbers))
         d_ptr->connectContactMethod(n);
 
-    emit phoneNumbersChanged();
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->phoneNumbersChanged();
 
     //Allow incoming calls from those numbers
     const QList<Account*> ringAccounts = AccountModel::instance().getAccountsByProtocol(Account::Protocol::RING);
@@ -763,12 +768,15 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     d_ptr->m_BestName.clear();
     endInsertRows();
 
-    emit phoneNumbersChanged();
-    emit relatedContactMethodsAdded(cm);
+    for (auto p : qAsConst(d_ptr->m_lParents)) {
+        emit p->phoneNumbersChanged();
+        emit p->relatedContactMethodsAdded(cm);
+    }
 
     if (d_ptr->m_HiddenContactMethods.indexOf(cm) != -1) {
         d_ptr->m_HiddenContactMethods.removeAll(cm);
-        emit relatedContactMethodsRemoved(cm);
+        for (auto p : qAsConst(d_ptr->m_lParents))
+            emit p->relatedContactMethodsRemoved(cm);
     }
 
     if (Q_UNLIKELY(cm->d_ptr->m_pIndividual && cm->d_ptr->m_pIndividual->d_ptr != d_ptr)) {
@@ -833,7 +841,8 @@ ContactMethod* Individual::removePhoneNumber(ContactMethod* cm)
 
     d_ptr->m_HiddenContactMethods << cm;
 
-    emit relatedContactMethodsAdded(cm);
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->relatedContactMethodsAdded(cm);
 
     return cm;
 }
@@ -890,7 +899,8 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
 
     const auto midx = index(idx, 0);
 
-    emit dataChanged(midx, midx);
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->dataChanged(midx, midx);
 
     d_ptr->m_HiddenContactMethods << newCm;
     d_ptr->connectContactMethod(newCm);
@@ -898,7 +908,8 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
 
     d_ptr->m_BestName.clear();
 
-    emit relatedContactMethodsAdded(old);
+    for (auto p : qAsConst(d_ptr->m_lParents))
+        emit p->relatedContactMethodsAdded(old);
 
     phoneNumbersChanged();
 
@@ -1027,17 +1038,25 @@ void IndividualPrivate::slotLastContactMethod(ContactMethod* cm)
 
     m_LastUsedCM = cm;
 
-    emit q_ptr->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
+    for (auto p : qAsConst(m_lParents))
+        emit p->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
+
+    emit PeersTimelineModel::instance().lastUsedIndividualChanged(
+        q_ptr->masterObject(),
+        q_ptr->lastUsedTime()
+    );
 }
 
 void IndividualPrivate::slotCallAdded(Call *call)
 {
-    emit q_ptr->callAdded(call);
+    for (auto p : qAsConst(m_lParents))
+        emit p->callAdded(call);
 }
 
 void IndividualPrivate::slotUnreadCountChanged()
 {
-    emit q_ptr->unreadCountChanged();
+    for (auto p : qAsConst(m_lParents))
+        emit p->unreadCountChanged();
 }
 
 void IndividualPrivate::slotCmDestroyed()
@@ -1060,7 +1079,8 @@ void IndividualPrivate::slotChildrenContactChanged(Person* newContact, Person* o
 {
     m_BestName.clear();
     auto cm = qobject_cast<ContactMethod*>(sender());
-    emit q_ptr->childrenContactChanged(cm, newContact, oldContact);
+    for (auto p : qAsConst(m_lParents))
+        emit p->childrenContactChanged(cm, newContact, oldContact);
 }
 
 void IndividualPrivate::slotChildrenTextRecordingAdded(Media::TextRecording* t)
@@ -1068,7 +1088,8 @@ void IndividualPrivate::slotChildrenTextRecordingAdded(Media::TextRecording* t)
     if (!m_lRecordings.contains(t))
         m_lRecordings << t;
 
-    emit q_ptr->textRecordingAdded(t);
+    for (auto p : qAsConst(m_lParents))
+        emit p->textRecordingAdded(t);
 }
 
 void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
@@ -1080,7 +1101,8 @@ void IndividualPrivate::slotChildrenRebased(ContactMethod* other)
         q_ptr->merge(cm->d_ptr->m_pIndividual);
     }
 
-    emit q_ptr->childrenRebased(cm, other);
+    for (auto p : qAsConst(m_lParents))
+        emit p->childrenRebased(cm, other);
 }
 
 void IndividualPrivate::slotContactChanged()
@@ -1117,7 +1139,8 @@ void IndividualPrivate::slotChanged()
     if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr == this) {
         const auto idx = q_ptr->index(cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex, 0);
 
-        emit q_ptr->dataChanged(idx, idx);
+        for (auto p : qAsConst(m_lParents))
+            emit p->dataChanged(idx, idx);
     }
 
 //     static bool blocked = false;
@@ -1136,31 +1159,37 @@ void IndividualPrivate::slotChanged()
 //
 //     blocked = false;
 
-    emit q_ptr->changed();
+    for (auto p : qAsConst(m_lParents))
+        emit p->changed();
+
     emit PeersTimelineModel::instance().individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotRegisteredName()
 {
     m_BestName.clear();
-    emit q_ptr->changed();
+    for (auto p : qAsConst(m_lParents))
+        emit p->changed();
 }
 
 void IndividualPrivate::slotBookmark(bool b)
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
 
-    emit q_ptr->bookmarkedChanged(cm, b);
+    for (auto p : qAsConst(m_lParents))
+        emit p->bookmarkedChanged(cm, b);
 }
 
 void IndividualPrivate::slotMediaAvailabilityChanged()
 {
-    emit q_ptr->mediaAvailabilityChanged();
+    for (auto p : qAsConst(m_lParents))
+        emit p->mediaAvailabilityChanged();
 }
 
 void IndividualPrivate::slotHasActiveCallChanged()
 {
-    emit q_ptr->hasActiveCallChanged();
+    for (auto p : qAsConst(m_lParents))
+        emit p->hasActiveCallChanged();
 }
 
 /// Like std::any_of

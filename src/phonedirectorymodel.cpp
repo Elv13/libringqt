@@ -38,7 +38,6 @@
 #include "collectioninterface.h"
 #include "dbus/presencemanager.h"
 #include "globalinstances.h"
-#include "peerstimelinemodel.h"
 #include "private/contactmethod_p.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "personmodel.h"
@@ -1049,9 +1048,6 @@ void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
          return;
 
       const auto cm2 = cm->individual()->lastUsedContactMethod();
-
-      if (cm2 && cm2->d() == cm->d() || t >= cm->individual()->lastUsedTime())
-          emit PeersTimelineModel::instance().lastUsedIndividualChanged(cm->individual(), t);
    }
 }
 

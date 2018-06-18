@@ -159,13 +159,13 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication:
         d_ptr, &PeersTimelineModelPrivate::slotDataChanged);
     connect(this, &PeersTimelineModel::individualMerged,
         d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged);
+    connect(this, &PeersTimelineModel::lastUsedIndividualChanged,
+        d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged);
 }
 
 PeersTimelineModel::~PeersTimelineModel()
 {
-    foreach(auto entry, d_ptr->m_hMapping)
-        delete entry;
-
+    qDeleteAll(d_ptr->m_hMapping);
     delete d_ptr;
 }
 
@@ -240,6 +240,10 @@ void PeersTimelineModelPrivate::debugState()
  */
 void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t)
 {
+    // Avoid duplicated map lookups
+    if (ind->masterObject() != ind)
+        return;
+
     auto i = m_hMapping.value(ind);
     Q_ASSERT(i);
 
@@ -303,7 +307,7 @@ void PeersTimelineModelPrivate::slotIndividualMerged(Individual* old, Individual
     Q_ASSERT(old->isDuplicate() && !into->isDuplicate() && into->masterObject() == into);
     auto entry = m_hMapping.take(old);
 
-    if (!m_IsInit)
+    if ((!m_IsInit) && entry)
         delete entry;
 
     if ((!m_IsInit) || !entry)
@@ -387,7 +391,7 @@ QVariant SummaryModel::data(const QModelIndex& idx, int role) const
     if (!idx.isValid())
         return {};
 
-    auto cur = d_ptr->m_lSummaryHead[idx.row()];
+    const auto cur = d_ptr->m_lSummaryHead[idx.row()];
 
     // Compute the total and visible distances between categories
     switch (role) {
@@ -420,8 +424,8 @@ QVariant SummaryModel::data(const QModelIndex& idx, int role) const
 QHash<int,QByteArray> SummaryModel::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-    static bool initRoles = false;
-    if (!initRoles) {
+    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    if (!init_flag.test_and_set()) {
         roles[(int)PeersTimelineModel::SummaryRoles::CATEGORY_ENTRIES ] = "categoryEntries";
         roles[(int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES] = "activeCategories";
         roles[(int)PeersTimelineModel::SummaryRoles::TOTAL_ENTRIES    ] = "totalEntries";
@@ -434,8 +438,7 @@ QHash<int,QByteArray> SummaryModel::roleNames() const
 
 QSharedPointer<QAbstractItemModel> PeersTimelineModel::timelineSummaryModel() const
 {
-    if (!d_ptr->m_pSummaryModel) {
-        d_ptr->m_pSummaryModel = new SummaryModel(d_ptr);
+    if ((!d_ptr->m_pSummaryModel) && (d_ptr->m_pSummaryModel = new SummaryModel(d_ptr))) {
         auto m = new SummaryModelProxy(d_ptr);
         d_ptr->m_SummaryPtr = QSharedPointer<SummaryModelProxy>(m);
 
