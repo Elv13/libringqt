@@ -100,6 +100,7 @@ public Q_SLOTS:
     void slotChanged            (                         );
     void slotRegisteredName     (                         );
     void slotBookmark           ( bool b                  );
+    void slotIsSelf             (                         );
     void slotMediaAvailabilityChanged();
     void slotHasActiveCallChanged();
 
@@ -558,6 +559,9 @@ void IndividualPrivate::connectContactMethod(ContactMethod* m)
     connect(m, &ContactMethod::bookmarkedChanged, this,
         &IndividualPrivate::slotBookmark);
 
+    connect(m, &ContactMethod::accountChanged, this,
+        &IndividualPrivate::slotIsSelf);
+
     connect(m, &ContactMethod::mediaAvailabilityChanged, this,
         &IndividualPrivate::slotMediaAvailabilityChanged);
 
@@ -605,6 +609,9 @@ void IndividualPrivate::disconnectContactMethod(ContactMethod* m)
 
     disconnect(m, &ContactMethod::bookmarkedChanged, this,
         &IndividualPrivate::slotBookmark);
+
+    disconnect(m, &ContactMethod::accountChanged, this,
+        &IndividualPrivate::slotIsSelf);
 
     disconnect(m, &ContactMethod::mediaAvailabilityChanged, this,
         &IndividualPrivate::slotMediaAvailabilityChanged);
@@ -1178,6 +1185,16 @@ void IndividualPrivate::slotBookmark(bool b)
 
     for (auto p : qAsConst(m_lParents))
         emit p->bookmarkedChanged(cm, b);
+}
+
+void IndividualPrivate::slotIsSelf()
+{
+    if (q_ptr->isSelf()) {
+        for (auto p : qAsConst(m_lParents))
+            emit p->isSelfChanged();
+
+        emit PeersTimelineModel::instance().selfRemoved(q_ptr->masterObject());
+    }
 }
 
 void IndividualPrivate::slotMediaAvailabilityChanged()

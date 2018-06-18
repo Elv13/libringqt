@@ -231,6 +231,7 @@ Q_SIGNALS:
     void unreadCountChanged();
     void callAdded(Call* call);
     void lastUsedTimeChanged(time_t time);
+    void isSelfChanged();
 
     /// When any ContactMethod bookmark status changes
     void bookmarkedChanged(ContactMethod* cm, bool isBookmarked);

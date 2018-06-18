@@ -60,7 +60,6 @@ class LIB_EXPORT PeersTimelineModel : public QAbstractTableModel
 
 public:
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
-    Q_PROPERTY(QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel READ deduplicatedTimelineModel CONSTANT)
     Q_PROPERTY(Individual*  mostRecentIndividual READ mostRecentIndividual NOTIFY headChanged)
     Q_PROPERTY(bool empty READ isEmpty  NOTIFY headChanged)
 
@@ -79,14 +78,12 @@ public:
     virtual ~PeersTimelineModel();
 
     // Model re-implementation
-    virtual QVariant    data    ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;
-    virtual int         rowCount( const QModelIndex& parent = {}                            ) const override;
-    virtual int         columnCount( const QModelIndex& parent = {}                         ) const override;
+    virtual QVariant data       ( const QModelIndex& index, int role = Qt::DisplayRole ) const override;
+    virtual int      rowCount   ( const QModelIndex& parent = {}                       ) const override;
+    virtual int      columnCount( const QModelIndex& parent = {}                       ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
 
     QSharedPointer<QAbstractItemModel> timelineSummaryModel() const;
-
-    QSharedPointer<QAbstractItemModel> deduplicatedTimelineModel() const;
 
     QSharedPointer<QAbstractItemModel> bookmarkedTimelineModel() const;
 
@@ -107,6 +104,7 @@ Q_SIGNALS:
     void individualMerged(Individual* oldInd, Individual* mergedInto);
     void individualAdded(Individual* ind);
     void individualChanged(Individual* ind);
+    void selfRemoved(Individual* ind);
 
 private:
     explicit PeersTimelineModel();
