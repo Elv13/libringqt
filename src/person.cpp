@@ -739,6 +739,16 @@ int Person::removeAllCustomFields(const QByteArray& key)
     return d_ptr->m_lCustomAttributes.remove(key);
 }
 
+void Person::deduplicateCustomField(const QByteArray& key)
+{
+    const auto old = getCustomFields(key);
+    removeAllCustomFields(key);
+    const QSet<QByteArray> vals = old.toSet();;
+
+    for (const auto& v : qAsConst(vals))
+        d_ptr->m_lCustomAttributes.insert(key, v);
+}
+
 const QByteArray Person::toVCard(QList<Account*> accounts) const
 {
     //serializing here
