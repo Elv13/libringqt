@@ -44,11 +44,10 @@ struct ITLNode final
     };
 
     explicit ITLNode(Individual* ind, time_t t=0):m_pInd(ind),m_Time(t) {}
-    bool        m_WhiteList {  false  };
-    int         m_Index     { -1      };
-    time_t      m_Time      {  0      };
-    int         m_CatHead   { -1      };
-    Individual* m_pInd      { nullptr };
+    int         m_Index   { -1      };
+    time_t      m_Time    {  0      };
+    int         m_CatHead { -1      };
+    Individual* m_pInd    { nullptr };
 };
 
 class PeersTimelineModelPrivate final : public QObject
@@ -300,8 +299,6 @@ void PeersTimelineModelPrivate::slotIndividualMerged(Individual* old, Individual
     Q_ASSERT((!into) || (old->isDuplicate() && !into->isDuplicate() && into->masterObject() == into));
     auto entry = m_hMapping.take(old);
 
-    Q_ASSERT(into);
-
     if ((!m_IsInit) && entry)
         delete entry;
 
@@ -543,19 +540,6 @@ QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
         return {};
 
     return contactMethodIndex(i->lastUsedContactMethod());
-}
-
-void PeersTimelineModel::whiteList(Individual* ind)
-{
-    if (ind->lastUsedTime() || ind->isSelf())
-        return;
-
-    auto i = d_ptr->m_hMapping.value(ind->masterObject());
-    Q_ASSERT(i);
-
-    i->m_WhiteList = true;
-    const auto idx = createIndex(i->m_Index, 0, i);
-    emit dataChanged(idx, idx);
 }
 
 class PeersTimelineSelectionModelPrivate
