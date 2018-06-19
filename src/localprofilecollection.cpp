@@ -133,5 +133,6 @@ void LocalProfileCollectionPrivate::setupDefaultProfile()
     for (int i = 0 ; i < AccountModel::instance().size() ; i++)
         AccountModel::instance()[i]->setProfile(profile);
 
+    profile->setCollection(q_ptr);
     q_ptr->editor<Person>()->addNew(profile);
 }
