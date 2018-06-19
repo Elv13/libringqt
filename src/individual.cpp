@@ -241,7 +241,7 @@ bool Individual::merge(Individual* other)
     emit layoutChanged();
 
     emit PeersTimelineModel::instance().individualMerged(this, other);
-
+    emit PeersTimelineModel::instance().individualChanged(masterObject());
 
     return true;
 }
@@ -646,6 +646,7 @@ void Individual::registerContactMethod(ContactMethod* m)
 
     if (objectName().isEmpty())
         setObjectName(m->primaryName());
+    emit PeersTimelineModel::instance().individualChanged(masterObject());
 }
 
 ///Get the phone number list
@@ -815,6 +816,8 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
 
     if (objectName().isEmpty())
         setObjectName(cm->primaryName());
+
+    emit PeersTimelineModel::instance().individualChanged(masterObject());
 
     return cm;
 }
@@ -1189,6 +1192,7 @@ void IndividualPrivate::slotRegisteredName()
     m_BestName.clear();
     for (auto p : qAsConst(m_lParents))
         emit p->changed();
+    emit PeersTimelineModel::instance().individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotBookmark(bool b)
