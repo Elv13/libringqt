@@ -614,6 +614,9 @@ bool ProfileModel::setProfile(Account* a, Person* p)
 
     Q_ASSERT(a->isNew() || a->contactMethod()->isSelf());
     a->contactMethod()->setPerson(p);
+    p->individual()->addPhoneNumber(a->contactMethod());
+
+    Q_ASSERT(p->individual()->isSelf());
 
     d_ptr->setProfile(accNode, proNode);
     return true;
