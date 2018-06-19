@@ -633,6 +633,12 @@ void Individual::registerContactMethod(ContactMethod* m)
     for (auto p : qAsConst(d_ptr->m_lParents))
         emit p->relatedContactMethodsAdded(m);
 
+    if (isSelf()) {
+        for (auto p : qAsConst(d_ptr->m_lParents))
+            emit p->isSelfChanged();
+        emit PeersTimelineModel::instance().selfRemoved(masterObject());
+    }
+
     d_ptr->connectContactMethod(m);
 
     if ((!d_ptr->m_LastUsedCM) || m->lastUsed() > d_ptr->m_LastUsedCM->lastUsed())
@@ -799,6 +805,12 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         }
         else
             Q_ASSERT(false);
+    }
+
+    if (isSelf()) {
+        for (auto p : qAsConst(d_ptr->m_lParents))
+            emit p->isSelfChanged();
+        emit PeersTimelineModel::instance().selfRemoved(masterObject());
     }
 
     if (objectName().isEmpty())
@@ -1237,6 +1249,10 @@ void Individual::forAllNumbers(const std::function<void(ContactMethod*)> functor
 
 bool Individual::isSelf() const
 {
+    // Profiles are always ourselves
+    if (d_ptr->m_pPerson && d_ptr->m_pPerson->collection() && d_ptr->m_pPerson->collection()->id() == "lpc")
+        return true;
+
     return hasProperty<&ContactMethod::isSelf>();
 }
 
