@@ -119,6 +119,8 @@ public:
     Individual* masterObject() const;
     bool merge(Individual* other);
 
+    bool hasPhoneNumber(ContactMethod* cm) const;
+
     /**
      * The most recently used ContactMethos that supports outgoing media `m`.
      *

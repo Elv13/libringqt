@@ -726,16 +726,27 @@ void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
     }
 }
 
+bool Individual::hasPhoneNumber(ContactMethod* cm) const
+{
+    if (!cm)
+        return false;
+
+    for (auto pn : qAsConst(d_ptr->m_Numbers)) {
+        if ((*pn) == cm)
+            return true;
+    }
+
+    return false;
+}
+
 ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
 {
     if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
         return nullptr;
 
-    for (auto cm2 : qAsConst(d_ptr->m_Numbers)) {
-        if (Q_UNLIKELY(cm2->d() == cm->d())) {
-            qWarning() << this << "already has the phone number" << cm;
-            return cm;
-        }
+    if (Q_UNLIKELY(hasPhoneNumber(cm))) {
+        qWarning() << this << "already has the phone number" << cm;
+        return cm;
     }
 
     if (cm->type() == ContactMethod::Type::TEMPORARY)
