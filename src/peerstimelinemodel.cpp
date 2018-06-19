@@ -138,15 +138,15 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication:
     d_ptr->q_ptr = this;
 
     connect(this, &PeersTimelineModel::individualAdded,
-        d_ptr, &PeersTimelineModelPrivate::slotIndividualAdded);
+        d_ptr, &PeersTimelineModelPrivate::slotIndividualAdded, Qt::QueuedConnection);
     connect(this, &PeersTimelineModel::individualChanged,
-        d_ptr, &PeersTimelineModelPrivate::slotDataChanged);
+        d_ptr, &PeersTimelineModelPrivate::slotDataChanged, Qt::QueuedConnection);
     connect(this, &PeersTimelineModel::individualMerged,
-        d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged);
+        d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged, Qt::QueuedConnection);
     connect(this, &PeersTimelineModel::lastUsedIndividualChanged,
-        d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged);
+        d_ptr, &PeersTimelineModelPrivate::slotLatestUsageChanged, Qt::QueuedConnection);
     connect(this, SIGNAL(selfRemoved(Individual*)),
-        d_ptr, SLOT(slotIndividualMerged(Individual*)));
+        d_ptr, SLOT(slotIndividualMerged(Individual*)), Qt::QueuedConnection);
 }
 
 PeersTimelineModel::~PeersTimelineModel()
@@ -209,6 +209,7 @@ std::vector<ITLNode*>::iterator PeersTimelineModelPrivate::getNextIndex(time_t t
 void PeersTimelineModelPrivate::debugState()
 {
 #ifdef ENABLE_TEST_ASSERTS
+    if (m_lRows.empty()) return;
     bool correct(true), correct2(true), correct3(true);
     for (uint i = 0; i < m_lRows.size()  - 1; i++) {
         correct  &= m_lRows[i]->m_Time  <= m_lRows[i+1]->m_Time;
@@ -233,7 +234,7 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
     auto i = m_hMapping.value(ind);
     Q_ASSERT(i);
 
-    if ((!m_IsInit) || (t > 0 && t <= i->m_Time))
+    if ((!m_IsInit) || (i->m_Index != ITLNode::NEW && t <= i->m_Time))
         return;
 
     const auto it    = getNextIndex(t);
@@ -253,6 +254,8 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
 
         // The item is already where it belongs
         if (start == dtEnd) return;
+
+        Q_ASSERT(curIt+1 < it);
 
         q_ptr->beginMoveRows({}, start, start, {}, dtEnd);
         std::for_each(curIt+1, it, [](ITLNode* n) {n->m_Index++;});
