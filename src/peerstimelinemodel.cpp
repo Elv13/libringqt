@@ -1,5 +1,5 @@
 /************************************************************************************
- *   Copyright (C) 2017 by BlueSystems GmbH                                         *
+ *   Copyright (C) 2017-2018 by BlueSystems GmbH                                    *
  *   Author : Emmanuel Lepage Vallee <elv1313@gmail.com>                            *
  *                                                                                  *
  *   This library is free software; you can redistribute it and/or                  *
@@ -26,16 +26,12 @@
 #include <QtCore/QDateTime>
 
 // Ring
-#include <contactmethod.h>
-#include <person.h>
 #include <individual.h>
 #include <phonedirectorymodel.h>
-#include <private/modelutils.h>
 #include <historytimecategorymodel.h>
 
 #define NEVER static_cast<int>(HistoryTimeCategoryModel::HistoryConst::Never)
 class SummaryModel;
-class BookmarkedCmModel;
 
 struct ITLNode final
 {
@@ -55,13 +51,12 @@ class PeersTimelineModelPrivate final : public QObject
     Q_OBJECT
 public:
     // Attributes
-    std::vector<ITLNode*> m_lRows;
-    QHash<Individual*, ITLNode*> m_hMapping;
-    bool m_IsInit {false};
-    SummaryModel* m_pSummaryModel;
-    QSharedPointer<QAbstractItemModel> m_SummaryPtr {nullptr};
-    std::vector<ITLNode*> m_lSummaryHead;
-    QWeakPointer<BookmarkedCmModel> m_BookmarkedCMPtr;
+    bool                               m_IsInit        { false };
+    SummaryModel*                      m_pSummaryModel {nullptr};
+    QSharedPointer<QAbstractItemModel> m_SummaryPtr    {nullptr};
+    std::vector<ITLNode*>              m_lRows         {       };
+    QHash<Individual*, ITLNode*>       m_hMapping      {       };
+    std::vector<ITLNode*>              m_lSummaryHead  {       };
 
     // Helpers
     int init();
@@ -78,10 +73,10 @@ public:
     PeersTimelineModel* q_ptr;
 
 public Q_SLOTS:
-    void slotLatestUsageChanged(Individual* cm, time_t t);
-    void slotIndividualAdded(Individual* ind);
-    void slotDataChanged(Individual* i);
-    void slotIndividualMerged(Individual*, Individual* i = nullptr);
+    void slotLatestUsageChanged( Individual* cm, time_t t            );
+    void slotIndividualAdded   ( Individual* ind                     );
+    void slotDataChanged       ( Individual* i                       );
+    void slotIndividualMerged  ( Individual*, Individual* i = nullptr);
 };
 
 /// Create a categorized "table of content" of the entries
@@ -112,23 +107,9 @@ protected:
     virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
 };
 
-/// Only filter the bookmarked entries
-class BookmarkedCmModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-public:
-    explicit BookmarkedCmModel(PeersTimelineModelPrivate* parent) :
-        QSortFilterProxyModel(), d_ptr(parent) {}
-
-    PeersTimelineModelPrivate* d_ptr;
-protected:
-    virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
-};
-
 PeersTimelineModel& PeersTimelineModel::instance()
 {
     static auto m_sInstance = new PeersTimelineModel();
-
     return *m_sInstance;
 }
 
@@ -237,9 +218,8 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
     if ((!m_IsInit) || (i->m_Index != ITLNode::NEW && t <= i->m_Time))
         return;
 
-    const auto it    = getNextIndex(t);
+    const auto it    = getNextIndex(i->m_Time = t);
     const auto dtEnd = std::distance(it, m_lRows.end());
-    i->m_Time        = t;
 
     if (i->m_Index == ITLNode::NEW || it == m_lRows.begin()) {
         i->m_Index = dtEnd;
@@ -250,11 +230,11 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
     } else {
         const auto curIt = m_lRows.begin() + realIndex(i->m_Index);
         const int start = std::distance(curIt, m_lRows.end()) -1;
-        Q_ASSERT(m_lRows[m_lRows.size()-1 - start] == i);
 
         // The item is already where it belongs
         if (start == dtEnd) return;
 
+        Q_ASSERT(m_lRows[m_lRows.size()-1 - start] == i);
         Q_ASSERT(curIt+1 < it);
 
         q_ptr->beginMoveRows({}, start, start, {}, dtEnd);
@@ -472,34 +452,9 @@ void SummaryModel::reloadCategories()
 }
 
 /// Remove all categories without entries
-bool SummaryModelProxy::filterAcceptsRow (int row, const QModelIndex & srcParent) const
+bool SummaryModelProxy::filterAcceptsRow(int row, const QModelIndex & srcParent) const
 {
     return (!srcParent.isValid()) && row <= NEVER && row >= 0 && d_ptr->m_lSummaryHead[row];
-}
-
-/// Remove all categories without entries
-bool BookmarkedCmModel::filterAcceptsRow(int row, const QModelIndex & srcParent) const
-{
-    if (srcParent.isValid() || row > (int) d_ptr->m_lRows.size())
-        return false;
-
-    auto n = d_ptr->m_lRows[d_ptr->realIndex(row)];
-
-    // Also flush is "myself" entries that could have become true after they
-    // were first inserted.
-    return n->m_pInd->hasBookmarks();
-}
-
-QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel() const
-{
-    if (!d_ptr->m_BookmarkedCMPtr) {
-        QSharedPointer<BookmarkedCmModel> m = QSharedPointer<BookmarkedCmModel>(new BookmarkedCmModel(d_ptr));
-        m->setSourceModel(const_cast<PeersTimelineModel*>(this));
-        d_ptr->m_BookmarkedCMPtr = m;
-        return m;
-    }
-
-    return d_ptr->m_BookmarkedCMPtr;
 }
 
 bool PeersTimelineModel::isEmpty() const
@@ -525,11 +480,7 @@ Individual* PeersTimelineModel::mostRecentIndividual() const
 QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 {
     auto n = d_ptr->m_hMapping.value(i->masterObject());
-
-    if (!n)
-        return {};
-
-    return createIndex(n->m_Index, 0, n);
+    return n ? createIndex(n->m_Index, 0, n) : QModelIndex();
 }
 
 #undef NEVER

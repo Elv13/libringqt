@@ -18,11 +18,12 @@
  ***********************************************************************************/
 #pragma once
 
-#include <QtCore/QAbstractTableModel>
-#include <QtCore/QItemSelectionModel>
-
 #include "typedefs.h"
 
+// Qt
+#include <QtCore/QAbstractTableModel>
+
+// libstdc++
 #include <memory>
 
 class ContactMethod;
@@ -84,8 +85,6 @@ public:
     virtual QHash<int,QByteArray> roleNames() const override;
 
     QSharedPointer<QAbstractItemModel> timelineSummaryModel() const;
-
-    QSharedPointer<QAbstractItemModel> bookmarkedTimelineModel() const;
 
     Individual* mostRecentIndividual() const;
     bool isEmpty() const;
