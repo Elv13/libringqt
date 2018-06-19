@@ -614,7 +614,9 @@ bool ProfileModel::setProfile(Account* a, Person* p)
 
     Q_ASSERT(a->isNew() || a->contactMethod()->isSelf());
     a->contactMethod()->setPerson(p);
-    p->individual()->addPhoneNumber(a->contactMethod());
+
+    if (!p->individual()->hasPhoneNumber(a->contactMethod()))
+        p->individual()->addPhoneNumber(a->contactMethod());
 
     Q_ASSERT(p->individual()->isSelf());
 
@@ -803,9 +805,26 @@ bool ProfileModel::addItemCallback(const Person* pro)
 
     const auto accountIds = pro->getCustomFields(VCardUtils::Property::X_RINGACCOUNT);
 
+    // Older vcardutils would accidently duplicates X_RINGACCOUNT many, many time
+    // and it actually slowed down startup due to calling setProfile and all
+    // the signals attached to it hundreds of time.
+    bool hasDuplicated = false;
+    QSet<QString> entries;
+
     for (const auto& accId : qAsConst(accountIds)) {
-        if (auto a = AccountModel::instance().getById(accId))
+        if (entries.contains(accId))
+            hasDuplicated = true;
+        else if (auto a = AccountModel::instance().getById(accId)) {
+            entries << accId;
             a->setProfile(const_cast<Person*>(pro));
+        }
+        else {
+            // Remove references to deleted accounts
+            proNode->m_pPerson->removeCustomField(
+                VCardUtils::Property::X_RINGACCOUNT, accId
+            );
+            hasDuplicated = true;
+        }
     }
 
     selectionModel()->setCurrentIndex(index(proNode->m_Index, 0), QItemSelectionModel::ClearAndSelect);
@@ -818,6 +837,11 @@ bool ProfileModel::addItemCallback(const Person* pro)
     });
 
     d_ptr->_test_validate();
+
+    if (hasDuplicated) {
+        proNode->m_pPerson->deduplicateCustomField(VCardUtils::Property::X_RINGACCOUNT);
+        proNode->m_pPerson->save();
+    }
 
     return true;
 }
