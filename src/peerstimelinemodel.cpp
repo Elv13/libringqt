@@ -501,10 +501,7 @@ QSharedPointer<QAbstractItemModel> PeersTimelineModel::bookmarkedTimelineModel()
 
 bool PeersTimelineModel::isEmpty() const
 {
-    if (!d_ptr->m_IsInit)
-        return false;
-
-    return !rowCount();
+    return (!d_ptr->m_IsInit) || !rowCount();
 }
 
 Individual* PeersTimelineModel::mostRecentIndividual() const
@@ -522,62 +519,14 @@ Individual* PeersTimelineModel::mostRecentIndividual() const
     return {};
 }
 
-QModelIndex PeersTimelineModel::contactMethodIndex(ContactMethod* cm) const
+QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 {
-    if (!cm)
-        return {};
-
-    auto n = d_ptr->m_hMapping.value(cm->individual()->masterObject());
+    auto n = d_ptr->m_hMapping.value(i->masterObject());
 
     if (!n)
         return {};
 
     return createIndex(n->m_Index, 0, n);
-}
-
-QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
-{
-    if (!i || !i->lastUsedContactMethod())
-        return {};
-
-    return contactMethodIndex(i->lastUsedContactMethod());
-}
-
-class PeersTimelineSelectionModelPrivate
-{
-public:
-    PeersTimelineModel* m_pModel;
-};
-
-PeersTimelineSelectionModel::PeersTimelineSelectionModel() :
-    QItemSelectionModel(nullptr),
-    d_ptr(new PeersTimelineSelectionModelPrivate)
-{
-    d_ptr->m_pModel = &PeersTimelineModel::instance();
-    setModel(d_ptr->m_pModel);
-    setParent(d_ptr->m_pModel);
-}
-
-PeersTimelineSelectionModel::~PeersTimelineSelectionModel()
-{
-    delete d_ptr;
-}
-
-ContactMethod* PeersTimelineSelectionModel::contactMethod() const
-{
-    const auto cur = currentIndex();
-
-    if (!cur.isValid())
-        return nullptr;
-
-    return qvariant_cast<ContactMethod*>(cur.data((int)Ring::Role::Object));
-}
-
-void PeersTimelineSelectionModel::setContactMethod(ContactMethod* cm)
-{
-    auto idx  = PeersTimelineModel::instance().contactMethodIndex(cm);
-
-    setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect);
 }
 
 #undef NEVER

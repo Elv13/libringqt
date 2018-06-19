@@ -90,7 +90,6 @@ public:
     Individual* mostRecentIndividual() const;
     bool isEmpty() const;
 
-    QModelIndex contactMethodIndex(ContactMethod* cm) const;
     QModelIndex individualIndex(Individual* i) const;
 
 Q_SIGNALS:
@@ -107,22 +106,3 @@ private:
     PeersTimelineModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(PeersTimelineModel)
 };
-
-class PeersTimelineSelectionModelPrivate;
-
-class LIB_EXPORT PeersTimelineSelectionModel : public QItemSelectionModel
-{
-    Q_OBJECT
-public:
-    Q_PROPERTY(ContactMethod* contactMethod READ contactMethod WRITE setContactMethod)
-
-    explicit PeersTimelineSelectionModel();
-    virtual ~PeersTimelineSelectionModel();
-
-    ContactMethod* contactMethod() const;
-    void setContactMethod(ContactMethod* cm);
-private:
-    PeersTimelineSelectionModelPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(PeersTimelineSelectionModel)
-};
-Q_DECLARE_METATYPE(PeersTimelineSelectionModel*);
