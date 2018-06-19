@@ -224,7 +224,8 @@ struct VCardMapper final {
             return true;
          }
 
-         c->addCustomField(key, value);
+         if (key != VCardUtils::Property::VERSION && key != "BEGIN" && key != "END")
+            c->addCustomField(key, value);
 
          return true;
       }
@@ -251,6 +252,7 @@ void VCardUtils::addProperty(const char* prop, const QString& value)
 {
    if (value.isEmpty() || value == QString(';'))
       return;
+
    m_vCard << (QString::fromUtf8(prop) + ':' + value);
 }
 
