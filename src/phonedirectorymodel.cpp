@@ -867,6 +867,10 @@ ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
     if ((!number->registeredName().isEmpty()) && number->uri() == ret->uri()) {
         ret->d_ptr->setRegisteredName(number->registeredName());
 
+        // Add to the name list so search works
+        if (auto wrap = d_ptr->m_hDirectory.value(ret->uri()))
+            d_ptr->m_lSortedNames.insert(number->registeredName(), wrap);
+
         // There is a potential race condition, for now ignore it, the cache isn't critical
         if (d_ptr->m_pNameServiceCache)
             d_ptr->m_pNameServiceCache->editor<ContactMethod>()->addExisting(ret);
@@ -1079,7 +1083,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
             if (!wrap) {
                wrap = new NumberWrapper(chunk);
                m_hNumbersByNames[chunk] = wrap;
-               m_lSortedNames[chunk]    = wrap;
+               m_lSortedNames.insert(chunk, wrap);
             }
             const int numCount = wrap->numbers.size();
             if (!((numCount == 1 && wrap->numbers[0] == number) || (numCount > 1 && wrap->numbers.indexOf(number) != -1)))
@@ -1090,7 +1094,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
       if (!wrap) {
          wrap = new NumberWrapper(lower);
          m_hNumbersByNames[lower] = wrap;
-         m_lSortedNames[lower]    = wrap;
+         m_lSortedNames.insert(lower, wrap);
       }
       const int numCount = wrap->numbers.size();
       if (!((numCount == 1 && wrap->numbers[0] == number) || (numCount > 1 && wrap->numbers.indexOf(number) != -1)))
@@ -1152,22 +1156,25 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
                 if (m_pNameServiceCache)
                     m_pNameServiceCache->editor<ContactMethod>()->addExisting(cm);
 
+                NumberWrapper* wrap2 = m_hDirectory.value(name);
+
                 // Add the CM to the directory using the registered name too.
                 // Note that in theory the wrapper can exist already if the
                 // user was either offline in a call attempt or if there is a
                 // collision with a SIP account.
-                if (!m_hDirectory.contains(name)) {
+                if (!wrap2) {
                     //TODO support multiple name service, use proper URIs for names
-                    auto wrap2 = new NumberWrapper(name);
+                    wrap2 = new NumberWrapper(name);
                     m_hDirectory    [name] = wrap2;
                     m_hSortedNumbers[name] = wrap2;
+                    m_lSortedNames.insert(name, wrap2);
                     wrap2->numbers << cm;
                 }
 
                 // Only add it once
-                if (!m_hDirectory[name]->numbers.indexOf(cm)) {
+                if (!wrap2->numbers.indexOf(cm)) {
                     //TODO check if some deduplication can be performed
-                    m_hDirectory[name]->numbers << cm;
+                    wrap2->numbers << cm;
                 }
 
                 defaultCm = cm;
