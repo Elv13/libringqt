@@ -404,6 +404,7 @@ QVariant SummaryModel::data(const QModelIndex& idx, int role) const
         case (int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES:
             return d_ptr->q_ptr->timelineSummaryModel()->rowCount();
         case (int)PeersTimelineModel::SummaryRoles::RECENT_DATE:
+            if (!cur) break;
             return QDateTime::fromTime_t(cur->m_Time);
         case (int)PeersTimelineModel::SummaryRoles::DISTANT_DATE:
             return {}; //TODO
