@@ -592,13 +592,86 @@ bool PhoneDirectoryModel::ensureValidity(const URI& uri, Account* a)
 }
 
 /**
+ * This variant is indented to add new phone numbers to existing individuals.
+ *
+ * It prevents the "race condition" where a new ::Individual would be created
+ * when adding a phone number. The deduplication that follows is not free and
+ * causes unwanted flickering in the peers timeline. It is also a problem when
+ * creating the first account where for a few ms, there will be elements in the
+ * timeline and the "first run" mode will be skipped.
+ */
+ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Account* a, const QString& type)
+{
+    // First check for existing entries
+    ContactMethod* cm = nullptr;
+
+    if (i)
+        i->forAllNumbers([&cm, &uri, a](ContactMethod* cm2) {
+            if (cm2->uri() == uri && ((!cm->account()) || (!a) || (cm2->account() == a)))
+                cm = cm2;
+        });
+
+    if (cm)
+        return cm;
+
+    // Get or create a new CM with the correct URI
+    cm = getNumber(uri, a, type);
+
+    // The CM is compatible, set the individual
+    if (i && (!cm->d_ptr->m_pIndividual) && cm->d_ptr->m_pIndividual->masterObject() == i->masterObject()) {
+        cm->d_ptr->m_pIndividual = i->masterObject();
+        return cm;
+    }
+
+    // A CM already eixsts for this URI, but isn't compatible (yet), too bad,
+    // create a new one.
+    cm = new ContactMethod(uri, NumberCategoryModel::instance().getCategory(type));
+    cm->dir_d_ptr = new ContactMethodDirectoryPrivate;
+    cm->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
+
+    // Add it to the index
+    auto wrap  = d_ptr->m_hDirectory.value(uri);
+    wrap = new NumberWrapper(uri);
+    d_ptr->m_hDirectory    [uri] = wrap;
+    d_ptr->m_hSortedNumbers[uri] = wrap;
+
+    if (i) {
+        cm->d_ptr->m_pIndividual = i->masterObject();
+        i->registerContactMethod(cm);
+    }
+
+    wrap->numbers << cm;
+
+    d_ptr->m_DirectoryAccess.unlock();
+
+    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
+    {
+        QMutexLocker l(&d_ptr->m_DirectoryAccess);
+        d_ptr->m_lNumbers << cm;
+    }
+    endInsertRows();
+
+    connect(cm,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
+    connect(cm,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
+    connect(cm,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
+    connect(cm,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged);
+    connect(cm,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
+
+    // perform a username lookup for new CM with RingID
+    if (cm->uri().protocolHint() == URI::ProtocolHint::RING)
+        NameDirectory::instance().lookupAddress(cm->account(), {}, cm->uri().userinfo());
+
+    return cm;
+}
+
+/**
  * This version of getNumber() try to get a phone number with a contact from an URI and account
  * It will also try to attach an account to existing numbers. This is not 100% reliable, but
  * it is correct often enough to do it.
  */
 ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, const QString& type)
 {
-   return getNumber(uri,nullptr,account,type);
+   return getNumber(uri, (Person*) nullptr,account,type);
 }
 
 ///Return/create a number when no information is available
@@ -615,36 +688,11 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
       return nb;
    }
 
-   //Too bad, lets create one
-   ContactMethod* number = new ContactMethod(uri, NumberCategoryModel::instance().getCategory(type));
-   number->dir_d_ptr = new ContactMethodDirectoryPrivate;
-   number->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
-
    auto wrap = new NumberWrapper(uri);
    d_ptr->m_hDirectory[uri] = wrap;
    d_ptr->m_hSortedNumbers[uri] = wrap;
-   wrap->numbers << number;
 
-   d_ptr->m_DirectoryAccess.unlock();
-
-   beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
-   {
-      QMutexLocker l(&d_ptr->m_DirectoryAccess);
-      d_ptr->m_lNumbers << number;
-   }
-   endInsertRows();
-
-   connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
-   connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
-   connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
-   connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged);
-   connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
-
-   // perform a username lookup for new CM with RingID
-   if (number->uri().protocolHint() == URI::ProtocolHint::RING)
-      NameDirectory::instance().lookupAddress(number->account(), {}, number->uri().userinfo());
-
-   return number;
+   return getNumber(uri, (Individual*) nullptr, nullptr, type);
 }
 
 /** An URI can take many forms and it's impossible to predict how and when each

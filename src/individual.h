@@ -160,6 +160,7 @@ public:
     QSharedPointer<EventAggregate> eventAggregate() const;
 
     Q_INVOKABLE ContactMethod* addPhoneNumber(ContactMethod* cm);
+    Q_INVOKABLE ContactMethod* addPhoneNumber(const URI& uri, Account* a, const QString& type);
     Q_INVOKABLE ContactMethod* removePhoneNumber(ContactMethod* cm);
     Q_INVOKABLE ContactMethod* replacePhoneNumber(ContactMethod* old, ContactMethod* newCm);
 

@@ -83,6 +83,7 @@ public:
    Q_INVOKABLE ContactMethod* getNumber(const URI& uri, const QString& type = {});
    Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Account* account, const QString& type = {});
    Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Person* contact, Account* account = nullptr, const QString& type = {});
+   Q_INVOKABLE ContactMethod* getNumber(const URI& uri, Individual* i, Account* a, const QString& type = {});
    Q_INVOKABLE ContactMethod* fromHash (const QString& hash);
    Q_INVOKABLE ContactMethod* fromTemporary(ContactMethod* number);
    Q_INVOKABLE ContactMethod* fromJson (const QJsonObject& o);

@@ -739,6 +739,14 @@ bool Individual::hasPhoneNumber(ContactMethod* cm) const
     return false;
 }
 
+
+ContactMethod* Individual::addPhoneNumber(const URI& uri, Account* a, const QString& type)
+{
+    addPhoneNumber(
+        PhoneDirectoryModel::instance().getNumber(uri, this, a, type)
+    );
+}
+
 ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
 {
     if ((!cm) || cm->type() == ContactMethod::Type::BLANK)
