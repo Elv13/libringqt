@@ -221,6 +221,10 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
     const auto it    = getNextIndex(i->m_Time = t);
     const auto dtEnd = std::distance(it, m_lRows.end());
 
+    // Need to be done before otherwise the category might not exist
+    if (m_pSummaryModel)
+        m_pSummaryModel->updateCategories(i, t);
+
     if (i->m_Index == ITLNode::NEW || it == m_lRows.begin()) {
         i->m_Index = dtEnd;
         q_ptr->beginInsertRows({}, dtEnd, dtEnd);
@@ -246,9 +250,6 @@ void PeersTimelineModelPrivate::slotLatestUsageChanged(Individual* ind, time_t t
 
     if (!dtEnd)
         emit q_ptr->headChanged();
-
-    if (m_pSummaryModel)
-        m_pSummaryModel->updateCategories(i, t);
 
     debugState();
 }
@@ -294,14 +295,15 @@ void PeersTimelineModelPrivate::slotIndividualMerged(Individual* old, Individual
     q_ptr->beginRemoveRows({}, entry->m_Index, entry->m_Index);
     std::for_each(m_lRows.begin(), realIdx, [](ITLNode* n) { n->m_Index--; });
     m_lRows.erase(realIdx);
-    q_ptr->endRemoveRows();
-
-    if (into)
-        slotLatestUsageChanged(into, into->lastUsedTime());
 
     // Not as efficient as it can be, but simple and rare
     if (entry->m_CatHead != -1 && m_pSummaryModel)
         m_pSummaryModel->reloadCategories();
+
+    q_ptr->endRemoveRows();
+
+    if (into)
+        slotLatestUsageChanged(into, into->lastUsedTime());
 
     delete entry;
 
