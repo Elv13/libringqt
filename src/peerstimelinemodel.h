@@ -83,13 +83,14 @@ public:
     virtual int      rowCount   ( const QModelIndex& parent = {}                       ) const override;
     virtual int      columnCount( const QModelIndex& parent = {}                       ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
+    virtual QModelIndex index(int row, int col, const QModelIndex& p = {}) const override;
 
     QSharedPointer<QAbstractItemModel> timelineSummaryModel() const;
 
     Individual* mostRecentIndividual() const;
     bool isEmpty() const;
 
-    QModelIndex individualIndex(Individual* i) const;
+    Q_INVOKABLE QModelIndex individualIndex(Individual* i) const;
 
 Q_SIGNALS:
     void headChanged();

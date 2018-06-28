@@ -171,6 +171,12 @@ int PeersTimelineModel::columnCount( const QModelIndex& parent) const
     return parent.isValid() ? 0 : 4;
 }
 
+QModelIndex PeersTimelineModel::index(int row, int col, const QModelIndex& p) const
+{
+    return (row < 0 || row >= d_ptr->m_lRows.size() || p.isValid() || col > 3) ?
+        QModelIndex() : createIndex(row, col, d_ptr->m_lRows[d_ptr->realIndex(row)]);
+}
+
 /// Get the best position for the CM
 std::vector<ITLNode*>::iterator PeersTimelineModelPrivate::getNextIndex(time_t t)
 {
