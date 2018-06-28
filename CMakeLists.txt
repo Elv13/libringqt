@@ -573,15 +573,13 @@ IF(ENABLE_LIBWRAP)
    )
 ENDIF()
 
-QT5_USE_MODULES(ringqt Core)
-
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  QT5_USE_MODULES(ringqt DBus)
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    FIND_PACKAGE(Qt5Concurrent)
 
    #For some reason, QSemaphore wont compile on Windows without QtConcurrent
-   QT5_USE_MODULES(ringqt Concurrent)
+   TARGET_LINK_LIBRARIES( ringqt
+      Qt5::Concurrent
+   )
 ENDIF()
 
 SET(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
@@ -668,38 +666,38 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
     )
 
     INSTALL( FILES ${libringqt_video_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/video
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/video
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_audio_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/audio
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/audio
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_media_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/media
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/media
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_card_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/libcard
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/libcard
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_troubleshoot_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/troubleshoot
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/troubleshoot
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_extensions_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/extensions
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/extensions
+        COMPONENT Devel
     )
 
     INSTALL( FILES ${libringqt_interface_LIB_HDRS}
-    DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/interfaces
-    COMPONENT Devel
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/interfaces
+        COMPONENT Devel
     )
 
     INSTALL( TARGETS ringqt
