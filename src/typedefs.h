@@ -39,6 +39,15 @@ typedef QMap< QString, QMap< QString, QStringList > >       MapStringMapStringSt
 typedef QMap< QString, QStringList >                        MapStringStringList           ;
 typedef QVector< QByteArray >                               VectorVectorByte              ;
 
+struct Message {
+    QString from;
+    MapStringString payloads;
+    quint64 received;
+};
+
+typedef QVector<Message> messages;
+
+
 // Adapted from libring DRing::DataTransferInfo
 // Adapted from libring DRing::DataTransferInfo
 struct DataTransferInfo
