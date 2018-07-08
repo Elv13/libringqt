@@ -318,6 +318,8 @@ bool Video::SourceModel::matches(ExtendedDeviceList t) const
         case ExtendedDeviceList::SCREEN :
         case ExtendedDeviceList::FILE   :
             return activeIndex() == (int) t;
+        case ExtendedDeviceList::COUNT__:
+            break;
     }
 
     return false;

@@ -41,6 +41,8 @@ Troubleshoot::Base::~Base()
 
 bool Troubleshoot::Base::setSelection(const QModelIndex& idx, Call* c)
 {
+    Q_UNUSED(idx)
+    Q_UNUSED(c)
     return false;
 }
 

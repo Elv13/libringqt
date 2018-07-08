@@ -61,7 +61,8 @@ InfoTemplate::InfoTemplate(const QByteArray& data, QObject* parent) : ItemBase(p
     const auto fields = VCardUtils::parseFields(data);
 
     for (const auto& f : qAsConst(fields)) {
-        //
+        Q_UNUSED(f);
+        //TODO
     }
 }
 

@@ -69,7 +69,7 @@ QSize Video::Renderer::size() const
 
 bool Video::Renderer::hasAcquired() const
 {
-    d_ptr->m_hasAcquired;
+    return d_ptr->m_hasAcquired;
 }
 
 /*****************************************************************************

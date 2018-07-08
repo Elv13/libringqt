@@ -258,29 +258,36 @@ QSharedPointer<EventAggregate> EventAggregate::build(Individual* ind)
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-attribute=noreturn"
 QSharedPointer<EventAggregate> EventAggregate::merge(const QList<QSharedPointer<EventAggregate> >& source)
 {
+    Q_UNUSED(source) //TODO
     Q_ASSERT(false);
-    auto ret =  QSharedPointer<EventAggregate>(new EventAggregate);
+    auto ret = QSharedPointer<EventAggregate>(new EventAggregate);
 
     return ret;
 }
+#pragma GCC diagnostic pop
 
 void EventAggregatePrivate::splitGroup(EventAggregateNode* toSplit, EventAggregateNode* splitWith)
 {
+    Q_UNUSED(toSplit)
+    Q_UNUSED(splitWith)
     //
 }
 
 void EventAggregatePrivate::slotAttendeeAdded(ContactMethod* cm)
 {
-
+    Q_UNUSED(cm)
 }
 
 void EventAggregatePrivate::slotEventChanged()
 {
-    if (QSharedPointer<QAbstractItemModel> ptr = m_pUnsortedListModel) {
+    //TODO
+    /*if (QSharedPointer<QAbstractItemModel> ptr = m_pUnsortedListModel) {
         auto m = qobject_cast<UnsortedEventListView*>(ptr.data());
-    }
+    }*/
 }
 
 void EventAggregatePrivate::slotEventAdded(QSharedPointer<Event> e)
@@ -296,7 +303,7 @@ void EventAggregatePrivate::slotEventAdded(QSharedPointer<Event> e)
 
 void EventAggregatePrivate::slotEventDetached(QSharedPointer<Event> e)
 {
-
+    Q_UNUSED(e)
 }
 
 UnsortedEventListView::UnsortedEventListView(const QSharedPointer<EventAggregatePrivate>& d) :
@@ -319,7 +326,7 @@ QVariant UnsortedEventListView::data( const QModelIndex& index, int role ) const
 
 int UnsortedEventListView::rowCount( const QModelIndex& parent ) const
 {
-    return d_ptr->m_lAllEvents.count();
+    return parent.isValid() ? 0 : d_ptr->m_lAllEvents.count();
 }
 
 QHash<int,QByteArray> UnsortedEventListView::roleNames() const
@@ -329,6 +336,7 @@ QHash<int,QByteArray> UnsortedEventListView::roleNames() const
 
 QModelIndex UnsortedEventListView::parent( const QModelIndex& index ) const
 {
+    Q_UNUSED(index)
     return {};
 }
 

@@ -127,7 +127,7 @@ bool Troubleshoot::Absent::isAffected(Call* c, time_t elapsedTime, Troubleshoot:
     if (!c->account())
         return false;
 
-    const bool isRing   = c->account()->protocol() == Account::Protocol::RING;
+    //const bool isRing   = c->account()->protocol() == Account::Protocol::RING;
     const bool isAbsent = c->lastErrorCode() == (int) std::errc::no_such_device_or_address;
 
     if (c->state() == Call::State::FAILURE && isAbsent) {
@@ -154,6 +154,7 @@ void Troubleshoot::Absent::activate()
     switch (d_ptr->m_State) {
         case AbsentPrivate::State::NORMAL:
             setStringList({});
+            break;
         case AbsentPrivate::State::NO_DEVICE:
         case AbsentPrivate::State::OFFLINE:
             setStringList(options);

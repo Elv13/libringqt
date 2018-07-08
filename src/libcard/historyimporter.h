@@ -37,6 +37,6 @@ namespace HistoryImporter
     *
     * The `callback` is executed once saving is completed.
     */
-void LIB_EXPORT importHistory(LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
+void LIB_EXPORT importHistory(LocalHistoryCollection* col);
 
 }

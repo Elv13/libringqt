@@ -130,6 +130,7 @@ bool LocalInfoTemplateCollectionEditor::remove(const InfoTemplate* item)
 
 bool LocalInfoTemplateCollectionEditor::edit( InfoTemplate* item)
 {
+    Q_UNUSED(item)
     return true;
 }
 

@@ -1078,6 +1078,7 @@ void PhoneDirectoryModelPrivate::slotContactMethodMerged(ContactMethod* other)
 // rather than having 1 qobject connection per CM.
 void PhoneDirectoryModelPrivate::slotAccountStateChanged(Account* a, const Account::RegistrationState state)
 {
+    Q_UNUSED(state)
     for (const auto numbers : qAsConst(m_hDirectory)) {
         for (auto cm : qAsConst(numbers->numbers)) {
             if ((!cm->account()) || cm->account()->protocol() == a->protocol())
@@ -1093,13 +1094,13 @@ void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
    if (cm) {
       emit q_ptr->lastUsedChanged(cm, t);
 
-      if (cm->type() == ContactMethod::Type::TEMPORARY)
+      /*if (cm->type() == ContactMethod::Type::TEMPORARY) //FIXME dead code?
          return;
 
       if (cm->type() == ContactMethod::Type::BLANK)
          return;
 
-      const auto cm2 = cm->individual()->lastUsedContactMethod();
+      const auto cm2 = cm->individual()->lastUsedContactMethod();*/
    }
 }
 

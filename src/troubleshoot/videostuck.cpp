@@ -109,6 +109,8 @@ bool Troubleshoot::VideoStuck::setSelection(const QModelIndex& idx, Call* c)
 
 bool Troubleshoot::VideoStuck::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    Q_UNUSED(elapsedTime)
+    Q_UNUSED(self)
     return c->state() == Call::State::CURRENT && c->videoRenderer() &&(
         c->liveMediaIssues() & Call::LiveMediaIssues::VIDEO_ACQUISITION_FAILED
     ) && c->videoRenderer()->hasAcquired();

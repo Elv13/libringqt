@@ -78,6 +78,8 @@ Troubleshoot::Base::Severity Troubleshoot::CallState::severity() const
 
 bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
 {
+    Q_UNUSED(idx)
+    Q_UNUSED(c)
     return false;
 }
 
@@ -90,6 +92,8 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
     auto cself = static_cast<Troubleshoot::CallState*>(self);
     cself->d_ptr->m_MissedText.clear();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
     switch(c->direction()) {
         case Call::Direction::INCOMING:
             switch(c->state()) {
@@ -120,6 +124,8 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
                     break;
             }
     }
+#pragma GCC diagnostic pop
+
 
     return false;
 }

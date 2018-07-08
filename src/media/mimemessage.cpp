@@ -226,6 +226,7 @@ MimeMessage* MimeMessage::buildExisting(const QJsonObject& json)
             st = State::UNKNOWN;
             break;
         case Media::Direction::COUNT__:
+        case Media::Direction::BOTH:
             break;
     }
 
@@ -286,6 +287,9 @@ bool MimeMessage::performAction(const MimeMessage::Actions action)
         case Media::Direction::OUT:
             d_ptr->m_Status = d_ptr->m_mStateMapOut[d_ptr->m_Status][action];
             break;
+        case Media::Direction::BOTH:
+            Q_ASSERT(false);
+            [[clang::fallthrough]];
         case Media::Direction::COUNT__:
             break;
     }

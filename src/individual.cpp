@@ -742,7 +742,7 @@ bool Individual::hasPhoneNumber(ContactMethod* cm) const
 
 ContactMethod* Individual::addPhoneNumber(const URI& uri, Account* a, const QString& type)
 {
-    addPhoneNumber(
+    return addPhoneNumber(
         PhoneDirectoryModel::instance().getNumber(uri, this, a, type)
     );
 }
@@ -1583,6 +1583,8 @@ bool Individual::isOffline() const
             ret = false;
 
     }, false);
+
+    return ret;
 }
 
 void* Individual::d() const

@@ -447,8 +447,6 @@ void AccountModelPrivate::slotVolatileAccountDetailsChange(const QString& accoun
       const QString transportDesc = details[DRing::Account::VolatileProperties::Transport::STATE_DESC];
       const QString status        = details[DRing::Account::VolatileProperties::Registration::STATUS];
 
-      const auto oldState = a->registrationState();
-
       a->statusModel()->addTransportEvent(transportDesc,transportCode);
 
       a->d_ptr->setLastTransportCode(transportCode);

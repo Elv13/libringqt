@@ -517,8 +517,13 @@ bool AvailableProfileModel::filterAcceptsRow(int row, const QModelIndex& srcPare
 /// Catch the availability changes
 int AvailableProfileModel::rowCount(const QModelIndex& parent) const
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsequence-point"
+
     if ((!!m_RcCache) ^ !!(m_RcCache = QSortFilterProxyModel::rowCount(parent)))
         emit d_ptr->q_ptr->hasAvailableProfileChanged();
+
+#pragma GCC diagnostic pop
 
     return parent.isValid() ? 0 : m_RcCache;
 }

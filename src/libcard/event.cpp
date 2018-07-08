@@ -105,6 +105,7 @@ Event::Event(const EventPrivate& attrs, Event::SyncState st) : ItemBase(nullptr)
 
 void Event::rebuild(const EventPrivate& attrs, SyncState st)
 {
+    Q_UNUSED(st)
     Q_ASSERT(syncState() == Event::SyncState::PLACEHOLDER);
     Q_ASSERT(uid() == attrs.m_UID);
     const auto i = d_ptr->m_pInternals;
@@ -207,6 +208,8 @@ QByteArray Event::categoryName(EventCategory cat)
             return "DATA TRANSFER";
         case EventCategory::MESSAGE_GROUP:
             return "TEXT MESSAGES";
+        case EventCategory::OTHER:
+            return "OTHER";
         case EventCategory::ALL:
         case EventCategory::COUNT__:
             Q_ASSERT(false);
@@ -293,11 +296,15 @@ QByteArray Event::typeName(Event::Type t)
 
 QVariant Event::getCustomProperty(Event::CustomProperties property) const
 {
+    Q_UNUSED(property)
     //TODO
+    return {};
 }
 
 void Event::setCustomProperty(Event::CustomProperties property, const QVariant& value)
 {
+    Q_UNUSED(property)
+    Q_UNUSED(value)
     if (syncState() == Event::SyncState::PLACEHOLDER) {
         qWarning() << "Trying to modify an event currently loading";
         Q_ASSERT(false);
@@ -318,6 +325,7 @@ bool Event::isSaved() const
         case Event::SyncState::SYNCHRONIZED:
         case Event::SyncState::CANCELLED:
         case Event::SyncState::ERROR:
+        case Event::SyncState::PLACEHOLDER:
             return true;
         case Event::SyncState::COUNT__:
             Q_ASSERT(false);

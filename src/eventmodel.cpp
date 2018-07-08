@@ -443,6 +443,8 @@ void EventModelPrivate::sort(ContactMethod* cm)
 /// Same as above, for on the invididual granularity
 void EventModelPrivate::sort(Individual* ind)
 {
+    Q_UNUSED(ind);
+    //TODO
 //     listsort <
 //         &EventModelNode::m_pNextByIndividual,
 //         &EventModelNode::m_pPreviousByIndividual,
@@ -516,21 +518,29 @@ void EventModelPrivate::slotFixCache()
 
 QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const
 {
+    Q_UNUSED(e)
+    Q_UNUSED(cm)
     return {};
 }
 
 QSharedPointer<Event> EventModel::nextEvent(const QSharedPointer<Event>& e, const Individual* cm) const
 {
+    Q_UNUSED(e)
+    Q_UNUSED(cm)
     return {};
 }
 
 QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, ContactMethod* cm) const
 {
+    Q_UNUSED(e)
+    Q_UNUSED(cm)
     return {};
 }
 
 QSharedPointer<Event> EventModel::previousEvent(const QSharedPointer<Event>& e, const Individual* cm) const
 {
+    Q_UNUSED(e)
+    Q_UNUSED(cm)
     return {};
 }
 

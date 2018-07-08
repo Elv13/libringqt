@@ -39,7 +39,7 @@
 namespace HistoryImporter
 {
 
-void importHistory(LocalHistoryCollection* histo, std::function<void (const QVector<Calendar*>&)> callback)
+void importHistory(LocalHistoryCollection* histo)
 {
     // Import the history
     histo->addCompletionCallback([](LocalHistoryCollection* c) {

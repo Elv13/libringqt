@@ -88,7 +88,8 @@ QVariant InfoTemplateManager::data( const QModelIndex& index, int role ) const
     if (!index.isValid())
         return {};
 
-    const InfoTemplate* info = d_ptr->m_lInfoTemplate[index.row()];
+    //TODO
+    //const InfoTemplate* info = d_ptr->m_lInfoTemplate[index.row()];
 
     switch (role) {
 //         case Qt::DisplayRole:

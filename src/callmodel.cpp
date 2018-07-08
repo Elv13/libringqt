@@ -1804,6 +1804,8 @@ void CallModelPrivate::slotPeerHold( const QString& callId, bool state)
 
 void CallModelPrivate::slotRtcpReportReceived(const QString& callId, const MapStringInt& m)
 {
+    Q_UNUSED(callId)
+    Q_UNUSED(m)
 }
 
 void CallModelPrivate::slotSelectionChanged(const QModelIndex& idx)

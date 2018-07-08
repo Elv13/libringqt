@@ -69,6 +69,7 @@ QVariant PixmapManipulatorDefault::securityIssueIcon(const QModelIndex& index)
 QByteArray PixmapManipulatorDefault::toByteArray(const QVariant& pxm, const QString& type)
 {
     Q_UNUSED(pxm)
+    Q_UNUSED(type)
     return QByteArray();
 }
 

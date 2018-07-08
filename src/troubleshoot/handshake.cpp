@@ -60,11 +60,14 @@ Troubleshoot::Base::Severity Troubleshoot::Handshake::severity() const
 
 bool Troubleshoot::Handshake::setSelection(const QModelIndex& idx, Call* c)
 {
+    Q_UNUSED(idx)
+    Q_UNUSED(c)
     return false;
 }
 
 bool Troubleshoot::Handshake::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    Q_UNUSED(self)
     return c->lifeCycleState() == Call::LifeCycleState::INITIALIZATION && elapsedTime >= 15;
 }
 

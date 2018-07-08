@@ -122,14 +122,17 @@ bool Calendar::load()
 #define ARGS (EventPrivate* self, const std::basic_string<char>& value, const AbstractVObjectAdaptor::Parameters& params)
 
     eventAdapter->addPropertyHandler("DTSTART", []ARGS {
+        Q_UNUSED(params)
         self->m_StartTimeStamp = QString(value.data()).toInt();
     });
 
     eventAdapter->addPropertyHandler("DTEND", []ARGS {
+        Q_UNUSED(params)
         self->m_StopTimeStamp = QString(value.data()).toInt();
     });
 
     eventAdapter->addPropertyHandler("DTSTAMP", []ARGS {
+        Q_UNUSED(params)
         self->m_RevTimeStamp = QString(value.data()).toInt();
     });
 
@@ -165,23 +168,27 @@ bool Calendar::load()
     });
 
     eventAdapter->addPropertyHandler("CATEGORIES", []ARGS {
+        Q_UNUSED(params)
         const QByteArray val = QByteArray::fromRawData(value.data(), value.size());
 
         self->m_EventCategory = Event::categoryFromName(val);
     });
 
     eventAdapter->addPropertyHandler("STATUS", []ARGS {
+        Q_UNUSED(params)
         const QByteArray val = QByteArray::fromRawData(value.data(), value.size());
 
         self->m_Status = Event::statusFromName(val);
     });
 
     eventAdapter->addPropertyHandler("X_RING_DIRECTION", []ARGS {
+        Q_UNUSED(params)
         self->m_Direction = value == "OUTGOING" ?
             Event::Direction::OUTGOING : Event::Direction::INCOMING;
     });
 
     eventAdapter->addPropertyHandler("UID", []ARGS {
+        Q_UNUSED(params)
         self->m_UID = value.data();
     });
 
@@ -205,6 +212,7 @@ bool Calendar::load()
 
     // All events are part of this calendar file, so assume it can be ignored
     calendarAdapter->setObjectFactory([this](const std::basic_string<char>& object_type) -> Calendar* {
+        Q_UNUSED(object_type)
         return this;
     });
 
@@ -228,6 +236,8 @@ bool Calendar::load()
            EventPrivate* child,
            const std::basic_string<char>& name
         ) {
+            Q_UNUSED(self)
+            Q_UNUSED(name)
             events << d_ptr->getEvent(*child, Event::SyncState::SAVED);
     });
 
@@ -358,6 +368,7 @@ bool CalendarEditor::remove( const Event* item )
 
 bool CalendarEditor::edit( Event* item )
 {
+    Q_UNUSED(item)
     return true;
 }
 

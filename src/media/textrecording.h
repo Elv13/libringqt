@@ -35,7 +35,7 @@ class LocalHistoryCollection;
 class Calendar;
 
 namespace HistoryImporter {
-void importHistory(LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
+void importHistory(LocalHistoryCollection* col);
 }
 
 namespace Media {
@@ -61,7 +61,7 @@ class LIB_EXPORT TextRecording : public Recording
    friend class ::ContactMethod;
    friend class ::IndividualTimelineModel;
    friend class ::IndividualTimelineModelPrivate;
-   friend void ::HistoryImporter::importHistory(::LocalHistoryCollection* col, std::function<void(const QVector<Calendar*>&)> callback);
+   friend void ::HistoryImporter::importHistory(::LocalHistoryCollection* col);
 
 public:
 

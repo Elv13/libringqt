@@ -453,7 +453,7 @@ void Serializable::Peers::write(QJsonObject &json) const
 
 Event* Serializable::Group::buildEvent()
 {
-    //
+    return nullptr;
 }
 
 bool Serializable::Group::hasEvent() const

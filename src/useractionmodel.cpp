@@ -454,7 +454,7 @@ const Matrix1D< UAM::Action, bool(*)(const Person*)> UserActionModelPrivate::per
    { UAMA::EMAIL_CONTACT     , P_CB { return ! p->preferredEmail().isEmpty(); }},
    { UAMA::COPY_CONTACT      , nullptr                                         },
    { UAMA::BOOKMARK          , nullptr                                         },
-   { UAMA::VIEW_CHAT_HISTORY , P_CB {
+   { UAMA::VIEW_CHAT_HISTORY , P_CB { Q_UNUSED(p);
       return false;/*p->hasRecording(
         Media::Media::Type::TEXT,
         Media::Media::Direction::OUT
@@ -508,7 +508,7 @@ const Matrix1D< UAM::Action, bool(*)(const ContactMethod*)> UserActionModelPriva
    }},
    { UAMA::COPY_CONTACT      , CM_CB { return cm && cm->contact();            }},
    { UAMA::BOOKMARK          , nullptr                                         },
-   { UAMA::VIEW_CHAT_HISTORY , CM_CB {
+   { UAMA::VIEW_CHAT_HISTORY , CM_CB { Q_UNUSED(cm);
        return false; /*cm && ((
           cm->textRecording()
           && !cm->textRecording()->isEmpty()
@@ -972,6 +972,7 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
                   case Ring::ObjectType::Certificate    : //TODO
                   case Ring::ObjectType::ContactRequest   : //TODO
                   case Ring::ObjectType::Event          : //TODO
+                  case Ring::ObjectType::Individual     : //TODO
                   case Ring::ObjectType::COUNT__        :
                      break;
                }
@@ -1077,6 +1078,8 @@ bool UserActionModel::execute(const UserActionModel::Action action) const
          case Ring::ObjectType::Media          : //TODO
          case Ring::ObjectType::Certificate    : //TODO
          case Ring::ObjectType::ContactRequest   : //TODO
+         case Ring::ObjectType::Event: //TODO
+         case Ring::ObjectType::Individual: //TODO
          case Ring::ObjectType::COUNT__        :
             break;
       }

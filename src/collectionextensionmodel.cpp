@@ -84,7 +84,7 @@ const QList<CollectionExtensionInterface*> CollectionExtensionModelSpecific::ent
 }
 
 /** Will insert elements into the entries() once the model has been created.
-/*
+ *
  * This avoids a static QObject initialization and those are now banned by the
  * tests.
  */

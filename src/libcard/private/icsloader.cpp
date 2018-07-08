@@ -476,7 +476,7 @@ const Matrix1D<VProperty::State, VObject::Event> VObject::m_PropertyToEvent = {
 class VBuffer
 {
 public:
-    inline void insert(char c, char rawPos) {
+    inline void insert(char c, unsigned char rawPos) {
         m_lContent[rawPos] = c;
     }
 
@@ -526,7 +526,7 @@ private:
     //TODO it could be applied to the main buffer instead of being a copy
     char m_lContent[4] = {0x00,0x00,0x00,0x00};
 
-    char m_Pos {3}; /*!< The previous byte is always necessary, so start at 1*/
+    unsigned char m_Pos {3}; /*!< The previous byte is always necessary, so start at 1*/
     bool m_IsInactive {false};
 
     char m_Room {0};

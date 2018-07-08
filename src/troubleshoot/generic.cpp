@@ -51,11 +51,14 @@ Troubleshoot::Base::Severity Troubleshoot::Generic::severity() const
 
 bool Troubleshoot::Generic::setSelection(const QModelIndex& idx, Call* c)
 {
+    Q_UNUSED(idx)
+    Q_UNUSED(c)
     return false;
 }
 
 bool Troubleshoot::Generic::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    Q_UNUSED(elapsedTime)
     if (c->state() == Call::State::ERROR || c->state() == Call::State::FAILURE) {
         if (c->lastErrorCode() >= 200 && c->lastErrorCode() < 300)
             return false;

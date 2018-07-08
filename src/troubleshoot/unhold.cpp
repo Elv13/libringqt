@@ -58,11 +58,15 @@ Troubleshoot::Base::Severity Troubleshoot::Unhold::severity() const
 
 bool Troubleshoot::Unhold::setSelection(const QModelIndex& idx, Call* c)
 {
+    Q_UNUSED(idx)
+    Q_UNUSED(c)
     return false;
 }
 
 bool Troubleshoot::Unhold::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
+    Q_UNUSED(self)
+    Q_UNUSED(elapsedTime)
     return c->liveMediaIssues() & Call::LiveMediaIssues::UNHOLD_FAILED;
 }
 

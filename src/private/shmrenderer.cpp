@@ -62,10 +62,7 @@ struct SHMHeader {
    unsigned readOffset   ; /*!< offset of readable frame in data                             */
    unsigned writeOffset  ; /*!< offset of writable frame in data                             */
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-pedantic"
    uint8_t data[]     ; /*!< the whole shared memory                                      */
-#pragma GCC diagnostic pop
 };
 
 namespace Video {

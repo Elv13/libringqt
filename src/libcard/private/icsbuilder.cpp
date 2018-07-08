@@ -69,6 +69,8 @@ bool ICSBuilder::toStream(Media::Attachment* file, std::basic_iostream<char>* de
     const auto path = file->path().toString().toStdString();
 
     (*device) << ";X_RING_ROLE=\"" << file->role().toStdString() << "\":" << path << '\n';
+
+    return true;
 }
 
 /**
@@ -193,6 +195,8 @@ bool ICSBuilder::toStream(Calendar* cal, std::basic_iostream<char>* device)
     Q_ASSERT(device->good());
 
     (*device) << "END:VCALENDAR\n";
+
+    return true;
 }
 
 /**
@@ -254,7 +258,7 @@ bool ICSBuilder::save(Calendar* cal, std::function<void(bool)> cb)
         return false;
     }
 
-    static int len = -strlen("\nEND:VCALENDAR");
+    static int len = -((int) strlen("\nEND:VCALENDAR"));
 
     // Move before the END:VCALENDAR
     fs.seekp(len, std::ios_base::end); //TODO actually check if it's right
@@ -312,7 +316,7 @@ void ICSBuilder::append(Calendar* cal, Event* event, std::function<void(bool)> c
         return;
     }
 
-    static int len = -strlen("\nEND:VCALENDAR");
+    static int len = -((int) strlen("\nEND:VCALENDAR"));
 
     // Move before the END:VCALENDAR
     fs.seekp(len, std::ios_base::end); //TODO actually check if it's right
@@ -356,7 +360,7 @@ bool ICSBuilder::rebuild(Calendar* cal, std::function<void(bool)> cb)
         return false;
     }
 
-    static int len = -strlen("\nEND:VCALENDAR");
+    static int len = -((int) strlen("\nEND:VCALENDAR"));
 
     // Move before the END:VCALENDAR
     fs.seekp(len, std::ios_base::end); //TODO actually check if it's right
