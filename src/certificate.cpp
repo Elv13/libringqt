@@ -910,5 +910,3 @@ Certificate::roleData(int role) const
     /* unknown role */
     return QVariant();
 }
-
-#include <certificate.moc>

@@ -59,5 +59,3 @@ bool SecurityFlaw::operator < ( const SecurityFlaw &r ) const {
 bool SecurityFlaw::operator > ( const SecurityFlaw &r ) const {
    return ( (int)d_ptr->m_severity < (int)r.d_ptr->m_severity );
 }
-
-#include <securityflaw.moc>

@@ -320,5 +320,3 @@ void Media::Text::send(const QMap<QString,QString>& message, const bool isMixed)
 
    emit messageSent(message);
 }
-
-#include <text.moc>

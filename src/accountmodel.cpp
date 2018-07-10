@@ -1305,5 +1305,3 @@ Account* AccountModel::findAccountIf(const std::function<bool(const Account&)>& 
         return *iter;
     return nullptr;
 }
-
-#include <accountmodel.moc>

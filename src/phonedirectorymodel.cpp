@@ -1348,5 +1348,3 @@ PhoneDirectoryModel::hasUnreadMessage() const
         return cm->textRecording()->unreadCount() > 0;
     });
 }
-
-#include <phonedirectorymodel.moc>

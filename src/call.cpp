@@ -2530,5 +2530,3 @@ void Call::playDTMF(const QString& str)
 #undef Q_ASSERT_IS_IN_PROGRESS
 #undef FORCE_ERROR_STATE
 #undef FORCE_ERROR_STATE_P
-
-#include <call.moc>

@@ -51,6 +51,8 @@ public:
         TRANSFERRED_FILE = 4, /*!< Files download from the peer               */
     };
 
+    virtual ~Attachment() {}
+
     virtual QMimeType* mimeType() const = 0;
 
     virtual QUrl path() const = 0;

@@ -19,7 +19,7 @@ ADD_DEFINITIONS(
    -Wuninitialized
    -Woverloaded-virtual
    -Wunused-value
-   #-pedantic
+   -pedantic
    -Wnonnull
    -Wsequence-point
    #-Wsystem-headers
@@ -56,7 +56,7 @@ IF (CMAKE_COMPILER_IS_GNUCC)
 
    if (GCC_VERSION VERSION_GREATER 5.1 OR GCC_VERSION VERSION_EQUAL 5.1)
       ADD_DEFINITIONS(
-         #-Wsuggest-override
+         -Wsuggest-override
          #-Wsuggest-final-types
          #-Wsuggest-final-methods
          -Wbool-compare
@@ -77,6 +77,7 @@ IF (CMAKE_COMPILER_IS_GNUCC)
          -Wshift-overflow
          -Wduplicated-cond
          -Wmisleading-indentation
+         -Wnon-virtual-dtor
       )
    ENDIF()
 ELSE()

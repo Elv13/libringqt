@@ -212,5 +212,3 @@ bool NumberCategoryModel::removeItemCallback(const ContactMethod* item)
     Q_UNUSED(item)
     return false;
 }
-
-#include <numbercategorymodel.moc>

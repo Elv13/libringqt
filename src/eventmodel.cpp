@@ -573,5 +573,3 @@ const QVector< QSharedPointer<Event> >& EventModelPrivate::events(const ContactM
 
     return cm->d_ptr->m_pEvents->m_lEvents;
 }
-
-#include <eventmodel.moc>

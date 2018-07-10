@@ -169,5 +169,3 @@ QVariant Macro::action() const
 {
    return d_ptr->m_Action;
 }
-
-#include <macro.moc>

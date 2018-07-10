@@ -125,5 +125,3 @@ QVariant Media::Recording::roleData(int role) const
     Q_UNUSED(role)
     return {};
 }
-
-#include <recording.moc>

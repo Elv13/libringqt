@@ -2951,4 +2951,4 @@ QDebug operator<<(QDebug dbg, const Account::Protocol& p)
 
 #undef TO_BOOL
 #undef IS_TRUE
-#include <account.moc>
+

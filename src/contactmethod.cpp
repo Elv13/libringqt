@@ -1696,5 +1696,3 @@ void UsageStatisticsPrivate::append(UsageStatistics* rhs)
 }
 
 Q_DECLARE_METATYPE(QList<Call*>)
-
-#include <contactmethod.moc>

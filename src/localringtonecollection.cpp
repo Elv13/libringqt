@@ -274,5 +274,3 @@ void Serializable::RingtoneNode::write(QJsonObject& json)
    json[QStringLiteral("path")] = ringtone->path();
    json[QStringLiteral("name")] = ringtone->name();
 }
-
-#include <localringtonecollection.moc>

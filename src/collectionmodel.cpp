@@ -30,6 +30,7 @@
 
 class ManageableCollectionProxy final : public QSortFilterProxyModel
 {
+    Q_OBJECT
 public:
    ManageableCollectionProxy(QAbstractItemModel* parent) : QSortFilterProxyModel(parent)
    {
