@@ -82,6 +82,26 @@ IF (CMAKE_COMPILER_IS_GNUCC)
          -Wnon-virtual-dtor
       )
    ENDIF()
+
+   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 7.0)
+      ADD_DEFINITIONS(
+         -Wimplicit-fallthrough
+         -Wduplicated-branches
+         -Wswitch-unreachable
+         -Wformat-overflow
+         -Wformat-truncation
+         -Wnonnull
+      )
+   ENDIF()
+
+   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
+      ADD_DEFINITIONS(
+        -Wmultistatement-macros
+        -Wstringop-truncation
+        -Wif-not-aligned
+        -Wmissing-attributes
+      )
+   ENDIF()
 ELSE()
     ADD_DEFINITIONS(-Wno-unknown-pragmas -Wno-unknown-warning-option)
 ENDIF()
