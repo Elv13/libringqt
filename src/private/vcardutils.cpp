@@ -182,8 +182,6 @@ struct VCardMapper final {
    }
 
    void addAddress(Person* c, const QString& key, const QByteArray& fn) {
-      auto addr = new Address;
-
       QList<QByteArray> fields = fn.split(VCardUtils::Delimiter::SEPARATOR_TOKEN[0]);
       QStringList keyFields = key.split(VCardUtils::Delimiter::SEPARATOR_TOKEN);
 
@@ -191,6 +189,8 @@ struct VCardMapper final {
           qDebug() << "Malformatted Address";
           return;
       }
+
+      auto addr = new Address;
 
       addr->setType        (keyFields[1]                   );
       addr->setAddressLine (QString::fromUtf8(fields[2])   );

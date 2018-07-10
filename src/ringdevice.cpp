@@ -33,8 +33,8 @@ public:
     RingDevice* q_ptr     ;
     QString     m_ID      ;
     QString     m_Name    ;
-    Account*    m_pAccount;
-    bool        m_IsSelf  ;
+    Account*    m_pAccount {nullptr};
+    bool        m_IsSelf   { false };
 
     // Constructor
     explicit RingDevicePrivate(RingDevice* device);

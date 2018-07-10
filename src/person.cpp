@@ -131,8 +131,7 @@ PersonPrivate::PersonPrivate(Person* contact) : QObject(nullptr),
 
 PersonPrivate::~PersonPrivate()
 {
-    while (!m_lAddresses.isEmpty())
-        delete m_lAddresses.takeFirst();
+    qDeleteAll(m_lAddresses);
 }
 
 ///Constructor

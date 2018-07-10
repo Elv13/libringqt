@@ -274,6 +274,8 @@ MimeMessage::~MimeMessage()
 {
     for (auto p : qAsConst(d_ptr->m_lPayloads))
         delete p;
+
+    delete d_ptr;
 }
 
 bool MimeMessage::performAction(const MimeMessage::Actions action)

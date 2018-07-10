@@ -359,13 +359,14 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
         }
 
         auto cm = PhoneDirectoryModel::instance().fromJson(o);
+        Q_ASSERT(cm);
 
         m_hSha1[cm->sha1()] = cm;
         peers.insert(cm);
 
         fallback.insert(cm);
 
-        if ((!a) && cm)
+        if (!a)
             a = cm->account();
     }
 

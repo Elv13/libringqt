@@ -61,13 +61,13 @@ public:
     QSharedPointer<Peers> m_pParent {nullptr};
 
     ///The group ID (necessary to untangle the graph
-    int id;
+    int id {-1};
     ///If the conversion add new participants, a new file will be created
     QString nextGroupSha1;
     ///The group type
     Media::MimeMessage::Type type {Media::MimeMessage::Type::CHAT};
     ///This is the group identifier in the file described by `nextGroupSha1`
-    int nextGroupId;
+    int nextGroupId {0};
     ///The unique identifier of the event associated with this text message group
     QByteArray eventUid;
 

@@ -53,7 +53,7 @@ public:
    QVector<Event*> m_lItems;
 
    Calendar* m_pCal {nullptr};
-   CalendarPrivate* d_ptr;
+   CalendarPrivate* d_ptr {nullptr};
 
 private:
    virtual QVector<Event*> items() const override;

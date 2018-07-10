@@ -189,6 +189,10 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
                 qWarning() << "An account is attached to a system contact instead of a profile";
                 currentNode = profileNodeById(m_pDefaultProfile->m_pPerson->uid());
             }
+            else {
+                qWarning() << "The profile collection could not be found";
+                return;
+            }
         }
         else {
             qWarning() << "Account must have a profile parent, doing nothing" << acc << currentProfile;
