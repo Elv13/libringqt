@@ -43,6 +43,9 @@ class CollectionManagerInterfaceBasePrivate;
 class CollectionCreationInterface;
 class CollectionConfigurationInterface;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-override"
+
 /**
  * Common elements for each CollectionManagerInterface
  */
@@ -201,4 +204,5 @@ private:
 };
 
 #include "collectionmanagerinterface.hpp"
+#pragma GCC diagnostic pop
 

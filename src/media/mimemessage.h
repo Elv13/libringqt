@@ -128,7 +128,7 @@ private:
     void write(QJsonObject       &json) const;
 
     MimeMessagePrivate* d_ptr;
-    Q_DECLARE_PRIVATE(MimeMessage);
+    Q_DECLARE_PRIVATE(MimeMessage)
 };
 
 } // Media::

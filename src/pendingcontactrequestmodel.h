@@ -39,7 +39,7 @@ class LIB_EXPORT PendingContactRequestModel : public QAbstractTableModel
 //    friend class AccountModelPrivate;
    friend class IncomingContactRequestManager; //manager
 public:
-    Q_PROPERTY(int size READ size NOTIFY countChanged);
+    Q_PROPERTY(int size READ size NOTIFY countChanged)
 
    enum Columns {
       PEER_ID,

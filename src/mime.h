@@ -60,7 +60,7 @@ namespace RingMimes {
       constexpr static const char* INVALID  = "invalid";
       constexpr static const char* JOIN     = "join";
       constexpr static const char* TRANSFER = "transfer";
-   };
+   }
 
    QByteArray LIB_EXPORT toActionName(Actions action);
    Actions LIB_EXPORT fromActionName(const QByteArray& name);

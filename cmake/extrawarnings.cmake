@@ -26,6 +26,8 @@ ADD_DEFINITIONS(
    -Wsizeof-pointer-memaccess
    #-Wuseless-cast
    -Wvarargs
+   -Wmaybe-uninitialized
+   -Wunused-local-typedefs
 
    #See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55578
    -Wno-unused-function
@@ -41,7 +43,7 @@ ADD_DEFINITIONS(
 # IF (CMAKE_COMPILER_IS_GNUCC)
 
 IF (CMAKE_COMPILER_IS_GNUCC)
-   IF (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
+   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
       ADD_DEFINITIONS(
          -Wunused-but-set-parameter
          -Wconditionally-supported
@@ -54,7 +56,7 @@ IF (CMAKE_COMPILER_IS_GNUCC)
       )
    ENDIF()
 
-   if (GCC_VERSION VERSION_GREATER 5.1 OR GCC_VERSION VERSION_EQUAL 5.1)
+   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.1 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.1)
       ADD_DEFINITIONS(
          -Wsuggest-override
          #-Wsuggest-final-types
@@ -70,7 +72,7 @@ IF (CMAKE_COMPILER_IS_GNUCC)
       )
    ENDIF()
 
-   IF (GCC_VERSION VERSION_GREATER 6.0 OR GCC_VERSION VERSION_EQUAL 6.0)
+   IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 6.0)
       ADD_DEFINITIONS(
          -Wnull-dereference
          -Wshift-negative-value

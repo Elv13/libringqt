@@ -54,7 +54,7 @@ protected:
 
 private:
     UsageStatisticsPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(UsageStatistics);
+    Q_DECLARE_PRIVATE(UsageStatistics)
 };
 
 Q_DECLARE_METATYPE(UsageStatistics*)

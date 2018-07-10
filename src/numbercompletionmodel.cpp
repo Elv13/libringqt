@@ -573,7 +573,7 @@ uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)
             weight += (number->callCount()+1)*35 ;
             weight *= (number->uri().indexOf(m_Prefix)!= -1?3:1);
             weight *= (number->isPresent()?2:1);
-            weight *= isDialingRing ? 1.1 : 1;
+            weight *= (uint) (isDialingRing ? 1.1 : 1.0);
             break;
         case ContactMethod::Type::ACCOUNT:
             qWarning() << "An account own contact method leaked into the completion";

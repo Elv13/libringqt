@@ -31,7 +31,7 @@ class IndividualPrivate;
 class EventAggregate;
 namespace Media {
     class TextRecording;
-};
+}
 
 /**
  * There is often more than one way to reach someone.

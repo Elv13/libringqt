@@ -67,7 +67,7 @@ public:
         RECORDINGS,
         COUNT__
     };
-    Q_ENUMS(NodeType);
+    Q_ENUMS(NodeType)
 
     enum class Role {
         NodeType = 2 << 16,
