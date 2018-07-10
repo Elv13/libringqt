@@ -464,7 +464,7 @@ bool Person::isReachable() const
 
 bool Person::hasBeenCalled() const
 {
-    return individual()->matchExpression([this](ContactMethod* cm) {
+    return individual()->matchExpression([](ContactMethod* cm) {
         return cm->callCount();
     });
 }

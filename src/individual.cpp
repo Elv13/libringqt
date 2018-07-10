@@ -1020,7 +1020,7 @@ ContactMethod* Individual::preferredContactMethod(Media::Media::Type m) const
     if (ret)
         return ret;
 
-    forAllNumbers([m, &ret, check](ContactMethod* cm) {
+    forAllNumbers([&ret, check](ContactMethod* cm) {
         if (ret)
             return;
 
@@ -1516,21 +1516,21 @@ QSharedPointer<IndividualEditor> Individual::createEditor() const
 
 bool Individual::canCall() const
 {
-    return matchExpression([this](ContactMethod* cm) {
+    return matchExpression([](ContactMethod* cm) {
         return cm->canCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
     });
 }
 
 bool Individual::canVideoCall() const
 {
-    return matchExpression([this](ContactMethod* cm) {
+    return matchExpression([](ContactMethod* cm) {
         return cm->canVideoCall() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
     });
 }
 
 bool Individual::canSendTexts() const
 {
-    return matchExpression([this](ContactMethod* cm) {
+    return matchExpression([](ContactMethod* cm) {
         return cm->canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
     });
 }

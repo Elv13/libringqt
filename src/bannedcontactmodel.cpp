@@ -35,29 +35,16 @@
 class BannedContactModelPrivate
 {
 public:
-    //Constructor
-    BannedContactModelPrivate(BannedContactModel* parent);
-
     //Attributes
     QList<ContactMethod*> m_lBanned;
     Account*              m_pAccount ;
-
-private:
-    BannedContactModel* q_ptr;
 };
-
-/**
- * constructor of BannedContactModelPrivate.
- */
-BannedContactModelPrivate::BannedContactModelPrivate(BannedContactModel* p) : q_ptr(p)
-{
-}
 
 /**
  * constructor of BannedContactModel.
  */
 BannedContactModel::BannedContactModel(Account* a) : QAbstractTableModel(a),
-d_ptr(new BannedContactModelPrivate(this))
+d_ptr(new BannedContactModelPrivate)
 {
     d_ptr->m_pAccount = a;
 

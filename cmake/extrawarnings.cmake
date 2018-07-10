@@ -79,6 +79,8 @@ IF (CMAKE_COMPILER_IS_GNUCC)
          -Wmisleading-indentation
       )
    ENDIF()
+ELSE()
+    ADD_DEFINITIONS(-Wno-unknown-pragmas -Wno-unknown-warning-option)
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

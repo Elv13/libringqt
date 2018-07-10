@@ -79,7 +79,7 @@ LocalNameServiceCache::~LocalNameServiceCache()
 
 bool LocalNameServiceCache::load()
 {
-    QTimer::singleShot(0, [this]() {
+    QTimer::singleShot(0, []() {
         QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation)
                     + QLatin1Char('/')
                     + LocalNameServiceCachePrivate::FILENAME);

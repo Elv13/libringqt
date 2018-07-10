@@ -2792,7 +2792,7 @@ void AccountPrivate::modify()  {
          }
          else if (q_ptr->username().isEmpty()) {
             // There is an high probability of the config file being corrupted
-            static std::atomic_flag warnflag {ATOMIC_FLAG_INIT};
+            static std::atomic_flag warnflag = ATOMIC_FLAG_INIT;
             if (!warnflag.test_and_set())
                qWarning() << "A Ring account has an empty username, this is not normal";
 

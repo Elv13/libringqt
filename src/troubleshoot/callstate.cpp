@@ -109,6 +109,7 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
                 default:
                     break;
             }
+            break;
         case Call::Direction::OUTGOING:
             switch(c->state()) {
                 case Call::State::BUSY:
@@ -123,6 +124,7 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
                 default:
                     break;
             }
+            break;
     }
 #pragma GCC diagnostic pop
 

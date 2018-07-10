@@ -65,8 +65,8 @@ class RecordingSubTreeProxy : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit RecordingSubTreeProxy(Media::RecordingModelPrivate* d, RecordingNode* root) :
-        QAbstractListModel(&Media::RecordingModel::instance()), m_pRoot(root), d_ptr(d) {}
+    explicit RecordingSubTreeProxy(RecordingNode* root) :
+        QAbstractListModel(&Media::RecordingModel::instance()), m_pRoot(root) {}
 
     virtual ~RecordingSubTreeProxy() {}
 
@@ -74,7 +74,6 @@ public:
     virtual int rowCount( const QModelIndex& parent) const override;
 
 private:
-    Media::RecordingModelPrivate* d_ptr;
     RecordingNode* m_pRoot;
 };
 
@@ -570,7 +569,7 @@ int RecordingSubTreeProxy::rowCount( const QModelIndex& parent) const
 QAbstractItemModel* Media::RecordingModel::audioRecordingModel() const
 {
     static auto p = new RecordingSubTreeProxy(
-        instance().d_ptr, instance().d_ptr->m_lCategories[1]
+        instance().d_ptr->m_lCategories[1]
     );
 
     return p;
@@ -579,7 +578,7 @@ QAbstractItemModel* Media::RecordingModel::audioRecordingModel() const
 QAbstractItemModel* Media::RecordingModel::textRecordingModel() const
 {
     static auto p = new RecordingSubTreeProxy(
-        instance().d_ptr, instance().d_ptr->m_lCategories[0]
+        instance().d_ptr->m_lCategories[0]
     );
 
     return p;

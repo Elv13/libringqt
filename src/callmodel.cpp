@@ -140,7 +140,7 @@ CallModel& CallModel::instance()
     static auto instance = new CallModel();
 
     // Fix loop-dependency issue between constructors
-    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set())
         instance->d_ptr->init();
 
@@ -234,7 +234,7 @@ QHash<int,QByteArray> CallModel::roleNames() const
 {
    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
 
-   static std::atomic_flag initRoles {ATOMIC_FLAG_INIT};
+   static std::atomic_flag initRoles = ATOMIC_FLAG_INIT;
    if (!initRoles.test_and_set()) {
       roles.insert(static_cast<int>(Call::Role::Name            ) ,QByteArray("name")            );
       roles.insert(static_cast<int>(Call::Role::Number          ) ,QByteArray("number")          );

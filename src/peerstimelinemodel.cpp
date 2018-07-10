@@ -187,7 +187,7 @@ std::vector<ITLNode*>::iterator PeersTimelineModelPrivate::getNextIndex(time_t t
     fake.m_Time = static_cast<long int>(t);
 
     return std::upper_bound(m_lRows.begin(), m_lRows.end(), &fake,
-        [t](const ITLNode* a, const ITLNode* t2) -> bool {
+        [](const ITLNode* a, const ITLNode* t2) -> bool {
             return a->m_Time < t2->m_Time;
     });
 }
@@ -407,7 +407,7 @@ QVariant SummaryModel::data(const QModelIndex& idx, int role) const
 QHash<int,QByteArray> SummaryModel::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
-    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set()) {
         roles[(int)PeersTimelineModel::SummaryRoles::CATEGORY_ENTRIES ] = "categoryEntries";
         roles[(int)PeersTimelineModel::SummaryRoles::ACTIVE_CATEGORIES] = "activeCategories";

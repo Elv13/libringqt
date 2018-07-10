@@ -44,8 +44,5 @@ public:
    void addCompletionCallback(std::function<void(LocalHistoryCollection*)> cb);
 
    virtual FlagPack<SupportedFeatures> supportedFeatures() const override;
-
-private:
-   CollectionMediator<Call>*  m_pMediator;
 };
 

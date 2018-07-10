@@ -43,12 +43,9 @@ public:
 
 public Q_SLOTS:
    void slotSelectionChanged(const QModelIndex& idx, const QModelIndex& prev);
-
-private:
-   NetworkInterfaceModel* q_ptr;
 };
 
-NetworkInterfaceModelPrivate::NetworkInterfaceModelPrivate(NetworkInterfaceModel* parent): QObject(parent),q_ptr(parent),m_pSelectionModel(nullptr),m_pAccount(nullptr)
+NetworkInterfaceModelPrivate::NetworkInterfaceModelPrivate(NetworkInterfaceModel* parent): QObject(parent),m_pSelectionModel(nullptr),m_pAccount(nullptr)
 {
 }
 

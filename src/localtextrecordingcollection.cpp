@@ -140,7 +140,7 @@ QString LocalTextRecordingCollection::directoryPath()
 {
     static QDir dir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
 
-    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set())
         dir.mkdir(QStringLiteral("text/"));
 

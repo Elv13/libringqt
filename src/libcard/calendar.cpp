@@ -220,7 +220,7 @@ bool Calendar::load()
     // in Event:: constructor
     EventPrivate e;
 
-    eventAdapter->setObjectFactory([this, &e](const std::basic_string<char>& object_type) -> EventPrivate* {
+    eventAdapter->setObjectFactory([&e](const std::basic_string<char>& object_type) -> EventPrivate* {
         e = {};
         e.m_Type = Event::typeFromName(object_type.data());
         return &e;

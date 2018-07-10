@@ -70,7 +70,7 @@ CollectionEditor<Call>(m),m_pCollection(parent)
 }
 
 LocalHistoryCollection::LocalHistoryCollection(CollectionMediator<Call>* mediator) :
-CollectionInterface(new LocalHistoryEditor(mediator,this)),m_pMediator(mediator)
+CollectionInterface(new LocalHistoryEditor(mediator,this))
 {
 //    setObjectName("LocalHistoryCollection");
 }

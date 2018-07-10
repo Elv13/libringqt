@@ -34,8 +34,6 @@ public:
 
    static const Matrix2D<Recording::Status, Recording::Action, Recording::Status> m_mStateMap;
    static const Matrix2D<Recording::Status, Recording::Action, RedFct> m_mStateMachine;
-private:
-   Recording* q_ptr;
 };
 
 #define ST Recording::Status::
@@ -62,7 +60,7 @@ const Matrix2D<Recording::Status, Recording::Action, RedFct> RecordingPrivate::m
 }};
 #undef REC
 
-RecordingPrivate::RecordingPrivate(Recording* r) : q_ptr(r)
+RecordingPrivate::RecordingPrivate(Recording*)
 {}
 
 Recording::Recording(const Recording::Type type, const Recording::Status status) : ItemBase(nullptr),

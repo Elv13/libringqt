@@ -26,14 +26,12 @@
 #include <list>
 #include <functional>
 
-class VContext;
-
 class AbstractVObjectAdaptorPrivate;
 
 // pimpl
 namespace VParser
 {
-    class VContext;
+    struct VContext;
 }
 
 /**
@@ -43,7 +41,7 @@ namespace VParser
  */
 class AbstractVObjectAdaptor
 {
-    friend class VParser::VContext;
+    friend struct VParser::VContext;
 public:
     using Parameters = std::list< std::pair<std::basic_string<char>, std::basic_string<char> > >;
     //
@@ -172,7 +170,7 @@ public:
     };
 
     class Property {
-        SupportedProperties type;
+        //SupportedProperties type; //TODO
         std::basic_string<char> name;
         Parameters parameters;
     };

@@ -245,7 +245,7 @@ void Matrix1D<Row,Value,Accessor>::operator=(std::initializer_list< Pairs > s)
 // template <class E, class T, class A> QMap<A,E> Matrix1D<E,T,A>::m_hReverseMapping;
 
 template<class Row, typename Value, typename Accessor>
-void Matrix1D<Row,Value,Accessor>::setReverseMapping(Matrix1D<Row,const char*> names)
+void Matrix1D<Row,Value,Accessor>::setReverseMapping(Matrix1D<Row,const char*> /*names*/)
 {
 //    for ( const Row row : EnumIterator<Row>() )
 //       m_hReverseMapping[names[row]] = row;

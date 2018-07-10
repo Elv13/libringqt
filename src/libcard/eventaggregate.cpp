@@ -161,7 +161,6 @@ public:
 
 private:
     // This is a private class, no need for d_ptr
-    const ContactMethod* m_pCM;
     QMetaObject::Connection m_cCallBack;
     QSharedPointer<EventAggregatePrivate> d_ptr;
 

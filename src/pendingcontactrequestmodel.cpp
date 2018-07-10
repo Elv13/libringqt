@@ -171,7 +171,7 @@ QHash<int,QByteArray> PendingContactRequestModel::roleNames() const
 {
     static QHash<int, QByteArray> roles = PersonModel::instance().roleNames();
 
-    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set()) {
         roles[ (int)Role::Person   ] = QByteArray("person"  );
         roles[ (int)Role::Account  ] = QByteArray("account" );

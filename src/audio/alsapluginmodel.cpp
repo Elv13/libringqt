@@ -31,15 +31,12 @@ public:
    QStringList m_lDeviceList;
    mutable QItemSelectionModel* m_pSelectionModel;
 
-private:
-   Audio::AlsaPluginModel* q_ptr;
-
 public Q_SLOTS:
    void setCurrentPlugin(const QModelIndex& idx);
 };
 
-AlsaPluginModelPrivate::AlsaPluginModelPrivate(Audio::AlsaPluginModel* parent) : q_ptr(parent),
-m_pSelectionModel(nullptr)
+AlsaPluginModelPrivate::AlsaPluginModelPrivate(Audio::AlsaPluginModel* parent) : QObject(parent),
+    m_pSelectionModel(nullptr)
 {
 
 }

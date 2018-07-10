@@ -500,7 +500,7 @@ public:
     // Uses a template to allow static_assert and inlining to work properly
     template<int pos, char room = 99>
     inline constexpr char get() const {
-        static_assert(pos < 4 && pos >= 0);
+        static_assert(pos < 4 && pos >= 0, "Position must be between 0 and 3");
 #ifdef ENABLE_TEST_ASSERTS
         assert(m_Room <= room);
 #endif

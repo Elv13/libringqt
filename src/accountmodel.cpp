@@ -118,7 +118,7 @@ QHash<int,QByteArray> AccountModel::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
 
-    static std::atomic_flag initRoles {ATOMIC_FLAG_INIT};
+    static std::atomic_flag initRoles = ATOMIC_FLAG_INIT;
     if (!initRoles.test_and_set()) {
         for (auto i = Ring::roleNames.constBegin(); i != Ring::roleNames.constEnd(); i++)
             roles[i.key()] = i.value();
@@ -236,7 +236,7 @@ AccountModel& AccountModel::instance()
     static auto instance = new AccountModel;
 
     // Upload account configuration only once in re-entrant way
-    static std::atomic_flag init_flag {ATOMIC_FLAG_INIT};
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (not init_flag.test_and_set())
         instance->d_ptr->init();
 
