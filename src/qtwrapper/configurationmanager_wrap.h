@@ -692,6 +692,7 @@ Q_SIGNALS: // SIGNALS
     void contactAdded(const QString &accountID, const QString &uri, bool banned);
     void contactRemoved(const QString &accountID, const QString &uri, bool banned);
     void debugMessageReceived(const std::string& message);
+    void dataTransferEvent(qulonglong transfer_id, uint code);
 };
 
 namespace org { namespace ring { namespace Ring {

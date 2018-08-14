@@ -50,12 +50,12 @@ InstanceManagerInterface::InstanceManagerInterface()
 
    DRing::init(static_cast<DRing::InitFlag>(ringFlags));
 
-   registerCallHandlers(CallManager::instance().callHandlers);
-   registerConfHandlers(ConfigurationManager::instance().confHandlers);
-   registerPresHandlers(PresenceManager::instance().presHandlers);
-   registerDataXferHandlers(ConfigurationManager::instance().dataXferHandlers);
+   registerSignalHandlers(CallManager::instance().callHandlers);
+   registerSignalHandlers(ConfigurationManager::instance().confHandlers);
+   registerSignalHandlers(PresenceManager::instance().presHandlers);
+   registerSignalHandlers(ConfigurationManager::instance().dataXferHandlers);
 #ifdef ENABLE_VIDEO
-   registerVideoHandlers(VideoManager::instance().videoHandlers);
+   registerSignalHandlers(VideoManager::instance().videoHandlers);
 #endif
 
    if (!DRing::start())
