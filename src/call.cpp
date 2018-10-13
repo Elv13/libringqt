@@ -1951,7 +1951,7 @@ void CallPrivate::call()
     // dring can print "No suitable account to create outgoing call" if the
     // URI isn't properly formatted (like sip:foobar).
     if (m_LegacyFields.m_Account && m_LegacyFields.m_Account->protocol() == Account::Protocol::RING && uri.protocolHint() != URI::ProtocolHint::RING) {
-       qWarning() << "The URI isn't a RingId. It is possible the call wont work" << uri.full();
+       qWarning() << "The URI isn't a RingId. It is possible the call won't work" << uri.full();
     }
 
     if (q_ptr->defaultMediaFlags() & Media::Media::TypeFlags::VIDEO) {
@@ -2092,7 +2092,7 @@ void CallPrivate::start()
 ///Toggle the timer
 void CallPrivate::startStop()
 {
-   qDebug() << "Starting and stoping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
+   qDebug() << "Starting and stopping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    setStartTimeStamp();
    m_LegacyFields.m_pStopTimeStamp  = m_LegacyFields.m_pStartTimeStamp;
    m_LegacyFields.m_Missed = true;
@@ -2101,7 +2101,7 @@ void CallPrivate::startStop()
 ///Stop the timer
 void CallPrivate::stop()
 {
-   qDebug() << "Stoping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
+   qDebug() << "Stopping call. callId : " << q_ptr  << "ConfId:" << q_ptr;
    time_t curTime;
    ::time(&curTime);
    m_LegacyFields.m_pStopTimeStamp = curTime;

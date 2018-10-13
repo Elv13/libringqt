@@ -576,7 +576,7 @@ ENDIF()
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
    FIND_PACKAGE(Qt5Concurrent)
 
-   #For some reason, QSemaphore wont compile on Windows without QtConcurrent
+   #For some reason, QSemaphore won't compile on Windows without QtConcurrent
    TARGET_LINK_LIBRARIES( ringqt
       Qt5::Concurrent
    )

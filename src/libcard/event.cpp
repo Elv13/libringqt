@@ -628,7 +628,7 @@ bool Event::addAttendee(ContactMethod* cm, const QString& name)
     // Let it happen, someone calling her/himself to leave voicemails or
     // something like this isn't all that unusual.
     if (hasInd) {
-        qWarning() << "Trying to add the same indivudual twice to the same event"
+        qWarning() << "Trying to add the same individual twice to the same event"
             << cm << ind;
         emit attendeeAdded(ind);
     }

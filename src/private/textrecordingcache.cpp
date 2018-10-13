@@ -383,7 +383,7 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
         a = AccountModel::instance()[0];
     }
     else if (!a) {
-        qWarning() << "There is no accounts for existing assets, this wont end well";
+        qWarning() << "There is no accounts for existing assets, this won't end well";
     }
 
     QJsonArray arr = json[QStringLiteral("groups")].toArray();
@@ -553,4 +553,3 @@ QSharedPointer<Event> Serializable::Group::event(bool allowPlaceholders) const
 
     return m_pEvent;
 }
-

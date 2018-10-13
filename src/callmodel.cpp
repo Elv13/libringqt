@@ -933,7 +933,7 @@ bool CallModel::createJoinOrMergeConferenceFromCall(Call* call1, Call* call2)
    }
 
    if (call1->lifeCycleState() == Call::LifeCycleState::CREATION || call2->lifeCycleState() == Call::LifeCycleState::CREATION) {
-       qWarning() << "Trying to add a dialing call to the conference, it wont work";
+       qWarning() << "Trying to add a dialing call to the conference, it won't work";
        return false;
    }
 
@@ -960,7 +960,7 @@ bool CallModel::addParticipant(Call* call2, Call* conference)
     }
 
     if (call2->lifeCycleState() == Call::LifeCycleState::CREATION) {
-        qWarning() << "Trying to add a dialing call to the conference, it wont work";
+        qWarning() << "Trying to add a dialing call to the conference, it won't work";
         return false;
     }
 
