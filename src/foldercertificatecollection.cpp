@@ -116,7 +116,7 @@ CollectionInterface(new FallbackLocalCertificateEditor(mediator,path),p),d_ptr(n
       d_ptr->m_IsValid = !FolderCertificateCollectionPrivate::m_sHasFallbackStore;
 
       if (!d_ptr->m_IsValid) {
-         qWarning() << "A fallback certificat store already exist, doing nothing";
+         qWarning() << "A fallback certificate store already exist, doing nothing";
       }
 
       FolderCertificateCollectionPrivate::m_sHasFallbackStore = true;
