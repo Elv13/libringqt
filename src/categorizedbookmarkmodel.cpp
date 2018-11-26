@@ -85,6 +85,7 @@ public:
     QVector<BookmarkNode*>  m_lChildren  {       };
     QMetaObject::Connection m_ChConn     {       };
     QMetaObject::Connection m_NameConn   {       };
+    QMetaObject::Connection m_RemConn    {       };
 };
 
 CategorizedBookmarkModelPrivate::CategorizedBookmarkModelPrivate(CategorizedBookmarkModel* parent) :
@@ -104,6 +105,7 @@ BookmarkNode::~BookmarkNode()
     qDeleteAll(m_lChildren);
     QObject::disconnect(m_ChConn);
     QObject::disconnect(m_NameConn);
+    QObject::disconnect(m_RemConn);
 }
 
 CategorizedBookmarkModel::CategorizedBookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
@@ -486,7 +488,7 @@ bool CategorizedBookmarkModel::addItemCallback(const ContactMethod* bookmark)
     });
 
     //If something like the nameservice causes a rebase, update the reverse map
-    connect(bookmark, &ContactMethod::rebased, bookmark, [bm, dptr, this]() {
+    bm->m_RemConn = connect(bookmark, &ContactMethod::rebased, bookmark, [bm, dptr, this]() {
         d_ptr->m_hTracked.remove(dptr);
         d_ptr->m_hTracked[bm->m_pNumber->d()] = bm;
     });
