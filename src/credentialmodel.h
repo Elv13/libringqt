@@ -68,6 +68,8 @@ public:
    explicit CredentialModel(Account* acc);
    virtual ~CredentialModel();
 
+   Q_PROPERTY(QAbstractItemModel* availableTypeModel READ availableTypeModel CONSTANT)
+
    //Abstract model member
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole        ) const override;
    virtual int                   rowCount    ( const QModelIndex& parent = QModelIndex()                   ) const override;
