@@ -31,7 +31,8 @@ class Account;
 class CodecModelPrivate;
 
 ///AudioCodecModel: A model for account audio codec
-class LIB_EXPORT CodecModel : public QAbstractListModel {
+class LIB_EXPORT CodecModel : public QAbstractListModel
+{
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    Q_OBJECT
@@ -44,17 +45,18 @@ public:
 
    //Roles
    enum Role {
-      ID          = 103,
-      NAME        = 100,
-      BITRATE     = 101,
-      MIN_BITRATE = 105,
-      MAX_BITRATE = 106,
-      SAMPLERATE  = 102,
-      TYPE        = 104,
-      QUALITY     = 107,
-      MIN_QUALITY = 108,
-      MAX_QUALITY = 109,
-      AUTO_QUALITY_ENABLED = 110,
+      ID = Qt::UserRole+1  ,
+      NAME                 ,
+      BITRATE              ,
+      MIN_BITRATE          ,
+      MAX_BITRATE          ,
+      SAMPLERATE           ,
+      TYPE                 ,
+      QUALITY              ,
+      MIN_QUALITY          ,
+      MAX_QUALITY          ,
+      ENABLED              ,
+      AUTO_QUALITY_ENABLED ,
    };
 
    /// @enum CodecModel::Action Manage a CodecModel lifecycle

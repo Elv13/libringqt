@@ -43,17 +43,17 @@ public:
    CodecModelPrivate(CodecModel* parent);
    ///@struct CodecData store audio/video codec information
    struct CodecData {
-      int              id         ;
-      QString          name       ;
-      QString          bitrate    ;
-      QString          min_bitrate;
-      QString          max_bitrate;
-      QString          samplerate ;
-      QString          type       ;
-      QString          quality    ;
-      QString          min_quality;
-      QString          max_quality;
-      QString          auto_quality_enabled;
+      int     id         ;
+      QString name       ;
+      QString bitrate    ;
+      QString min_bitrate;
+      QString max_bitrate;
+      QString samplerate ;
+      QString type       ;
+      QString quality    ;
+      QString min_quality;
+      QString max_quality;
+      QString auto_quality_enabled;
    };
 
    enum class CodecType {
@@ -142,6 +142,7 @@ QHash<int,QByteArray> CodecModel::roleNames() const
    if (!initRoles) {
       initRoles = true;
       roles.insert(CodecModel::Role::ID         ,QByteArray("id"));
+      roles.insert(CodecModel::Role::ENABLED    ,QByteArray("enabled"));
       roles.insert(CodecModel::Role::NAME       ,QByteArray("name"));
       roles.insert(CodecModel::Role::BITRATE    ,QByteArray("bitrate"));
       roles.insert(CodecModel::Role::MIN_BITRATE,QByteArray("min_bitrate"));
@@ -174,6 +175,8 @@ QVariant CodecModel::data(const QModelIndex& idx, int role) const
             return QVariant(d_ptr->m_lCodecs[idx.row()]->name);
         case Qt::CheckStateRole:
             return QVariant(d_ptr->m_lEnabledCodecs[d_ptr->m_lCodecs[idx.row()]->id] ? Qt::Checked : Qt::Unchecked);
+        case CodecModel::Role::ENABLED:
+            return d_ptr->m_lEnabledCodecs[d_ptr->m_lCodecs[idx.row()]->id];
         case CodecModel::Role::NAME:
             return d_ptr->m_lCodecs[idx.row()]->name;
         case CodecModel::Role::BITRATE:
@@ -229,6 +232,9 @@ bool CodecModel::setData( const QModelIndex& idx, const QVariant &value, int rol
     switch (role) {
         case CodecModel::NAME :
             d_ptr->m_lCodecs[idx.row()]->name = value.toString();
+            break;
+        case CodecModel::ENABLED:
+            d_ptr->m_lEnabledCodecs[d_ptr->m_lCodecs[idx.row()]->id] = value.toBool();
             break;
         case CodecModel::BITRATE :
             d_ptr->m_lCodecs[idx.row()]->bitrate = value.toString();
