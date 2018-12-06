@@ -121,8 +121,9 @@ d_ptr(new CredentialModelPrivate())
    d_ptr->m_EditState = CredentialModel::EditState::LOADING;
    d_ptr->m_pAccount  = acc;
    d_ptr->q_ptr       = this;
-   QHash<int, QByteArray> roles = roleNames();
+
    this << EditAction::RELOAD;
+
    d_ptr->m_EditState = CredentialModel::EditState::READY;
 }
 
@@ -139,9 +140,10 @@ QHash<int,QByteArray> CredentialModel::roleNames() const
    static bool initRoles = false;
    if (!initRoles) {
       initRoles = true;
-      roles.insert(CredentialModel::Role::NAME    ,QByteArray("name"));
-      roles.insert(CredentialModel::Role::PASSWORD,QByteArray("password"));
-      roles.insert(CredentialModel::Role::REALM   ,QByteArray("realm"));
+      roles.insert(CredentialModel::Role::NAME       ,QByteArray("name"));
+      roles.insert(CredentialModel::Role::PASSWORD   ,QByteArray("password"));
+      roles.insert(CredentialModel::Role::REALM      ,QByteArray("realm"));
+      roles.insert(CredentialModel::Role::IS_CATEGORY,QByteArray("isCategory"));
    }
    return roles;
 }
@@ -201,6 +203,8 @@ QVariant CredentialModel::data(const QModelIndex& idx, int role) const {
          switch(role) {
             case Qt::DisplayRole:
                return *node->m_CategoryName;
+            case CredentialModel::Role::IS_CATEGORY:
+               return true;
          }
          break;
       case CredentialNode::Level::CREDENTIAL:
@@ -212,6 +216,8 @@ QVariant CredentialModel::data(const QModelIndex& idx, int role) const {
                return node->m_pCredential->password();
             case CredentialModel::Role::REALM:
                return node->m_pCredential->realm();
+            case CredentialModel::Role::IS_CATEGORY:
+               return false;
             default:
                break;
          }

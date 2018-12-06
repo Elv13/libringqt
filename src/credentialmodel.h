@@ -40,9 +40,10 @@ class LIB_EXPORT CredentialModel : public QAbstractItemModel {
 public:
    //Roles
    enum Role {
-      NAME     = 100,
-      PASSWORD = 101,
-      REALM    = 102,
+      NAME     = Qt::UserRole +1,
+      PASSWORD   ,
+      REALM      ,
+      IS_CATEGORY,
    };
 
    /// @enum CredentialModel::Action Manage a CredentialModel lifecycle
