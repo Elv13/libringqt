@@ -1238,6 +1238,7 @@ QVariant Account::roleData(int role) const
       case Qt::CheckStateRole:
          return QVariant(isEnabled() ? Qt::Checked : Qt::Unchecked);
       case Qt::BackgroundRole:
+      case CAST(Account::Role::RegistrationStateColor):
          return stateColor();
       case Qt::DecorationRole:
          return GlobalInstances::accountListColorizer().icon(this);

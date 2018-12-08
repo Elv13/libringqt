@@ -209,6 +209,7 @@ QHash<int,QByteArray> AccountModel::roleNames() const
         roles.insert((int) Account::Role::HasActiveCallLimit          , "hasActiveCallLimit");
         roles.insert((int) Account::Role::SecurityLevel               , "securityLevel");
         roles.insert((int) Account::Role::SecurityLevelIcon           , "securityLevelIcon");
+        roles.insert((int) Account::Role::RegistrationStateColor      , "registrationStateColor");
         roles.insert((int) Account::Role::LastStatusChangeTimeStamp   , "lastStatusChangeTimeStamp");
         roles.insert((int) Account::Role::RegisteredName              , "registeredName");
         roles.insert((int) Account::Role::LastErrorCode               , "lastErrorCode");
