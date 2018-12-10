@@ -2,13 +2,13 @@
 
 INCLUDE(GNUInstallDirs)
 
-SET(LIB_RING_QT_INCLUDE_DIR @INCLUDE_INSTALL_DIR@/libringqt)
+SET(LIB_RING_QT_INCLUDE_DIR @INCLUDE_INSTALL_DIR@/libringqtquick)
 
 # First, always set the dynamic path
 SET(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib;.so;.dll")
-SET(LIB_RING_QT_LIBRARY_NAME "ringqt")
+SET(LIB_RING_QT_LIBRARY_NAME "ringqtquick")
 
-FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ringqt
+FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ringqtquick
             PATHS ${RING_BUILD_DIR}/.libs
             PATHS @LIB_INSTALL_DIR@
             PATHS ${CMAKE_INSTALL_PREFIX}/libexec )
@@ -16,9 +16,9 @@ FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ringqt
 #if ENABLE_STATIC is set, default to the static version
 IF(NOT LIB_RING_QT_LIBRARY OR DEFINED ${ENABLE_STATIC} OR ${ENABLE_STATIC} MATCHES true)
    SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.la;.lib")
-   SET(LIB_RING_QT_LIBRARY_NAME "ringqt")
+   SET(LIB_RING_QT_LIBRARY_NAME "ringqtquick")
 
-   FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ringqt
+   FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ringqtquick
              PATHS ${RING_BUILD_DIR}/.libs
              PATHS @LIB_INSTALL_DIR@
              PATHS ${CMAKE_INSTALL_PREFIX}/libexec )
@@ -29,8 +29,6 @@ FIND_LIBRARY(LIB_RING_QT_LIBRARY NAMES ${LIB_RING_QT_LIBRARY_NAME}
              PATHS @LIB_INSTALL_DIR@
              PATHS ${CMAKE_INSTALL_PREFIX}/libexec )
 
-
-set(ringqt_REQUIRE_DBUS @ENABLE_LIBWRAP@)
 
 # Set the usual CMake library variables. This is required for some other official
 # cmake macros to work
@@ -52,20 +50,20 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIB_RING_QT
 # changing it above would break the API, it instead add a second target
 # with the proper name.
 
-SET(ringqt_LIBRARY ${LIB_RING_QT_LIBRARY})
-SET(ringqt_INCLUDE_DIR ${LIB_RING_QT_INCLUDE_DIR})
-SET(ringqt_INCLUDES ${LIB_RING_QT_INCLUDE_DIR}) #compat
+SET(ringqtquick_LIBRARY ${LIB_RING_QT_LIBRARY})
+SET(ringqtquick_INCLUDE_DIR ${LIB_RING_QT_INCLUDE_DIR})
+SET(ringqtquick_INCLUDES ${LIB_RING_QT_INCLUDE_DIR}) #compat
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(ringqt
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(ringqtquick
     FOUND_VAR
-        ringqt_FOUND
+        ringqtquick_FOUND
     REQUIRED_VARS
-        ringqt_LIBRARY
-        ringqt_INCLUDE_DIR
+        ringqtquick_LIBRARY
+        ringqtquick_INCLUDE_DIR
     VERSION_VAR
         1.0.0
 )
 
-if(NOT TARGET ringqt AND NOT ringqt_BINARY_DIR)
-  include("@CMAKE_INSTALL_FULL_LIBDIR@/cmake/LibRingQt/LibRingQtTargets.cmake")
+if(NOT TARGET ringqtquick AND NOT ringqtquick_BINARY_DIR)
+  include("@CMAKE_INSTALL_FULL_LIBDIR@/cmake/LibRingQtQuick/LibRingQtQuickTargets.cmake")
 endif()

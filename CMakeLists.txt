@@ -62,10 +62,18 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 FIND_PACKAGE(Ring REQUIRED)
 FIND_PACKAGE(Qt5Core ${QT_MIN_VERSION} REQUIRED)
+FIND_PACKAGE(Qt5Quick ${QT_MIN_VERSION})
 FIND_PACKAGE(Qt5LinguistTools QUIET   ) # translations
 
 IF(NOT ENABLE_LIBWRAP)
    FIND_PACKAGE(Qt5DBus REQUIRED)
+ENDIF()
+
+# Create a proper Qt plugin for QtQuick
+IF (Qt5Quick_FOUND)
+   add_subdirectory(libringqtquick)
+ELSE()
+   message(STATUS "QtQuick has not been found, QML support is disabled")
 ENDIF()
 
 # Make sure that the d_ptr work as intended
