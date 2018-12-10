@@ -37,13 +37,11 @@
 #include "private/vcardutils.h"
 #include "mime.h"
 
-struct AccountStruct final {
-    Account*             m_pAccount        {nullptr};
-    QItemSelectionModel* m_pSelectionModel {nullptr};
-};
+struct ProfileNode;
 
 class AvailableProfileModel : public QSortFilterProxyModel
 {
+    friend class ProfileModelPrivate;
 public:
     explicit AvailableProfileModel(ProfileModelPrivate* d);
 protected:
@@ -55,11 +53,42 @@ private:
     ProfileModelPrivate* d_ptr;
 };
 
+struct AccountStruct final {
+    Account*             m_pAccount        {nullptr};
+    QItemSelectionModel* m_pSelectionModel {nullptr};
+};
+
+class SingleProfileModel final : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    explicit SingleProfileModel(ProfileNode* d);
+
+    virtual ~SingleProfileModel() {}
+    virtual int rowCount(const QModelIndex& parent) const override;
+    virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    virtual QHash<int,QByteArray> roleNames() const override;
+
+    void removeAt(int i);
+
+    void addAt(int i);
+
+    ProfileNode* d_ptr;
+};
+
+struct PersonStruct final {
+    Person* m_pPerson {nullptr};
+    SingleProfileModel* m_pModel {nullptr};
+};
+
 struct ProfileNode final
 {
-    explicit ProfileNode(): m_pPerson(nullptr) {}
+    explicit ProfileNode() {}
 
     virtual ~ProfileNode() {
+        if (type == Type::PROFILE && m_PerData.m_pModel)
+            delete m_PerData.m_pModel;
+
         QObject::disconnect(m_ChangedConn);
         qDeleteAll(children);
     }
@@ -76,7 +105,7 @@ struct ProfileNode final
     Type         type     { ProfileNode::Type::ACCOUNT };
     int          m_Index  {              0             };
     union {
-        Person*       m_pPerson;
+        PersonStruct  m_PerData;
         AccountStruct m_AccData;
     };
 
@@ -105,6 +134,7 @@ public:
     void setProfile(ProfileNode* accNode, ProfileNode* proNode);
     ProfileNode* profileNodeById(const QByteArray& id) const;
     ProfileNode* nodeForAccount(const Account* a) const;
+    ProfileNode* nodeForProfile(const Person* p) const;
     QModelIndex mapToSource  (const QModelIndex& idx) const;
     QModelIndex mapFromSource(const QModelIndex& idx) const;
     ProfileNode* createNodeForAccount(Account* a);
@@ -169,12 +199,12 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     if (!currentProfile) {
         qWarning() << "No profile selected or none exists, fall back tot the default";
 
-        m_pDefaultProfile->m_pPerson->addCustomField(
+        m_pDefaultProfile->m_PerData.m_pPerson->addCustomField(
             VCardUtils::Property::X_RINGACCOUNT, acc->id()
         );
-        m_pDefaultProfile->m_pPerson->save();
+        m_pDefaultProfile->m_PerData.m_pPerson->save();
 
-        currentProfile = m_pDefaultProfile->m_pPerson;
+        currentProfile = m_pDefaultProfile->m_PerData.m_pPerson;
     }
 
     auto currentNode = profileNodeById(currentProfile->uid());
@@ -187,7 +217,7 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
             const auto collections = q_ptr->collections(CollectionInterface::SupportedFeatures::ADD);
             if (collections.indexOf(currentProfile->collection()) == -1) {
                 qWarning() << "An account is attached to a system contact instead of a profile";
-                currentNode = profileNodeById(m_pDefaultProfile->m_pPerson->uid());
+                currentNode = profileNodeById(m_pDefaultProfile->m_PerData.m_pPerson->uid());
             }
             else {
                 qWarning() << "The profile collection could not be found";
@@ -206,8 +236,14 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
 
     const auto parentIdx = ProfileModel::instance().index(currentNode->m_Index,0);
 
-    q_ptr->beginInsertRows(parentIdx, currentNode->children.size(), currentNode->children.size());
+    q_ptr->beginInsertRows(parentIdx, account_pro->m_Index, account_pro->m_Index);
     currentNode->children << account_pro;
+
+    if (currentNode->parent->m_PerData.m_pModel) {
+        auto m = currentNode->parent->m_PerData.m_pModel;
+        m->addAt(account_pro->m_Index);
+    }
+
     q_ptr->endInsertRows();
 
     // Update the profile as it's availability could have chnaged
@@ -219,7 +255,7 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
 ProfileNode* ProfileModelPrivate::profileNodeById(const QByteArray& id) const
 {
     for (auto p : qAsConst(m_lProfiles))
-        if(p->m_pPerson->uid() == id)
+        if(p->m_PerData.m_pPerson->uid() == id)
             return p;
     return nullptr;
 }
@@ -277,6 +313,17 @@ void ProfileModelPrivate::slotDataChanged(const QModelIndex& tl,const QModelInde
     for (int i=tl.row(); i<=br.row();i++) {
         const auto idx = mapFromSource(tl);
         emit q_ptr->dataChanged(idx, idx);
+
+        if (idx.isValid()) {
+            ProfileNode* n = static_cast<ProfileNode*>(idx.internalPointer());
+            Q_ASSERT(n->parent);
+
+            if (n->parent->m_PerData.m_pModel) {
+                const auto accIdx = n->parent->m_PerData.m_pModel->index(idx.row(), 0);
+                Q_ASSERT(accIdx.isValid());
+                emit n->parent->m_PerData.m_pModel->dataChanged(accIdx, accIdx);
+            }
+        }
     }
 
     // Also update the profile as the availability could have changed
@@ -303,11 +350,18 @@ void ProfileModelPrivate::slotAccountRemoved(Account* a)
     const int accIdx = n->m_Index;
 
     q_ptr->beginRemoveRows(profIdx, accIdx, accIdx);
+
+
+    if (n->parent->parent->m_PerData.m_pModel) {
+        auto m = n->parent->parent->m_PerData.m_pModel;
+        m->removeAt(accIdx);
+    }
+
     n->parent->children.removeAt(accIdx);
     for (int i = accIdx; i < n->parent->children.size(); i++)
         n->parent->children[i]->m_Index--;
 
-    n->parent->m_pPerson->save();
+    n->parent->m_PerData.m_pPerson->save();
 
     delete n;
 
@@ -325,6 +379,15 @@ ProfileNode* ProfileModelPrivate::nodeForAccount(const Account* a) const
                 return accNode;
             }
         }
+    }
+    return nullptr;
+}
+
+ProfileNode* ProfileModelPrivate::nodeForProfile(const Person* p) const
+{
+    for (auto pro : qAsConst(m_lProfiles)) {
+        if (*pro->m_PerData.m_pPerson == *p)
+            return pro;
     }
     return nullptr;
 }
@@ -366,12 +429,12 @@ QVariant ProfileModel::data(const QModelIndex& index, int role ) const
         case ProfileNode::Type::PROFILE:
             if (role == (int) Ring::Role::Object)
                 return QVariant::fromValue(
-                    currentNode->m_pPerson->individual()
+                    currentNode->m_PerData.m_pPerson->individual()
                 );
             else if (role == (int) Ring::Role::ObjectType)
                 return QVariant::fromValue(Ring::ObjectType::Individual);
 
-            return currentNode->m_pPerson->roleData(role);
+            return currentNode->m_PerData.m_pPerson->roleData(role);
         case ProfileNode::Type::ACCOUNT:
             switch(role) {
                 case ProfileModelPrivate::c_OrderRole:
@@ -474,7 +537,7 @@ QMimeData* ProfileModel::mimeData(const QModelIndexList &indexes) const
 
         switch (current->type) {
             case ProfileNode::Type::PROFILE:
-                mMimeData->setData(RingMimes::PROFILE , current->m_pPerson->uid());
+                mMimeData->setData(RingMimes::PROFILE , current->m_PerData.m_pPerson->uid());
                 break;
             case ProfileNode::Type::ACCOUNT:
                 mMimeData->setData(RingMimes::ACCOUNT , current->m_AccData.m_pAccount->id());
@@ -659,7 +722,7 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 
 
     if (oldProfile) {
-        if(Q_UNLIKELY(!oldProfile->m_pPerson->removeCustomField(
+        if(Q_UNLIKELY(!oldProfile->m_PerData.m_pPerson->removeCustomField(
             VCardUtils::Property::X_RINGACCOUNT,
             accNode->m_AccData.m_pAccount->id()
         )))
@@ -673,17 +736,17 @@ void ProfileModelPrivate::setProfile(ProfileNode* accNode, ProfileNode* proNode)
 
     updateIndexes();
 
-    if (!proNode->m_pPerson->hasCustomField(VCardUtils::Property::X_RINGACCOUNT, accNode->m_AccData.m_pAccount->id())) {
-        proNode->m_pPerson->addCustomField(
+    if (!proNode->m_PerData.m_pPerson->hasCustomField(VCardUtils::Property::X_RINGACCOUNT, accNode->m_AccData.m_pAccount->id())) {
+        proNode->m_PerData.m_pPerson->addCustomField(
             VCardUtils::Property::X_RINGACCOUNT,
             accNode->m_AccData.m_pAccount->id()
         );
 
-        proNode->m_pPerson->save();
+        proNode->m_PerData.m_pPerson->save();
     }
 
     if (oldProfile) {
-        oldProfile->m_pPerson->save();
+        oldProfile->m_PerData.m_pPerson->save();
         q_ptr->endMoveRows();
     }
     else
@@ -729,7 +792,7 @@ bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
             newProfile = static_cast<ProfileNode*>(profileIdx.internalPointer());
         }
 
-        if ((!newProfile) || (!newProfile->m_pPerson)) {
+        if ((!newProfile) || (!newProfile->m_PerData.m_pPerson)) {
             qDebug() << "Invalid profile";
             return false;
         }
@@ -802,8 +865,10 @@ bool ProfileModel::addItemCallback(const Person* pro)
 {
     auto proNode       = new ProfileNode           ;
     proNode->type      = ProfileNode::Type::PROFILE;
-    proNode->m_pPerson = const_cast<Person*>(pro);
     proNode->m_Index   = d_ptr->m_lProfiles.size();
+
+    proNode->m_PerData.m_pPerson = const_cast<Person*>(pro);
+    proNode->m_PerData.m_pModel  = nullptr;
 
     if (pro->hasCustomField(VCardUtils::Property::X_RINGDEFAULTACCOUNT))
         d_ptr->m_pDefaultProfile = proNode;
@@ -829,7 +894,7 @@ bool ProfileModel::addItemCallback(const Person* pro)
         }
         else {
             // Remove references to deleted accounts
-            proNode->m_pPerson->removeCustomField(
+            proNode->m_PerData.m_pPerson->removeCustomField(
                 VCardUtils::Property::X_RINGACCOUNT, accId
             );
             hasDuplicated = true;
@@ -839,7 +904,7 @@ bool ProfileModel::addItemCallback(const Person* pro)
     selectionModel()->setCurrentIndex(index(proNode->m_Index, 0), QItemSelectionModel::ClearAndSelect);
 
     proNode->m_ChangedConn = connect(pro, &Person::changed, this, [this, proNode]() {
-        if (proNode->m_pPerson->isActive()) {
+        if (proNode->m_PerData.m_pPerson->isActive()) {
             const QModelIndex idx = index(proNode->m_Index, 0);
             emit dataChanged(idx, idx);
         }
@@ -848,8 +913,8 @@ bool ProfileModel::addItemCallback(const Person* pro)
     d_ptr->_test_validate();
 
     if (hasDuplicated) {
-        proNode->m_pPerson->deduplicateCustomField(VCardUtils::Property::X_RINGACCOUNT);
-        proNode->m_pPerson->save();
+        proNode->m_PerData.m_pPerson->deduplicateCustomField(VCardUtils::Property::X_RINGACCOUNT);
+        proNode->m_PerData.m_pPerson->save();
     }
 
     return true;
@@ -899,7 +964,7 @@ bool ProfileModel::remove(const QModelIndex& idx)
 
     if (n->type != ProfileNode::Type::PROFILE) {
         qDebug() << "Failed to remove profile: It is not a profile"
-                    << (int)n->type << n->m_pPerson
+                    << (int)n->type << n->m_PerData.m_pPerson
                     << realIdx.data(Qt::DisplayRole);
         return false;
     }
@@ -909,7 +974,7 @@ bool ProfileModel::remove(const QModelIndex& idx)
         return false;
     }
 
-    return n->m_pPerson->remove();
+    return n->m_PerData.m_pPerson->remove();
 }
 
 Person* ProfileModelPrivate::addProfile(Person* person, const QString& name, CollectionInterface* col)
@@ -941,19 +1006,19 @@ void ProfileModelPrivate::_test_validate()
 {
 #ifdef ENABLE_TEST_ASSERTS
     for (auto prof : qAsConst(m_lProfiles)) {
-        Q_ASSERT(prof->m_pPerson);
+        Q_ASSERT(prof->m_PerData.m_pPerson);
 
         for (auto acc : qAsConst(prof->children)) {
             Q_ASSERT(acc->m_AccData.m_pAccount);
             Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod());
             Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact());
             Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact()->isProfile());
-            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact() == prof->m_pPerson);
+            Q_ASSERT(acc->m_AccData.m_pAccount->contactMethod()->contact() == prof->m_PerData.m_pPerson);
         }
 
         // It isn't a profile *yet* if there is no associated accounts
-        Q_ASSERT(prof->m_pPerson->isProfile() || prof->children.isEmpty());
-        Q_ASSERT(prof->m_pPerson->isTracked() || prof->children.isEmpty());
+        Q_ASSERT(prof->m_PerData.m_pPerson->isProfile() || prof->children.isEmpty());
+        Q_ASSERT(prof->m_PerData.m_pPerson->isTracked() || prof->children.isEmpty());
     }
 #endif
 }
@@ -988,9 +1053,9 @@ Person* ProfileModel::getProfile(const QModelIndex& idx) const
     const auto current = static_cast<ProfileNode*>(idx.internalPointer());
     switch (current->type) {
         case ProfileNode::Type::PROFILE:
-            return current->m_pPerson;
+            return current->m_PerData.m_pPerson;
         case ProfileNode::Type::ACCOUNT:
-            return current->parent->m_pPerson;
+            return current->parent->m_PerData.m_pPerson;
         default:
             qWarning() << "Unknown node type to create mimedata";
             return nullptr;
@@ -1023,7 +1088,7 @@ QItemSelectionModel* ProfileModel::getAccountSelectionModel(Account* a) const
     if (Q_UNLIKELY(!an)) {
         qWarning() << "Account not found, setting default profile";
         if (d_ptr->m_pDefaultProfile) {
-            const_cast<ProfileModel*>(this)->setProfile(a, d_ptr->m_pDefaultProfile->m_pPerson);
+            const_cast<ProfileModel*>(this)->setProfile(a, d_ptr->m_pDefaultProfile->m_PerData.m_pPerson);
             if (!(an = d_ptr->nodeForAccount(a))) {
                 qWarning() << "Setting default profile failed";
                 return nullptr;
@@ -1062,5 +1127,66 @@ QItemSelectionModel* ProfileModel::getAccountSelectionModel(Account* a) const
 
     return an->m_AccData.m_pSelectionModel;
 }
+
+QAbstractItemModel* ProfileModel::profilesForPerson(Person *p) const
+{
+    if (!p)
+        return nullptr;
+
+    auto pro = d_ptr->nodeForProfile(p);
+
+    if (!pro)
+        return nullptr;
+
+    if (pro->m_PerData.m_pModel)
+        return pro->m_PerData.m_pModel;
+
+    pro->m_PerData.m_pModel = new SingleProfileModel(pro);
+
+    return pro->m_PerData.m_pModel;
+}
+
+QAbstractItemModel* ProfileModel::profilesForPerson(Individual* ind) const
+{
+    if (!ind)
+        return nullptr;
+
+    return profilesForPerson(ind->person());
+}
+
+int SingleProfileModel::rowCount(const QModelIndex& parent) const
+{
+    return parent.isValid() ? 0 : d_ptr->children.size();
+}
+
+QVariant SingleProfileModel::data(const QModelIndex& idx, int role) const
+{
+    if (!idx.isValid())
+        return {};
+
+    const auto an = d_ptr->children[idx.row()];
+
+    return an->m_AccData.m_pAccount->roleData(role);
+}
+
+QHash<int,QByteArray> SingleProfileModel::roleNames() const
+{
+    return AccountModel::instance().roleNames();
+}
+
+SingleProfileModel::SingleProfileModel(ProfileNode* d) :
+    QAbstractListModel(d->m_PerData.m_pPerson), d_ptr(d)
+{}
+
+void SingleProfileModel::removeAt(int i) {
+    beginRemoveRows({}, i, i);
+    endRemoveRows();
+}
+
+void SingleProfileModel::addAt(int i) {
+    beginInsertRows({}, i, i);
+    endInsertRows();
+}
+
 
 #include "profilemodel.moc"

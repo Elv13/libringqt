@@ -31,6 +31,7 @@ class QStringList;
 class Person;
 class ProfileModelPrivate;
 class Account;
+class Individual;
 
 /**
  * This model manage the "profile" property of `::Account` objects.
@@ -79,6 +80,9 @@ public:
 
     QItemSelectionModel* getAccountSelectionModel(Account* a) const;
     Q_INVOKABLE bool setProfile(Account* a, Person* p);
+
+    Q_INVOKABLE QAbstractItemModel* profilesForPerson(Person* p) const;
+    Q_INVOKABLE QAbstractItemModel* profilesForPerson(Individual* ind) const;
 
 private:
     ProfileModelPrivate* d_ptr;
