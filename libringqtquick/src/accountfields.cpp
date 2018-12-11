@@ -87,11 +87,8 @@ bool AttachedAccountFieldStatusPrivate::getAccount()
     auto p = QObject::parent();
     Q_ASSERT(p);
 
-    qDebug() << "\n\nFOO" << p;
-
     if (!m_pParent) {
         while (p) {
-            qDebug() << "PARENT!" << p;
             if (p->metaObject()->inherits(&AccountFields::staticMetaObject)) {
                 m_pParent = qobject_cast<AccountFields*>(p);
                 Q_ASSERT(m_pParent);
