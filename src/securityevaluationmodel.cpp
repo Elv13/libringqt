@@ -477,7 +477,7 @@ bool AccountChecksModel::setData( const QModelIndex& index, const QVariant &valu
 
 QHash<int,QByteArray> AccountChecksModel::roleNames() const
 {
-   return {};
+   return QAbstractItemModel::roleNames();
 }
 
 //This could have been an inlined function too
@@ -605,7 +605,7 @@ bool CombinaisonProxyModel::setData( const QModelIndex& index, const QVariant &v
 
 QHash<int,QByteArray> CombinaisonProxyModel::roleNames() const
 {
-   return {};
+   return QAbstractItemModel::roleNames();
 }
 
 
@@ -653,7 +653,7 @@ QHash<int,QByteArray> SecurityEvaluationModel::roleNames() const
    static bool initRoles = false;
    if (!initRoles) {
       initRoles = true;
-      roles[(int)Role::Severity] = "Severity";
+      roles[(int)Role::Severity] = "severity";
    }
    return roles;
 }
