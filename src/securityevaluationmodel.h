@@ -73,6 +73,9 @@ public:
    Q_PROPERTY(int           fatalWarningCount READ fatalWarningCount NOTIFY fatalWarningCountChanged )
    Q_PROPERTY(SecurityLevel securityLevel     READ securityLevel     NOTIFY securityLevelChanged     )
 
+   Q_PROPERTY(bool permissionWarning READ hasPermissionWarning NOTIFY warningCountChanged)
+   Q_PROPERTY(bool locationWarning   READ hasLocationWarning   NOTIFY warningCountChanged)
+
    ///Give the user an overview of the current security state
    enum class SecurityLevel {
       NONE        = 0, /*!< Security is not functional or severely defective               */
@@ -144,6 +147,9 @@ public:
    int           errorCount       () const;
    int           fatalWarningCount() const;
    SecurityLevel securityLevel    () const;
+
+   bool hasPermissionWarning() const;
+   bool hasLocationWarning  () const;
 
 Q_SIGNALS:
    void informationCountChanged ();

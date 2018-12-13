@@ -815,4 +815,42 @@ int SecurityEvaluationModel::errorCount                   () const
 int SecurityEvaluationModel::fatalWarningCount            () const
 { return d_ptr->m_SeverityCount[ (int)Severity::FATAL_WARNING ]; }
 
+bool SecurityEvaluationModel::hasPermissionWarning() const
+{
+    static constexpr auto FAILED = Certificate::CheckValues::FAILED;
+    return (
+        (d_ptr->m_pAccount->tlsCertificate() && (
+         d_ptr->m_pAccount->tlsCertificate()->arePrivateKeyStoragePermissionOk          () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePublicKeyStoragePermissionOk           () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePrivateKeyDirectoryPermissionsOk       () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePublicKeyDirectoryPermissionsOk        () ==FAILED  )
+        ) ||
+        (d_ptr->m_pAccount->tlsCaListCertificate() && (
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePrivateKeyStoragePermissionOk    () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePublicKeyStoragePermissionOk     () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePrivateKeyDirectoryPermissionsOk () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePublicKeyDirectoryPermissionsOk  () ==FAILED  )
+        )
+    );
+}
+
+bool SecurityEvaluationModel::hasLocationWarning() const
+{
+    static constexpr auto FAILED = Certificate::CheckValues::FAILED;
+    return (
+        (d_ptr->m_pAccount->tlsCertificate() && (
+         d_ptr->m_pAccount->tlsCertificate()->arePrivateKeyStorageLocationOk            () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePublicKeyStorageLocationOk             () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePrivateKeySelinuxAttributesOk          () ==FAILED ||
+         d_ptr->m_pAccount->tlsCertificate()->arePublicKeySelinuxAttributesOk           () ==FAILED  )
+        ) ||
+        (d_ptr->m_pAccount->tlsCaListCertificate() && (
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePrivateKeyStorageLocationOk      () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePublicKeyStorageLocationOk       () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePrivateKeySelinuxAttributesOk    () ==FAILED ||
+         d_ptr->m_pAccount->tlsCaListCertificate()->arePublicKeySelinuxAttributesOk     () ==FAILED  )
+        )
+    );
+}
+
 #include <securityevaluationmodel.moc>
