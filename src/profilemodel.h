@@ -78,7 +78,7 @@ public:
     Account* getAccount(const QModelIndex& idx) const;
     QModelIndex accountIndex(Account* a) const;
 
-    QItemSelectionModel* getAccountSelectionModel(Account* a) const;
+    Q_INVOKABLE QItemSelectionModel* getAccountSelectionModel(Account* a) const;
     Q_INVOKABLE bool setProfile(Account* a, Person* p);
 
     Q_INVOKABLE QAbstractItemModel* profilesForPerson(Person* p) const;
