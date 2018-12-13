@@ -38,6 +38,7 @@ class LIB_EXPORT ProtocolModel : public QAbstractListModel {
    #pragma GCC diagnostic pop
 
 public:
+    Q_PROPERTY(QItemSelectionModel* selectionModel READ selectionModel CONSTANT)
 
    enum class Role {
       Protocol = Qt::UserRole
