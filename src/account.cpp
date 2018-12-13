@@ -208,6 +208,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
 
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
    Account* a = new Account();
+   a->setParent(&AccountModel::instance());
    a->setProtocol(proto);
    a->d_ptr->m_hAccountDetails.clear();
    a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
