@@ -24,12 +24,14 @@
 
 // LibRingQt
 #include "accountfields.h"
+#include "accountbuilder.h"
 
 void RingQtQuick::registerTypes(const char *uri)
 {
     Q_ASSERT(uri == QLatin1String("net.lvindustries.ringqtquick"));
 
-    qmlRegisterType<AccountFields>(uri, 1, 0, "AccountFields");
+    qmlRegisterType<AccountFields> (uri, 1, 0, "AccountFields" );
+    qmlRegisterType<AccountBuilder>(uri, 1, 0, "AccountBuilder");
 
     // Alias
     qmlRegisterUncreatableType<AttachedAccountFieldStatus>(

@@ -36,11 +36,13 @@ configure_package_config_file(
 
 set(libringqtquick_LIB_SRCS
     src/accountfields.cpp
+    src/accountbuilder.cpp
     src/plugin.cpp
 )
 
 set(libringqtquick_LIB_HEADERS
     accountfields.h
+    accountbuilder.h
 )
 
 # if(NOT BUILD_SHARED_LIBS)
