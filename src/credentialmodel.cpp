@@ -341,6 +341,17 @@ QModelIndex CredentialModel::addCredentials()
    return addCredentials(type);
 }
 
+QModelIndex CredentialModel::addCredentials(const QModelIndex& index)
+{
+    if (!index.isValid())
+        return {};
+
+    if (index.model() != availableTypeModel())
+        return {};
+
+    return addCredentials(static_cast<Credential::Type>(index.row()));
+}
+
 ///Add a new credential
 QModelIndex CredentialModel::addCredentials(Credential::Type type)
 {

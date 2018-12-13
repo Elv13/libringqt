@@ -78,12 +78,13 @@ public:
    virtual QModelIndex           parent      ( const QModelIndex& index                                    ) const override;
    virtual int                   columnCount ( const QModelIndex& parent = QModelIndex()                   ) const override;
    virtual QModelIndex           index       ( int row, int column, const QModelIndex& parent=QModelIndex()) const override;
-   virtual QHash<int,QByteArray> roleNames(                                                                ) const override;
+   virtual QHash<int,QByteArray> roleNames   (                                                             ) const override;
 
    //Mutator
    QModelIndex addCredentials(Credential::Type type);
+   Q_INVOKABLE QModelIndex addCredentials(const QModelIndex& index);
    QModelIndex addCredentials();
-   void removeCredentials(const QModelIndex& idx);
+   Q_INVOKABLE void removeCredentials(const QModelIndex& idx);
    bool performAction(CredentialModel::EditAction action);
 
    //Getter

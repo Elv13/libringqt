@@ -34,6 +34,7 @@ public:
       TURN, //Does this exist?
       COUNT__
    };
+   Q_ENUM(Type)
 
    //Property
    Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
@@ -66,4 +67,5 @@ private:
    CredentialPrivate* d_ptr;
 };
 Q_DECLARE_METATYPE(Credential*)
+Q_DECLARE_METATYPE(Credential::Type)
 DECLARE_ENUM_FLAGS(Credential::Type)
