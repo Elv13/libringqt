@@ -1438,6 +1438,8 @@ QVariant Account::roleData(int role) const
          return lastErrorCode();
       case CAST(Account::Role::LastErrorMessage):
          return lastErrorMessage();
+      case CAST(Account::Role::Profile):
+         return QVariant::fromValue(profile());
       default:
          return QVariant();
    }

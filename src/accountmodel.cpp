@@ -214,6 +214,7 @@ QHash<int,QByteArray> AccountModel::roleNames() const
         roles.insert((int) Account::Role::RegisteredName              , "registeredName");
         roles.insert((int) Account::Role::LastErrorCode               , "lastErrorCode");
         roles.insert((int) Account::Role::LastErrorMessage            , "lastErrorMessage");
+        roles.insert((int) Account::Role::Profile                     , "profile");
    }
    return roles;
 }

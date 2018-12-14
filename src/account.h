@@ -321,6 +321,7 @@ class LIB_EXPORT Account : public ItemBase {
          LastErrorCode               ,
          LastErrorMessage            ,
          RegistrationStateColor      ,
+         Profile                     ,
       };
 
       ///@enum RoleState Whether a role can be used in a certain context
