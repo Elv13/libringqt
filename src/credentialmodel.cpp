@@ -298,7 +298,7 @@ CredentialNode* CredentialModelPrivate::createCat(const QString& name)
    n->m_Index = q_ptr->rowCount();
    n->m_CategoryName = new QString(name);
 
-   q_ptr->beginInsertRows(QModelIndex(),m_lCategories.size(),0);
+   q_ptr->beginInsertRows({}, m_lCategories.size(), m_lCategories.size());
    m_lCategories << n;
    q_ptr->endInsertRows();
 
