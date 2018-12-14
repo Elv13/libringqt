@@ -132,6 +132,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 {
 //    qDebug() << "Building an account from id: " << _accountId;
    Account* a = new Account();
+   a->setParent(&AccountModel::instance());
    a->d_ptr->m_AccountId = _accountId;
    a->d_ptr->setObjectName(_accountId);
    a->d_ptr->m_RemoteEnabledState = true;
