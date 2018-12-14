@@ -561,7 +561,7 @@ class LIB_EXPORT Account : public ItemBase {
       void setAllowIncomingFromUnknown      (bool value );
       void setHasActiveCallLimit            (bool value );
       void setProfile                       (Person* p );
-      void setRoleData(int role, const QVariant& value);
+      bool setRoleData(int role, const QVariant& value);
 
       //Operators
       bool operator==(const Account&)const;

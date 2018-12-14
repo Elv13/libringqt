@@ -1261,8 +1261,6 @@ QVariant Account::roleData(int role) const
          return mailbox();
       case CAST(Account::Role::Proxy):
          return proxy();
-//       case Password:
-//          return accountPassword();
       case CAST(Account::Role::TlsPassword):
          return tlsPassword();
       case CAST(Account::Role::TlsCaListCertificate):
@@ -2162,7 +2160,7 @@ void AccountPrivate::setRegistrationState(Account::RegistrationState value)
 
 #define CAST(item) static_cast<int>(item)
 ///Proxy for AccountModel::setData
-void Account::setRoleData(int role, const QVariant& value)
+bool Account::setRoleData(int role, const QVariant& value)
 {
    switch(role) {
       case CAST(Account::Role::Alias):
@@ -2185,18 +2183,14 @@ void Account::setRoleData(int role, const QVariant& value)
       case CAST(Account::Role::Proxy):
          setProxy(value.toString());
          break;
-//       case Password:
-//          accountPassword();
       case CAST(Account::Role::TlsPassword):
          setTlsPassword(value.toString());
          break;
-      case CAST(Account::Role::TlsCaListCertificate): {
+      case CAST(Account::Role::TlsCaListCertificate):
          setTlsCaListCertificate(value.toString());
          break;
-      }
-      case CAST(Account::Role::TlsCertificate): {
+      case CAST(Account::Role::TlsCertificate):
          setTlsCertificate(value.toString());
-      }
          break;
       case CAST(Account::Role::TlsServerName):
          setTlsServerName(value.toString());
@@ -2335,10 +2329,10 @@ void Account::setRoleData(int role, const QVariant& value)
          setAllowIncomingFromUnknown(value.toBool());
          break;
       case CAST(Account::Role::ActiveCallLimit):
-         return setActiveCallLimit(value.toInt());
+         setActiveCallLimit(value.toInt());
          break;
       case CAST(Account::Role::HasActiveCallLimit):
-         return setHasActiveCallLimit(value.toBool());
+         setHasActiveCallLimit(value.toBool());
          break;
       //Read-only
       case CAST(Account::Role::SecurityLevel):
@@ -2356,7 +2350,11 @@ void Account::setRoleData(int role, const QVariant& value)
       case CAST(Account::Role::TurnServerEnabled):
        setTurnEnabled(value.toBool());
        break;
+      default:
+         return false;
    }
+
+   return true;
 }
 #undef CAST
 

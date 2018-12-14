@@ -1173,6 +1173,11 @@ bool AccountModel::setData(const QModelIndex& idx, const QVariant& value, int ro
          emit dataChanged(idx, idx);
       }
    }
+   else if (idx.isValid()) {
+      if (auto a = getAccountByModelIndex(idx))
+          return a->setRoleData(role, value);
+   }
+
    return false;
 }
 
