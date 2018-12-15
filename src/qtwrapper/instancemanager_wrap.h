@@ -30,6 +30,7 @@
 #include "dring.h"
 #include "../typedefs.h"
 #include "conversions_wrap.hpp"
+#include <dbus/metatypes.h>
 
 /*
  * Proxy class for interface org.ring.Ring.Instance

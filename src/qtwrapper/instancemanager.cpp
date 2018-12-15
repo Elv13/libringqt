@@ -21,6 +21,7 @@
 #include "callmanager.h"
 #include "presencemanager.h"
 #include "configurationmanager.h"
+#include <dbus/metatypes.h>
 #ifdef ENABLE_VIDEO
  #include "videomanager.h"
 #endif //ENABLE_VIDEO

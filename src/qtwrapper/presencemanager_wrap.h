@@ -30,6 +30,7 @@
 #include "typedefs.h"
 #include <presencemanager_interface.h>
 #include "conversions_wrap.hpp"
+#include <dbus/metatypes.h>
 
 
 /*

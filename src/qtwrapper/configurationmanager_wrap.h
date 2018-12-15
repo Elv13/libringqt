@@ -33,6 +33,8 @@
 #include <datatransfer_interface.h>
 #include <account_const.h>
 
+#include <dbus/metatypes.h>
+
 #include "typedefs.h"
 #include "conversions_wrap.hpp"
 

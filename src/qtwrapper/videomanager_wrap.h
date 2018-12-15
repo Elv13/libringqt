@@ -38,6 +38,7 @@
 
 #include "typedefs.h"
 #include "conversions_wrap.hpp"
+#include <dbus/metatypes.h>
 
 class VideoManagerInterface;
 

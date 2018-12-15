@@ -30,6 +30,7 @@
 #include <callmanager_interface.h>
 #include "typedefs.h"
 #include "conversions_wrap.hpp"
+#include <dbus/metatypes.h>
 
 /*
  * Proxy class for interface cx.ring.Ring.CallManager
