@@ -239,8 +239,9 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     q_ptr->beginInsertRows(parentIdx, account_pro->m_Index, account_pro->m_Index);
     currentNode->children << account_pro;
 
-    if (currentNode->parent->m_PerData.m_pModel) {
-        auto m = currentNode->parent->m_PerData.m_pModel;
+    Q_ASSERT(currentNode->type == ProfileNode::Type::PROFILE);
+    if (currentNode->m_PerData.m_pModel) {
+        auto m = currentNode->m_PerData.m_pModel;
         m->addAt(account_pro->m_Index);
     }
 
