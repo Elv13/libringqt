@@ -15,7 +15,6 @@ option(BUILD_SHARED_LIBS "Build the shared library (instead of static)" OFF)
 # Shared is current NOT supported. The application will load but will NOT work
 set(BUILD_SHARED_LIBS OFF)
 
-find_package( LibRingQt REQUIRED )
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED Core Quick)
 
 if (ringqt_REQUIRE_DBUS)
@@ -56,6 +55,7 @@ add_library(ringqtquick STATIC ${libringqtquick_LIB_SRCS} )
 
 target_include_directories( ringqtquick PRIVATE
     src/
+    ../src/
     ${ringqt_INCLUDE_DIR}
 )
 
