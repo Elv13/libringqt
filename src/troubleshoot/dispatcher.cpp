@@ -246,14 +246,13 @@ void Troubleshoot::DispatcherPrivate::registerAdapter()
 {
     auto i = new T(q_ptr);
 
-    auto h = new Holder {
-        [i](Call* c, time_t t) -> bool { return T::isAffected(c, t, i); },
-        i,
-        new QTimer( q_ptr ),
-        nullptr            ,
-        T::timeout(       ),
-        m_Count++
-    };
+    auto h = new Holder();
+    h->m_fProbe    = [i](Call* c, time_t t) -> bool { return T::isAffected(c, t, i); };
+    h->m_pInstance = i;
+    h->m_pTimer    = new QTimer( q_ptr );
+    h->m_pNext     = nullptr            ;
+    h->m_Timeout   = T::timeout(       );
+    h->m_Index     = m_Count++;
 
     if (auto t = T::timeout()) {
         connect(h->m_pTimer, &QTimer::timeout, this, &DispatcherPrivate::slotTimeout);
