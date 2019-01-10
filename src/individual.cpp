@@ -47,6 +47,7 @@
  */
 struct ContactMethodIndividualData
 {
+    explicit ContactMethodIndividualData(IndividualPrivate* d) : d_ptr(d) {}
     /// Used for the model
     int m_PhoneNumberIndex {-1};
     IndividualPrivate* d_ptr {nullptr};
@@ -790,11 +791,10 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
         }
         cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = d_ptr->m_Numbers.size();
     }
-    else
-        cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
-            d_ptr->m_Numbers.size(),
-            d_ptr
-        };
+    else {
+        cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData(d_ptr);
+        cm->d_ptr->m_pIndividualData->m_PhoneNumberIndex = d_ptr->m_Numbers.size();
+    }
 
     beginInsertRows({}, d_ptr->m_Numbers.size(), d_ptr->m_Numbers.size());
     d_ptr->m_Numbers << cm;
@@ -861,11 +861,9 @@ ContactMethod* Individual::removePhoneNumber(ContactMethod* cm)
     for (int i =0; i < d_ptr->m_Numbers.size(); i++) {
         auto cm = d_ptr->m_Numbers[i];
 
-        if (!cm->d_ptr->m_pIndividualData)
-            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
-                -1,
-                d_ptr
-            };
+        if (!cm->d_ptr->m_pIndividualData) {
+            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData(d_ptr);
+        }
         else
             Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
 
@@ -927,11 +925,9 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
     for (int i =0; i < d_ptr->m_Numbers.size(); i++) {
         auto cm = d_ptr->m_Numbers[i];
 
-        if (!cm->d_ptr->m_pIndividualData)
-            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData {
-                -1,
-                d_ptr
-            };
+        if (!cm->d_ptr->m_pIndividualData) {
+            cm->d_ptr->m_pIndividualData = new ContactMethodIndividualData(d_ptr);
+        }
         else
             Q_ASSERT(cm->d_ptr->m_pIndividualData->d_ptr == d_ptr);
 
@@ -1160,10 +1156,8 @@ void IndividualPrivate::slotContactChanged()
     if (cm->d_ptr->m_pIndividualData && cm->d_ptr->m_pIndividualData->d_ptr != this) {
         delete cm->d_ptr->m_pIndividualData;
 
-        cm->d_ptr->m_pIndividualData = contains(cm, false) ? new ContactMethodIndividualData {
-            -1,
-            this
-        } : nullptr;
+        cm->d_ptr->m_pIndividualData = contains(cm, false) ?
+            new ContactMethodIndividualData(this) : nullptr;
 
         for (int i =0; i < m_Numbers.size(); i++) {
             auto cm = m_Numbers[i];
