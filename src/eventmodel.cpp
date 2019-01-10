@@ -311,11 +311,8 @@ bool EventModel::addItemCallback(const Event* item)
 
     beginInsertRows({} ,d_ptr->m_lEvent.size(),d_ptr->m_lEvent.size());
 
-    auto n = new EventModelNode {
-        const_cast<Event*>(item),
-        nullptr,
-        nullptr
-    };
+    auto n = new EventModelNode();
+    n->m_pEvent = const_cast<Event*>(item);
 
     // Check if the event is a direct sibling
     if (!d_ptr->m_lEvent.isEmpty()) {

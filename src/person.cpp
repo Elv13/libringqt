@@ -803,6 +803,6 @@ Person::ensureUid()
     while (d_ptr->m_Uid.isEmpty()
         or (PersonModel::instance().getPersonByUid(d_ptr->m_Uid)
             && PersonModel::instance().getPersonByUid(d_ptr->m_Uid) != this)) {
-        d_ptr->m_Uid = std::to_string(id_generator(rand)).c_str();
+        d_ptr->m_Uid = QString::number(id_generator(rand)).toLatin1();
     }
 }
