@@ -78,8 +78,15 @@ typename EnumIterator<EnumClass, from, to>::EnumClassIter EnumIterator<EnumClass
    return EnumIterator<EnumClass, from, to>::EnumClassIter( this, enum_class_size<EnumClass, from, to>() );
 }
 
+// GCC 4.9 is the last version of GCC for Android and would otherwise fail
+#ifdef CPP11_COMPAT
+ #define COMPAT_CONSTEXPR
+#else
+ #define COMPAT_CONSTEXPR constexpr
+#endif
+
 template<class Row, typename Value, typename Accessor>
-constexpr Matrix1D<Row,Value,Accessor>::Matrix1D() : m_lData{nullptr}
+COMPAT_CONSTEXPR Matrix1D<Row,Value,Accessor>::Matrix1D() : m_lData{nullptr}
 {
 }
 
@@ -100,7 +107,7 @@ Matrix1D<Row,Value,Accessor>::~Matrix1D()
 
 //DEPRECATED
 template<class Row, typename Value, typename Accessor>
-constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::initializer_list<Value>> s)
+COMPAT_CONSTEXPR Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::initializer_list<Value>> s)
 : m_lData{nullptr} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
@@ -119,7 +126,7 @@ constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< std::ini
 }
 
 template<typename Enum>
-constexpr EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
+COMPAT_CONSTEXPR EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<Enum> s)
 {
    static_assert(std::is_enum<Enum>(),"Row has to be an enum class");
    assert(s.size() == enum_class_size<Enum>());
@@ -141,7 +148,7 @@ constexpr EnumClassReordering<Enum>::EnumClassReordering(std::initializer_list<E
 }
 
 template<class Row, typename Value, typename Accessor>
-constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Order > s)
+COMPAT_CONSTEXPR Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Order > s)
 : m_lData{} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
@@ -168,7 +175,7 @@ constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D
  * they are present only once and support re-ordering
  */
 template<class Row, typename Value, typename Accessor>
-constexpr Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Pairs> s)
+COMPAT_CONSTEXPR Matrix1D<Row,Value,Accessor>::Matrix1D(std::initializer_list< Matrix1D<Row,Value,Accessor>::Pairs> s)
 : m_lData{} {
    static_assert(std::is_enum<Row>(),"Row has to be an enum class");
    static_assert(static_cast<int>(Row::COUNT__) > 0,"Row need a COUNT__ element");
