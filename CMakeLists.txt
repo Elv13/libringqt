@@ -60,8 +60,8 @@ ENDIF()
 
 # First, check is the compiler is new enough, most version of Clang are fine
 # until problems arise, checking for GCC is enough
-IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-   MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 5 or later")
+IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+   MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 4.9 or later")
 ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
