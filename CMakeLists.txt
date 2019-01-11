@@ -614,7 +614,6 @@ SET_TARGET_PROPERTIES(ringqt PROPERTIES
 )
 
 TARGET_LINK_LIBRARIES( ringqt
-   -lpthread
    Qt5::Core
 )
 
