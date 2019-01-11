@@ -52,10 +52,19 @@ ELSE()
    OPTION(DISABLE_EXPORT    "Do not install anything"                      ON )
 ENDIF()
 
+# Detect when added with `add_subdirectory`
+GET_DIRECTORY_PROPERTY(USES_ADD_SUBDIRECTORY PARENT_DIRECTORY)
+IF(USES_ADD_SUBDIRECTORY OR DEFINED LibRingQt_SRC)
+   OPTION(BUILD_SHARED_LIBS OFF)
+ENDIF()
+
 # First, check is the compiler is new enough, most version of Clang are fine
 # until problems arise, checking for GCC is enough
-IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-   MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 5 or later")
+IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+   MESSAGE(FATAL_ERROR "Your version of GCC is too old, please install GCC 4.9 or later")
+ELSEIF(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+   MESSAGE(WARNING "Your compiler doesn't support C++14, slower code will be used")
+   ADD_DEFINITIONS(-DCPP11_COMPAT=1)
 ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
@@ -605,7 +614,6 @@ SET_TARGET_PROPERTIES(ringqt PROPERTIES
 )
 
 TARGET_LINK_LIBRARIES( ringqt
-   -lpthread
    Qt5::Core
 )
 
@@ -640,15 +648,12 @@ ENDIF()
 CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" NEED_LIBRT)
 IF(NEED_LIBRT)
    TARGET_LINK_LIBRARIES(ringqt rt)
+ENDIF()
 
-   IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-      ADD_DEFINITIONS(-D__ANDROID__=1)
-   ELSE()
-      ADD_DEFINITIONS(-D__ANDROID__=0)
-   ENDIF()
-
-ELSE()
-   ADD_DEFINITIONS(-D__ANDROID__=0)
+IF(${OPERATING_SYSTEM} MATCHES "Android")
+    message(STATUS Android detected)
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    TARGET_LINK_LIBRARIES( ringqt -lpthread )
 ENDIF()
 
 EXPORT(TARGETS ringqt

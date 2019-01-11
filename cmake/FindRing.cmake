@@ -4,11 +4,19 @@
 
 SET(RING_FOUND true)
 
+# Check the environment variables override. This is useful when cross-compiling
+# DRing/LibJami in a different container
 IF(EXISTS $ENV{RING_BUILD_DIR})
    SET(RING_BUILD_DIR $ENV{RING_BUILD_DIR})
 ENDIF()
+IF(EXISTS $ENV{RING_INCLUDE_DIRS})
+   SET(ring_INCLUDE_DIRS $ENV{RING_INCLUDE_DIRS})
+ENDIF()
+IF(EXISTS $ENV{RING_LIBRARY})
+   SET(ring_BIN $ENV{RING_LIBRARY})
+ENDIF()
 
-IF(EXISTS ${CMAKE_INSTALL_PREFIX}/include/dring/dring.h)
+IF(NOT ring_INCLUDE_DIRS AND EXISTS ${CMAKE_INSTALL_PREFIX}/include/dring/dring.h)
    SET(ring_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include/dring)
 ELSEIF(EXISTS ${RING_INCLUDE_DIR}/dring.h)
    SET(ring_INCLUDE_DIRS ${RING_INCLUDE_DIR})
