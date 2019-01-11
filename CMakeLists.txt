@@ -52,6 +52,12 @@ ELSE()
    OPTION(DISABLE_EXPORT    "Do not install anything"                      ON )
 ENDIF()
 
+# Detect when added with `add_subdirectory`
+GET_DIRECTORY_PROPERTY(USES_ADD_SUBDIRECTORY PARENT_DIRECTORY)
+IF(USES_ADD_SUBDIRECTORY OR DEFINED LibRingQt_SRC)
+   OPTION(BUILD_SHARED_LIBS OFF)
+ENDIF()
+
 # First, check is the compiler is new enough, most version of Clang are fine
 # until problems arise, checking for GCC is enough
 IF (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
