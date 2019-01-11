@@ -650,7 +650,7 @@ IF(NEED_LIBRT)
    TARGET_LINK_LIBRARIES(ringqt rt)
 ENDIF()
 
-IF(${OPERATING_SYSTEM} MATCHES "Android")
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     message(STATUS Android detected)
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     TARGET_LINK_LIBRARIES( ringqt -lpthread )
