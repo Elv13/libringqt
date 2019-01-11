@@ -24,6 +24,13 @@
 #include <type_traits>
 #include <cassert>
 
+// GCC 4.9 is the last version of GCC for Android and would otherwise fail
+#ifdef CPP11_COMPAT
+ #define COMPAT_CONSTEXPR
+#else
+ #define COMPAT_CONSTEXPR constexpr
+#endif
+
 template<class T, class E>
 struct TypedStateMachine
 {
@@ -60,7 +67,7 @@ struct TypedStateMachine
 template<typename Enum>
 class EnumClassReordering {
 public:
-   constexpr EnumClassReordering(std::initializer_list<Enum> s);
+   COMPAT_CONSTEXPR EnumClassReordering(std::initializer_list<Enum> s);
 // private:
    Enum m_lData[enum_class_size<Enum>()];
 };
@@ -90,10 +97,10 @@ struct Matrix1D
       std::initializer_list<Value> vs   ;
    };
 
-   constexpr Matrix1D(std::initializer_list< std::initializer_list<Value> > s);
-   constexpr Matrix1D(std::initializer_list< Pairs > s);
-   constexpr Matrix1D(std::initializer_list<Order> s);
-   constexpr explicit Matrix1D();
+   COMPAT_CONSTEXPR Matrix1D(std::initializer_list< std::initializer_list<Value> > s);
+   COMPAT_CONSTEXPR Matrix1D(std::initializer_list< Pairs > s);
+   COMPAT_CONSTEXPR Matrix1D(std::initializer_list<Order> s);
+   COMPAT_CONSTEXPR explicit Matrix1D();
    Matrix1D(const Matrix1D<Row,Value,A>& copy);
    ~Matrix1D();
 

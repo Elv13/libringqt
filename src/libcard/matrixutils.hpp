@@ -78,13 +78,6 @@ typename EnumIterator<EnumClass, from, to>::EnumClassIter EnumIterator<EnumClass
    return EnumIterator<EnumClass, from, to>::EnumClassIter( this, enum_class_size<EnumClass, from, to>() );
 }
 
-// GCC 4.9 is the last version of GCC for Android and would otherwise fail
-#ifdef CPP11_COMPAT
- #define COMPAT_CONSTEXPR
-#else
- #define COMPAT_CONSTEXPR constexpr
-#endif
-
 template<class Row, typename Value, typename Accessor>
 COMPAT_CONSTEXPR Matrix1D<Row,Value,Accessor>::Matrix1D() : m_lData{nullptr}
 {
