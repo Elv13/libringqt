@@ -55,7 +55,7 @@ ENDIF()
 # Detect when added with `add_subdirectory`
 GET_DIRECTORY_PROPERTY(USES_ADD_SUBDIRECTORY PARENT_DIRECTORY)
 IF(USES_ADD_SUBDIRECTORY OR DEFINED LibRingQt_SRC)
-   OPTION(BUILD_SHARED_LIBS OFF)
+   SET(BUILD_SHARED_LIBS OFF)
 ENDIF()
 
 # First, check is the compiler is new enough, most version of Clang are fine
