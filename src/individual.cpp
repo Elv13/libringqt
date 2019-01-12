@@ -127,8 +127,8 @@ Individual::Individual(Person* parent) :
     moveToThread(QCoreApplication::instance()->thread());
     setObjectName(parent->formattedName());
 
-    PeersTimelineModel::instance();
-    emit PeersTimelineModel::instance().individualAdded(this);
+    Session::instance()->peersTimelineModel();
+    emit Session::instance()->peersTimelineModel()->individualAdded(this);
 
     connect(parent, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
@@ -139,8 +139,8 @@ Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()),
     d_ptr->q_ptr = this;
     d_ptr->m_lParents << this;
     moveToThread(QCoreApplication::instance()->thread());
-    PeersTimelineModel::instance();
-    emit PeersTimelineModel::instance().individualAdded(this);
+    Session::instance()->peersTimelineModel();
+    emit Session::instance()->peersTimelineModel()->individualAdded(this);
 }
 
 Individual::~Individual()
@@ -242,8 +242,8 @@ bool Individual::merge(Individual* other)
 
     emit layoutChanged();
 
-    emit PeersTimelineModel::instance().individualMerged(this, other);
-    emit PeersTimelineModel::instance().individualChanged(masterObject());
+    emit Session::instance()->peersTimelineModel()->individualMerged(this, other);
+    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
 
     return true;
 }
@@ -638,7 +638,7 @@ void Individual::registerContactMethod(ContactMethod* m)
     if (isSelf()) {
         for (auto p : qAsConst(d_ptr->m_lParents))
             emit p->isSelfChanged();
-        emit PeersTimelineModel::instance().selfRemoved(masterObject());
+        emit Session::instance()->peersTimelineModel()->selfRemoved(masterObject());
     }
 
     d_ptr->connectContactMethod(m);
@@ -648,7 +648,7 @@ void Individual::registerContactMethod(ContactMethod* m)
 
     if (objectName().isEmpty())
         setObjectName(m->primaryName());
-    emit PeersTimelineModel::instance().individualChanged(masterObject());
+    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
 }
 
 ///Get the phone number list
@@ -831,13 +831,13 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     if (isSelf()) {
         for (auto p : qAsConst(d_ptr->m_lParents))
             emit p->isSelfChanged();
-        emit PeersTimelineModel::instance().selfRemoved(masterObject());
+        emit Session::instance()->peersTimelineModel()->selfRemoved(masterObject());
     }
 
     if (objectName().isEmpty())
         setObjectName(cm->primaryName());
 
-    emit PeersTimelineModel::instance().individualChanged(masterObject());
+    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
 
     return cm;
 }
@@ -1079,7 +1079,7 @@ void IndividualPrivate::slotLastContactMethod(ContactMethod* cm)
     for (auto p : qAsConst(m_lParents))
         emit p->lastUsedTimeChanged(cm ? cm->lastUsed() : 0);
 
-    emit PeersTimelineModel::instance().lastUsedIndividualChanged(
+    emit Session::instance()->peersTimelineModel()->lastUsedIndividualChanged(
         q_ptr->masterObject(),
         q_ptr->lastUsedTime()
     );
@@ -1198,7 +1198,7 @@ void IndividualPrivate::slotChanged()
     for (auto p : qAsConst(m_lParents))
         emit p->changed();
 
-    emit PeersTimelineModel::instance().individualChanged(q_ptr->masterObject());
+    emit Session::instance()->peersTimelineModel()->individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotRegisteredName()
@@ -1206,7 +1206,7 @@ void IndividualPrivate::slotRegisteredName()
     m_BestName.clear();
     for (auto p : qAsConst(m_lParents))
         emit p->changed();
-    emit PeersTimelineModel::instance().individualChanged(q_ptr->masterObject());
+    emit Session::instance()->peersTimelineModel()->individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotBookmark(bool b)
@@ -1223,7 +1223,7 @@ void IndividualPrivate::slotIsSelf()
         for (auto p : qAsConst(m_lParents))
             emit p->isSelfChanged();
 
-        emit PeersTimelineModel::instance().selfRemoved(q_ptr->masterObject());
+        emit Session::instance()->peersTimelineModel()->selfRemoved(q_ptr->masterObject());
     }
 }
 

@@ -59,6 +59,7 @@ class LIB_EXPORT PeersTimelineModel : public QAbstractTableModel
 {
     Q_OBJECT
 
+    friend class Session; // Factory
 public:
     Q_PROPERTY(QSharedPointer<QAbstractItemModel> timelineSummaryModel READ timelineSummaryModel CONSTANT)
     Q_PROPERTY(Individual*  mostRecentIndividual READ mostRecentIndividual NOTIFY headChanged)
@@ -75,7 +76,6 @@ public:
     Q_ENUMS(SumaryRoles)
 
     // Singleton
-    static PeersTimelineModel& instance();
     virtual ~PeersTimelineModel();
 
     // Model re-implementation

@@ -27,6 +27,7 @@
 
 // Ring
 #include <individual.h>
+#include <session.h>
 #include <phonedirectorymodel.h>
 #include <historytimecategorymodel.h>
 
@@ -106,12 +107,6 @@ public:
 protected:
     virtual bool filterAcceptsRow(int row, const QModelIndex & srcParent ) const override;
 };
-
-PeersTimelineModel& PeersTimelineModel::instance()
-{
-    static auto m_sInstance = new PeersTimelineModel();
-    return *m_sInstance;
-}
 
 PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication::instance()),
     d_ptr(new PeersTimelineModelPrivate())
