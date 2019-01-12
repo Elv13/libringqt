@@ -19,6 +19,7 @@
 #include "private/numbercategorymodel_p.h"
 #include "contactmethod.h"
 #include "numbercategory.h"
+#include "session.h"
 
 NumberCategoryModel::NumberCategoryModel(QObject* parent) : QAbstractListModel(parent),CollectionManagerInterface(this),d_ptr(new NumberCategoryModelPrivate())
 {}
@@ -119,12 +120,6 @@ NumberCategory* NumberCategoryModel::addCategory(const QString& name, const QVar
     return cat;
 }
 
-NumberCategoryModel& NumberCategoryModel::instance()
-{
-    static auto instance = new NumberCategoryModel;
-    return *instance;
-}
-
 QModelIndex NumberCategoryModel::nameToIndex(const QString& name) const
 {
     if (const auto rep = d_ptr->m_hByName.value(name.toLower()))
@@ -141,7 +136,7 @@ void NumberCategoryModelPrivate::registerNumber(ContactMethod* number)
     auto rep = m_hByName.value(lower);
 
     if (!rep) {
-        NumberCategoryModel::instance().addCategory(number->category()->name(), {});
+        Session::instance()->numberCategoryModel()->addCategory(number->category()->name(), {});
         rep = m_hByName[lower];
     }
 
@@ -166,7 +161,7 @@ NumberCategory* NumberCategoryModel::getCategory(const QString& type) const
     else if(auto internal = d_ptr->m_hByName.value(lower))
         return internal->category;
 
-    return instance().addCategory(lower, {});
+    return Session::instance()->numberCategoryModel()->addCategory(lower, {});
 }
 
 NumberCategory* NumberCategoryModel::getCategory(const QModelIndex& index) const
@@ -186,7 +181,7 @@ NumberCategory* NumberCategoryModel::forKey(int key) const
 NumberCategory* NumberCategoryModel::other()
 {
     static QString translated = QObject::tr("Other");
-    static auto ret = instance().getCategory(translated);
+    static auto ret = Session::instance()->numberCategoryModel()->getCategory(translated);
     return ret;
 }
 

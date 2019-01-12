@@ -24,6 +24,7 @@
 #include "collectionmediator.h"
 #include "collectioneditor.h"
 #include "contactmethod.h"
+#include "session.h"
 #include "numbercategorymodel.h"
 #include "private/numbercategorymodel_p.h"
 
@@ -89,7 +90,7 @@ bool NumberCategory::load()
 
 int NumberCategory::size() const
 {
-   return NumberCategoryModel::instance().d_ptr->getSize(this);
+   return Session::instance()->numberCategoryModel()->d_ptr->getSize(this);
 }
 
 int NumberCategory::key() const

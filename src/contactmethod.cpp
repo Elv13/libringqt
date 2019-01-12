@@ -202,7 +202,7 @@ d_ptr(new ContactMethodPrivate(number,cat,st,this))
    setObjectName(d_ptr->m_Uri);
    d_ptr->m_hasType = cat != NumberCategoryModel::other();
    if (d_ptr->m_hasType) {
-      NumberCategoryModel::instance().d_ptr->registerNumber(this);
+      Session::instance()->numberCategoryModel()->d_ptr->registerNumber(this);
    }
    d_ptr->m_lParents << this;
 }
@@ -424,11 +424,11 @@ void ContactMethod::setCategory(NumberCategory* cat)
 {
    if (cat == d_ptr->m_pCategory) return;
    if (d_ptr->m_hasType)
-      NumberCategoryModel::instance().d_ptr->unregisterNumber(this);
+      Session::instance()->numberCategoryModel()->d_ptr->unregisterNumber(this);
    d_ptr->m_hasType = cat != NumberCategoryModel::other();
    d_ptr->m_pCategory = cat;
    if (d_ptr->m_hasType)
-      NumberCategoryModel::instance().d_ptr->registerNumber(this);
+      Session::instance()->numberCategoryModel()->d_ptr->registerNumber(this);
    d_ptr->changed();
 }
 
@@ -947,7 +947,7 @@ bool ContactMethod::setRoleData(const QVariant &value, int role)
             setBookmarked(value.toBool());
             return true;
         case static_cast<int>(Role::CategoryKey):
-            if (auto cat = NumberCategoryModel::instance().forKey(value.toInt())) {
+            if (auto cat = Session::instance()->numberCategoryModel()->forKey(value.toInt())) {
                 setCategory(cat);
                 return true;
             }

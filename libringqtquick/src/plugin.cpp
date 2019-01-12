@@ -36,7 +36,7 @@
 #include <person.h>
 #include <individual.h>
 #include <contactmethod.h>
-#include <event.h>
+#include <libcard/event.h>
 #include <media/recording.h>
 #include <media/textrecording.h>
 #include <media/avrecording.h>
@@ -63,6 +63,7 @@
 #include <categorizedcontactmodel.h>
 #include <namedirectory.h>
 #include <peerstimelinemodel.h>
+#include <numbercategorymodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -107,6 +108,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( CategorizedContactModel    )
     QML_TYPE_MOD( CategorizedHistoryModel    )
     QML_TYPE_MOD( PeersTimelineModel         )
+    QML_TYPE_MOD( NumberCategoryModel        )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

@@ -32,6 +32,7 @@ class CategorizedBookmarkModel;
 class AvailableAccountModel;
 class NameDirectory;
 class PeersTimelineModel;
+class NumberCategoryModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -48,6 +49,7 @@ public:
     Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
     Q_PROPERTY(NameDirectory* nameDirectory READ nameDirectory CONSTANT)
     Q_PROPERTY(PeersTimelineModel* peersTimelineModel READ peersTimelineModel CONSTANT)
+    Q_PROPERTY(NumberCategoryModel* numberCategoryModel READ numberCategoryModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -57,6 +59,7 @@ public:
     AvailableAccountModel* availableAccountModel() const;
     NameDirectory* nameDirectory() const;
     PeersTimelineModel* peersTimelineModel() const;
+    NumberCategoryModel* numberCategoryModel() const;
 
     static Session* instance();
 

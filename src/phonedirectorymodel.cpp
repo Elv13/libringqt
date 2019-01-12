@@ -544,7 +544,7 @@ ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, cons
 
         //If everything match, complete the candidate
         auto cat = number->category() ? number->category() :
-            NumberCategoryModel::instance().getCategory(type);
+            Session::instance()->numberCategoryModel()->getCategory(type);
 
         if (contact)
             number->setPerson   ( contact         );
@@ -626,7 +626,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Acc
 
     // A CM already eixsts for this URI, but isn't compatible (yet), too bad,
     // create a new one.
-    cm = new ContactMethod(uri, NumberCategoryModel::instance().getCategory(type));
+    cm = new ContactMethod(uri, Session::instance()->numberCategoryModel()->getCategory(type));
     cm->dir_d_ptr = new ContactMethodDirectoryPrivate;
     cm->dir_d_ptr->m_Index = d_ptr->m_lNumbers.size();
 
@@ -683,7 +683,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
    if (const auto wrap = d_ptr->m_hDirectory.value(uri)) {
       ContactMethod* nb = wrap->numbers[0];
       if ((nb->category() == NumberCategoryModel::other()) && (!type.isEmpty())) {
-         nb->setCategory(NumberCategoryModel::instance().getCategory(type));
+         nb->setCategory(Session::instance()->numberCategoryModel()->getCategory(type));
       }
       d_ptr->m_DirectoryAccess.unlock();
       return nb;
@@ -861,7 +861,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    }
 
    //Create the number
-   ContactMethod* number = new ContactMethod(uri,NumberCategoryModel::instance().getCategory(type));
+   ContactMethod* number = new ContactMethod(uri,Session::instance()->numberCategoryModel()->getCategory(type));
    number->dir_d_ptr = new ContactMethodDirectoryPrivate;
 
    number->setAccount(account);

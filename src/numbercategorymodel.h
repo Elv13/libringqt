@@ -39,6 +39,7 @@ class LIB_EXPORT NumberCategoryModel : public QAbstractListModel, public Collect
 public:
    friend class NumberCategory;
    friend class ContactMethod ;
+   friend class Session; // factory
 
    enum Role {
       KEY = 100,
@@ -53,9 +54,6 @@ public:
 
    //Mutator
    NumberCategory* addCategory(const QString& name, const QVariant& icon, int key = -1);
-
-   //Singleton
-   static NumberCategoryModel& instance();
 
    //Getter
    QModelIndex     nameToIndex(const QString& name       ) const;
