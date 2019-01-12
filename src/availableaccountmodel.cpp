@@ -68,12 +68,6 @@ AvailableAccountModel::~AvailableAccountModel()
    delete d_ptr;
 }
 
-AvailableAccountModel& AvailableAccountModel::instance()
-{
-    static auto instance = new AvailableAccountModel(QCoreApplication::instance());
-    return *instance;
-}
-
 //Do not show the checkbox
 QVariant AvailableAccountModel::data(const QModelIndex& idx,int role ) const
 {
@@ -99,7 +93,7 @@ bool AvailableAccountModel::filterAcceptsRow(int source_row, const QModelIndex& 
 Account* AvailableAccountModel::currentDefaultAccount(const ContactMethod* method)
 {
     // if no CM is give, we use the user chosen account, since no other parameters are available
-    const auto idx =  AvailableAccountModel::instance().selectionModel()->currentIndex();
+    const auto idx =  Session::instance()->availableAccountModel()->selectionModel()->currentIndex();
     if (!method && idx.isValid()) {
         return idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     }
@@ -138,7 +132,7 @@ bool AvailableAccountModel::validAccountForScheme(Account* account, URI::SchemeT
 Account* AvailableAccountModel::currentDefaultAccount(URI::SchemeType schemeType)
 {
     // Always try to respect user choice
-    const auto idx =  AvailableAccountModel::instance().selectionModel()->currentIndex();
+    const auto idx =  Session::instance()->availableAccountModel()->selectionModel()->currentIndex();
     auto userChosenAccount = idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     if (userChosenAccount && validAccountForScheme(userChosenAccount, schemeType)) {
         return userChosenAccount;
@@ -177,20 +171,20 @@ void AvailableAccountModelPrivate::setPriorAccount(const Account* account)
    const bool changed = (account && m_spPriorAccount != account) || (!account && m_spPriorAccount);
    m_spPriorAccount = const_cast<Account*>(account);
    if (changed) {
-      auto& self = AvailableAccountModel::instance();
+      auto self = Session::instance()->availableAccountModel();
 
-      Account* a = account ? const_cast<Account*>(account) : self.currentDefaultAccount();
+      Account* a = account ? const_cast<Account*>(account) : self->currentDefaultAccount();
 
-      emit self.currentDefaultAccountChanged(a);
+      emit self->currentDefaultAccountChanged(a);
 
-      if (self.d_ptr->m_pSelectionModel) {
+      if (self->d_ptr->m_pSelectionModel) {
 
-         const QModelIndex idx = self.mapFromSource(a->index());
+         const QModelIndex idx = self->mapFromSource(a->index());
 
          if (idx.isValid())
-            self.d_ptr->m_pSelectionModel->setCurrentIndex(self.mapFromSource(a->index()), QItemSelectionModel::ClearAndSelect);
+            self->d_ptr->m_pSelectionModel->setCurrentIndex(self->mapFromSource(a->index()), QItemSelectionModel::ClearAndSelect);
          else
-            self.d_ptr->m_pSelectionModel->clearSelection();
+            self->d_ptr->m_pSelectionModel->clearSelection();
       }
    }
 }

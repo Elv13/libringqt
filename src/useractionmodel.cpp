@@ -842,7 +842,7 @@ bool UserActionModelPrivate::updateByCall(UserActionModel::Action action, const 
 {
    if (!c)
       return false;
-   Account* a = c->account() ? c->account() :  AvailableAccountModel::instance().currentDefaultAccount();
+   Account* a = c->account() ? c->account() :  Session::instance()->availableAccountModel()->currentDefaultAccount();
 
    return (
       availableActionMap        [action] [c->state()             ] &&
@@ -871,7 +871,7 @@ bool UserActionModelPrivate::updateByContactMethod(UserActionModel::Action actio
       return cmActionAvailability[action] ?
          cmActionAvailability[action](nullptr) : true;
 
-   Account* a = cm->account() ? cm->account() :  AvailableAccountModel::instance().currentDefaultAccount();
+   Account* a = cm->account() ? cm->account() :  Session::instance()->availableAccountModel()->currentDefaultAccount();
 
    return updateByAccount(action, a) && (
       (!cmActionAvailability[action]) || cmActionAvailability[action](cm)
@@ -980,7 +980,7 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
             }
          }
          else {
-            Account* a =  AvailableAccountModel::instance().currentDefaultAccount();
+            Account* a =  Session::instance()->availableAccountModel()->currentDefaultAccount();
             ret = multi_call_options[action][UserActionModelPrivate::SelectionState::NONE]
                && (a?availableAccountActionMap[action][a->registrationState()]:false);
          }

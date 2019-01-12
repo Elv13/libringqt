@@ -1378,7 +1378,7 @@ void ContactMethodPrivate::addAlternativeTextRecording(Media::TextRecording* rec
  */
 ContactMethod::MediaAvailailityStatus ContactMethod::canSendTexts(bool warn) const
 {
-    auto selectedAccount = account() ? account() :  AvailableAccountModel::instance().currentDefaultAccount(this);
+    auto selectedAccount = account() ? account() :  Session::instance()->availableAccountModel()->currentDefaultAccount(this);
 
     // Texts might still fail, but there is no reliable way to know, assume the
     // best.
@@ -1417,7 +1417,7 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canCall() const
     auto selectedAccount = account();
 
     if (!selectedAccount)
-        if (!(selectedAccount =  AvailableAccountModel::instance().currentDefaultAccount(this)))
+        if (!(selectedAccount =  Session::instance()->availableAccountModel()->currentDefaultAccount(this)))
             return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
 
     if (!selectedAccount->canCall())
@@ -1436,7 +1436,7 @@ ContactMethod::MediaAvailailityStatus ContactMethod::canVideoCall() const
     auto selectedAccount = account();
 
     if (!selectedAccount) {
-        if (!(selectedAccount =  AvailableAccountModel::instance().currentDefaultAccount(this)))
+        if (!(selectedAccount =  Session::instance()->availableAccountModel()->currentDefaultAccount(this)))
             return ContactMethod::MediaAvailailityStatus::NO_ACCOUNT;
     }
 
@@ -1457,7 +1457,7 @@ bool ContactMethod::isAvailable() const
 
 bool ContactMethod::sendOfflineTextMessage(const QMap<QString,QString>& payloads)
 {
-    auto selectedAccount = account() ? account() :  AvailableAccountModel::instance().currentDefaultAccount(this);
+    auto selectedAccount = account() ? account() :  Session::instance()->availableAccountModel()->currentDefaultAccount(this);
 
     if (canSendTexts(true) != ContactMethod::MediaAvailailityStatus::AVAILABLE)
         return false;

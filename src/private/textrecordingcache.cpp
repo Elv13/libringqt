@@ -376,7 +376,7 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
         // Too noisy, it happens with deleted accounts because once the file
         // is saved again, the accountId is no longer there.
         //qWarning() << "Could not find a viable account for existing chat conversation";
-        a =  AvailableAccountModel::instance().currentDefaultAccount();
+        a =  Session::instance()->availableAccountModel()->currentDefaultAccount();
     }
 
     // Getting worst, pick something at "random" (the account order is not really random)
@@ -500,7 +500,7 @@ QSharedPointer<Event> Serializable::Group::event(bool allowPlaceholders) const
 
     // Try to fix the errors of the past and fix a suitable account.
     if (!m_pAccount)
-        m_pAccount =  AvailableAccountModel::instance().currentDefaultAccount();
+        m_pAccount =  Session::instance()->availableAccountModel()->currentDefaultAccount();
 
     // This is very, very bad
     if (!m_pAccount && Session::instance()->accountModel()->size())

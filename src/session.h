@@ -27,6 +27,7 @@
 class CallModel;
 class AccountModel;
 class CategorizedHistoryModel;
+class AvailableAccountModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -38,10 +39,12 @@ public:
     Q_PROPERTY(CallModel* callModel READ callModel CONSTANT)
     Q_PROPERTY(AccountModel* accountModel READ accountModel CONSTANT)
     Q_PROPERTY(CategorizedHistoryModel* historyModel READ historyModel CONSTANT)
+    Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
     CategorizedHistoryModel* historyModel() const;
+    AvailableAccountModel* availableAccountModel() const;
 
     static Session* instance();
 

@@ -38,6 +38,8 @@ class AvailableAccountModelPrivate;
 class LIB_EXPORT AvailableAccountModel : public QSortFilterProxyModel
 {
    Q_OBJECT
+
+   friend class Session; // Factory
 public:
 
    virtual QVariant      data            (const QModelIndex& index,int role = Qt::DisplayRole       ) const override;
@@ -50,9 +52,6 @@ public:
    Q_INVOKABLE Account* currentDefaultAccount(const ContactMethod* method = nullptr);
    Q_INVOKABLE Account* currentDefaultAccount(URI::SchemeType schemeType);
    Q_INVOKABLE bool validAccountForScheme(Account* account, URI::SchemeType scheme);
-
-   //Singleton
-   static AvailableAccountModel& instance();
 
 Q_SIGNALS:
    void currentDefaultAccountChanged(Account*);
