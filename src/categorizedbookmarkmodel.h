@@ -33,6 +33,8 @@ class LIB_EXPORT CategorizedBookmarkModel : public QAbstractItemModel, public Co
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
     Q_OBJECT
     #pragma GCC diagnostic pop
+
+    friend class Session; // Factory
 public:
     Q_PROPERTY(bool displayMostPopular READ displayMostPopular WRITE setDisplayPopular)
 
@@ -62,9 +64,6 @@ public:
 
     //Getters
     int acceptedPayloadTypes();
-
-    //Singleton
-    static CategorizedBookmarkModel& instance();
 
 private:
     CategorizedBookmarkModelPrivate* d_ptr;

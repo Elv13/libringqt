@@ -58,6 +58,9 @@
 #include <callmodel.h>
 #include <accountmodel.h>
 #include <numbercompletionmodel.h>
+#include <categorizedbookmarkmodel.h>
+#include <categorizedhistorymodel.h>
+#include <categorizedcontactmodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -97,6 +100,9 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( ProtocolModel              )
     QML_TYPE_MOD( CallModel                  )
     QML_TYPE_MOD( AccountModel               )
+    QML_TYPE_MOD( CategorizedBookmarkModel   )
+    QML_TYPE_MOD( CategorizedContactModel    )
+    QML_TYPE_MOD( CategorizedHistoryModel    )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

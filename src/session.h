@@ -28,6 +28,7 @@ class CallModel;
 class AccountModel;
 class CategorizedHistoryModel;
 class CategorizedContactModel;
+class CategorizedBookmarkModel;
 class AvailableAccountModel;
 
 /**
@@ -41,12 +42,14 @@ public:
     Q_PROPERTY(AccountModel* accountModel READ accountModel CONSTANT)
     Q_PROPERTY(CategorizedHistoryModel* historyModel READ historyModel CONSTANT)
     Q_PROPERTY(CategorizedContactModel* contactModel READ contactModel CONSTANT)
+    Q_PROPERTY(CategorizedBookmarkModel* bookmarkModel READ bookmarkModel CONSTANT)
     Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
     CategorizedHistoryModel* historyModel() const;
     CategorizedContactModel* contactModel() const;
+    CategorizedBookmarkModel* bookmarkModel() const;
     AvailableAccountModel* availableAccountModel() const;
 
     static Session* instance();

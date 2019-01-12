@@ -437,9 +437,9 @@ void ContactMethod::setBookmarked(bool bookmarked )
    d_ptr->m_IsBookmark = bookmarked;
 
    if (bookmarked)
-      CategorizedBookmarkModel::instance().addBookmark(this);
+      Session::instance()->bookmarkModel()->addBookmark(this);
    else
-      CategorizedBookmarkModel::instance().removeBookmark(this);
+      Session::instance()->bookmarkModel()->removeBookmark(this);
 
    changed();
    bookmarkedChanged(bookmarked);

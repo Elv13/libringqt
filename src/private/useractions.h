@@ -349,7 +349,7 @@ bool bookmark(ContactMethod* cm)
    if (!cm)
       return false;
 
-   CategorizedBookmarkModel::instance().addBookmark(cm);
+   Session::instance()->bookmarkModel()->addBookmark(cm);
 
    return true;
 }

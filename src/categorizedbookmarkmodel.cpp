@@ -135,17 +135,10 @@ CategorizedBookmarkModel::~CategorizedBookmarkModel()
     delete d_ptr;
 }
 
-CategorizedBookmarkModel& CategorizedBookmarkModel::instance()
-{
-    static auto instance = new CategorizedBookmarkModel(QCoreApplication::instance());
-    return *instance;
-}
-
 QHash<int,QByteArray> CategorizedBookmarkModel::roleNames() const
 {
     return PhoneDirectoryModel::instance().roleNames();
 }
-
 
 BookmarkNode* CategorizedBookmarkModelPrivate::getCategory(BookmarkNode* bm)
 {

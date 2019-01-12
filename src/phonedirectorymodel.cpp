@@ -63,7 +63,7 @@ PhoneDirectoryModelPrivate::PhoneDirectoryModelPrivate(PhoneDirectoryModel* pare
 m_CallWithAccount(false),m_pPopularModel(nullptr)
 {
     QTimer::singleShot(0, [this]() {
-        m_pNameServiceCache = CategorizedBookmarkModel::instance().addCollection<LocalNameServiceCache>(LoadOptions::FORCE_ENABLED);
+        m_pNameServiceCache = Session::instance()->bookmarkModel()->addCollection<LocalNameServiceCache>(LoadOptions::FORCE_ENABLED);
     });
     connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound, this, &PhoneDirectoryModelPrivate::slotRegisteredNameFound);
 }
