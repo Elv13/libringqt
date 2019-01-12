@@ -32,6 +32,7 @@
 #include "phonedirectorymodel.h"
 #include "contactmethod.h"
 #include "call.h"
+#include "session.h"
 #include "callmodel.h"
 #include "uri.h"
 #include "numbercategory.h"
@@ -144,7 +145,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
 NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
 {
    setObjectName(QStringLiteral("NumberCompletionModel"));
-   connect(&CallModel::instance(), &CallModel::dialNumberChanged, d_ptr,
+   connect(Session::instance()->callModel(), &CallModel::dialNumberChanged, d_ptr,
       [this](Call*, const QString& str) {d_ptr->setPrefix(str);}
    );
 }
@@ -312,9 +313,9 @@ bool NumberCompletionModel::setData(const QModelIndex& index, const QVariant &va
 
 void NumberCompletionModelPrivate::setPrefix(const QString& str)
 {
-    if ((!str.isEmpty()) && !CallModel::instance().hasDialingCall()) {
+    if ((!str.isEmpty()) && !Session::instance()->callModel()->hasDialingCall()) {
         m_Prefix.clear();
-        if (auto c = CallModel::instance().dialingCall()) {
+        if (auto c = Session::instance()->callModel()->dialingCall()) {
 
             if (c != m_pCall)
                 resetSelectionModel();

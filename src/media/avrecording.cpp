@@ -25,6 +25,7 @@
 
 //Ring
 #include <callmodel.h>
+#include <session.h>
 #include <media/recordingmodel.h>
 
 namespace Media {
@@ -87,7 +88,7 @@ public Q_SLOTS:
    void slotUpdatePlaybackScale   (const QString& filepath, int position, int size);
 };
 
-RecordingPlaybackManager::RecordingPlaybackManager() : QObject(&CallModel::instance())
+RecordingPlaybackManager::RecordingPlaybackManager() : QObject(Session::instance()->callModel())
 {
    CallManagerInterface& callManager = CallManager::instance();
    connect(&callManager,&CallManagerInterface::recordPlaybackStopped , this, &RecordingPlaybackManager::slotRecordPlaybackStopped );

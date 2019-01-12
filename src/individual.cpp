@@ -36,6 +36,7 @@
 #include "media/textrecording.h"
 #include "contactmethod_p.h"
 #include "person_p.h"
+#include "session.h"
 #include "callmodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
@@ -334,7 +335,7 @@ QHash<int,QByteArray> Individual::roleNames() const
 
 Call* Individual::firstActiveCall() const
 {
-    return CallModel::instance().firstActiveCall(const_cast<Individual*>(this));
+    return Session::instance()->callModel()->firstActiveCall(const_cast<Individual*>(this));
 }
 
 

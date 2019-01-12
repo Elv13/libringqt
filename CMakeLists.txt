@@ -264,6 +264,7 @@ SET( libringqt_LIB_SRCS
   src/private/threadworker.cpp
   src/private/addressmodel.cpp
   src/mime.cpp
+  src/session.cpp
   src/smartinfohub.cpp
 
   #Extension
@@ -284,6 +285,7 @@ ENDIF(ENABLE_LIBWRAP)
 # Public API
 SET( libringqt_LIB_HDRS
   src/account.h
+  src/session.h
   src/address.h
   src/ringdevice.h
   src/credential.h

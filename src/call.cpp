@@ -39,6 +39,7 @@
 
 #include "collectioninterface.h"
 #include "person.h"
+#include "session.h"
 #include "uri.h"
 #include <mime.h>
 #include "account.h"
@@ -301,7 +302,7 @@ CallPrivate::CallPrivate(Call* parent) : QObject(parent),q_ptr(parent),
 
 ///Constructor
 Call::Call(Call::State startState, const QString& peerName, ContactMethod* number, Account* account)
-   : ItemBase(&CallModel::instance())
+   : ItemBase(Session::instance()->callModel())
    , d_ptr(new CallPrivate(this))
 {
    d_ptr->m_CurrentState     = startState;
@@ -315,7 +316,7 @@ Call::Call(Call::State startState, const QString& peerName, ContactMethod* numbe
 
 ///Constructor
 Call::Call(const QString& confId, const QString& account)
-   : ItemBase(&CallModel::instance())
+   : ItemBase(Session::instance()->callModel())
    , d_ptr(new CallPrivate(this))
 {
    d_ptr->m_CurrentState = Call::State::CONFERENCE;
@@ -1622,7 +1623,7 @@ bool Call::joinToParent()
 {
     if (not d_ptr->m_pParentCall)
         return false;
-    auto success = CallModel::instance().createJoinOrMergeConferenceFromCall(this, d_ptr->m_pParentCall);
+    auto success = Session::instance()->callModel()->createJoinOrMergeConferenceFromCall(this, d_ptr->m_pParentCall);
     if (success)
         setParentCall(nullptr);
     return success;
@@ -1977,7 +1978,7 @@ void CallPrivate::call()
     }
     setObjectName("Call:"+m_DringId);
 
-    CallModel::instance().registerCall(q_ptr);
+    Session::instance()->callModel()->registerCall(q_ptr);
 
     connect(peerCM, SIGNAL(presentChanged(bool)), this, SLOT(updated()));
 

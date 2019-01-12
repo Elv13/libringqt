@@ -24,6 +24,7 @@
 #include "video/renderer.h"
 #include "video/sourcemodel.h"
 #include "call.h"
+#include "session.h"
 #include "callmodel.h"
 #include "libcard/matrixutils.h"
 
@@ -78,9 +79,9 @@ AvailabilityTracker::AvailabilityTracker(QObject* parent) : QObject(parent),
     connect(&AccountModel::instance(), &AccountModel::registrationChanged, d_ptr, &AvailabilityTrackerPrivate::slotRegistrationChanged);
     connect(&AccountModel::instance(), &AccountModel::canVideoCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanVideoCallChanged);
 
-    connect(&CallModel::instance(), &CallModel::callStateChanged , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
-    connect(&CallModel::instance(), &CallModel::rendererAdded    , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
-    connect(&CallModel::instance(), &CallModel::rendererRemoved  , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(Session::instance()->callModel(), &CallModel::callStateChanged , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(Session::instance()->callModel(), &CallModel::rendererAdded    , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(Session::instance()->callModel(), &CallModel::rendererRemoved  , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
 }
 
 AvailabilityTracker::~AvailabilityTracker()
@@ -149,7 +150,7 @@ AvailabilityTrackerPrivate::CallMode AvailabilityTrackerPrivate::getCallMode() c
     if (!m_pIndividual)
         return CallMode::NONE;
 
-    const auto c = CallModel::instance().firstActiveCall(m_pIndividual);
+    const auto c = Session::instance()->callModel()->firstActiveCall(m_pIndividual);
 
     if (!c)
         return CallMode::NONE;
@@ -301,7 +302,7 @@ AvailabilityTracker::ControlState AvailabilityTracker::textMessagesControlState(
 
 AvailabilityTracker::ControlState AvailabilityTracker::hangUpControlState() const
 {
-    return CallModel::instance().firstActiveCall(d_ptr->m_pIndividual) ?
+    return Session::instance()->callModel()->firstActiveCall(d_ptr->m_pIndividual) ?
         ControlState::NORMAL : ControlState::HIDDEN;
 }
 

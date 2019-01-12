@@ -27,6 +27,7 @@
 //Ring
 #include "phonedirectorymodel.h"
 #include "person.h"
+#include "session.h"
 #include "account.h"
 #include "media/recordingmodel.h"
 #include "private/person_p.h"
@@ -787,7 +788,7 @@ Call* ContactMethod::firstOutgoingCall() const
 
 Call* ContactMethod::firstActiveCall() const
 {
-    return CallModel::instance().firstActiveCall(const_cast<ContactMethod*>(this));
+    return Session::instance()->callModel()->firstActiveCall(const_cast<ContactMethod*>(this));
 }
 
 QHash<QString,QPair<int, time_t>> ContactMethod::alternativeNames() const

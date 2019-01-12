@@ -23,6 +23,7 @@
 
 // Ring
 #include <call.h>
+#include <session.h>
 #include <callmodel.h>
 #include <video/renderer.h>
 #include <media/video.h>
@@ -99,7 +100,7 @@ bool Troubleshoot::VideoStuck::setSelection(const QModelIndex& idx, Call* c)
             break;
         case VideoStuckPrivate::Mitigations::CALL_AGAIN:
             c << Call::Action::REFUSE;
-            c = CallModel::instance().dialingCall(cm);
+            c = Session::instance()->callModel()->dialingCall(cm);
             c << Call::Action::ACCEPT;
             break;
     }

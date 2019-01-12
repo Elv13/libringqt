@@ -22,6 +22,7 @@
 #include <call.h>
 #include <callmodel.h>
 #include <account.h>
+#include <session.h>
 #include <contactmethod.h>
 #include <troubleshoot/dispatcher.h>
 
@@ -98,7 +99,7 @@ bool Troubleshoot::Absent::setSelection(const QModelIndex& idx, Call* c)
             break;
         case AbsentPrivate::Buttons::TRY_AGAIN:
             c << Call::Action::REFUSE;
-            c = CallModel::instance().dialingCall(cm);
+            c = Session::instance()->callModel()->dialingCall(cm);
             c << Call::Action::ACCEPT;
             break;
         default:

@@ -21,10 +21,14 @@
 // Qt
 #include <QtCore/QObject>
 #include <QQmlEngine>
+#include <QQmlContext>
 
-// LibRingQt
+// LibRingQtQuick
 #include "accountfields.h"
 #include "accountbuilder.h"
+
+// Globals
+#include <session.h>
 
 // Data objects
 #include <account.h>
@@ -51,6 +55,7 @@
 #include <codecmodel.h>
 #include <credentialmodel.h>
 #include <protocolmodel.h>
+#include <callmodel.h>
 #include <numbercompletionmodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
@@ -89,6 +94,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( CodecModel                 )
     QML_TYPE_MOD( CredentialModel            )
     QML_TYPE_MOD( ProtocolModel              )
+    QML_TYPE_MOD( CallModel                  )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 
@@ -127,4 +133,5 @@ void RingQtQuick::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine)
     Q_UNUSED(uri)
+    engine->rootContext()->setContextProperty("RingSession", Session::instance());
 }

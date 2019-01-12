@@ -30,6 +30,7 @@
 //Ring
 #include <call.h>
 #include <account.h>
+#include <session.h>
 #include <contactmethod.h>
 #include <accountmodel.h>
 #include <personmodel.h>

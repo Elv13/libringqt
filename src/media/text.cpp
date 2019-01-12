@@ -26,6 +26,7 @@
 #include <call.h>
 #include <callmodel.h>
 #include <account.h>
+#include <session.h>
 #include <person.h>
 #include <contactmethod.h>
 #include <mime.h>
@@ -159,7 +160,7 @@ void IMConversationManagerPrivate::newMessage(const QString& callId, const QStri
 {
    Q_UNUSED(from)
 
-   auto call = CallModel::instance().getCall(callId);
+   auto call = Session::instance()->callModel()->getCall(callId);
    if ((!call) || (!call->peerContactMethod()))
       return;
 

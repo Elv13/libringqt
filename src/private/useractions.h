@@ -31,6 +31,7 @@
 #include <interfaces/actionextenderi.h>
 #include <interfaces/itemmodelstateserializeri.h>
 #include <mime.h>
+#include <session.h>
 
 #include "media/media.h"
 #include "media/audio.h"
@@ -70,8 +71,8 @@ bool addPerson(ContactMethod* cm, CollectionInterface* col = nullptr);
 
 bool addNew()
 {
-   Call* call = CallModel::instance().dialingCall();
-   CallModel::instance().selectionModel()->setCurrentIndex(CallModel::instance().getIndex(call), QItemSelectionModel::ClearAndSelect);
+   Call* call = Session::instance()->callModel()->dialingCall();
+   Session::instance()->callModel()->selectionModel()->setCurrentIndex(Session::instance()->callModel()->getIndex(call), QItemSelectionModel::ClearAndSelect);
    return true;
 }
 
@@ -89,8 +90,8 @@ bool accept(Call* call)
    if (state == Call::State::RINGING || state == Call::State::CURRENT || state == Call::State::HOLD
       || state == Call::State::BUSY || state == Call::State::FAILURE || state == Call::State::ERROR) {
       qDebug() << "Calling when item currently ringing, current, hold or busy. Opening an item.";
-      Call* c2 = CallModel::instance().dialingCall();
-      CallModel::instance().selectionModel()->setCurrentIndex(CallModel::instance().getIndex(c2), QItemSelectionModel::ClearAndSelect);
+      Call* c2 = Session::instance()->callModel()->dialingCall();
+      Session::instance()->callModel()->selectionModel()->setCurrentIndex(Session::instance()->callModel()->getIndex(c2), QItemSelectionModel::ClearAndSelect);
    }
    else {
       try {
@@ -333,7 +334,7 @@ bool callAgain(ContactMethod* cm)
    if (!cm)
       return false;
 
-   Call* call = CallModel::instance().dialingCall(cm);
+   Call* call = Session::instance()->callModel()->dialingCall(cm);
 
    if (call) {
       call->performAction(Call::Action::ACCEPT);

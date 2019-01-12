@@ -30,6 +30,7 @@
 #include "dbus/callmanager.h"
 #include "dbus/configurationmanager.h"
 #include "call.h"
+#include "session.h"
 #include "person.h"
 #include "contactmethod.h"
 #include "callmodel.h"
@@ -555,7 +556,7 @@ bool CategorizedHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction
 
    if (parentIdx.isValid() && mime->hasFormat( RingMimes::CALLID)) {
       QByteArray encodedCallId = mime->data( RingMimes::CALLID );
-      Call*      call          = CallModel::instance().fromMime(encodedCallId);
+      Call*      call          = Session::instance()->callModel()->fromMime(encodedCallId);
 
       if (call) {
          const auto idx = index(row,column,parentIdx);
@@ -564,7 +565,7 @@ bool CategorizedHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction
             const Call* target = static_cast<HistoryNode*>(idx.internalPointer())->m_pCall;
 
             if (target) {
-               CallModel::instance().transfer(call,target->peerContactMethod());
+               Session::instance()->callModel()->transfer(call,target->peerContactMethod());
                return true;
             }
          }

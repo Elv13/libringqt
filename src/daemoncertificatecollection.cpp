@@ -20,6 +20,7 @@
 //Ring
 #include "certificate.h"
 #include "account.h"
+#include "session.h"
 #include "certificatemodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"

@@ -25,6 +25,7 @@
 #include "call.h"
 #include "mime.h"
 #include "callmodel.h"
+#include "session.h"
 #include "account.h"
 #include "accountmodel.h"
 #include "contactmethod.h"
@@ -1038,7 +1039,7 @@ bool UserActionModel::execute(const UserActionModel::Action action) const
    // Get the indexes of the selected objects
    const QModelIndexList selected = d_ptr->m_pSelectionModel ?
       d_ptr->m_pSelectionModel->selectedRows() :
-      QModelIndexList{CallModel::instance().getIndex(d_ptr->m_pCall)};
+      QModelIndexList{Session::instance()->callModel()->getIndex(d_ptr->m_pCall)};
 
    for (const auto& idx : selected) {
       const QVariant objTv = idx.data(static_cast<int>(Ring::Role::ObjectType));

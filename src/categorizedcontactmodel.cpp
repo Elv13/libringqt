@@ -26,6 +26,7 @@
 
 //Ring
 #include "callmodel.h"
+#include "session.h"
 #include "categorizedhistorymodel.h"
 #include "contactmethod.h"
 #include "phonedirectorymodel.h"
@@ -428,7 +429,7 @@ bool CategorizedContactModel::dropMimeData(const QMimeData *data, Qt::DropAction
    if (data->hasFormat(RingMimes::CALLID)) {
       const QByteArray encodedCallId = data->data( RingMimes::CALLID    );
       const QModelIndex targetIdx    = index   ( row,column,parent );
-      Call* call                     = CallModel::instance().fromMime ( encodedCallId        );
+      Call* call                     = Session::instance()->callModel()->fromMime ( encodedCallId        );
       if (call && targetIdx.isValid()) {
          ContactTreeNode* modelItem = (ContactTreeNode*)targetIdx.internalPointer();
          switch (modelItem->m_Type) {
@@ -439,7 +440,7 @@ bool CategorizedContactModel::dropMimeData(const QMimeData *data, Qt::DropAction
                      case 0: //Do nothing when there is no phone numbers
                         return false;
                      case 1: //Call when there is one
-                        CallModel::instance().transfer(call,ct->individual()->phoneNumbers().first());
+                        Session::instance()->callModel()->transfer(call,ct->individual()->phoneNumbers().first());
                         break;
                      default:
                         //TODO
@@ -451,7 +452,7 @@ bool CategorizedContactModel::dropMimeData(const QMimeData *data, Qt::DropAction
                const ContactMethod* nb  = modelItem->m_pContactMethod;
                if (nb) {
                   call->setTransferNumber(nb->uri());
-                  CallModel::instance().transfer(call,nb);
+                  Session::instance()->callModel()->transfer(call,nb);
                }
             } break;
             case ContactTreeNode::NodeType::CATEGORY:

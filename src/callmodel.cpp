@@ -135,16 +135,12 @@ private Q_SLOTS:
  ****************************************************************************/
 
 ///Singleton
-CallModel& CallModel::instance()
+void CallModel::init()
 {
-    static auto instance = new CallModel();
-
     // Fix loop-dependency issue between constructors
     static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set())
-        instance->d_ptr->init();
-
-    return *instance;
+        d_ptr->init();
 }
 
 CallModelPrivate::CallModelPrivate(CallModel* parent) : QObject(parent),q_ptr(parent)

@@ -29,6 +29,7 @@
 #include <video/device.h>
 #include <call.h>
 #include <callmodel.h>
+#include <session.h>
 #include <video/renderer.h>
 #include <video/devicemodel.h>
 #include <video/channel.h>
@@ -256,15 +257,15 @@ void VideoRendererManagerPrivate::startedDecoding(const QString& id, const QStri
    if (id != PREVIEW_RENDERER_ID) {
       qDebug() << "Starting video for call" << id;
 
-      Call* c = CallModel::instance().getCall(id);
+      Call* c = Session::instance()->callModel()->getCall(id);
 
       if (c)
           c->d_ptr->registerRenderer(r);
       else {
           //We don't have the conference yet
-          QObject::connect(&CallModel::instance(), &CallModel::conferenceCreated, this, [id, r](Call* conf) {
+          QObject::connect(Session::instance()->callModel(), &CallModel::conferenceCreated, this, [id, r](Call* conf) {
               Q_UNUSED(conf)
-              Call* c = CallModel::instance().getCall(id);
+              Call* c = Session::instance()->callModel()->getCall(id);
 
               if (c) {
                   c->d_ptr->registerRenderer(r);
@@ -314,7 +315,7 @@ void VideoRendererManagerPrivate::stoppedDecoding(const QString& id, const QStri
 
     auto r = m_hRenderers.value(id.toLatin1());
 
-    Call* c = CallModel::instance().getCall(id);
+    Call* c = Session::instance()->callModel()->getCall(id);
 
     // TODO: the current implementeation of CallPrivate::removeRenderer() does nothing
     if (c && c->lifeCycleState() == Call::LifeCycleState::FINISHED) {
@@ -383,7 +384,7 @@ void VideoRendererManagerPrivate::removeRenderer(Video::Renderer* r)
       return;
    }
 
-   Call* c = CallModel::instance().getCall(id);
+   Call* c = Session::instance()->callModel()->getCall(id);
 
    if (c && c->lifeCycleState() == Call::LifeCycleState::FINISHED) {
       c->d_ptr->removeRenderer(r);

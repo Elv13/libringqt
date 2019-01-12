@@ -56,6 +56,7 @@ Q_OBJECT
    //The renderer use DringId as identifiers and have to be matched to calls
    friend class VideoRendererManagerPrivate;
 
+   friend class Session; // Factory
 public:
    ///Accepted (mime) payload types
    enum DropPayloadType {
@@ -143,7 +144,6 @@ public:
 
 
    //Singleton
-   static CallModel& instance();
    virtual ~CallModel( );
 
 private:
@@ -151,6 +151,8 @@ private:
    explicit CallModel();
    QScopedPointer<CallModelPrivate> d_ptr;
    Q_DECLARE_PRIVATE(CallModel)
+
+   void init();
 
    //Friend API
    Call* getCall ( const QString& callId  ) const;
