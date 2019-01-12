@@ -28,6 +28,7 @@
 
 //Ring
 #include "call.h"
+#include "session.h"
 #include "media/media.h"
 #include "media/recording.h"
 #include "media/avrecording.h"
@@ -82,7 +83,7 @@ LocalHistoryCollection::~LocalHistoryCollection()
 
 void LocalHistoryEditor::saveCall(QTextStream& stream, const Call* call)
 {
-   if (!CategorizedHistoryModel::instance().isHistoryEnabled())
+   if (!Session::instance()->historyModel()->isHistoryEnabled())
       return;
 
    stream.setCodec("UTF-8");
@@ -130,7 +131,7 @@ bool LocalHistoryEditor::regenFile(const Call* toIgnore)
    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QLatin1Char('/') +"history.ini");
    if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
       QTextStream stream(&file);
-      for (const Call* c : CategorizedHistoryModel::instance().getHistoryCalls()) {
+      for (const Call* c : Session::instance()->historyModel()->getHistoryCalls()) {
          if (c != toIgnore)
             saveCall(stream, c);
       }
@@ -220,7 +221,7 @@ bool LocalHistoryCollection::isEnabled() const
 
 bool LocalHistoryCollection::load()
 {
-   if (!CategorizedHistoryModel::instance().isHistoryEnabled())
+   if (!Session::instance()->historyModel()->isHistoryEnabled())
       return false;
 
    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QLatin1Char('/') +"history.ini");
@@ -235,8 +236,8 @@ bool LocalHistoryCollection::load()
       //TODO support windows again
       QVector<QStringRef> lines = QStringRef(&data).trimmed().split('\n');
 
-      const bool      isLimited = CategorizedHistoryModel::instance().isHistoryLimited();
-      const long long dayLimit  = CategorizedHistoryModel::instance().historyLimit() * 24 * 3600;
+      const bool      isLimited = Session::instance()->historyModel()->isHistoryLimited();
+      const long long dayLimit  = Session::instance()->historyModel()->historyLimit() * 24 * 3600;
 
       time_t now = time(0); // get time now
 

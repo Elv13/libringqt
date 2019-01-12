@@ -29,6 +29,7 @@
 //Ring library
 #include "call.h"
 #include "uri.h"
+#include "session.h"
 #include "phonedirectorymodel.h"
 #include "contactmethod.h"
 #include "accountmodel.h"
@@ -184,7 +185,7 @@ void CallModelPrivate::init()
     /**/connect(&callManager, SIGNAL(onRtcpReportReceived(QString,MapStringInt)), this , SLOT(slotRtcpReportReceived(QString,MapStringInt)), Qt::QueuedConnection);
     /*                                                                                                                           */
 
-    connect(&CategorizedHistoryModel::instance(),SIGNAL(newHistoryCall(Call*)),this,SLOT(slotAddPrivateCall(Call*)));
+    connect(Session::instance()->historyModel(),SIGNAL(newHistoryCall(Call*)),this,SLOT(slotAddPrivateCall(Call*)));
 
     registerCommTypes();
 
@@ -1461,7 +1462,7 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
     if (call->lifeCycleState() == Call::LifeCycleState::FINISHED) {
         if (!call->collection()) {
             /*TODO remove all traces of the old history
-            foreach (CollectionInterface* backend, CategorizedHistoryModel::instance().collections(CollectionInterface::SupportedFeatures::ADD)) {
+            foreach (CollectionInterface* backend, Session::instance()->historyModel()->collections(CollectionInterface::SupportedFeatures::ADD)) {
                 if (backend->editor<Call>()->addNew(call))
                 call->setCollection(backend);
             }

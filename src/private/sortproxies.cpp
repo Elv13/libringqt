@@ -30,6 +30,7 @@
 #include <categorizedcontactmodel.h>
 #include <categorizedhistorymodel.h>
 #include <globalinstances.h>
+#include <session.h>
 #include <interfaces/pixmapmanipulatori.h>
 
 namespace CategoryModelCommon {
@@ -191,23 +192,23 @@ void sortHistory(QSortFilterProxyModel* p, int role)
 {
    switch (static_cast<CategorizedHistoryModel::SortedProxy::Categories>(role)) {
       case CategorizedHistoryModel::SortedProxy::Categories::DATE:
-         CategorizedHistoryModel::instance().setCategoryRole(static_cast<int>(Call::Role::FuzzyDate));
+         Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::FuzzyDate));
          p->setSortRole(static_cast<int>(Call::Role::Date));
          break;
       case CategorizedHistoryModel::SortedProxy::Categories::NAME:
-         CategorizedHistoryModel::instance().setCategoryRole(static_cast<int>(Call::Role::Name));
+         Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::Name));
          p->setSortRole(Qt::DisplayRole);
          break;
       case CategorizedHistoryModel::SortedProxy::Categories::POPULARITY:
-         CategorizedHistoryModel::instance().setCategoryRole(static_cast<int>(Call::Role::CallCount));
+         Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::CallCount));
          p->setSortRole(static_cast<int>(Call::Role::CallCount));
          break;
       case CategorizedHistoryModel::SortedProxy::Categories::LENGTH:
-         CategorizedHistoryModel::instance().setCategoryRole(static_cast<int>(Call::Role::Length));
+         Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::Length));
          p->setSortRole(static_cast<int>(Call::Role::Length));
          break;
       case CategorizedHistoryModel::SortedProxy::Categories::SPENT_TIME:
-         CategorizedHistoryModel::instance().setCategoryRole(static_cast<int>(Call::Role::TotalSpentTime));
+         Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::TotalSpentTime));
          p->setSortRole(static_cast<int>(Call::Role::TotalSpentTime));
          break;
       case CategorizedHistoryModel::SortedProxy::Categories::COUNT__:
@@ -290,7 +291,7 @@ SortingCategory::ModelTuple* SortingCategory::getContactProxy()
 
 SortingCategory::ModelTuple* SortingCategory::getHistoryProxy()
 {
-   return createModels<HistorySortingCategoryModel>(&CategorizedHistoryModel::instance(),static_cast<int>(Call::Role::Filter), static_cast<int>(Call::Role::Date), [](QSortFilterProxyModel* proxy,const QModelIndex& idx) {
+   return createModels<HistorySortingCategoryModel>(Session::instance()->historyModel(),static_cast<int>(Call::Role::Filter), static_cast<int>(Call::Role::Date), [](QSortFilterProxyModel* proxy,const QModelIndex& idx) {
      if (idx.isValid()) {
          qDebug() << "Selection changed" << idx.row();
          sortHistory(proxy,idx.row());

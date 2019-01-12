@@ -370,7 +370,7 @@ bool removeFromHistory(Call* c)
    if (c && c->collection()->supportedFeatures() & CollectionInterface::SupportedFeatures::REMOVE) {
 
       if (GlobalInstances::actionExtender().warnDeleteCall(c)) {
-         CategorizedHistoryModel::instance().deleteItem(c); //TODO add add and remove to the manager
+         Session::instance()->historyModel()->deleteItem(c); //TODO add add and remove to the manager
          return true;
       }
    }

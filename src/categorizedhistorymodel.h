@@ -48,6 +48,7 @@ class LIB_EXPORT CategorizedHistoryModel : public QAbstractItemModel, public Col
    Q_OBJECT
    #pragma GCC diagnostic pop
 public:
+   friend class Session; // Factory
    friend class HistoryItemNode;
    friend class HistoryTopLevelItem;
 
@@ -55,9 +56,6 @@ public:
    Q_PROPERTY(bool hasCollections   READ hasCollections  )
    Q_PROPERTY(bool historyEnabled   READ isHistoryEnabled WRITE setHistoryEnabled)
    Q_PROPERTY(bool historyLimited   READ isHistoryLimited WRITE setHistoryLimited)
-
-   //Singleton
-   static CategorizedHistoryModel& instance();
 
    //Getters
    int  acceptedPayloadTypes       () const;

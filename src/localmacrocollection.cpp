@@ -27,6 +27,7 @@
 
 //Ring
 #include <macro.h>
+#include <session.h>
 #include <collectioneditor.h>
 #include <macromodel.h>
 #include <globalinstances.h>

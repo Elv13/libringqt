@@ -26,6 +26,7 @@
 // LibRingQt
 class CallModel;
 class AccountModel;
+class CategorizedHistoryModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -34,12 +35,13 @@ class LIB_EXPORT Session final : public QObject
 {
     Q_OBJECT
 public:
-
     Q_PROPERTY(CallModel* callModel READ callModel CONSTANT)
     Q_PROPERTY(AccountModel* accountModel READ accountModel CONSTANT)
+    Q_PROPERTY(CategorizedHistoryModel* historyModel READ historyModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
+    CategorizedHistoryModel* historyModel() const;
 
     static Session* instance();
 
