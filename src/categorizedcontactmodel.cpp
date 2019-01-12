@@ -285,12 +285,6 @@ CategorizedContactModel::~CategorizedContactModel()
       delete d_ptr->m_pSortedProxy;
 }
 
-CategorizedContactModel& CategorizedContactModel::instance()
-{
-    static auto instance = new CategorizedContactModel;
-    return *instance;
-}
-
 QHash<int,QByteArray> CategorizedContactModel::roleNames() const
 {
     return PersonModel::instance().roleNames();
@@ -667,31 +661,31 @@ void CategorizedContactModelPrivate::reloadTreeVisibility( ContactTreeNode* node
 
 QAbstractItemModel* CategorizedContactModel::SortedProxy::model() const
 {
-    if (!CategorizedContactModel::instance().d_ptr->m_pSortedProxy)
-        CategorizedContactModel::instance().d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
+    if (!Session::instance()->contactModel()->d_ptr->m_pSortedProxy)
+        Session::instance()->contactModel()->d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
 
-    return CategorizedContactModel::instance().d_ptr->m_pSortedProxy->model;
+    return Session::instance()->contactModel()->d_ptr->m_pSortedProxy->model;
 }
 
 QAbstractItemModel* CategorizedContactModel::SortedProxy::categoryModel() const
 {
-    if (!CategorizedContactModel::instance().d_ptr->m_pSortedProxy)
-        CategorizedContactModel::instance().d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
+    if (!Session::instance()->contactModel()->d_ptr->m_pSortedProxy)
+        Session::instance()->contactModel()->d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
 
-    return CategorizedContactModel::instance().d_ptr->m_pSortedProxy->categories;
+    return Session::instance()->contactModel()->d_ptr->m_pSortedProxy->categories;
 }
 
 QItemSelectionModel* CategorizedContactModel::SortedProxy::categorySelectionModel() const
 {
-    if (!CategorizedContactModel::instance().d_ptr->m_pSortedProxy)
-        CategorizedContactModel::instance().d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
+    if (!Session::instance()->contactModel()->d_ptr->m_pSortedProxy)
+        Session::instance()->contactModel()->d_ptr->m_pSortedProxy = SortingCategory::getContactProxy();
 
-    return CategorizedContactModel::instance().d_ptr->m_pSortedProxy->selectionModel;
+    return Session::instance()->contactModel()->d_ptr->m_pSortedProxy->selectionModel;
 }
 
 CategorizedContactModel::SortedProxy& CategorizedContactModel::SortedProxy::instance()
 {
-    return CategorizedContactModel::instance().d_ptr->m_pProxies;
+    return Session::instance()->contactModel()->d_ptr->m_pProxies;
 }
 
 #include <categorizedcontactmodel.moc>

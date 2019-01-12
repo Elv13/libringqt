@@ -43,6 +43,7 @@ public:
    friend class ContactTreeNode  ;
    friend class ContactTreeBinder;
    friend class SortedProxy      ;
+   friend class Session          ; // factory
 
    virtual ~CategorizedContactModel();
 
@@ -87,9 +88,6 @@ public:
       QItemSelectionModel* categorySelectionModel() const;
       static CategorizedContactModel::SortedProxy& instance();
    };
-
-   //Singleton
-   static CategorizedContactModel& instance();
 
 private:
    explicit CategorizedContactModel(int role = Qt::DisplayRole);
