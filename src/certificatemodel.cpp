@@ -37,6 +37,7 @@
 #include "certificate.h"
 #include "contactmethod.h"
 #include "account.h"
+#include "session.h"
 #include "foldercertificatecollection.h"
 #include "daemoncertificatecollection.h"
 #include "libcard/matrixutils.h"
@@ -980,7 +981,7 @@ bool CertificateModelPrivate::banCertificate(Certificate* c, Account* a)
 
 void CertificateModelPrivate::slotCertificateStateChanged(const QString& accountId, const QString& certId, const QString& state)
 {
-    if( auto a = AccountModel::instance().getById(accountId.toLatin1())) {
+    if( auto a = Session::instance()->accountModel()->getById(accountId.toLatin1())) {
         auto c = q_ptr->getCertificateFromId(certId, a);
 
         //Make sure the lists exist

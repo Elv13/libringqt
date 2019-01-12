@@ -31,6 +31,7 @@
 //Ring
 #include "private/vcardutils.h"
 #include "account.h"
+#include "session.h"
 #include "accountmodel.h"
 #include "personmodel.h"
 #include "person.h"
@@ -79,7 +80,7 @@ static QVector<Account*> getAccountList(const QList<QByteArray>& accs)
 {
     QVector<Account*> ret;
     for (const auto& id : qAsConst(accs)) {
-        if (auto a = AccountModel::instance().getById(id))
+        if (auto a = Session::instance()->accountModel()->getById(id))
             ret << a;
     }
 
@@ -112,10 +113,10 @@ void LocalProfileCollectionPrivate::setupDefaultProfile()
     // Select a better name
     auto name = QObject::tr("Default");
 
-    const int accountCount = AccountModel::instance().size();
+    const int accountCount = Session::instance()->accountModel()->size();
 
     for (int i = 0; i < accountCount; i++) {
-        const auto a = AccountModel::instance()[i];
+        const auto a = (*Session::instance()->accountModel())[i];
         if (!a->registeredName().isEmpty()) {
             name = a->registeredName();
             break;
@@ -130,8 +131,8 @@ void LocalProfileCollectionPrivate::setupDefaultProfile()
     profile->setFormattedName(name);
     profile->addCustomField(VCardUtils::Property::X_RINGDEFAULTACCOUNT, "1");
 
-    for (int i = 0 ; i < AccountModel::instance().size() ; i++)
-        AccountModel::instance()[i]->setProfile(profile);
+    for (int i = 0 ; i < Session::instance()->accountModel()->size() ; i++)
+        (*Session::instance()->accountModel())[i]->setProfile(profile);
 
     profile->setCollection(q_ptr);
     q_ptr->editor<Person>()->addNew(profile);

@@ -32,6 +32,7 @@
 #include "collectioneditor.h"
 #include "callmodel.h"
 #include "individual.h"
+#include "session.h"
 #include "contactmethod.h"
 #include "person.h"
 #include "private/vcardutils.h"
@@ -275,13 +276,13 @@ CollectionManagerInterface<Person>(this), d_ptr(new ProfileModelPrivate(this))
 {
     //Once LibRingClient is ready, start listening
     QTimer::singleShot(0,d_ptr,[this]() {
-        connect(&AccountModel::instance(), &QAbstractItemModel::dataChanged  , d_ptr, &ProfileModelPrivate::slotDataChanged   );
-        connect(&AccountModel::instance(), &AccountModel::accountRemoved     , d_ptr, &ProfileModelPrivate::slotAccountRemoved);
-        connect(&AccountModel::instance(), &AccountModel::accountAdded       , d_ptr, &ProfileModelPrivate::slotAccountAdded);
+        connect(Session::instance()->accountModel(), &QAbstractItemModel::dataChanged  , d_ptr, &ProfileModelPrivate::slotDataChanged   );
+        connect(Session::instance()->accountModel(), &AccountModel::accountRemoved     , d_ptr, &ProfileModelPrivate::slotAccountRemoved);
+        connect(Session::instance()->accountModel(), &AccountModel::accountAdded       , d_ptr, &ProfileModelPrivate::slotAccountAdded);
 
         // Load existing accounts
-        for (int i = 0; i < AccountModel::instance().rowCount(); i++)
-            d_ptr->slotAccountAdded(AccountModel::instance()[i]);
+        for (int i = 0; i < Session::instance()->accountModel()->rowCount(); i++)
+            d_ptr->slotAccountAdded((*Session::instance()->accountModel())[i]);
     });
 }
 
@@ -293,7 +294,7 @@ ProfileModel::~ProfileModel()
 
 QHash<int,QByteArray> ProfileModel::roleNames() const
 {
-    return AccountModel::instance().roleNames();
+    return Session::instance()->accountModel()->roleNames();
 }
 
 void ProfileModelPrivate::updateIndexes()
@@ -404,10 +405,10 @@ QModelIndex ProfileModelPrivate::mapToSource(const QModelIndex& idx) const
 
 QModelIndex ProfileModelPrivate::mapFromSource(const QModelIndex& idx) const
 {
-    if (!idx.isValid() || idx.model() != &AccountModel::instance())
+    if (!idx.isValid() || idx.model() != Session::instance()->accountModel())
         return {};
 
-    auto acc = AccountModel::instance().getAccountByModelIndex(idx);
+    auto acc = Session::instance()->accountModel()->getAccountByModelIndex(idx);
     auto accNode = nodeForAccount(acc);
 
     //Something is wrong, there is an orphan
@@ -603,7 +604,7 @@ QItemSelectionModel* ProfileModel::selectionModel() const
 
         connect(d_ptr->m_pSelectionModel, &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& i) {
             const auto accIdx = d_ptr->mapToSource(i);
-            AccountModel::instance().selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
+            Session::instance()->accountModel()->selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
         });
     }
 
@@ -619,7 +620,7 @@ QItemSelectionModel* ProfileModel::sortedProxySelectionModel() const
             const auto accIdx = d_ptr->mapToSource(
                 static_cast<QSortFilterProxyModel*>(sortedProxyModel())->mapToSource(i)
             );
-            AccountModel::instance().selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
+            Session::instance()->accountModel()->selectionModel()->setCurrentIndex(accIdx, QItemSelectionModel::ClearAndSelect);
         });
     }
 
@@ -799,7 +800,7 @@ bool ProfileModel::dropMimeData(const QMimeData *data, Qt::DropAction action, in
         }
 
         // Use the account ID to locate the original location
-        auto acc = AccountModel::instance().getById(accountId);
+        auto acc = Session::instance()->accountModel()->getById(accountId);
 
         if (!acc)
             return false;
@@ -843,7 +844,7 @@ bool ProfileModel::setData(const QModelIndex& index, const QVariant &value, int 
     if (!current->parent)
         return false;
 
-    return AccountModel::instance().setData(d_ptr->mapToSource(index),value,role);
+    return Session::instance()->accountModel()->setData(d_ptr->mapToSource(index),value,role);
 }
 
 QVariant ProfileModel::headerData(int section, Qt::Orientation orientation, int role ) const
@@ -889,7 +890,7 @@ bool ProfileModel::addItemCallback(const Person* pro)
     for (const auto& accId : qAsConst(accountIds)) {
         if (entries.contains(accId))
             hasDuplicated = true;
-        else if (auto a = AccountModel::instance().getById(accId)) {
+        else if (auto a = Session::instance()->accountModel()->getById(accId)) {
             entries << accId;
             a->setProfile(const_cast<Person*>(pro));
         }
@@ -1172,7 +1173,7 @@ QVariant SingleProfileModel::data(const QModelIndex& idx, int role) const
 
 QHash<int,QByteArray> SingleProfileModel::roleNames() const
 {
-    return AccountModel::instance().roleNames();
+    return Session::instance()->accountModel()->roleNames();
 }
 
 SingleProfileModel::SingleProfileModel(ProfileNode* d) :

@@ -114,10 +114,10 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
 {
    //Create the temporary number list
    bool     hasNonIp2Ip = false;
-   Account* ip2ip       = AccountModel::instance().ip2ip();
+   Account* ip2ip       = Session::instance()->accountModel()->ip2ip();
 
-   for (int i =0; i < AccountModel::instance().size();i++) {
-      Account* a = AccountModel::instance()[i];
+   for (int i =0; i < Session::instance()->accountModel()->size();i++) {
+      Account* a = (*Session::instance()->accountModel())[i];
       if (a != ip2ip) {
          hasNonIp2Ip |= accountAdded(a);
       }
@@ -130,8 +130,8 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
       m_hSipTemporaryNumbers[ip2ip] = cm;
    }
 
-   connect(&AccountModel::instance(), &AccountModel::accountAdded  , this, &NumberCompletionModelPrivate::accountAdded  );
-   connect(&AccountModel::instance(), &AccountModel::accountRemoved, this, &NumberCompletionModelPrivate::accountRemoved);
+   connect(Session::instance()->accountModel(), &AccountModel::accountAdded  , this, &NumberCompletionModelPrivate::accountAdded  );
+   connect(Session::instance()->accountModel(), &AccountModel::accountRemoved, this, &NumberCompletionModelPrivate::accountRemoved);
 
    connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound,
       this, &NumberCompletionModelPrivate::slotRegisteredNameFound);
@@ -249,7 +249,7 @@ QVariant NumberCompletionModel::data(const QModelIndex& index, int role ) const
       case NumberCompletionModelPrivate::Columns::NAME:
          return n->roleData(role);
       case NumberCompletionModelPrivate::Columns::ACCOUNT:
-         if(auto acc = n->account() ? n->account() : AvailableAccountModel::instance().currentDefaultAccount())
+         if(auto acc = n->account() ? n->account() :  AvailableAccountModel::instance().currentDefaultAccount())
             return acc->roleData(role);
          break;
       case NumberCompletionModelPrivate::Columns::WEIGHT:

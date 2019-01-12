@@ -27,6 +27,7 @@
 //Ring
 #include "contactmethod.h"
 #include "uri.h"
+#include "session.h"
 
 class AvailableAccountModelPrivate final : public QObject
 {
@@ -52,14 +53,14 @@ Account* AvailableAccountModelPrivate::m_spPriorAccount = nullptr;
 
 AvailableAccountModelPrivate::AvailableAccountModelPrivate(AvailableAccountModel* parent) :m_pSelectionModel(nullptr),q_ptr(parent)
 {
-    connect(&AccountModel::instance(), &AccountModel::accountRemoved     , this, &AvailableAccountModelPrivate::checkRemovedAccount );
-    connect(&AccountModel::instance(), &AccountModel::accountStateChanged, this, &AvailableAccountModelPrivate::checkStateChanges   );
+    connect(Session::instance()->accountModel(), &AccountModel::accountRemoved     , this, &AvailableAccountModelPrivate::checkRemovedAccount );
+    connect(Session::instance()->accountModel(), &AccountModel::accountStateChanged, this, &AvailableAccountModelPrivate::checkStateChanges   );
 }
 
 AvailableAccountModel::AvailableAccountModel(QObject* parent) : QSortFilterProxyModel(parent),
 d_ptr(new AvailableAccountModelPrivate(this))
 {
-   setSourceModel(&AccountModel::instance());
+   setSourceModel(Session::instance()->accountModel());
 }
 
 AvailableAccountModel::~AvailableAccountModel()
@@ -98,7 +99,7 @@ bool AvailableAccountModel::filterAcceptsRow(int source_row, const QModelIndex& 
 Account* AvailableAccountModel::currentDefaultAccount(const ContactMethod* method)
 {
     // if no CM is give, we use the user chosen account, since no other parameters are available
-    const auto idx = AvailableAccountModel::instance().selectionModel()->currentIndex();
+    const auto idx =  AvailableAccountModel::instance().selectionModel()->currentIndex();
     if (!method && idx.isValid()) {
         return idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     }
@@ -137,7 +138,7 @@ bool AvailableAccountModel::validAccountForScheme(Account* account, URI::SchemeT
 Account* AvailableAccountModel::currentDefaultAccount(URI::SchemeType schemeType)
 {
     // Always try to respect user choice
-    const auto idx = AvailableAccountModel::instance().selectionModel()->currentIndex();
+    const auto idx =  AvailableAccountModel::instance().selectionModel()->currentIndex();
     auto userChosenAccount = idx.data(static_cast<int>(Ring::Role::Object)).value<Account*>();
     if (userChosenAccount && validAccountForScheme(userChosenAccount, schemeType)) {
         return userChosenAccount;
@@ -197,7 +198,7 @@ void AvailableAccountModelPrivate::setPriorAccount(const Account* account)
 ///Get the first registerred account (default account)
 Account* AvailableAccountModelPrivate::firstRegisteredAccount(URI::SchemeType type)
 {
-    return AccountModel::instance().findAccountIf([&type](const Account& account) {
+    return Session::instance()->accountModel()->findAccountIf([&type](const Account& account) {
         return account.registrationState() == Account::RegistrationState::READY
             && account.isEnabled()
             && account.supportScheme(type);

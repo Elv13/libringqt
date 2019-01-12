@@ -56,6 +56,7 @@
 #include <credentialmodel.h>
 #include <protocolmodel.h>
 #include <callmodel.h>
+#include <accountmodel.h>
 #include <numbercompletionmodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
@@ -95,6 +96,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( CredentialModel            )
     QML_TYPE_MOD( ProtocolModel              )
     QML_TYPE_MOD( CallModel                  )
+    QML_TYPE_MOD( AccountModel               )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

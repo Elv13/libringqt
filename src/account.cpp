@@ -48,6 +48,7 @@
 #include "private/contactmethod_p.h"
 #include "credentialmodel.h"
 #include "ciphermodel.h"
+#include "session.h"
 #include "protocolmodel.h"
 #include "bootstrapmodel.h"
 #include "ringdevicemodel.h"
@@ -123,7 +124,7 @@ void AccountPrivate::changeState(Account::EditState state) {
 }
 
 ///Constructors
-Account::Account():ItemBase(&AccountModel::instance()),d_ptr(new AccountPrivate(this))
+Account::Account():ItemBase(Session::instance()->accountModel()),d_ptr(new AccountPrivate(this))
 {
 }
 
@@ -132,7 +133,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 {
 //    qDebug() << "Building an account from id: " << _accountId;
    Account* a = new Account();
-   a->setParent(&AccountModel::instance());
+   a->setParent(Session::instance()->accountModel());
    a->d_ptr->m_AccountId = _accountId;
    a->d_ptr->setObjectName(_accountId);
    a->d_ptr->m_RemoteEnabledState = true;
@@ -140,7 +141,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
    a->performAction(Account::EditAction::RELOAD);
 
    //If a placeholder exist for this account, upgrade it
-   if (auto place_holder = AccountModel::instance().findPlaceHolder(_accountId))
+   if (auto place_holder = Session::instance()->accountModel()->findPlaceHolder(_accountId))
        place_holder->d_ptr->merge(a);
 
    //Load the pending trust requests
@@ -153,8 +154,8 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 
          auto contactRequest = new ContactRequest(a, ringID, timeReceived, payload);
          a->pendingContactRequestModel()->d_ptr->addRequest(contactRequest);
-         AccountModel::instance().incomingContactRequestModel();
-         AccountModel::instance().d_ptr->m_pPendingIncomingRequests->d_ptr->addRequest(contactRequest);
+         Session::instance()->accountModel()->incomingContactRequestModel();
+         Session::instance()->accountModel()->d_ptr->m_pPendingIncomingRequests->d_ptr->addRequest(contactRequest);
       }
    }
 
@@ -209,7 +210,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
 
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
    Account* a = new Account();
-   a->setParent(&AccountModel::instance());
+   a->setParent(Session::instance()->accountModel());
    a->setProtocol(proto);
    a->d_ptr->m_hAccountDetails.clear();
    a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
@@ -447,9 +448,9 @@ const QString Account::alias() const
 QModelIndex Account::index() const
 {
    //There is usually < 5 accounts, the loop may be faster than a hash for most users
-   for (int i=0;i < AccountModel::instance().size();i++) {
-      if (this == AccountModel::instance()[i]) {
-         return AccountModel::instance().index(i,0);
+   for (int i=0;i < Session::instance()->accountModel()->size();i++) {
+      if (this == (*Session::instance()->accountModel())[i]) {
+         return Session::instance()->accountModel()->index(i,0);
       }
    }
    return QModelIndex();
@@ -2628,10 +2629,10 @@ void AccountPrivate::save()
    q_ptr->credentialModel() << CredentialModel::EditAction::SAVE;
 
    if (!q_ptr->id().isEmpty()) {
-      Account* acc =  AccountModel::instance().getById(q_ptr->id());
+      Account* acc =  Session::instance()->accountModel()->getById(q_ptr->id());
       if (acc != q_ptr) {
          qDebug() << "Adding the new account to the account list (" << q_ptr->id() << ")";
-         AccountModel::instance().add(q_ptr);
+         Session::instance()->accountModel()->add(q_ptr);
       }
 
       q_ptr->performAction(Account::EditAction::RELOAD);
@@ -2732,7 +2733,7 @@ void AccountPrivate::reload()
       //The registration state is cached, update that cache
       updateState();
 
-      AccountModel::instance().d_ptr->slotVolatileAccountDetailsChange(q_ptr->id(),configurationManager.getVolatileAccountDetails(q_ptr->id()));
+      Session::instance()->accountModel()->d_ptr->slotVolatileAccountDetailsChange(q_ptr->id(),configurationManager.getVolatileAccountDetails(q_ptr->id()));
 
       m_ReloadLock.unlock();
    }

@@ -39,6 +39,8 @@ class LIB_EXPORT AccountModel : public QAbstractListModel {
    Q_OBJECT
    #pragma GCC diagnostic pop
 
+   friend class Session; // Factory
+
 public:
    Q_PROPERTY(Account*       ip2ip                      READ ip2ip                                            )
    Q_PROPERTY(int            size                       READ size   NOTIFY accountListUpdated                 )
@@ -68,7 +70,6 @@ public:
    };
 
    //Singleton
-   static AccountModel& instance();
    virtual  ~AccountModel();
 
    //Getters
@@ -133,6 +134,8 @@ public:
 private:
    //Constructors & Destructors
    explicit AccountModel ();
+
+   void init();
 
    //Helpers
    void add(Account* acc);

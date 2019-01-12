@@ -18,6 +18,7 @@
 
 #include "namedirectory.h"
 #include "accountmodel.h"
+#include "session.h"
 #include "private/namedirectory_p.h"
 #include "dbus/configurationmanager.h"
 
@@ -47,7 +48,7 @@ void NameDirectoryPrivate::slotNameRegistrationEnded(const QString& accountId, i
 {
     qDebug() << "Name registration ended. Account:" << accountId << "status:" << status << "name:" << name;
 
-   Account* account = AccountModel::instance().getById(accountId.toLatin1());
+   Account* account = Session::instance()->accountModel()->getById(accountId.toLatin1());
 
    emit q_ptr->nameRegistrationEnded(account, static_cast<NameDirectory::RegisterNameStatus>(status), name);
 
@@ -79,7 +80,7 @@ void NameDirectoryPrivate::slotRegisteredNameFound(const QString& accountId, int
             break;
     }
 
-    Account* account = AccountModel::instance().getById(accountId.toLatin1());
+    Account* account = Session::instance()->accountModel()->getById(accountId.toLatin1());
 
     emit q_ptr->registeredNameFound(account, static_cast<NameDirectory::LookupStatus>(status), address, name);
 

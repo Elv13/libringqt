@@ -28,6 +28,7 @@
 #include "event.h"
 #include <call.h>
 #include <account.h>
+#include <session.h>
 #include <accountmodel.h>
 #include <personmodel.h>
 #include <eventmodel.h>
@@ -158,7 +159,7 @@ bool Calendar::load()
                 p = PersonModel::instance().getPlaceHolder(pVal);
             }
             else if (pKey == "X_RING_ACCOUNTID")
-                a = AccountModel::instance().getById(pVal);
+                a = Session::instance()->accountModel()->getById(pVal);
         }
 
         self->m_lAttendees << QPair<ContactMethod*, QString> {

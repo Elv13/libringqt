@@ -710,7 +710,7 @@ void Individual::setPhoneNumbers(const QVector<ContactMethod*>& numbers)
         emit p->phoneNumbersChanged();
 
     //Allow incoming calls from those numbers
-    const QList<Account*> ringAccounts = AccountModel::instance().getAccountsByProtocol(Account::Protocol::RING);
+    const QList<Account*> ringAccounts = Session::instance()->accountModel()->getAccountsByProtocol(Account::Protocol::RING);
     QStringList certIds;
     for (ContactMethod* n : qAsConst(d_ptr->m_Numbers)) {
         if (n->uri().protocolHint() == URI::ProtocolHint::RING)

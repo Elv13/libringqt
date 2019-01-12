@@ -37,6 +37,7 @@
 //Ring library
 #include "private/account_p.h"
 #include "account.h"
+#include "session.h"
 #include "mime.h"
 #include "profilemodel.h"
 #include "protocolmodel.h"
@@ -233,16 +234,12 @@ Account* AccountModel::ip2ip() const
 }
 
 ///Singleton
-AccountModel& AccountModel::instance()
+void AccountModel::init()
 {
-    static auto instance = new AccountModel;
-
     // Upload account configuration only once in re-entrant way
     static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
-    if (not init_flag.test_and_set())
-        instance->d_ptr->init();
-
-    return *instance;
+    if (!init_flag.test_and_set())
+        d_ptr->init();
 }
 
 QItemSelectionModel* AccountModel::selectionModel() const
@@ -280,8 +277,8 @@ PendingContactRequestModel* AccountModel::incomingContactRequestModel() const
 Account*
 AccountModel::selectedAccount() const
 {
-   auto accIdx = AccountModel::instance().selectionModel()->currentIndex();
-   return AccountModel::instance().getAccountByModelIndex(accIdx);
+   auto accIdx = Session::instance()->accountModel()->selectionModel()->currentIndex();
+   return Session::instance()->accountModel()->getAccountByModelIndex(accIdx);
 }
 
 QList<Account*> AccountModel::accountsToMigrate() const
@@ -921,17 +918,17 @@ Account* AccountModel::getAccountByModelIndex(const QModelIndex& item) const
 ///Generate an unique suffix to prevent multiple account from sharing alias
 QString AccountModel::getSimilarAliasIndex(const QString& alias)
 {
-    auto& self = instance();
+    auto self = Session::instance()->accountModel();
 
     int count = 0;
-    foreach (Account* a, self.d_ptr->m_lAccounts) {
+    foreach (Account* a, self->d_ptr->m_lAccounts) {
         if (a->alias().left(alias.size()) == alias)
             count++;
     }
     bool found = true;
     do {
         found = false;
-        foreach (Account* a, self.d_ptr->m_lAccounts) {
+        foreach (Account* a, self->d_ptr->m_lAccounts) {
             if (a->alias() == alias+QStringLiteral(" (%1)").arg(count)) {
                 count++;
                 found = false;

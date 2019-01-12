@@ -23,6 +23,7 @@
 
 // LRC
 #include <account.h>
+#include <session.h>
 #include <profilemodel.h>
 #include <accountmodel.h>
 
@@ -114,7 +115,7 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
 //             if( !dlg->exec() )
 //                 return;
 //
-//             AccountModel::instance().importAccounts(path, dlg->password());
+//             Session::instance()->accountModel()->importAccounts(path, dlg->password());
 //
 //             delete dlg;
 //         }
@@ -125,7 +126,7 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
     const QString newAlias = tr("New account")+
         AccountModel::getSimilarAliasIndex(tr("New account"));
 
-    Account* a = AccountModel::instance().add(newAlias, proto);
+    Account* a = Session::instance()->accountModel()->add(newAlias, proto);
 
     QModelIndex accIdx = ProfileModel::instance().accountIndex(a);
     accIdx = static_cast<QAbstractProxyModel*>(

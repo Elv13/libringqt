@@ -28,6 +28,7 @@
 #include "dbus/configurationmanager.h"
 #include "dbus/callmanager.h"
 #include "account.h"
+#include "session.h"
 #include "accountmodel.h"
 #include "ringtone.h"
 #include <localringtonecollection.h>
@@ -75,12 +76,12 @@ RingtoneModel::RingtoneModel(QObject* parent)
   , d_ptr(new RingtoneModelPrivate(this))
 {
    d_ptr->m_pCollection = addCollection<LocalRingtoneCollection>();
-   QObject::connect(AccountModel::instance().selectionModel(),
+   QObject::connect(Session::instance()->accountModel()->selectionModel(),
                  &QItemSelectionModel::currentChanged, this,
                  [=](const QModelIndex &current, const QModelIndex &previous) {
                      Q_UNUSED(current)
                     if (d_ptr->m_isPlaying && previous.isValid()) {
-                        auto acc = AccountModel::instance().getAccountByModelIndex(previous);
+                        auto acc = Session::instance()->accountModel()->getAccountByModelIndex(previous);
                         auto qIdx = d_ptr->m_hSelectionModels[acc]->currentIndex();
                         play(qIdx);
                     }

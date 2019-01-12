@@ -30,6 +30,7 @@
 #include "contactmethod.h"
 #include "call.h"
 #include "uri.h"
+#include "session.h"
 #include "account.h"
 #include "person.h"
 #include "accountmodel.h"
@@ -75,7 +76,7 @@ PhoneDirectoryModel::PhoneDirectoryModel(QObject* parent) :
            SLOT(slotNewBuddySubscription(QString,QString,bool,QString)));
 
    QTimer::singleShot(0, [this]() {
-      connect(&AccountModel::instance(), &AccountModel::accountStateChanged,
+      connect(Session::instance()->accountModel(), &AccountModel::accountStateChanged,
          d_ptr.data(), &PhoneDirectoryModelPrivate::slotAccountStateChanged);
    });
 }
@@ -933,7 +934,7 @@ ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
    if (fields.size() == 3) {
       const QString uri = fields[0];
       const QByteArray acc = fields[1].toLatin1();
-      Account* account = acc.isEmpty() ? nullptr : AccountModel::instance().getById(acc);
+      Account* account = acc.isEmpty() ? nullptr : Session::instance()->accountModel()->getById(acc);
       Person* contact = PersonModel::instance().getPersonByUid(fields[2].toUtf8());
       return getNumber(uri,contact,account);
    }
@@ -957,7 +958,7 @@ ContactMethod* PhoneDirectoryModel::fromJson(const QJsonObject& o)
     const auto personUID = o[QStringLiteral("personUID")].toString();
 
     auto a = accountId.isEmpty() ?
-        nullptr: AccountModel::instance().getById(accountId.toLatin1());
+        nullptr: Session::instance()->accountModel()->getById(accountId.toLatin1());
 
     auto c = personUID.isEmpty() ?
         nullptr: PersonModel::instance().getPlaceHolder(personUID.toLatin1());
@@ -1114,7 +1115,7 @@ void PhoneDirectoryModelPrivate::slotContactChanged(Person* newContact, Person* 
 
 void PhoneDirectoryModelPrivate::slotNewBuddySubscription(const QString& accountId, const QString& uri, bool status, const QString& message)
 {
-   ContactMethod* number = q_ptr->getNumber(uri,AccountModel::instance().getById(accountId.toLatin1()));
+   ContactMethod* number = q_ptr->getNumber(uri,Session::instance()->accountModel()->getById(accountId.toLatin1()));
    number->d_ptr->setPresent(status);
    number->setPresenceMessage(message);
    emit number->changed();
@@ -1158,7 +1159,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
 void
 PhoneDirectoryModel::setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name)
 {
-    auto account = AccountModel::instance().findAccountIf([](const Account& a) {
+    auto account = Session::instance()->accountModel()->findAccountIf([](const Account& a) {
         return a.protocol() == Account::Protocol::RING;
     });
 

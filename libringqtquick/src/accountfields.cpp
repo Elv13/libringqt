@@ -19,6 +19,7 @@
 #include "accountfields.h"
 
 #include <account.h>
+#include <session.h>
 #include <accountmodel.h>
 
 class AttachedAccountFieldStatusPrivate final : public QObject
@@ -111,10 +112,10 @@ bool AttachedAccountFieldStatusPrivate::getAccount()
 
     slotAccountChanged();
 
-    if (AccountModel::instance().roleNames().key(m_Name) == -1)
+    if (Session::instance()->accountModel()->roleNames().key(m_Name) == -1)
         return false;
 
-    m_Role = (Account::Role) AccountModel::instance().roleNames().key(m_Name);
+    m_Role = (Account::Role) Session::instance()->accountModel()->roleNames().key(m_Name);
 
     return true;
 }

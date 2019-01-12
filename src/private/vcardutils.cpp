@@ -35,6 +35,7 @@
 #include "individual.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "personmodel.h"
+#include "session.h"
 
 /* https://www.ietf.org/rfc/rfc2045.txt
  * https://www.ietf.org/rfc/rfc2047.txt
@@ -400,7 +401,7 @@ bool VCardUtils::mapToPerson(Person* p, const QByteArray& all, QList<Account*>* 
         //Link with accounts
         if(pair.first == VCardUtils::Property::X_RINGACCOUNT) {
             if (accounts) {
-                Account* a = AccountModel::instance().getById(pair.second,true);
+                Account* a = Session::instance()->accountModel()->getById(pair.second,true);
                 if(!a) {
                     qDebug() << "Could not find account: " << pair.second;
                     continue;
@@ -440,7 +441,7 @@ Person* VCardUtils::mapToPerson(const QHash<QByteArray, QByteArray>& vCard, QLis
         it.next();
         if (it.key() == VCardUtils::Property::X_RINGACCOUNT) {
             if (accounts) {
-                auto acc = AccountModel::instance().getById(it.value().trimmed(),true);
+                auto acc = Session::instance()->accountModel()->getById(it.value().trimmed(),true);
                 if (!acc) {
                     qDebug() << "Could not find account: " << it.value().trimmed();
                     continue;

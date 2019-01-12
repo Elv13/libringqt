@@ -26,6 +26,7 @@
 #include "contactmethod.h"
 #include "account.h"
 #include "person.h"
+#include "session.h"
 #include "personmodel.h"
 #include "accountmodel.h"
 #include "eventmodel.h"
@@ -375,12 +376,12 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
         // Too noisy, it happens with deleted accounts because once the file
         // is saved again, the accountId is no longer there.
         //qWarning() << "Could not find a viable account for existing chat conversation";
-        a = AvailableAccountModel::instance().currentDefaultAccount();
+        a =  AvailableAccountModel::instance().currentDefaultAccount();
     }
 
     // Getting worst, pick something at "random" (the account order is not really random)
-    if ((!a) && AccountModel::instance().size()) {
-        a = AccountModel::instance()[0];
+    if ((!a) && Session::instance()->accountModel()->size()) {
+        a = (*Session::instance()->accountModel())[0];
     }
     else if (!a) {
         qWarning() << "There is no accounts for existing assets, this won't end well";
@@ -499,11 +500,11 @@ QSharedPointer<Event> Serializable::Group::event(bool allowPlaceholders) const
 
     // Try to fix the errors of the past and fix a suitable account.
     if (!m_pAccount)
-        m_pAccount = AvailableAccountModel::instance().currentDefaultAccount();
+        m_pAccount =  AvailableAccountModel::instance().currentDefaultAccount();
 
     // This is very, very bad
-    if (!m_pAccount && AccountModel::instance().size())
-        m_pAccount = AccountModel::instance()[0];
+    if (!m_pAccount && Session::instance()->accountModel()->size())
+        m_pAccount = (*Session::instance()->accountModel())[0];
 
     // There is nothing to do, it will probably crash soon in a way or another
     if (!m_pAccount) {

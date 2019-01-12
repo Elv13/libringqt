@@ -24,6 +24,7 @@
 #include "accountmodel.h"
 #include "dbus/presencemanager.h"
 #include "globalinstances.h"
+#include "session.h"
 #include "interfaces/presenceserializeri.h"
 
 class PresenceStatusModelPrivate
@@ -336,7 +337,7 @@ void PresenceStatusModel::setCurrentIndex  (const QModelIndex& index)
     emit currentNameChanged(d_ptr->m_pCurrentStatus->name());
     emit currentMessageChanged(d_ptr->m_pCurrentStatus->message());
     //    emit currentStatusChanged(d_ptr->m_pCurrentStatus->status);
-    for (int i=0; i < AccountModel::instance().size(); i++) {
+    for (int i=0; i < Session::instance()->accountModel()->size(); i++) {
     //       PresenceManager::instance().publish(
     //          AccountModel::instance()[i]->id(), d_ptr->m_pCurrentStatus->status,d_ptr->m_pCurrentStatus->message()
     //       );

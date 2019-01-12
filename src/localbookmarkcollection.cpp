@@ -288,7 +288,7 @@ void Serializable::BookmarkNode::read(const QJsonObject &json)
    const QByteArray& accountId = json[ QStringLiteral("accountId") ].toString().toLatin1();
    const QByteArray& contactId = json[ QStringLiteral("contactId") ].toString().toLatin1();
 
-   account = accountId.isEmpty()?nullptr:AccountModel::instance ().getById       ( accountId            );
+   account = accountId.isEmpty()?nullptr:Session::instance()->accountModel()->getById( accountId );
    contact = contactId.isEmpty()?nullptr:PersonModel::instance  ().getPersonByUid( contactId            );
    cm      = uri.isEmpty()?nullptr:PhoneDirectoryModel::instance().getNumber     ( uri, contact, account);
 }

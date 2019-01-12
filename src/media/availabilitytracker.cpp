@@ -75,9 +75,9 @@ AvailabilityTracker::AvailabilityTracker(QObject* parent) : QObject(parent),
     d_ptr(new AvailabilityTrackerPrivate())
 {
     d_ptr->q_ptr = this;
-    connect(&AccountModel::instance(), &AccountModel::canCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
-    connect(&AccountModel::instance(), &AccountModel::registrationChanged, d_ptr, &AvailabilityTrackerPrivate::slotRegistrationChanged);
-    connect(&AccountModel::instance(), &AccountModel::canVideoCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanVideoCallChanged);
+    connect(Session::instance()->accountModel(), &AccountModel::canCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
+    connect(Session::instance()->accountModel(), &AccountModel::registrationChanged, d_ptr, &AvailabilityTrackerPrivate::slotRegistrationChanged);
+    connect(Session::instance()->accountModel(), &AccountModel::canVideoCallChanged, d_ptr, &AvailabilityTrackerPrivate::slotCanVideoCallChanged);
 
     connect(Session::instance()->callModel(), &CallModel::callStateChanged , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);
     connect(Session::instance()->callModel(), &CallModel::rendererAdded    , d_ptr, &AvailabilityTrackerPrivate::slotCanCallChanged);

@@ -25,6 +25,7 @@
 #include <accountmodel.h>
 #include <certificate.h>
 #include <account.h>
+#include <session.h>
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
 #include "personmodel.h"
@@ -259,7 +260,7 @@ void IncomingContactRequestManager::slotIncomingContactRequest(const QString& ac
 {
    Q_UNUSED(payload);
 
-   auto a = AccountModel::instance().getById(accountId.toLatin1());
+   auto a = Session::instance()->accountModel()->getById(accountId.toLatin1());
 
    if (!a) {
       qWarning() << "Incoming trust request for unknown account" << accountId;
@@ -272,7 +273,7 @@ void IncomingContactRequestManager::slotIncomingContactRequest(const QString& ac
 
    /* Also keep a global list of incoming requests */
    qobject_cast<PendingContactRequestModel*>(
-       AccountModel::instance().incomingContactRequestModel()
+       Session::instance()->accountModel()->incomingContactRequestModel()
    )->d_ptr->addRequest(r);
 
    auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
@@ -281,7 +282,7 @@ void IncomingContactRequestManager::slotIncomingContactRequest(const QString& ac
 
 void IncomingContactRequestManager::slotContactAdded(const QString& accountId, const QString& hash, bool confirm)
 {
-    auto a = AccountModel::instance().getById(accountId.toLatin1());
+    auto a = Session::instance()->accountModel()->getById(accountId.toLatin1());
 
     if (!a) {
         qWarning() << "Incoming trust request for unknown account" << accountId;

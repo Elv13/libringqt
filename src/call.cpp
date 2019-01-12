@@ -320,7 +320,7 @@ Call::Call(const QString& confId, const QString& account)
    , d_ptr(new CallPrivate(this))
 {
    d_ptr->m_CurrentState = Call::State::CONFERENCE;
-   d_ptr->m_LegacyFields.m_Account      = AccountModel::instance().getById(account.toLatin1());
+   d_ptr->m_LegacyFields.m_Account      = Session::instance()->accountModel()->getById(account.toLatin1());
    d_ptr->m_Type         = (!confId.isEmpty())?Call::Type::CONFERENCE:Call::Type::CALL;
    d_ptr->m_DringId      = confId;
 
@@ -414,7 +414,7 @@ MapStringString CallPrivate::getCallDetailsCommon(const QString& callId)
    if (account.isEmpty())
       return details;
 
-   Account* acc = AccountModel::instance().getById(account.toLatin1());
+   Account* acc = Session::instance()->accountModel()->getById(account.toLatin1());
 
    //Only keep the useful part of the URI
    if (acc && acc->protocol() == Account::Protocol::RING)
@@ -447,7 +447,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
         return nullptr;
     }
 
-    const auto& acc = AccountModel::instance().getById(account.toLatin1());
+    const auto& acc = Session::instance()->accountModel()->getById(account.toLatin1());
 
     // Sanitize invalid data sent by the daemon
     if (acc->protocol() == Account::Protocol::RING && peerNumber.left(4) == QStringLiteral("sip:"))
@@ -554,7 +554,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
       return nullptr;
    }
 
-   auto acc = AccountModel::instance().getById(accId);
+   auto acc = Session::instance()->accountModel()->getById(accId);
 
    // Older history files may still have invalid entries, get rid of them
    if ((!PhoneDirectoryModel::ensureValidity(number, acc)) && startTimeStamp == stopTimeStamp)
@@ -588,7 +588,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
    call->d_ptr->setStartTimeStamp(startTimeStamp);
    call->d_ptr->setRecordingPath (rec_path.toString());
    call->d_ptr->m_History         = true;
-   call->d_ptr->m_LegacyFields.m_Account         = AccountModel::instance().getById(accId);
+   call->d_ptr->m_LegacyFields.m_Account         = Session::instance()->accountModel()->getById(accId);
 
    if (missed) {
       call->d_ptr->m_LegacyFields.m_Missed = true;
@@ -1899,7 +1899,7 @@ void CallPrivate::call()
     // Try to set the account from the associated ContactMethod
     if (auto tryingAcc = peerCM->account()) {
         // make sure account exist in the model and that it's READY
-        if (AccountModel::instance().getById(tryingAcc->id()) &&
+        if (Session::instance()->accountModel()->getById(tryingAcc->id()) &&
             (tryingAcc->registrationState() == Account::RegistrationState::READY))
             m_LegacyFields.m_Account = tryingAcc;
     }
@@ -1907,7 +1907,7 @@ void CallPrivate::call()
     // Otherwise set default account
     if (!m_LegacyFields.m_Account) {
         qDebug() << "Account is not set, taking the first registered.";
-        m_LegacyFields.m_Account = AvailableAccountModel::instance().currentDefaultAccount(peerCM);
+        m_LegacyFields.m_Account =  AvailableAccountModel::instance().currentDefaultAccount(peerCM);
         if (!m_LegacyFields.m_Account) {
             qDebug() << "Trying to call "
                      << (m_pTransferNumber ? static_cast<QString>(m_pTransferNumber->uri()) : QStringLiteral("ERROR"))

@@ -26,6 +26,7 @@
 #include <call.h>
 #include <account.h>
 #include <accountmodel.h>
+#include <session.h>
 #include <media/recordingmodel.h>
 #include <media/recording.h>
 #include <media/textrecording.h>
@@ -128,11 +129,11 @@ void importHistory(LocalHistoryCollection* histo)
 
 
         int counter = 0;
-        const auto accountCount = AccountModel::instance().size();
+        const auto accountCount = Session::instance()->accountModel()->size();
 
         // Wait until all calendars are loaded to limit the number of placeholder events
         for (int i = 0; i < accountCount; i++) {
-            const auto a = AccountModel::instance()[i];
+            const auto a = (*Session::instance()->accountModel())[i];
 
             // While they currently load synchronously in the main thread, in the
             // future this should move either to threads or use coroutines.
