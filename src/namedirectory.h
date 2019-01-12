@@ -26,6 +26,8 @@ class Account;
 class LIB_EXPORT NameDirectory : public QObject
 {
     Q_OBJECT
+
+    friend class Session; // Factory
 public:
 
     //Register name status
@@ -46,9 +48,6 @@ public:
         ERROR = 3
     };
     Q_ENUMS(LookupStatus)
-
-    //Singleton
-    static NameDirectory& instance();
 
     //Lookup
     Q_INVOKABLE bool lookupName    (const Account* account, const QString& nameServiceURL, const QString& name    ) const;

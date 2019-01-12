@@ -133,7 +133,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
    connect(Session::instance()->accountModel(), &AccountModel::accountAdded  , this, &NumberCompletionModelPrivate::accountAdded  );
    connect(Session::instance()->accountModel(), &AccountModel::accountRemoved, this, &NumberCompletionModelPrivate::accountRemoved);
 
-   connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound,
+   connect(Session::instance()->nameDirectory(), &NameDirectory::registeredNameFound,
       this, &NumberCompletionModelPrivate::slotRegisteredNameFound);
 
    auto t = new QTimer(this);
@@ -360,7 +360,7 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
 
             // Perform name lookups
             if (str.size() >=3 && !m_hNameCache.contains(str))
-                NameDirectory::instance().lookupName(cm->account(), {}, str);
+                Session::instance()->nameDirectory()->lookupName(cm->account(), {}, str);
         }
     }
 

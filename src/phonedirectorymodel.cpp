@@ -65,7 +65,7 @@ m_CallWithAccount(false),m_pPopularModel(nullptr)
     QTimer::singleShot(0, [this]() {
         m_pNameServiceCache = Session::instance()->bookmarkModel()->addCollection<LocalNameServiceCache>(LoadOptions::FORCE_ENABLED);
     });
-    connect(&NameDirectory::instance(), &NameDirectory::registeredNameFound, this, &PhoneDirectoryModelPrivate::slotRegisteredNameFound);
+    connect(Session::instance()->nameDirectory(), &NameDirectory::registeredNameFound, this, &PhoneDirectoryModelPrivate::slotRegisteredNameFound);
 }
 
 PhoneDirectoryModel::PhoneDirectoryModel(QObject* parent) :
@@ -467,7 +467,7 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
    // for RingIDs, once we set an account, we should perform (another) name lookup, in case the
    // account has a different name server set from the default
    if (number->uri().protocolHint() == URI::ProtocolHint::RING)
-      NameDirectory::instance().lookupAddress(number->account(), QString(), number->uri().userinfo());
+      Session::instance()->nameDirectory()->lookupAddress(number->account(), QString(), number->uri().userinfo());
 }
 
 ///Add new information to existing numbers and try to merge
@@ -660,7 +660,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Acc
 
     // perform a username lookup for new CM with RingID
     if (cm->uri().protocolHint() == URI::ProtocolHint::RING)
-        NameDirectory::instance().lookupAddress(cm->account(), {}, cm->uri().userinfo());
+        Session::instance()->nameDirectory()->lookupAddress(cm->account(), {}, cm->uri().userinfo());
 
     return cm;
 }
@@ -896,7 +896,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    // perform a username lookup for new CM with RingID
    if (number->uri().protocolHint() == URI::ProtocolHint::RING)
-      NameDirectory::instance().lookupAddress(number->account(), QString(), number->uri().userinfo());
+      Session::instance()->nameDirectory()->lookupAddress(number->account(), QString(), number->uri().userinfo());
 
    return number;
 }

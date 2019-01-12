@@ -1630,7 +1630,7 @@ void Account::setHostname(const QString& detail)
 ///Set the account registeredName
 bool Account::registerName(const QString& password, const QString& name) const
 {
-    return NameDirectory::instance().registerName(this, password, name);
+    return Session::instance()->nameDirectory()->registerName(this, password, name);
 }
 
 //Lookup a name
@@ -1639,13 +1639,13 @@ bool Account::lookupName(const QString& name) const
     if (protocol() != Account::Protocol::RING)
         return false;
 
-    return NameDirectory::instance().lookupName(this, QString(), name);
+    return Session::instance()->nameDirectory()->lookupName(this, QString(), name);
 }
 
 //Lookup an address
 bool Account::lookupAddress(const QString& address) const
 {
-    return NameDirectory::instance().lookupAddress(this, QString(), address);
+    return Session::instance()->nameDirectory()->lookupAddress(this, QString(), address);
 }
 
 /// Automatically create a profile based on the account name

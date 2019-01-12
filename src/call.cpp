@@ -459,7 +459,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
 
     // When a peer calls for the first time, it's registered name isn't known yet
     if (acc->protocol() == Account::Protocol::RING && nb->registeredName().isEmpty()) {
-        NameDirectory::instance().lookupAddress(acc, acc->nameServiceURL(), nb->uri());
+        Session::instance()->nameDirectory()->lookupAddress(acc, acc->nameServiceURL(), nb->uri());
     }
 
     auto call = std::unique_ptr<Call, decltype(deleteCall)&>( new Call(startState, peerName, nb, acc),

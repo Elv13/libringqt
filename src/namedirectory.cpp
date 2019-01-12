@@ -36,13 +36,6 @@ NameDirectory::NameDirectory() : QObject(QCoreApplication::instance()), d_ptr(ne
 {
 }
 
-///Singleton
-NameDirectory& NameDirectory::instance()
-{
-    static auto instance = new NameDirectory;
-    return *instance;
-}
-
 //Name registration ended
 void NameDirectoryPrivate::slotNameRegistrationEnded(const QString& accountId, int status, const QString& name)
 {

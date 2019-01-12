@@ -30,6 +30,7 @@ class CategorizedHistoryModel;
 class CategorizedContactModel;
 class CategorizedBookmarkModel;
 class AvailableAccountModel;
+class NameDirectory;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -44,6 +45,7 @@ public:
     Q_PROPERTY(CategorizedContactModel* contactModel READ contactModel CONSTANT)
     Q_PROPERTY(CategorizedBookmarkModel* bookmarkModel READ bookmarkModel CONSTANT)
     Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
+    Q_PROPERTY(NameDirectory* nameDirectory READ nameDirectory CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -51,6 +53,7 @@ public:
     CategorizedContactModel* contactModel() const;
     CategorizedBookmarkModel* bookmarkModel() const;
     AvailableAccountModel* availableAccountModel() const;
+    NameDirectory* nameDirectory() const;
 
     static Session* instance();
 
