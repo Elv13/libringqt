@@ -37,6 +37,7 @@ class IndividualDirectory;
 class ProfileModel;
 class PresenceStatusModel;
 class EventModel;
+class RingtoneModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -58,6 +59,7 @@ public:
     Q_PROPERTY(PresenceStatusModel* presenceStatusModel READ presenceStatusModel CONSTANT)
     Q_PROPERTY(EventModel* eventModel READ eventModel CONSTANT)
     Q_PROPERTY(IndividualDirectory* individualDirectory READ individualDirectory CONSTANT)
+    Q_PROPERTY(RingtoneModel* ringtoneModel READ ringtoneModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -72,6 +74,7 @@ public:
     ProfileModel* profileModel() const;
     PresenceStatusModel* presenceStatusModel() const;
     EventModel* eventModel() const;
+    RingtoneModel* ringtoneModel() const;
 
     static Session* instance();
 

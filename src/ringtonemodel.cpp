@@ -88,12 +88,6 @@ RingtoneModel::RingtoneModel(QObject* parent)
                  });
 }
 
-RingtoneModel& RingtoneModel::instance()
-{
-   static auto instance = new RingtoneModel(QCoreApplication::instance());
-   return *instance;
-}
-
 RingtoneModel::~RingtoneModel()
 {
    while (d_ptr->m_lRingtone.size()) {

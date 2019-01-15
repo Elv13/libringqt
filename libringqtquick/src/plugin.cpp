@@ -66,6 +66,9 @@
 #include <individualdirectory.h>
 #include <numbercategorymodel.h>
 #include <profilemodel.h>
+#include <ringtonemodel.h>
+#include <presencestatusmodel.h>
+#include <eventmodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -113,6 +116,9 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( NumberCategoryModel        )
     QML_TYPE_MOD( IndividualDirectory        )
     QML_TYPE_MOD( ProfileModel               )
+    QML_TYPE_MOD( EventModel                 )
+    QML_TYPE_MOD( RingtoneModel              )
+    QML_TYPE_MOD( PresenceStatusModel        )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

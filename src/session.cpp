@@ -31,6 +31,7 @@
 #include "profilemodel.h"
 #include "presencestatusmodel.h"
 #include "eventmodel.h"
+#include "ringtonemodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -134,6 +135,13 @@ PresenceStatusModel* Session::presenceStatusModel() const
 EventModel* Session::eventModel() const
 {
     static EventModel m;
+
+    return &m;
+}
+
+RingtoneModel* Session::ringtoneModel() const
+{
+    static RingtoneModel m;
 
     return &m;
 }

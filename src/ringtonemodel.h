@@ -34,6 +34,7 @@ class Ringtone;
 class LIB_EXPORT RingtoneModel : public QAbstractTableModel, public CollectionManagerInterface<Ringtone>
 {
    Q_OBJECT
+   friend class Session; // factory
 public:
 
    enum Role {
@@ -58,8 +59,6 @@ public:
    //Mutator
    void play(const QModelIndex& index);
    bool add(const QUrl& path, Account* autoSelect = nullptr);
-
-   static RingtoneModel& instance();
 
 private:
    explicit RingtoneModel(QObject* parent = nullptr);
