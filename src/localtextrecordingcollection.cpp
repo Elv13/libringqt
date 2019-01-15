@@ -28,6 +28,7 @@
 
 //Ring
 #include <globalinstances.h>
+#include <session.h>
 #include <interfaces/pixmapmanipulatori.h>
 #include <media/recordingmodel.h>
 #include <media/recording.h>
@@ -132,7 +133,7 @@ LocalTextRecordingCollection::~LocalTextRecordingCollection()
 
 LocalTextRecordingCollection& LocalTextRecordingCollection::instance()
 {
-    static auto instance = Media::RecordingModel::instance().addCollection<LocalTextRecordingCollection>();
+    static auto instance = Session::instance()->recordingModel()->addCollection<LocalTextRecordingCollection>();
     return *instance;
 }
 

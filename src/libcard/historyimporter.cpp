@@ -74,7 +74,7 @@ void importHistory(LocalHistoryCollection* histo)
         LocalTextRecordingCollection::instance();
 
         auto callback = [] {
-            const auto recordingCollections = Media::RecordingModel::instance().collections();
+            const auto recordingCollections = Session::instance()->recordingModel()->collections();
 
             // Load all text recording, read all files, scan everything
             for (CollectionInterface* backend : qAsConst(recordingCollections)) {

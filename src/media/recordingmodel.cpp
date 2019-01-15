@@ -32,6 +32,7 @@
 #include "textrecording.h"
 #include "avrecording.h"
 #include "media.h"
+#include "session.h"
 #include "mimemessage.h"
 #include "call.h"
 #include "localtextrecordingcollection.h"
@@ -66,7 +67,7 @@ class RecordingSubTreeProxy : public QAbstractListModel
     Q_OBJECT
 public:
     explicit RecordingSubTreeProxy(RecordingNode* root) :
-        QAbstractListModel(&Media::RecordingModel::instance()), m_pRoot(root) {}
+        QAbstractListModel(Session::instance()->recordingModel()), m_pRoot(root) {}
 
     virtual ~RecordingSubTreeProxy() {}
 
@@ -175,12 +176,6 @@ d_ptr(new RecordingModelPrivate(this))
     });
 
     d_ptr->initCategories();
-}
-
-Media::RecordingModel& Media::RecordingModel::instance()
-{
-    static auto instance = new RecordingModel(QCoreApplication::instance());
-    return *instance;
 }
 
 QHash<int,QByteArray> Media::RecordingModel::roleNames() const
@@ -569,7 +564,7 @@ int RecordingSubTreeProxy::rowCount( const QModelIndex& parent) const
 QAbstractItemModel* Media::RecordingModel::audioRecordingModel() const
 {
     static auto p = new RecordingSubTreeProxy(
-        instance().d_ptr->m_lCategories[1]
+        Session::instance()->recordingModel()->d_ptr->m_lCategories[1]
     );
 
     return p;
@@ -578,7 +573,7 @@ QAbstractItemModel* Media::RecordingModel::audioRecordingModel() const
 QAbstractItemModel* Media::RecordingModel::textRecordingModel() const
 {
     static auto p = new RecordingSubTreeProxy(
-        instance().d_ptr->m_lCategories[0]
+        Session::instance()->recordingModel()->d_ptr->m_lCategories[0]
     );
 
     return p;

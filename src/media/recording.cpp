@@ -66,7 +66,7 @@ RecordingPrivate::RecordingPrivate(Recording*)
 Recording::Recording(const Recording::Type type, const Recording::Status status) : ItemBase(nullptr),
 d_ptr(new RecordingPrivate(this))
 {
-   //FIXME setParent(&RecordingModel::instance());
+   //FIXME setParent(Session::instance()->recordingModel());
    d_ptr->m_Type = type;
    d_ptr->m_Status = status;
 }

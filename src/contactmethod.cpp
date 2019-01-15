@@ -1277,7 +1277,7 @@ bool ContactMethod::operator==(const ContactMethod& other) const
 Media::TextRecording* ContactMethod::textRecording() const
 {
     if (!d_ptr->m_pTextRecording) {
-        d_ptr->m_pTextRecording = Media::RecordingModel::instance().createTextRecording(this);
+        d_ptr->m_pTextRecording = Session::instance()->recordingModel()->createTextRecording(this);
 
         for (auto n : qAsConst(d_ptr->m_lParents))
             emit n->textRecordingAdded(d_ptr->m_pTextRecording);
@@ -1289,7 +1289,7 @@ Media::TextRecording* ContactMethod::textRecording() const
 bool ContactMethod::hasTextRecordings() const
 {
     return d_ptr->m_pTextRecording ||
-        Media::RecordingModel::instance().hasTextRecordings(this);
+        Session::instance()->recordingModel()->hasTextRecordings(this);
 }
 
 bool ContactMethod::isReachable() const

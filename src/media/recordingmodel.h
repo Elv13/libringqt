@@ -55,6 +55,7 @@ class LIB_EXPORT RecordingModel :  public QAbstractItemModel, public CollectionM
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    Q_OBJECT
    #pragma GCC diagnostic pop
+   friend class Session; // factory
 public:
     // Properties
     Q_PROPERTY(QItemSelectionModel* selectionModel  READ selectionModel  CONSTANT                           )
@@ -99,9 +100,6 @@ public:
 
     //Mutator
     TextRecording* createTextRecording(const ContactMethod* cm);
-
-    //Singleton
-    static RecordingModel& instance();
 
 Q_SIGNALS:
     void newTextMessage(::Media::TextRecording* t, ContactMethod* cm);

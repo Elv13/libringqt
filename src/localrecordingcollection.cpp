@@ -24,6 +24,7 @@
 #include <interfaces/pixmapmanipulatori.h>
 #include <media/recordingmodel.h>
 #include <media/recording.h>
+#include <session.h>
 #include <media/avrecording.h>
 
 class LocalRecordingEditor final : public CollectionEditor<Media::Recording>
@@ -55,7 +56,7 @@ LocalRecordingCollection::~LocalRecordingCollection()
 
 LocalRecordingCollection& LocalRecordingCollection::instance()
 {
-   static auto instance = Media::RecordingModel::instance().addCollection<LocalRecordingCollection>();
+   static auto instance = Session::instance()->recordingModel()->addCollection<LocalRecordingCollection>();
    return *instance;
 }
 

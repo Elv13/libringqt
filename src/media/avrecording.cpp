@@ -209,7 +209,7 @@ void Media::AVRecording::setPath(const QUrl& path)
 ///Play (or resume) the playback
 void Media::AVRecording::play()
 {
-   RecordingModel::instance().setCurrentRecording(this);
+   Session::instance()->recordingModel()->setCurrentRecording(this);
 
    RecordingPlaybackManager::instance().activateRecording(this);
 
@@ -339,12 +339,12 @@ void RecordingPlaybackManager::desactivateRecording(Media::AVRecording* r)
 
 bool Media::AVRecording::isCurrent() const
 {
-    return RecordingModel::instance().currentRecording() == this;
+    return Session::instance()->recordingModel()->currentRecording() == this;
 }
 
 bool Media::AVRecording::isPlaying() const
 {
-    return RecordingModel::instance().currentRecording() == this && d_ptr->m_IsPlaying;
+    return Session::instance()->recordingModel()->currentRecording() == this && d_ptr->m_IsPlaying;
 }
 
 #include <avrecording.moc>

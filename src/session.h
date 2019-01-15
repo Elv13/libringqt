@@ -39,6 +39,10 @@ class PresenceStatusModel;
 class EventModel;
 class RingtoneModel;
 
+namespace Media {
+class RecordingModel;
+}
+
 /**
  * All uncreatable single instance objects of the base namespace.
  */
@@ -60,6 +64,7 @@ public:
     Q_PROPERTY(EventModel* eventModel READ eventModel CONSTANT)
     Q_PROPERTY(IndividualDirectory* individualDirectory READ individualDirectory CONSTANT)
     Q_PROPERTY(RingtoneModel* ringtoneModel READ ringtoneModel CONSTANT)
+    Q_PROPERTY(Media::RecordingModel* recordingModel READ recordingModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -75,6 +80,7 @@ public:
     PresenceStatusModel* presenceStatusModel() const;
     EventModel* eventModel() const;
     RingtoneModel* ringtoneModel() const;
+    Media::RecordingModel* recordingModel() const;
 
     static Session* instance();
 

@@ -247,7 +247,7 @@ Media::TextRecording* Media::Text::recording() const
        if (auto otherRecording = call()->peerContactMethod()->textRecording())
            d_ptr->m_pRecording = otherRecording;
        else
-           d_ptr->m_pRecording = RecordingModel::instance().createTextRecording(call()->peerContactMethod());
+           d_ptr->m_pRecording = Session::instance()->recordingModel()->createTextRecording(call()->peerContactMethod());
    }
 
    return d_ptr->m_pRecording;

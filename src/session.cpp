@@ -32,6 +32,7 @@
 #include "presencestatusmodel.h"
 #include "eventmodel.h"
 #include "ringtonemodel.h"
+#include "media/recordingmodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -142,6 +143,13 @@ EventModel* Session::eventModel() const
 RingtoneModel* Session::ringtoneModel() const
 {
     static RingtoneModel m;
+
+    return &m;
+}
+
+Media::RecordingModel* Session::recordingModel() const
+{
+    static Media::RecordingModel m(const_cast<Session*>(this));
 
     return &m;
 }
