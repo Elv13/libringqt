@@ -31,6 +31,8 @@ ItemBase::ItemBase(QObject* parent) :QObject(nullptr), d_ptr(new ItemBasePrivate
          QObject::setParent(parent);
       });
    }
+   else
+       QObject::setParent(parent);
 }
 
 ItemBase::~ItemBase()
