@@ -65,6 +65,7 @@
 #include <peerstimelinemodel.h>
 #include <individualdirectory.h>
 #include <numbercategorymodel.h>
+#include <profilemodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -111,6 +112,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( PeersTimelineModel         )
     QML_TYPE_MOD( NumberCategoryModel        )
     QML_TYPE_MOD( IndividualDirectory        )
+    QML_TYPE_MOD( ProfileModel               )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

@@ -34,6 +34,7 @@ class NameDirectory;
 class PeersTimelineModel;
 class NumberCategoryModel;
 class IndividualDirectory;
+class ProfileModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -51,6 +52,7 @@ public:
     Q_PROPERTY(NameDirectory* nameDirectory READ nameDirectory CONSTANT)
     Q_PROPERTY(PeersTimelineModel* peersTimelineModel READ peersTimelineModel CONSTANT)
     Q_PROPERTY(NumberCategoryModel* numberCategoryModel READ numberCategoryModel CONSTANT)
+    Q_PROPERTY(ProfileModel* profileModel READ profileModel CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -62,6 +64,7 @@ public:
     PeersTimelineModel* peersTimelineModel() const;
     NumberCategoryModel* numberCategoryModel() const;
     IndividualDirectory* individualDirectory() const;
+    ProfileModel* profileModel() const;
 
     static Session* instance();
 

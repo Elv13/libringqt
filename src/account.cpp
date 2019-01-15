@@ -1652,7 +1652,7 @@ bool Account::lookupAddress(const QString& address) const
 bool Account::createProfile()
 {
     const auto name = registeredName().isEmpty() ? alias() : registeredName();
-    setProfile(ProfileModel::instance().add(name));
+    setProfile(Session::instance()->profileModel()->add(name));
 
     // Saving will break
     Q_ASSERT(profile()->collection()->id() != "trcb");
@@ -2125,7 +2125,7 @@ void Account::setProfile(Person* p)
         return;
     }
 
-    ProfileModel::instance().setProfile(this, p);
+    Session::instance()->profileModel()->setProfile(this, p);
 
     emit changed(this);
 }

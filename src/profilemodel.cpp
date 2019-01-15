@@ -235,7 +235,7 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     account_pro->m_Index = currentNode->children.size();
     account_pro->parent  = currentNode;
 
-    const auto parentIdx = ProfileModel::instance().index(currentNode->m_Index,0);
+    const auto parentIdx = Session::instance()->profileModel()->index(currentNode->m_Index,0);
 
     q_ptr->beginInsertRows(parentIdx, account_pro->m_Index, account_pro->m_Index);
     currentNode->children << account_pro;
@@ -630,7 +630,7 @@ QItemSelectionModel* ProfileModel::sortedProxySelectionModel() const
 QAbstractItemModel* ProfileModel::sortedProxyModel() const
 {
     if (!d_ptr->m_pSortedProxyModel) {
-        d_ptr->m_pSortedProxyModel = new QSortFilterProxyModel(&ProfileModel::instance());
+        d_ptr->m_pSortedProxyModel = new QSortFilterProxyModel(Session::instance()->profileModel());
         d_ptr->m_pSortedProxyModel->setSourceModel(const_cast<ProfileModel*>(this));
         d_ptr->m_pSortedProxyModel->setSortRole(ProfileModelPrivate::c_OrderRole);
         d_ptr->m_pSortedProxyModel->sort(0);

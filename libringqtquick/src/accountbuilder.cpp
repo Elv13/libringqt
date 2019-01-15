@@ -92,12 +92,12 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
 
    // Add profile or import accounts
     if ((int)proto == ((int)Account::Protocol::COUNT__) + (int)ExtendedRole::PROFILE) {
-        const bool ret = ProfileModel::instance().add();
+        const bool ret = Session::instance()->profileModel()->add();
 
         if (!ret)
             return nullptr;
 
-        const QModelIndex idx = ProfileModel::instance().index(ProfileModel::instance().rowCount(),0);
+        const QModelIndex idx = Session::instance()->profileModel()->index(Session::instance()->profileModel()->rowCount(),0);
 
 //         if (idx.isValid()) {
 //             m_pAccountList->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect);
@@ -128,12 +128,12 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
 
     Account* a = Session::instance()->accountModel()->add(newAlias, proto);
 
-    QModelIndex accIdx = ProfileModel::instance().accountIndex(a);
+    QModelIndex accIdx = Session::instance()->profileModel()->accountIndex(a);
     accIdx = static_cast<QAbstractProxyModel*>(
-        ProfileModel::instance().sortedProxyModel()
+        Session::instance()->profileModel()->sortedProxyModel()
     )->mapFromSource(accIdx);
 
-    ProfileModel::instance().sortedProxySelectionModel()->setCurrentIndex(
+    Session::instance()->profileModel()->sortedProxySelectionModel()->setCurrentIndex(
         accIdx, QItemSelectionModel::ClearAndSelect
     );
 

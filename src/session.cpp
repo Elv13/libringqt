@@ -28,6 +28,7 @@
 #include "peerstimelinemodel.h"
 #include "numbercategorymodel.h"
 #include "individualdirectory.h"
+#include "profilemodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -110,6 +111,13 @@ NumberCategoryModel* Session::numberCategoryModel() const
 IndividualDirectory* Session::individualDirectory() const
 {
     static IndividualDirectory m;
+
+    return &m;
+}
+
+ProfileModel* Session::profileModel() const
+{
+    static ProfileModel m;
 
     return &m;
 }
