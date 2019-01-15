@@ -15,7 +15,7 @@
  *   You should have received a copy of the GNU General Public License      *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
-#include "categorizedhistorymodel.h"
+#include "callhistorymodel.h"
 
 //C include
 #include <time.h>
@@ -46,11 +46,11 @@
 
 struct HistoryNode;
 
-class CategorizedHistoryModelPrivate final : public QObject
+class CallHistoryModelPrivate final : public QObject
 {
    Q_OBJECT
 public:
-   CategorizedHistoryModelPrivate(CategorizedHistoryModel* parent);
+   CallHistoryModelPrivate(CallHistoryModel* parent);
 
    //Helpers
    HistoryNode* getCategory(const Call* call);
@@ -65,10 +65,10 @@ public:
    SortingCategory::ModelTuple* m_pSortedProxy {nullptr};
    int                          m_Role             ;
    QStringList                  m_lMimes           ;
-   CategorizedHistoryModel::SortedProxy m_pProxies;
+   CallHistoryModel::SortedProxy m_pProxies;
 
 private:
-   CategorizedHistoryModel* q_ptr;
+   CallHistoryModel* q_ptr;
 
 public Q_SLOTS:
    void add(Call* call);
@@ -98,7 +98,7 @@ struct HistoryNode final
    QVector<HistoryNode*> m_lChildren  ;
 };
 
-CallMap CategorizedHistoryModelPrivate::m_sHistoryCalls;
+CallMap CallHistoryModelPrivate::m_sHistoryCalls;
 
 /*****************************************************************************
  *                                                                           *
@@ -106,20 +106,20 @@ CallMap CategorizedHistoryModelPrivate::m_sHistoryCalls;
  *                                                                           *
  ****************************************************************************/
 
-CategorizedHistoryModelPrivate::CategorizedHistoryModelPrivate(CategorizedHistoryModel* parent) : QObject(parent), q_ptr(parent),
+CallHistoryModelPrivate::CallHistoryModelPrivate(CallHistoryModel* parent) : QObject(parent), q_ptr(parent),
 m_Role(static_cast<int>(Call::Role::FuzzyDate)),m_pSortedProxy(nullptr)
 {
 }
 
 ///Constructor
-CategorizedHistoryModel::CategorizedHistoryModel():QAbstractItemModel(QCoreApplication::instance()),CollectionManagerInterface<Call>(this),
-d_ptr(new CategorizedHistoryModelPrivate(this))
+CallHistoryModel::CallHistoryModel():QAbstractItemModel(QCoreApplication::instance()),CollectionManagerInterface<Call>(this),
+d_ptr(new CallHistoryModelPrivate(this))
 {
    d_ptr->m_lMimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER << RingMimes::HISTORYID;
 } //initHistory
 
 ///Destructor
-CategorizedHistoryModel::~CategorizedHistoryModel()
+CallHistoryModel::~CallHistoryModel()
 {
 
    while(d_ptr->m_lCategoryCounter.size()) {
@@ -133,7 +133,7 @@ CategorizedHistoryModel::~CategorizedHistoryModel()
       delete d_ptr->m_pSortedProxy;
 }
 
-QHash<int,QByteArray> CategorizedHistoryModel::roleNames() const
+QHash<int,QByteArray> CallHistoryModel::roleNames() const
 {
    static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
    static bool initRoles = false;
@@ -194,7 +194,7 @@ QHash<int,QByteArray> CategorizedHistoryModel::roleNames() const
  *                                                                           *
  ****************************************************************************/
 ///Get the top level item based on a call
-HistoryNode* CategorizedHistoryModelPrivate::getCategory(const Call* call)
+HistoryNode* CallHistoryModelPrivate::getCategory(const Call* call)
 {
    HistoryNode* category = nullptr;
    static QString name;
@@ -237,13 +237,13 @@ HistoryNode* CategorizedHistoryModelPrivate::getCategory(const Call* call)
 }
 
 
-const CallMap CategorizedHistoryModel::getHistoryCalls() const
+const CallMap CallHistoryModel::getHistoryCalls() const
 {
    return d_ptr->m_sHistoryCalls;
 }
 
 ///Add to history
-void CategorizedHistoryModelPrivate::add(Call* call)
+void CallHistoryModelPrivate::add(Call* call)
 {
    if (!call || call->lifeCycleState() != Call::LifeCycleState::FINISHED || !call->startTimeStamp()) {
       return;
@@ -288,39 +288,39 @@ void CategorizedHistoryModelPrivate::add(Call* call)
 }
 
 ///Set if the history has a limit
-void CategorizedHistoryModel::setHistoryLimited(bool isLimited)
+void CallHistoryModel::setHistoryLimited(bool isLimited)
 {
    if (!isLimited)
       ConfigurationManager::instance().setHistoryLimit(0);
 }
 
 ///Set if the history is enabled
-void CategorizedHistoryModel::setHistoryEnabled(bool isEnabled)
+void CallHistoryModel::setHistoryEnabled(bool isEnabled)
 {
    if (!isEnabled)
       ConfigurationManager::instance().setHistoryLimit(-1);
 }
 
 ///Set the number of days before history items are discarded
-void CategorizedHistoryModel::setHistoryLimit(int numberOfDays)
+void CallHistoryModel::setHistoryLimit(int numberOfDays)
 {
    ConfigurationManager::instance().setHistoryLimit(numberOfDays);
 }
 
 ///Is history items are being deleted after "historyLimit()" days
-bool CategorizedHistoryModel::isHistoryLimited() const
+bool CallHistoryModel::isHistoryLimited() const
 {
    return ConfigurationManager::instance().getHistoryLimit() > 0;
 }
 
 ///Number of days before items are discarded (0 = never)
-int CategorizedHistoryModel::historyLimit() const
+int CallHistoryModel::historyLimit() const
 {
    return ConfigurationManager::instance().getHistoryLimit();
 }
 
 ///Get if the history is enabled
-bool CategorizedHistoryModel::isHistoryEnabled() const
+bool CallHistoryModel::isHistoryEnabled() const
 {
    return ConfigurationManager::instance().getHistoryLimit() >= 0;
 }
@@ -332,7 +332,7 @@ bool CategorizedHistoryModel::isHistoryEnabled() const
  *                                                                           *
  ****************************************************************************/
 
-void CategorizedHistoryModelPrivate::reloadCategories()
+void CallHistoryModelPrivate::reloadCategories()
 {
    emit q_ptr->layoutAboutToBeChanged();
    m_hCategories.clear();
@@ -370,12 +370,12 @@ void CategorizedHistoryModelPrivate::reloadCategories()
    emit q_ptr->dataChanged(q_ptr->index(0,0),q_ptr->index(q_ptr->rowCount()-1,0));
 }
 
-void CategorizedHistoryModelPrivate::slotChanged(const QModelIndex& idx)
+void CallHistoryModelPrivate::slotChanged(const QModelIndex& idx)
 {
    emit q_ptr->dataChanged(idx,idx);
 }
 
-bool CategorizedHistoryModel::setData( const QModelIndex& idx, const QVariant &value, int role)
+bool CallHistoryModel::setData( const QModelIndex& idx, const QVariant &value, int role)
 {
    Q_UNUSED(idx)
    Q_UNUSED(value)
@@ -384,7 +384,7 @@ bool CategorizedHistoryModel::setData( const QModelIndex& idx, const QVariant &v
    return false;
 }
 
-QVariant CategorizedHistoryModel::data( const QModelIndex& idx, int role) const
+QVariant CallHistoryModel::data( const QModelIndex& idx, int role) const
 {
    if (!idx.isValid())
       return QVariant();
@@ -417,7 +417,7 @@ QVariant CategorizedHistoryModel::data( const QModelIndex& idx, int role) const
    return QVariant();
 }
 
-QVariant CategorizedHistoryModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant CallHistoryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
    Q_UNUSED(section)
    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
@@ -427,7 +427,7 @@ QVariant CategorizedHistoryModel::headerData(int section, Qt::Orientation orient
    return QVariant();
 }
 
-int CategorizedHistoryModel::rowCount( const QModelIndex& parentIdx ) const
+int CallHistoryModel::rowCount( const QModelIndex& parentIdx ) const
 {
    if ((!parentIdx.isValid()) || (!parentIdx.internalPointer())) {
       return d_ptr->m_lCategoryCounter.size();
@@ -444,7 +444,7 @@ int CategorizedHistoryModel::rowCount( const QModelIndex& parentIdx ) const
    return 0;
 }
 
-Qt::ItemFlags CategorizedHistoryModel::flags( const QModelIndex& idx ) const
+Qt::ItemFlags CallHistoryModel::flags( const QModelIndex& idx ) const
 {
    if (!idx.isValid())
       return Qt::NoItemFlags;
@@ -456,13 +456,13 @@ Qt::ItemFlags CategorizedHistoryModel::flags( const QModelIndex& idx ) const
    return (isEnabled?Qt::ItemIsEnabled:Qt::NoItemFlags) | Qt::ItemIsSelectable | (hasParent?Qt::ItemIsDragEnabled|Qt::ItemIsDropEnabled:Qt::ItemIsEnabled);
 }
 
-int CategorizedHistoryModel::columnCount ( const QModelIndex& parentIdx) const
+int CallHistoryModel::columnCount ( const QModelIndex& parentIdx) const
 {
    Q_UNUSED(parentIdx)
    return 1;
 }
 
-QModelIndex CategorizedHistoryModel::parent( const QModelIndex& idx) const
+QModelIndex CallHistoryModel::parent( const QModelIndex& idx) const
 {
    if (!idx.isValid() || !idx.internalPointer()) {
       return QModelIndex();
@@ -479,7 +479,7 @@ QModelIndex CategorizedHistoryModel::parent( const QModelIndex& idx) const
    return QModelIndex();
 }
 
-QModelIndex CategorizedHistoryModel::index( int row, int column, const QModelIndex& parentIdx) const
+QModelIndex CallHistoryModel::index( int row, int column, const QModelIndex& parentIdx) const
 {
    if (!parentIdx.isValid() && row >= 0 && row < d_ptr->m_lCategoryCounter.size())
       return createIndex(row,column,(void*)d_ptr->m_lCategoryCounter[row]);
@@ -499,7 +499,7 @@ QModelIndex CategorizedHistoryModel::index( int row, int column, const QModelInd
 }
 
 ///Called when dynamically adding calls, otherwise the proxy filter will segfault
-bool CategorizedHistoryModel::insertRows( int row, int count, const QModelIndex & parent)
+bool CallHistoryModel::insertRows( int row, int count, const QModelIndex & parent)
 {
    if (parent.isValid()) {
       beginInsertRows(parent,row,row+count-1);
@@ -509,12 +509,12 @@ bool CategorizedHistoryModel::insertRows( int row, int count, const QModelIndex 
    return false;
 }
 
-QStringList CategorizedHistoryModel::mimeTypes() const
+QStringList CallHistoryModel::mimeTypes() const
 {
    return d_ptr->m_lMimes;
 }
 
-QMimeData* CategorizedHistoryModel::mimeData(const QModelIndexList &indexes) const
+QMimeData* CallHistoryModel::mimeData(const QModelIndexList &indexes) const
 {
    QMimeData *mimeData2 = new QMimeData();
    foreach (const QModelIndex &idx, indexes) {
@@ -537,7 +537,7 @@ QMimeData* CategorizedHistoryModel::mimeData(const QModelIndexList &indexes) con
    return mimeData2;
 }
 
-bool CategorizedHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction action, int row, int column, const QModelIndex &parentIdx)
+bool CallHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction action, int row, int column, const QModelIndex &parentIdx)
 {
    Q_UNUSED(row)
    Q_UNUSED(column)
@@ -566,13 +566,13 @@ bool CategorizedHistoryModel::dropMimeData(const QMimeData *mime, Qt::DropAction
    return false;
 }
 
-void CategorizedHistoryModel::collectionAddedCallback(CollectionInterface* backend)
+void CallHistoryModel::collectionAddedCallback(CollectionInterface* backend)
 {
    Q_UNUSED(backend)
 }
 
 ///Call all collections that support clearing
-bool CategorizedHistoryModel::clearAllCollections() const
+bool CallHistoryModel::clearAllCollections() const
 {
     foreach (CollectionInterface* backend, collections(CollectionInterface::SupportedFeatures::CLEAR)) {
         backend->clear();
@@ -581,32 +581,32 @@ bool CategorizedHistoryModel::clearAllCollections() const
 }
 
 ///Delete all history and clear model
-void CategorizedHistoryModel::clear()
+void CallHistoryModel::clear()
 {
     beginResetModel();
     clearAllCollections();
     endResetModel();
 }
 
-bool CategorizedHistoryModel::addItemCallback(const Call* item)
+bool CallHistoryModel::addItemCallback(const Call* item)
 {
    d_ptr->add(const_cast<Call*>(item));
    return true;
 }
 
-bool CategorizedHistoryModel::removeItemCallback(const Call* item)
+bool CallHistoryModel::removeItemCallback(const Call* item)
 {
    emit const_cast<Call*>(item)->changed();
    return false;
 }
 
 ///Return valid payload types
-int CategorizedHistoryModel::acceptedPayloadTypes() const
+int CallHistoryModel::acceptedPayloadTypes() const
 {
    return CallModel::DropPayloadType::CALL;
 }
 
-void CategorizedHistoryModel::setCategoryRole(int role)
+void CallHistoryModel::setCategoryRole(int role)
 {
    if (d_ptr->m_Role != role) {
       d_ptr->m_Role = role;
@@ -614,7 +614,7 @@ void CategorizedHistoryModel::setCategoryRole(int role)
    }
 }
 
-QSortFilterProxyModel* CategorizedHistoryModel::SortedProxy::model() const
+QSortFilterProxyModel* CallHistoryModel::SortedProxy::model() const
 {
    if (!Session::instance()->historyModel()->d_ptr->m_pSortedProxy)
       Session::instance()->historyModel()->d_ptr->m_pSortedProxy = SortingCategory::getHistoryProxy();
@@ -622,7 +622,7 @@ QSortFilterProxyModel* CategorizedHistoryModel::SortedProxy::model() const
    return Session::instance()->historyModel()->d_ptr->m_pSortedProxy->model;
 }
 
-QAbstractItemModel* CategorizedHistoryModel::SortedProxy::categoryModel() const
+QAbstractItemModel* CallHistoryModel::SortedProxy::categoryModel() const
 {
    if (!Session::instance()->historyModel()->d_ptr->m_pSortedProxy)
       Session::instance()->historyModel()->d_ptr->m_pSortedProxy = SortingCategory::getHistoryProxy();
@@ -630,7 +630,7 @@ QAbstractItemModel* CategorizedHistoryModel::SortedProxy::categoryModel() const
    return Session::instance()->historyModel()->d_ptr->m_pSortedProxy->categories;
 }
 
-QItemSelectionModel* CategorizedHistoryModel::SortedProxy::categorySelectionModel() const
+QItemSelectionModel* CallHistoryModel::SortedProxy::categorySelectionModel() const
 {
    if (!Session::instance()->historyModel()->d_ptr->m_pSortedProxy)
       Session::instance()->historyModel()->d_ptr->m_pSortedProxy = SortingCategory::getHistoryProxy();
@@ -638,9 +638,9 @@ QItemSelectionModel* CategorizedHistoryModel::SortedProxy::categorySelectionMode
    return Session::instance()->historyModel()->d_ptr->m_pSortedProxy->selectionModel;
 }
 
-CategorizedHistoryModel::SortedProxy& CategorizedHistoryModel::SortedProxy::instance()
+CallHistoryModel::SortedProxy& CallHistoryModel::SortedProxy::instance()
 {
    return Session::instance()->historyModel()->d_ptr->m_pProxies;
 }
 
-#include <categorizedhistorymodel.moc>
+#include <callhistorymodel.moc>

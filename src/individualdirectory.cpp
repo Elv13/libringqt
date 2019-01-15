@@ -46,7 +46,7 @@
 #include "media/recordingmodel.h"
 #include "media/textrecording.h"
 #include "localnameservicecache.h"
-#include "categorizedbookmarkmodel.h"
+#include "bookmarkmodel.h"
 #include "individual.h"
 
 //Private

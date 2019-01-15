@@ -25,9 +25,9 @@
 #include "typedefs.h"
 #include "contactmethod.h"
 
-class CategorizedBookmarkModelPrivate;
+class BookmarkModelPrivate;
 
-class LIB_EXPORT CategorizedBookmarkModel : public QAbstractItemModel, public CollectionManagerInterface<ContactMethod>
+class LIB_EXPORT BookmarkModel : public QAbstractItemModel, public CollectionManagerInterface<ContactMethod>
 {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -39,8 +39,8 @@ public:
     Q_PROPERTY(bool displayMostPopular READ displayMostPopular WRITE setDisplayPopular)
 
     //Constructor
-    virtual ~CategorizedBookmarkModel();
-    explicit CategorizedBookmarkModel(QObject* parent);
+    virtual ~BookmarkModel();
+    explicit BookmarkModel(QObject* parent);
 
     bool displayMostPopular() const;
     void setDisplayPopular(bool value);
@@ -66,8 +66,8 @@ public:
     int acceptedPayloadTypes();
 
 private:
-    CategorizedBookmarkModelPrivate* d_ptr;
-    Q_DECLARE_PRIVATE(CategorizedBookmarkModel)
+    BookmarkModelPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(BookmarkModel)
 
     //Backend interface
     virtual void collectionAddedCallback(CollectionInterface* backend) override;

@@ -86,7 +86,7 @@ class  LIB_EXPORT Call : public ItemBase
    #pragma GCC diagnostic pop
 public:
    friend class CallModel            ;
-   friend class CategorizedHistoryModel;
+   friend class CallHistoryModel;
    friend class CallModelPrivate     ;
    friend class IMConversationManager;
    friend class VideoRendererManager;

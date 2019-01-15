@@ -36,7 +36,7 @@
 #include "person.h"
 #include "certificate.h"
 #include "contactmethod.h"
-#include "categorizedhistorymodel.h"
+#include "callhistorymodel.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 

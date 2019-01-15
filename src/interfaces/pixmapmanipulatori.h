@@ -27,7 +27,7 @@ class QByteArray ;
 //Ring
 #include <securityevaluationmodel.h>
 #include <contactmodel.h>
-#include <categorizedhistorymodel.h>
+#include <callhistorymodel.h>
 class  Person             ;
 class  ContactMethod      ;
 class  Call               ;
@@ -74,7 +74,7 @@ public:
     virtual QVariant   personPhoto(const QByteArray& data, const QString& type = QStringLiteral("PNG")) = 0;
     virtual QVariant   collectionIcon(const CollectionInterface* interface, PixmapManipulatorI::CollectionIconHint hint = PixmapManipulatorI::CollectionIconHint::NONE) const = 0;
     virtual QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const = 0;
-    virtual QVariant   historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const = 0;
+    virtual QVariant   historySortingCategoryIcon(const CallHistoryModel::SortedProxy::Categories cat) const = 0;
     virtual QVariant   contactSortingCategoryIcon(const ContactModel::SortedProxy::Categories cat) const = 0;
     virtual QVariant   videoDeviceIcon(const QModelIndex& idx) const = 0;
     virtual QVariant   decorationRole(const QModelIndex&   index) = 0;

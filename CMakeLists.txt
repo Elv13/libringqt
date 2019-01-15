@@ -150,8 +150,8 @@ SET( libringqt_LIB_SRCS
   src/accountmodel.cpp
   src/availableaccountmodel.cpp
   src/callmodel.cpp
-  src/categorizedhistorymodel.cpp
-  src/categorizedbookmarkmodel.cpp
+  src/callhistorymodel.cpp
+  src/bookmarkmodel.cpp
   src/credentialmodel.cpp
   src/contactmodel.cpp
   src/useractionmodel.cpp
@@ -295,14 +295,14 @@ SET( libringqt_LIB_HDRS
   src/call.h
   src/call.hpp
   src/callmodel.h
-  src/categorizedhistorymodel.h
+  src/callhistorymodel.h
   src/person.h
   src/bootstrapmodel.h
   src/individualeditor.h
   src/ringdevicemodel.h
   src/collectioninterface.h
   src/collectioninterface.hpp
-  src/categorizedbookmarkmodel.h
+  src/bookmarkmodel.h
   src/credentialmodel.h
   src/contactmodel.h
   src/useractionmodel.h

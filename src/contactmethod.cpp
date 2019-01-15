@@ -36,7 +36,7 @@
 #include "availableaccountmodel.h"
 #include "dbus/presencemanager.h"
 #include "numbercategorymodel.h"
-#include "categorizedbookmarkmodel.h"
+#include "bookmarkmodel.h"
 #include "private/numbercategorymodel_p.h"
 #include "numbercategory.h"
 #include "certificate.h"

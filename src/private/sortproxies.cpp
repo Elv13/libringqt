@@ -28,7 +28,7 @@
 //Ring
 #include "libcard/matrixutils.h"
 #include <contactmodel.h>
-#include <categorizedhistorymodel.h>
+#include <callhistorymodel.h>
 #include <globalinstances.h>
 #include <session.h>
 #include <interfaces/pixmapmanipulatori.h>
@@ -54,7 +54,7 @@ namespace CategoryModelCommon {
            QT_TRANSLATE_NOOP("ContactSortingCategoryModel", "Department"   ),
    }};
 
-   static const Matrix1D<CategorizedHistoryModel::SortedProxy::Categories,QString> historySortNames = {{
+   static const Matrix1D<CallHistoryModel::SortedProxy::Categories,QString> historySortNames = {{
            QT_TRANSLATE_NOOP("HistorySortingCategoryModel", "Date"       ),
            QT_TRANSLATE_NOOP("HistorySortingCategoryModel", "Name"       ),
            QT_TRANSLATE_NOOP("HistorySortingCategoryModel", "Popularity" ),
@@ -190,28 +190,28 @@ bool ContactSortingCategoryModel::setData( const QModelIndex& index, const QVari
 void sortHistory(QSortFilterProxyModel* p, int role);
 void sortHistory(QSortFilterProxyModel* p, int role)
 {
-   switch (static_cast<CategorizedHistoryModel::SortedProxy::Categories>(role)) {
-      case CategorizedHistoryModel::SortedProxy::Categories::DATE:
+   switch (static_cast<CallHistoryModel::SortedProxy::Categories>(role)) {
+      case CallHistoryModel::SortedProxy::Categories::DATE:
          Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::FuzzyDate));
          p->setSortRole(static_cast<int>(Call::Role::Date));
          break;
-      case CategorizedHistoryModel::SortedProxy::Categories::NAME:
+      case CallHistoryModel::SortedProxy::Categories::NAME:
          Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::Name));
          p->setSortRole(Qt::DisplayRole);
          break;
-      case CategorizedHistoryModel::SortedProxy::Categories::POPULARITY:
+      case CallHistoryModel::SortedProxy::Categories::POPULARITY:
          Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::CallCount));
          p->setSortRole(static_cast<int>(Call::Role::CallCount));
          break;
-      case CategorizedHistoryModel::SortedProxy::Categories::LENGTH:
+      case CallHistoryModel::SortedProxy::Categories::LENGTH:
          Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::Length));
          p->setSortRole(static_cast<int>(Call::Role::Length));
          break;
-      case CategorizedHistoryModel::SortedProxy::Categories::SPENT_TIME:
+      case CallHistoryModel::SortedProxy::Categories::SPENT_TIME:
          Session::instance()->historyModel()->setCategoryRole(static_cast<int>(Call::Role::TotalSpentTime));
          p->setSortRole(static_cast<int>(Call::Role::TotalSpentTime));
          break;
-      case CategorizedHistoryModel::SortedProxy::Categories::COUNT__:
+      case CallHistoryModel::SortedProxy::Categories::COUNT__:
          break;
    }
 }
@@ -231,9 +231,9 @@ QVariant HistorySortingCategoryModel::data( const QModelIndex& index, int role) 
    if (index.isValid()) {
       switch(role) {
          case Qt::DisplayRole:
-            return CategoryModelCommon::historySortNames[static_cast<CategorizedHistoryModel::SortedProxy::Categories>(index.row())];
+            return CategoryModelCommon::historySortNames[static_cast<CallHistoryModel::SortedProxy::Categories>(index.row())];
          case Qt::DecorationRole:
-            return GlobalInstances::pixmapManipulator().historySortingCategoryIcon(static_cast<CategorizedHistoryModel::SortedProxy::Categories>(index.row()));
+            return GlobalInstances::pixmapManipulator().historySortingCategoryIcon(static_cast<CallHistoryModel::SortedProxy::Categories>(index.row()));
       }
    }
 
@@ -242,7 +242,7 @@ QVariant HistorySortingCategoryModel::data( const QModelIndex& index, int role) 
 
 int HistorySortingCategoryModel::rowCount( const QModelIndex& parent) const
 {
-   return parent.isValid()? 0 : enum_class_size<CategorizedHistoryModel::SortedProxy::Categories>();
+   return parent.isValid()? 0 : enum_class_size<CallHistoryModel::SortedProxy::Categories>();
 }
 
 Qt::ItemFlags HistorySortingCategoryModel::flags( const QModelIndex& index ) const

@@ -20,9 +20,9 @@
 
 #include "callmodel.h"
 #include "accountmodel.h"
-#include "categorizedhistorymodel.h"
+#include "callhistorymodel.h"
 #include "contactmodel.h"
-#include "categorizedbookmarkmodel.h"
+#include "bookmarkmodel.h"
 #include "availableaccountmodel.h"
 #include "namedirectory.h"
 #include "peerstimelinemodel.h"
@@ -66,9 +66,9 @@ AccountModel* Session::accountModel() const
     return &m;
 }
 
-CategorizedHistoryModel* Session::historyModel() const
+CallHistoryModel* Session::historyModel() const
 {
-    static CategorizedHistoryModel m;
+    static CallHistoryModel m;
 
     return &m;
 }
@@ -80,9 +80,9 @@ ContactModel* Session::contactModel() const
     return &m;
 }
 
-CategorizedBookmarkModel* Session::bookmarkModel() const
+BookmarkModel* Session::bookmarkModel() const
 {
-    static CategorizedBookmarkModel m(const_cast<Session*>(this));
+    static BookmarkModel m(const_cast<Session*>(this));
 
     return &m;
 }

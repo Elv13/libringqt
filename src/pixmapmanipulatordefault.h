@@ -33,7 +33,7 @@ public:
     QVariant   personPhoto(const QByteArray& data, const QString& type = QStringLiteral("PNG")) override;
     QVariant   collectionIcon(const CollectionInterface* interface, PixmapManipulatorI::CollectionIconHint hint = PixmapManipulatorI::CollectionIconHint::NONE) const override;
     QVariant   securityLevelIcon(const SecurityEvaluationModel::SecurityLevel level) const override;
-    QVariant   historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const override;
+    QVariant   historySortingCategoryIcon(const CallHistoryModel::SortedProxy::Categories cat) const override;
     QVariant   contactSortingCategoryIcon(const ContactModel::SortedProxy::Categories cat) const override;
     QVariant   videoDeviceIcon(const QModelIndex& idx) const override;
     QString    takeSnapshot(Call* call) override;

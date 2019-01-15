@@ -46,7 +46,7 @@
 #include "individual.h"
 #include "collectioninterface.h"
 #include "dbus/videomanager.h"
-#include "categorizedhistorymodel.h"
+#include "callhistorymodel.h"
 #include "globalinstances.h"
 #include "interfaces/contactmethodselectori.h"
 #include "persondirectory.h"

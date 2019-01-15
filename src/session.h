@@ -28,9 +28,9 @@ class QItemSelectionModel;
 // LibRingQt
 class CallModel;
 class AccountModel;
-class CategorizedHistoryModel;
+class CallHistoryModel;
 class ContactModel;
-class CategorizedBookmarkModel;
+class BookmarkModel;
 class AvailableAccountModel;
 class NameDirectory;
 class PeersTimelineModel;
@@ -60,9 +60,9 @@ class LIB_EXPORT Session final : public QObject
 public:
     Q_PROPERTY(CallModel* callModel READ callModel CONSTANT)
     Q_PROPERTY(AccountModel* accountModel READ accountModel CONSTANT)
-    Q_PROPERTY(CategorizedHistoryModel* historyModel READ historyModel CONSTANT)
+    Q_PROPERTY(CallHistoryModel* historyModel READ historyModel CONSTANT)
     Q_PROPERTY(ContactModel* contactModel READ contactModel CONSTANT)
-    Q_PROPERTY(CategorizedBookmarkModel* bookmarkModel READ bookmarkModel CONSTANT)
+    Q_PROPERTY(BookmarkModel* bookmarkModel READ bookmarkModel CONSTANT)
     Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
     Q_PROPERTY(NameDirectory* nameDirectory READ nameDirectory CONSTANT)
     Q_PROPERTY(PeersTimelineModel* peersTimelineModel READ peersTimelineModel CONSTANT)
@@ -82,9 +82,9 @@ public:
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
-    CategorizedHistoryModel* historyModel() const;
+    CallHistoryModel* historyModel() const;
     ContactModel* contactModel() const;
-    CategorizedBookmarkModel* bookmarkModel() const;
+    BookmarkModel* bookmarkModel() const;
     AvailableAccountModel* availableAccountModel() const;
     NameDirectory* nameDirectory() const;
     PeersTimelineModel* peersTimelineModel() const;

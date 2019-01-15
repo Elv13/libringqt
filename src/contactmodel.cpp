@@ -27,7 +27,7 @@
 //Ring
 #include "callmodel.h"
 #include "session.h"
-#include "categorizedhistorymodel.h"
+#include "callhistorymodel.h"
 #include "contactmethod.h"
 #include "individualdirectory.h"
 #include "historytimecategorymodel.h"

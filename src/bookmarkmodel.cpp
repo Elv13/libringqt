@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License      *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
-#include "categorizedbookmarkmodel.h"
+#include "bookmarkmodel.h"
 
 //Qt
 #include <QtCore/QMimeData>
@@ -35,11 +35,11 @@
 
 class BookmarkNode;
 
-class CategorizedBookmarkModelPrivate final : public QObject
+class BookmarkModelPrivate final : public QObject
 {
     Q_OBJECT
 public:
-    CategorizedBookmarkModelPrivate(CategorizedBookmarkModel* parent);
+    BookmarkModelPrivate(BookmarkModel* parent);
 
     //Attributes
     QVector<BookmarkNode*>       m_lCategoryCounter ;
@@ -58,13 +58,13 @@ public Q_SLOTS:
     void reloadCategories();
 
 private:
-    CategorizedBookmarkModel* q_ptr;
+    BookmarkModel* q_ptr;
 };
 
 //Model item/index
 class BookmarkNode final
 {
-    friend class CategorizedBookmarkModel;
+    friend class BookmarkModel;
 public:
     enum class Type {
         BOOKMARK,
@@ -89,7 +89,7 @@ public:
     QMetaObject::Connection m_RemConn    {       };
 };
 
-CategorizedBookmarkModelPrivate::CategorizedBookmarkModelPrivate(CategorizedBookmarkModel* parent) :
+BookmarkModelPrivate::BookmarkModelPrivate(BookmarkModel* parent) :
 QObject(parent), q_ptr(parent)
 {}
 
@@ -109,14 +109,14 @@ BookmarkNode::~BookmarkNode()
     QObject::disconnect(m_RemConn);
 }
 
-CategorizedBookmarkModel::CategorizedBookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
-d_ptr(new CategorizedBookmarkModelPrivate(this))
+BookmarkModel::BookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
+d_ptr(new BookmarkModelPrivate(this))
 {
-    setObjectName(QStringLiteral("CategorizedBookmarkModel"));
+    setObjectName(QStringLiteral("BookmarkModel"));
     d_ptr->reloadCategories();
 }
 
-void CategorizedBookmarkModelPrivate::clear()
+void BookmarkModelPrivate::clear()
 {
     q_ptr->beginResetModel();
 
@@ -130,18 +130,18 @@ void CategorizedBookmarkModelPrivate::clear()
     q_ptr->endResetModel();
 }
 
-CategorizedBookmarkModel::~CategorizedBookmarkModel()
+BookmarkModel::~BookmarkModel()
 {
     d_ptr->clear();
     delete d_ptr;
 }
 
-QHash<int,QByteArray> CategorizedBookmarkModel::roleNames() const
+QHash<int,QByteArray> BookmarkModel::roleNames() const
 {
     return Session::instance()->individualDirectory()->roleNames();
 }
 
-BookmarkNode* CategorizedBookmarkModelPrivate::getCategory(BookmarkNode* bm)
+BookmarkNode* BookmarkModelPrivate::getCategory(BookmarkNode* bm)
 {
     const QString val = bm->m_pNumber->bestName().left(1).toUpper();
 
@@ -162,7 +162,7 @@ BookmarkNode* CategorizedBookmarkModelPrivate::getCategory(BookmarkNode* bm)
 }
 
 ///Reload bookmark cateogries
-void CategorizedBookmarkModelPrivate::reloadCategories()
+void BookmarkModelPrivate::reloadCategories()
 {
     clear();
 
@@ -185,7 +185,7 @@ void CategorizedBookmarkModelPrivate::reloadCategories()
         q_ptr->addItemCallback(bookmark);
 }
 
-QVariant CategorizedBookmarkModel::data( const QModelIndex& index, int role) const
+QVariant BookmarkModel::data( const QModelIndex& index, int role) const
 {
     if ((!index.isValid()))
         return {};
@@ -229,7 +229,7 @@ QVariant CategorizedBookmarkModel::data( const QModelIndex& index, int role) con
 }
 
 ///Get header data
-QVariant CategorizedBookmarkModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant BookmarkModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     Q_UNUSED(section)
 
@@ -240,7 +240,7 @@ QVariant CategorizedBookmarkModel::headerData(int section, Qt::Orientation orien
 }
 
 ///Get the number of child of "parent"
-int CategorizedBookmarkModel::rowCount( const QModelIndex& parent ) const
+int BookmarkModel::rowCount( const QModelIndex& parent ) const
 {
     if (!parent.isValid())
         return d_ptr->m_lCategoryCounter.size();
@@ -265,7 +265,7 @@ int CategorizedBookmarkModel::rowCount( const QModelIndex& parent ) const
     return 0;
 }
 
-Qt::ItemFlags CategorizedBookmarkModel::flags( const QModelIndex& index ) const
+Qt::ItemFlags BookmarkModel::flags( const QModelIndex& index ) const
 {
     if (!index.isValid())
         return 0;
@@ -278,13 +278,13 @@ Qt::ItemFlags CategorizedBookmarkModel::flags( const QModelIndex& index ) const
 }
 
 ///There is only 1 column
-int CategorizedBookmarkModel::columnCount ( const QModelIndex& parent) const
+int BookmarkModel::columnCount ( const QModelIndex& parent) const
 {
     return parent.isValid() ? 0 : 1;
 }
 
 ///Get the bookmark parent
-QModelIndex CategorizedBookmarkModel::parent( const QModelIndex& idx) const
+QModelIndex BookmarkModel::parent( const QModelIndex& idx) const
 {
     if (!idx.isValid())
         return {};
@@ -305,7 +305,7 @@ QModelIndex CategorizedBookmarkModel::parent( const QModelIndex& idx) const
 }
 
 ///Get the index
-QModelIndex CategorizedBookmarkModel::index(int row, int column, const QModelIndex& parent) const
+QModelIndex BookmarkModel::index(int row, int column, const QModelIndex& parent) const
 {
     if (column != 0)
         return {};
@@ -328,7 +328,7 @@ QModelIndex CategorizedBookmarkModel::index(int row, int column, const QModelInd
 }
 
 ///Get bookmarks mime types
-QStringList CategorizedBookmarkModel::mimeTypes() const
+QStringList BookmarkModel::mimeTypes() const
 {
     static const QStringList mimes {
         RingMimes::PLAIN_TEXT,
@@ -339,7 +339,7 @@ QStringList CategorizedBookmarkModel::mimeTypes() const
 }
 
 ///Generate mime data
-QMimeData* CategorizedBookmarkModel::mimeData(const QModelIndexList &indexes) const
+QMimeData* BookmarkModel::mimeData(const QModelIndexList &indexes) const
 {
     auto mimeData = new QMimeData();
 
@@ -361,35 +361,35 @@ QMimeData* CategorizedBookmarkModel::mimeData(const QModelIndexList &indexes) co
 }
 
 ///Return valid payload types
-int CategorizedBookmarkModel::acceptedPayloadTypes()
+int BookmarkModel::acceptedPayloadTypes()
 {
     return CallModel::DropPayloadType::CALL;
 }
 
-bool CategorizedBookmarkModel::displayMostPopular() const
+bool BookmarkModel::displayMostPopular() const
 {
     return d_ptr->m_DisplayPopular;
 }
 
-void CategorizedBookmarkModel::setDisplayPopular(bool value)
+void BookmarkModel::setDisplayPopular(bool value)
 {
     d_ptr->m_DisplayPopular = value;
 
     if (d_ptr->m_DisplayPopular)
         connect(Session::instance()->individualDirectory()->mostPopularNumberModel(),
             &QAbstractItemModel::rowsInserted,
-            d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
+            d_ptr,&BookmarkModelPrivate::reloadCategories
         );
     else
         disconnect(Session::instance()->individualDirectory()->mostPopularNumberModel(),
             &QAbstractItemModel::rowsInserted,
-            d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
+            d_ptr,&BookmarkModelPrivate::reloadCategories
         );
 
     d_ptr->reloadCategories();
 }
 
-QVector<ContactMethod*> CategorizedBookmarkModelPrivate::bookmarkList() const
+QVector<ContactMethod*> BookmarkModelPrivate::bookmarkList() const
 {
     if (q_ptr->collections().isEmpty())
         return {};
@@ -397,7 +397,7 @@ QVector<ContactMethod*> CategorizedBookmarkModelPrivate::bookmarkList() const
     return q_ptr->collections().first()->items<ContactMethod>();
 }
 
-void CategorizedBookmarkModel::addBookmark(ContactMethod* number)
+void BookmarkModel::addBookmark(ContactMethod* number)
 {
     if (collections().isEmpty()) {
         qWarning() << "No bookmark backend is set";
@@ -411,7 +411,7 @@ void CategorizedBookmarkModel::addBookmark(ContactMethod* number)
     collections().first()->editor<ContactMethod>()->addNew(number);
 }
 
-void CategorizedBookmarkModel::removeBookmark(ContactMethod* number)
+void BookmarkModel::removeBookmark(ContactMethod* number)
 {
     if (collections().isEmpty()) {
         qWarning() << "No bookmark backend is set";
@@ -424,7 +424,7 @@ void CategorizedBookmarkModel::removeBookmark(ContactMethod* number)
     collections().first()->editor<ContactMethod>()->remove(number);
 }
 
-void CategorizedBookmarkModel::remove(const QModelIndex& idx)
+void BookmarkModel::remove(const QModelIndex& idx)
 {
     if ((!idx.isValid()) || idx.model() != this)
         return;
@@ -437,18 +437,18 @@ void CategorizedBookmarkModel::remove(const QModelIndex& idx)
     collections().first()->editor<ContactMethod>()->remove(item->m_pNumber);
 }
 
-void CategorizedBookmarkModel::clear()
+void BookmarkModel::clear()
 {
     collections().first()->clear();
 }
 
 ///Callback when an item change
-void CategorizedBookmarkModelPrivate::slotIndexChanged(const QModelIndex& idx)
+void BookmarkModelPrivate::slotIndexChanged(const QModelIndex& idx)
 {
     emit q_ptr->dataChanged(idx,idx);
 }
 
-bool CategorizedBookmarkModel::addItemCallback(const ContactMethod* bookmark)
+bool BookmarkModel::addItemCallback(const ContactMethod* bookmark)
 {
     // Contact methods can be duplicates of each other, make sure to handle them
     if ((!bookmark) || d_ptr->m_hTracked.contains(bookmark->d()) || bookmark->isSelf())
@@ -492,7 +492,7 @@ bool CategorizedBookmarkModel::addItemCallback(const ContactMethod* bookmark)
     return true;
 }
 
-bool CategorizedBookmarkModel::removeItemCallback(const ContactMethod* cm)
+bool BookmarkModel::removeItemCallback(const ContactMethod* cm)
 {
     auto item = d_ptr->m_hTracked.value(cm->d());
 
@@ -542,10 +542,10 @@ bool CategorizedBookmarkModel::removeItemCallback(const ContactMethod* cm)
     return true;
 }
 
-void CategorizedBookmarkModel::collectionAddedCallback(CollectionInterface* backend)
+void BookmarkModel::collectionAddedCallback(CollectionInterface* backend)
 {
     Q_UNUSED(backend)
     d_ptr->reloadCategories();
 }
 
-#include <categorizedbookmarkmodel.moc>
+#include <bookmarkmodel.moc>

@@ -35,13 +35,13 @@ typedef QList<Call*>       CallList;
 
 class HistoryItemNode;
 class AbstractHistoryBackend;
-class CategorizedHistoryModelPrivate;
+class CallHistoryModelPrivate;
 class QSortFilterProxyModel;
 class QItemSelectionModel;
 
 //TODO split ASAP
-///CategorizedHistoryModel: History call manager
-class LIB_EXPORT CategorizedHistoryModel : public QAbstractItemModel, public CollectionManagerInterface<Call>
+///CallHistoryModel: History call manager
+class LIB_EXPORT CallHistoryModel : public QAbstractItemModel, public CollectionManagerInterface<Call>
 {
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -102,15 +102,15 @@ public:
       QSortFilterProxyModel* model                 () const;
       QAbstractItemModel   * categoryModel         () const;
       QItemSelectionModel  * categorySelectionModel() const;
-      static CategorizedHistoryModel::SortedProxy& instance();
+      static CallHistoryModel::SortedProxy& instance();
    };
 
 private:
    //Constructor
-   explicit CategorizedHistoryModel();
-   ~CategorizedHistoryModel();
-   QScopedPointer<CategorizedHistoryModelPrivate> d_ptr;
-   Q_DECLARE_PRIVATE(CategorizedHistoryModel)
+   explicit CallHistoryModel();
+   ~CallHistoryModel();
+   QScopedPointer<CallHistoryModelPrivate> d_ptr;
+   Q_DECLARE_PRIVATE(CallHistoryModel)
 
    //Backend interface
    virtual void collectionAddedCallback(CollectionInterface* collection) override;

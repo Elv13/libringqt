@@ -99,7 +99,7 @@ QVariant PixmapManipulatorDefault::securityLevelIcon(const SecurityEvaluationMod
     return QVariant();
 }
 
-QVariant PixmapManipulatorDefault::historySortingCategoryIcon(const CategorizedHistoryModel::SortedProxy::Categories cat) const
+QVariant PixmapManipulatorDefault::historySortingCategoryIcon(const CallHistoryModel::SortedProxy::Categories cat) const
 {
     Q_UNUSED(cat)
     return QVariant();

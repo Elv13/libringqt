@@ -21,7 +21,7 @@
 // Ring
 #include <contactmethod.h>
 #include <numbercategory.h>
-#include <categorizedhistorymodel.h>
+#include <callhistorymodel.h>
 #include <individualdirectory.h>
 #include <person.h>
 #include <account.h>

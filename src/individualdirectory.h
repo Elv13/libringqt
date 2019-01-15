@@ -47,7 +47,7 @@ class LIB_EXPORT IndividualDirectory : public QAbstractTableModel
    friend class NumberCompletionModel;
    friend class NumberCompletionModelPrivate;
    friend class MostPopularNumberModel;
-   friend class CategorizedBookmarkModel;
+   friend class BookmarkModel;
    friend class Session; // factory
 
    //Friend unit test class

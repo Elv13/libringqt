@@ -262,15 +262,15 @@
     </message>
 </context>
 <context>
-    <name>CategorizedBookmarkModel</name>
+    <name>BookmarkModel</name>
     <message>
-        <location filename="../src/categorizedbookmarkmodel.cpp" line="181"/>
+        <location filename="../src/bookmarkmodel.cpp" line="181"/>
         <source>Most popular</source>
         <extracomment>Most popular contacts</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/categorizedbookmarkmodel.cpp" line="299"/>
+        <location filename="../src/bookmarkmodel.cpp" line="299"/>
         <source>Contacts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -305,9 +305,9 @@
     </message>
 </context>
 <context>
-    <name>CategorizedHistoryModel</name>
+    <name>CallHistoryModel</name>
     <message>
-        <location filename="../src/categorizedhistorymodel.cpp" line="414"/>
+        <location filename="../src/callhistorymodel.cpp" line="414"/>
         <source>History</source>
         <translation type="unfinished"></translation>
     </message>

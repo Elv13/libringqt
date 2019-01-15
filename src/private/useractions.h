@@ -23,8 +23,8 @@
 #include <QtCore/QStringBuilder>
 
 // LRC
-#include <categorizedbookmarkmodel.h>
-#include <categorizedhistorymodel.h>
+#include <bookmarkmodel.h>
+#include <callhistorymodel.h>
 #include <individual.h>
 #include <persondirectory.h>
 #include <media/textrecording.h>
