@@ -37,10 +37,7 @@ namespace Media {
 
 // StdC++
 #include <functional>
-
-namespace std {
-    template<typename T> class basic_iostream<T>;
-}
+#include <iosfwd>
 
 /**
  * Convert an event into a serialized VCALENDAR:VEVENT or a full VCALENDAR

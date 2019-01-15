@@ -115,7 +115,7 @@ bool LocalRingtoneCollection::load()
       qWarning() << "Ringtones doesn't exist or is not readable";
 
 //TODO remove that and do a proper collection for each platforms
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX) || defined(Q_OS_FREEBSD)
    QDir ringtonesDir(QFileInfo(QCoreApplication::applicationFilePath()).path()+"/../share/ring/ringtones/");
 #elif defined(Q_OS_WIN)
    QDir ringtonesDir(QFileInfo(QCoreApplication::applicationFilePath()).path()+"/ringtones/");
