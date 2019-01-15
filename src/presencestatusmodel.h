@@ -40,6 +40,8 @@ class LIB_EXPORT PresenceStatusModel : public QAbstractTableModel, public Collec
     #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
     Q_OBJECT
     #pragma GCC diagnostic pop
+
+    friend class Session; // factory
 public:
 
     //Table columns
@@ -72,9 +74,6 @@ public:
     virtual bool          setData    (const QModelIndex& index, const QVariant &value, int role            )       override;
     virtual QVariant      headerData (int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
     virtual QHash<int,QByteArray> roleNames() const override;
-
-    //Singleton
-    static PresenceStatusModel& instance();
 
     //Setters
     void setDefaultStatus( const QModelIndex& idx );

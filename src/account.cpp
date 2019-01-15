@@ -1320,9 +1320,9 @@ QVariant Account::roleData(int role) const
       case CAST(Account::Role::TypeName):
          return CAST(protocol());
       case CAST(Account::Role::PresenceStatus):
-         return PresenceStatusModel::instance().currentStatus();
+         return Session::instance()->presenceStatusModel()->currentStatus();
       case CAST(Account::Role::PresenceMessage):
-         return PresenceStatusModel::instance().currentMessage();
+         return Session::instance()->presenceStatusModel()->currentMessage();
       case CAST(Account::Role::RegistrationState):
          return QVariant::fromValue(registrationState());
       case CAST(Account::Role::UsedForOutgogingCall):

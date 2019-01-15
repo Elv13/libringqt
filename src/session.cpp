@@ -29,6 +29,7 @@
 #include "numbercategorymodel.h"
 #include "individualdirectory.h"
 #include "profilemodel.h"
+#include "presencestatusmodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -118,6 +119,13 @@ IndividualDirectory* Session::individualDirectory() const
 ProfileModel* Session::profileModel() const
 {
     static ProfileModel m;
+
+    return &m;
+}
+
+PresenceStatusModel* Session::presenceStatusModel() const
+{
+    static PresenceStatusModel m;
 
     return &m;
 }

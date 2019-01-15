@@ -239,13 +239,6 @@ void PresenceStatusModel::save()
     GlobalInstances::presenceSerializer().save();
 }
 
-///Singleton
-PresenceStatusModel& PresenceStatusModel::instance()
-{
-    static auto instance = new PresenceStatusModel;
-    return *instance;
-}
-
 ///Move idx up
 void PresenceStatusModel::moveUp(const QModelIndex& idx)
 {
