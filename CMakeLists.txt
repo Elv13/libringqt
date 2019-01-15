@@ -44,7 +44,7 @@ OPTION(ENABLE_TEST_ASSERTS "Enable extra asserts (cpu intensive)"         OFF)
 OPTION(USE_STATIC_LIBRING  "Always prefer the static libring (buggy)"     OFF)
 
 # DBus is the default on Linux, LibRing on anything else
-IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+IF (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
    OPTION(ENABLE_LIBWRAP    "Disable the daemon and use libring directly"  OFF)
    OPTION(DISABLE_EXPORT    "Do not install anything"                      OFF)
 ELSE()
