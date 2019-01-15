@@ -575,7 +575,7 @@
     </message>
 </context>
 <context>
-    <name>PersonModel</name>
+    <name>PersonDirectory</name>
     <message>
         <location filename="../src/personmodel.cpp" line="171"/>
         <source>Persons</source>

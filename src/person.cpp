@@ -30,8 +30,9 @@
 #include "collectioninterface.h"
 #include "transitionalpersonbackend.h"
 #include "account.h"
+#include "session.h"
 #include "private/vcardutils.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "historytimecategorymodel.h"
 #include "individualdirectory.h"
 #include "numbercategorymodel.h"
@@ -135,7 +136,7 @@ PersonPrivate::~PersonPrivate()
 }
 
 ///Constructor
-Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance())
+Person::Person(CollectionInterface* parent): ItemBase(Session::instance()->personDirectory())
 {
    moveToThread(QCoreApplication::instance()->thread());
    d_ptr = new PersonPrivate(this);
@@ -146,7 +147,7 @@ Person::Person(CollectionInterface* parent): ItemBase(&PersonModel::instance())
 }
 
 Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionInterface* parent)
- : ItemBase(&PersonModel::instance())
+ : ItemBase(Session::instance()->personDirectory())
 {
    moveToThread(QCoreApplication::instance()->thread());
    d_ptr = new PersonPrivate(this);
@@ -175,7 +176,7 @@ Person::Person(const QByteArray& content, Person::Encoding encoding, CollectionI
  * multiple person with multiple collection is currently not supported (but
  * would be easy to enable if the need arise).
  */
-Person::Person(const Person& other) noexcept : ItemBase(&PersonModel::instance())
+Person::Person(const Person& other) noexcept : ItemBase(Session::instance()->personDirectory())
 {
    moveToThread(QCoreApplication::instance()->thread());
    d_ptr = new PersonPrivate(this);
@@ -801,8 +802,8 @@ Person::ensureUid()
     static std::uniform_int_distribution<uint64_t> id_generator;
 
     while (d_ptr->m_Uid.isEmpty()
-        or (PersonModel::instance().getPersonByUid(d_ptr->m_Uid)
-            && PersonModel::instance().getPersonByUid(d_ptr->m_Uid) != this)) {
+        or (Session::instance()->personDirectory()->getPersonByUid(d_ptr->m_Uid)
+            && Session::instance()->personDirectory()->getPersonByUid(d_ptr->m_Uid) != this)) {
         d_ptr->m_Uid = QString::number(id_generator(rand)).toLatin1();
     }
 }

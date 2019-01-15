@@ -28,7 +28,7 @@
 #include <session.h>
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "individual.h"
 #include "contactmethod.h"
 #include "private/contactmethod_p.h"
@@ -170,7 +170,7 @@ bool PendingContactRequestModel::setData( const QModelIndex& index, const QVaria
 
 QHash<int,QByteArray> PendingContactRequestModel::roleNames() const
 {
-    static QHash<int, QByteArray> roles = PersonModel::instance().roleNames();
+    static QHash<int, QByteArray> roles = Session::instance()->personDirectory()->roleNames();
 
     static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
     if (!init_flag.test_and_set()) {

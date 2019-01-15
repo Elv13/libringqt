@@ -30,7 +30,7 @@
 #include <account.h>
 #include <session.h>
 #include <accountmodel.h>
-#include <personmodel.h>
+#include <persondirectory.h>
 #include <eventmodel.h>
 #include <individualdirectory.h>
 #include <localrecordingcollection.h>
@@ -156,7 +156,7 @@ bool Calendar::load()
             }
             else if (pKey == "UID") {
                 pVal.detach();
-                p = PersonModel::instance().getPlaceHolder(pVal);
+                p = Session::instance()->personDirectory()->getPlaceHolder(pVal);
             }
             else if (pKey == "X_RING_ACCOUNTID")
                 a = Session::instance()->accountModel()->getById(pVal);

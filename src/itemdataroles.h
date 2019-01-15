@@ -36,7 +36,7 @@ Q_NAMESPACE
 /**
  * The purpose of this enum class is to mimic/extend the Qt::ItemDataRole in LRC so that the same
  * value is used when using a common role in the ::data() method of any model in LRC,
- * eg: the value of the Object role should not be different for the PersonModel and the CallModel.
+ * eg: the value of the Object role should not be different for the PersonDirectory and the CallModel.
  *
  * This is so that clients of LRC do need additional logic when trying to extract the same type of
  * data from multiple types of LRC models.

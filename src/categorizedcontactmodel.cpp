@@ -34,7 +34,7 @@
 #include "person.h"
 #include "uri.h"
 #include "mime.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "individual.h"
 #include "private/sortproxies.h"
 
@@ -265,11 +265,11 @@ CategorizedContactModel::CategorizedContactModel(int role) : QAbstractItemModel(
    d_ptr->m_lCategoryCounter.reserve(32);
    d_ptr->m_lMimes << RingMimes::PLAIN_TEXT << RingMimes::PHONENUMBER;
 
-   connect(&PersonModel::instance(),&PersonModel::newPersonAdded,d_ptr.data(),&CategorizedContactModelPrivate::slotContactAdded);
-   connect(&PersonModel::instance(),&PersonModel::personRemoved,d_ptr.data(),&CategorizedContactModelPrivate::slotContactRemoved);
+   connect(Session::instance()->personDirectory(),&PersonDirectory::newPersonAdded,d_ptr.data(),&CategorizedContactModelPrivate::slotContactAdded);
+   connect(Session::instance()->personDirectory(),&PersonDirectory::personRemoved,d_ptr.data(),&CategorizedContactModelPrivate::slotContactRemoved);
 
-   for(int i=0; i < PersonModel::instance().rowCount();i++) {
-      Person* p = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Ring::Role::Object));
+   for(int i=0; i < Session::instance()->personDirectory()->rowCount();i++) {
+      Person* p = qvariant_cast<Person*>(Session::instance()->personDirectory()->index(i,0).data((int)Ring::Role::Object));
       d_ptr->slotContactAdded(p);
    }
 
@@ -287,7 +287,7 @@ CategorizedContactModel::~CategorizedContactModel()
 
 QHash<int,QByteArray> CategorizedContactModel::roleNames() const
 {
-    return PersonModel::instance().roleNames();
+    return Session::instance()->personDirectory()->roleNames();
 }
 
 ContactTreeNode* CategorizedContactModelPrivate::getContactTopLevelItem(const QString& category)
@@ -317,8 +317,8 @@ void CategorizedContactModelPrivate::reloadCategories()
 
    q_ptr->endResetModel();
 
-   for (int i=0; i < PersonModel::instance().rowCount();i++) {
-      Person* cont = qvariant_cast<Person*>(PersonModel::instance().index(i,0).data((int)Ring::Role::Object));
+   for (int i=0; i < Session::instance()->personDirectory()->rowCount();i++) {
+      Person* cont = qvariant_cast<Person*>(Session::instance()->personDirectory()->index(i,0).data((int)Ring::Role::Object));
       slotContactAdded(cont);
    }
 }

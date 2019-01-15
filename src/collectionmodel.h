@@ -23,7 +23,7 @@
 #include <QtCore/QAbstractItemModel>
 
 #include "collectionmanagerinterface.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "collectioninterface.h"
 
 //Ring

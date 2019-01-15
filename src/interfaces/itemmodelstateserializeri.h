@@ -63,7 +63,7 @@ public:
      * Allow to overload the default algoritm used to look for a default
      * collection to store something new.
      *
-     * @param manager The likes of PersonModel::instance() or CategorizedHistoryModel::instance()
+     * @param manager The likes of PersonDirectory::instance() or CategorizedHistoryModel::instance()
      * @param features A list of must have collection features. If NONE is set \
      * the implementation is free to return whatever it want. If it is set, a \
      * collection must return a compliant collection or the result will be \

@@ -33,7 +33,7 @@
 #include "account.h"
 #include "session.h"
 #include "accountmodel.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "person.h"
 
 class LocalProfileCollectionPrivate

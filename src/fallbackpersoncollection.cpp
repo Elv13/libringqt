@@ -29,12 +29,13 @@
 
 //Ring
 #include "person.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "private/vcardutils.h"
 #include "contactmethod.h"
 #include "collectioneditor.h"
 #include "globalinstances.h"
 #include "individual.h"
+#include "session.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "interfaces/actionextenderi.h"
 #include "interfaces/itemmodelstateserializeri.h"
@@ -279,7 +280,7 @@ void FallbackPersonCollectionPrivate::loadAsync()
    QDir d(m_Path);
    for (const QString& dir : d.entryList(QDir::AllDirs)) {
       if (dir != QString('.') && dir != QLatin1String("..")) {
-         CollectionInterface* col = PersonModel::instance().addCollection<FallbackPersonCollection,QString,FallbackPersonCollection*>(m_Path+'/'+dir,q_ptr);
+         CollectionInterface* col = Session::instance()->personDirectory()->addCollection<FallbackPersonCollection,QString,FallbackPersonCollection*>(m_Path+'/'+dir,q_ptr);
          if (col->isEnabled()) {
             col->load();
          }

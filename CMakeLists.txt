@@ -169,7 +169,7 @@ SET( libringqt_LIB_SRCS
   src/infotemplatemanager.cpp
   src/eventmodel.cpp
   src/securityevaluationmodel.cpp
-  src/personmodel.cpp
+  src/persondirectory.cpp
   src/collectionmodel.cpp
   src/collectionextensionmodel.cpp
   src/collectionmanagerinterface.cpp
@@ -333,7 +333,7 @@ SET( libringqt_LIB_HDRS
   src/peerprofilecollection2.h
   src/securityevaluationmodel.h
   src/certificate.h
-  src/personmodel.h
+  src/persondirectory.h
   src/transitionalpersonbackend.h
   src/collectionmodel.h
   src/collectionextensionmodel.h

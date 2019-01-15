@@ -49,7 +49,7 @@
 #include "categorizedhistorymodel.h"
 #include "globalinstances.h"
 #include "interfaces/contactmethodselectori.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "useractionmodel.h"
 #include "video/renderer.h"
 #include "media/audio.h"
@@ -1377,7 +1377,7 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
       qDebug() << "Contact" << encodedPerson << "on call" << target;
       try {
          const ContactMethod* number = GlobalInstances::contactMethodSelector().number(
-         PersonModel::instance().getPersonByUid(encodedPerson));
+         Session::instance()->personDirectory()->getPersonByUid(encodedPerson));
          if (!number->uri().isEmpty()) {
             Call* newCall = dialingCall();
             newCall->setDialNumber(number);

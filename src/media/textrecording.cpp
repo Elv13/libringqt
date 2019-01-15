@@ -35,7 +35,7 @@
 #include "account.h"
 #include "individualdirectory.h"
 #include "accountmodel.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "private/textrecording_p.h"
 #include "private/contactmethod_p.h"
 #include "globalinstances.h"

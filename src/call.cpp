@@ -58,7 +58,7 @@
 #include "video/sourcemodel.h"
 #include "tlsmethodmodel.h"
 #include "audio/settings.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "namedirectory.h"
 #include "accountstatusmodel.h"
 #include "private/contactmethod_p.h"
@@ -577,7 +577,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
    const QStringRef contactUid = hc[ QStringRef(&Call::HistoryMapFields::CONTACT_UID) ];
    Person* ct = nullptr;
    if (!contactUid.isEmpty())
-      ct = PersonModel::instance().getPlaceHolder(contactUid.toLatin1());
+      ct = Session::instance()->personDirectory()->getPlaceHolder(contactUid.toLatin1());
 
    ContactMethod*  nb             = Session::instance()->individualDirectory()->getNumber(number,ct,acc);
 

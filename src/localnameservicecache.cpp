@@ -29,7 +29,7 @@
 #include <account.h>
 #include <contactmethod.h>
 #include <accountmodel.h>
-#include <personmodel.h>
+#include <persondirectory.h>
 #include <individualdirectory.h>
 #include <collectioneditor.h>
 #include "session.h"

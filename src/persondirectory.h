@@ -31,27 +31,24 @@
 class Person;
 class Account;
 class CollectionInterface;
-class PersonModelPrivate;
+class PersonDirectoryPrivate;
 class PersonItemNode;
 
 //Typedef
 typedef QVector<Person*> PersonList;
 
-///PersonModel: Allow different way to handle contact without poluting the library
-class LIB_EXPORT PersonModel :
+///PersonDirectory: Allow different way to handle contact without poluting the library
+class LIB_EXPORT PersonDirectory :
    public QAbstractItemModel, public CollectionManagerInterface<Person> {
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    Q_OBJECT
    #pragma GCC diagnostic pop
    friend class PersonItemNode;
+   friend class Session; // factory
 public:
-
-   template <typename T > using ItemMediator = CollectionMediator<Person>;
-
-
-   explicit PersonModel(QObject* parent = nullptr);
-   virtual ~PersonModel();
+   explicit PersonDirectory(QObject* parent = nullptr);
+   virtual ~PersonDirectory();
 
    //Getters
    Person* getPersonByUid   ( const QByteArray& uid );
@@ -68,12 +65,9 @@ public:
    virtual QVariant      headerData  ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
    virtual QHash<int,QByteArray> roleNames() const override;
 
-   //Singleton
-   static PersonModel& instance();
-
 private:
-   QScopedPointer<PersonModelPrivate> d_ptr;
-   Q_DECLARE_PRIVATE(PersonModel)
+   QScopedPointer<PersonDirectoryPrivate> d_ptr;
+   Q_DECLARE_PRIVATE(PersonDirectory)
 
    //Backend interface
    virtual void collectionAddedCallback(CollectionInterface* backend) override;

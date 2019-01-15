@@ -17,7 +17,7 @@
  ***************************************************************************/
 
 //Parent
-#include "personmodel.h"
+#include "persondirectory.h"
 
 //Std
 #include <memory>
@@ -60,11 +60,11 @@ public:
 
 };
 
-class PersonModelPrivate final : public QObject
+class PersonDirectoryPrivate final : public QObject
 {
    Q_OBJECT
 public:
-   PersonModelPrivate(PersonModel* parent);
+   PersonDirectoryPrivate(PersonDirectory* parent);
 
    //Attributes
 //    QVector<CollectionInterface*> m_lBackends;
@@ -75,7 +75,7 @@ public:
    std::vector<std::unique_ptr<PersonItemNode>> m_lPersons;
 
 private:
-   PersonModel* q_ptr;
+   PersonDirectory* q_ptr;
 //    void slotPersonAdded(Person* c);
 
 public Q_SLOTS:
@@ -94,28 +94,22 @@ m_Type(type),m_pContactMethod(cm)
 
 }
 
-PersonModelPrivate::PersonModelPrivate(PersonModel* parent) : QObject(parent), q_ptr(parent)
+PersonDirectoryPrivate::PersonDirectoryPrivate(PersonDirectory* parent) : QObject(parent), q_ptr(parent)
 {
 
 }
 
 ///Constructor
-PersonModel::PersonModel(QObject* par) : QAbstractItemModel(par?par:QCoreApplication::instance()), CollectionManagerInterface<Person>(this),
-d_ptr(new PersonModelPrivate(this))
+PersonDirectory::PersonDirectory(QObject* par) : QAbstractItemModel(par?par:QCoreApplication::instance()), CollectionManagerInterface<Person>(this),
+d_ptr(new PersonDirectoryPrivate(this))
 {
-   setObjectName(QStringLiteral("PersonModel"));
+   setObjectName(QStringLiteral("PersonDirectory"));
 }
 
 ///Destructor
-PersonModel::~PersonModel()
+PersonDirectory::~PersonDirectory()
 {
    d_ptr->m_hPersonsByUid.clear();
-}
-
-PersonModel& PersonModel::instance()
-{
-    static auto instance = new PersonModel(QCoreApplication::instance());
-    return *instance;
 }
 
 /*****************************************************************************
@@ -124,7 +118,7 @@ PersonModel& PersonModel::instance()
  *                                                                           *
  ****************************************************************************/
 
-QHash<int,QByteArray> PersonModel::roleNames() const
+QHash<int,QByteArray> PersonDirectory::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
     static bool initRoles = false;
@@ -152,7 +146,7 @@ QHash<int,QByteArray> PersonModel::roleNames() const
    return roles;
 }
 
-bool PersonModel::setData( const QModelIndex& idx, const QVariant &value, int role)
+bool PersonDirectory::setData( const QModelIndex& idx, const QVariant &value, int role)
 {
    Q_UNUSED(idx)
    Q_UNUSED(value)
@@ -160,7 +154,7 @@ bool PersonModel::setData( const QModelIndex& idx, const QVariant &value, int ro
    return false;
 }
 
-QVariant PersonModel::data( const QModelIndex& idx, int role) const
+QVariant PersonDirectory::data( const QModelIndex& idx, int role) const
 {
    if (!idx.isValid())
       return QVariant();
@@ -175,7 +169,7 @@ QVariant PersonModel::data( const QModelIndex& idx, int role) const
    return QVariant();
 }
 
-QVariant PersonModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant PersonDirectory::headerData(int section, Qt::Orientation orientation, int role) const
 {
    Q_UNUSED(section)
    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
@@ -183,7 +177,7 @@ QVariant PersonModel::headerData(int section, Qt::Orientation orientation, int r
    return QVariant();
 }
 
-int PersonModel::rowCount( const QModelIndex& par ) const
+int PersonDirectory::rowCount( const QModelIndex& par ) const
 {
    if (!par.isValid()) {
       return d_ptr->m_lPersons.size();
@@ -194,20 +188,20 @@ int PersonModel::rowCount( const QModelIndex& par ) const
    return 0;
 }
 
-Qt::ItemFlags PersonModel::flags( const QModelIndex& idx ) const
+Qt::ItemFlags PersonDirectory::flags( const QModelIndex& idx ) const
 {
    if (!idx.isValid())
       return Qt::NoItemFlags;
    return Qt::ItemIsEnabled | ((idx.parent().isValid())?Qt::ItemIsSelectable:Qt::ItemIsEnabled);
 }
 
-int PersonModel::columnCount ( const QModelIndex& par) const
+int PersonDirectory::columnCount ( const QModelIndex& par) const
 {
    Q_UNUSED(par)
    return 1;
 }
 
-QModelIndex PersonModel::parent( const QModelIndex& idx) const
+QModelIndex PersonDirectory::parent( const QModelIndex& idx) const
 {
    if (!idx.isValid())
       return QModelIndex();
@@ -218,7 +212,7 @@ QModelIndex PersonModel::parent( const QModelIndex& idx) const
    return QModelIndex();
 }
 
-QModelIndex PersonModel::index( int row, int column, const QModelIndex& par) const
+QModelIndex PersonDirectory::index( int row, int column, const QModelIndex& par) const
 {
    if (row >= 0 && column >= 0) {
       if (!par.isValid() && d_ptr->m_lPersons.size() > static_cast<unsigned>(row)) {
@@ -240,7 +234,7 @@ QModelIndex PersonModel::index( int row, int column, const QModelIndex& par) con
 
 
 ///Find contact by UID
-Person* PersonModel::getPersonByUid(const QByteArray& uid)
+Person* PersonDirectory::getPersonByUid(const QByteArray& uid)
 {
    return d_ptr->m_hPersonsByUid[uid];
 }
@@ -249,7 +243,7 @@ Person* PersonModel::getPersonByUid(const QByteArray& uid)
  * Create a temporary contact or return the existing one for an UID
  * This temporary contact should eventually be merged into the real one
  */
-Person* PersonModel::getPlaceHolder(const QByteArray& uid )
+Person* PersonDirectory::getPlaceHolder(const QByteArray& uid )
 {
    Person* ct = d_ptr->m_hPersonsByUid[uid];
 
@@ -269,12 +263,12 @@ Person* PersonModel::getPlaceHolder(const QByteArray& uid )
    return ct2;
 }
 
-void PersonModel::collectionAddedCallback(CollectionInterface* backend)
+void PersonDirectory::collectionAddedCallback(CollectionInterface* backend)
 {
    Q_UNUSED(backend)
 }
 
-bool PersonModel::addItemCallback(const Person* c)
+bool PersonDirectory::addItemCallback(const Person* c)
 {
    //Add to the model
    beginInsertRows(QModelIndex(),d_ptr->m_lPersons.size(),d_ptr->m_lPersons.size());
@@ -307,7 +301,7 @@ bool PersonModel::addItemCallback(const Person* c)
       }
    }
 
-   connect(c, &Person::lastUsedTimeChanged, d_ptr.data(), &PersonModelPrivate::slotLastUsedTimeChanged);
+   connect(c, &Person::lastUsedTimeChanged, d_ptr.data(), &PersonDirectoryPrivate::slotLastUsedTimeChanged);
 
    if (c->lastUsedTime())
       emit lastUsedTimeChanged(const_cast<Person*>(c), c->lastUsedTime());
@@ -315,7 +309,7 @@ bool PersonModel::addItemCallback(const Person* c)
    return true;
 }
 
-bool PersonModel::removeItemCallback(const Person* item)
+bool PersonDirectory::removeItemCallback(const Person* item)
 {
    for (unsigned int nodeIdx = 0; nodeIdx < d_ptr->m_lPersons.size(); ++nodeIdx) {
       auto person = d_ptr->m_lPersons[nodeIdx]->m_pPerson;
@@ -354,7 +348,7 @@ bool PersonModel::removeItemCallback(const Person* item)
 }
 
 ///@deprecated
-bool PersonModel::addNewPerson(Person* c, CollectionInterface* backend)
+bool PersonDirectory::addNewPerson(Person* c, CollectionInterface* backend)
 {
    if ((!backend) && (!collections().size()))
       return false;
@@ -372,10 +366,10 @@ bool PersonModel::addNewPerson(Person* c, CollectionInterface* backend)
    return ret;
 }
 
-void PersonModelPrivate::slotLastUsedTimeChanged(time_t t) const
+void PersonDirectoryPrivate::slotLastUsedTimeChanged(time_t t) const
 {
    emit q_ptr->lastUsedTimeChanged(static_cast<Person*>(QObject::sender()), t);
 }
 
 
-#include <personmodel.moc>
+#include <persondirectory.moc>

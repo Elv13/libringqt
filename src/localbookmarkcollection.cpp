@@ -33,7 +33,7 @@
 #include <session.h>
 #include <contactmethod.h>
 #include <accountmodel.h>
-#include <personmodel.h>
+#include <persondirectory.h>
 #include <individualdirectory.h>
 #include <collectioneditor.h>
 #include <globalinstances.h>
@@ -289,8 +289,8 @@ void Serializable::BookmarkNode::read(const QJsonObject &json)
    const QByteArray& contactId = json[ QStringLiteral("contactId") ].toString().toLatin1();
 
    account = accountId.isEmpty()?nullptr:Session::instance()->accountModel()->getById( accountId );
-   contact = contactId.isEmpty()?nullptr:PersonModel::instance  ().getPersonByUid( contactId            );
-   cm      = uri.isEmpty()?nullptr:Session::instance()->individualDirectory()->getNumber     ( uri, contact, account);
+   contact = contactId.isEmpty()?nullptr:Session::instance()->personDirectory()->getPersonByUid( contactId );
+   cm      = uri.isEmpty()?nullptr:Session::instance()->individualDirectory()->getNumber( uri, contact, account);
 }
 
 void Serializable::BookmarkNode::write(QJsonObject& json) const

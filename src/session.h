@@ -38,6 +38,7 @@ class ProfileModel;
 class PresenceStatusModel;
 class EventModel;
 class RingtoneModel;
+class PersonDirectory;
 
 namespace Media {
 class RecordingModel;
@@ -65,6 +66,7 @@ public:
     Q_PROPERTY(IndividualDirectory* individualDirectory READ individualDirectory CONSTANT)
     Q_PROPERTY(RingtoneModel* ringtoneModel READ ringtoneModel CONSTANT)
     Q_PROPERTY(Media::RecordingModel* recordingModel READ recordingModel CONSTANT)
+    Q_PROPERTY(PersonDirectory* personDirectory READ personDirectory CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -81,6 +83,7 @@ public:
     EventModel* eventModel() const;
     RingtoneModel* ringtoneModel() const;
     Media::RecordingModel* recordingModel() const;
+    PersonDirectory* personDirectory() const;
 
     static Session* instance();
 

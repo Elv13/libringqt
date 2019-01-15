@@ -24,7 +24,7 @@
 //Ring
 #include "typedefs.h"
 #include "person.h"
-class PersonModel;
+class PersonDirectory;
 class ContactTreeNode;
 class TopLevelItem;
 class ContactTreeBinder;
@@ -39,7 +39,7 @@ class LIB_EXPORT CategorizedContactModel :  public QAbstractItemModel
    Q_OBJECT
    #pragma GCC diagnostic pop
 public:
-   friend class PersonModel      ;
+   friend class PersonDirectory      ;
    friend class ContactTreeNode  ;
    friend class ContactTreeBinder;
    friend class SortedProxy      ;

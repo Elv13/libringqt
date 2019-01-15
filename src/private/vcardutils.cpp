@@ -34,7 +34,7 @@
 #include "globalinstances.h"
 #include "individual.h"
 #include "interfaces/pixmapmanipulatori.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "session.h"
 
 /* https://www.ietf.org/rfc/rfc2045.txt
@@ -433,7 +433,7 @@ bool VCardUtils::mapToPerson(Person* p, const QUrl& path, QList<Account*>* accou
 
 Person* VCardUtils::mapToPerson(const QHash<QByteArray, QByteArray>& vCard, QList<Account*>* accounts)
 {
-    auto existingPerson = PersonModel::instance().getPersonByUid(vCard[Property::UID]);
+    auto existingPerson = Session::instance()->personDirectory()->getPersonByUid(vCard[Property::UID]);
     auto personMapped = existingPerson == nullptr ? new Person() : existingPerson;
 
     QHashIterator<QByteArray, QByteArray> it(vCard);

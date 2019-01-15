@@ -41,7 +41,7 @@
 #include "globalinstances.h"
 #include "private/contactmethod_p.h"
 #include "interfaces/pixmapmanipulatori.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "dbus/configurationmanager.h"
 #include "media/recordingmodel.h"
 #include "media/textrecording.h"
@@ -929,7 +929,7 @@ ContactMethod* IndividualDirectory::fromHash(const QString& hash)
       const QString uri = fields[0];
       const QByteArray acc = fields[1].toLatin1();
       Account* account = acc.isEmpty() ? nullptr : Session::instance()->accountModel()->getById(acc);
-      Person* contact = PersonModel::instance().getPersonByUid(fields[2].toUtf8());
+      Person* contact = Session::instance()->personDirectory()->getPersonByUid(fields[2].toUtf8());
       return getNumber(uri,contact,account);
    }
    else if (fields.size() == 1) {
@@ -955,7 +955,7 @@ ContactMethod* IndividualDirectory::fromJson(const QJsonObject& o)
         nullptr: Session::instance()->accountModel()->getById(accountId.toLatin1());
 
     auto c = personUID.isEmpty() ?
-        nullptr: PersonModel::instance().getPlaceHolder(personUID.toLatin1());
+        nullptr: Session::instance()->personDirectory()->getPlaceHolder(personUID.toLatin1());
 
     return Session::instance()->individualDirectory()->getNumber(uri, c, a);
 }

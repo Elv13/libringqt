@@ -39,7 +39,7 @@
 #include <private/imconversationmanagerprivate.h>
 #include <peerprofilecollection2.h>
 #include <accountmodel.h>
-#include <personmodel.h>
+#include <persondirectory.h>
 
 /*
  * Instant message have 3 major modes, "past", "in call" and "offline"
@@ -142,7 +142,7 @@ bool ProfileChunk::addChunk(const QMap<QString, QString>& args, const QString& p
     // The peer profile collection is not mandatory, but should never change
     // over the application lifetime.
     if (!ppc) {
-        const auto cols = PersonModel::instance().collections(CollectionInterface::SupportedFeatures::ADD);
+        const auto cols = Session::instance()->personDirectory()->collections(CollectionInterface::SupportedFeatures::ADD);
         const auto iter = std::find_if(cols.constBegin(), cols.constEnd(), [](CollectionInterface* c) {
             return c->id() == "ppc";
         });

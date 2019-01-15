@@ -252,7 +252,7 @@ public:
     * Return an object that has been associated with this collection type
     *
     * It can be set using registerConfigarator() available in every collection
-    * manager objects such as PersonModel, CategorizedHistoryModel and others.
+    * manager objects such as PersonDirectory, CategorizedHistoryModel and others.
     */
    CollectionConfigurationInterface* configurator() const;
 

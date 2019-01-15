@@ -27,7 +27,7 @@
 #include "account.h"
 #include "person.h"
 #include "session.h"
-#include "personmodel.h"
+#include "persondirectory.h"
 #include "accountmodel.h"
 #include "eventmodel.h"
 #include "libcard/private/event_p.h"

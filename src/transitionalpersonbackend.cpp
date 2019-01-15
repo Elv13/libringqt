@@ -16,11 +16,12 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 #include "transitionalpersonbackend.h"
-#include <personmodel.h>
+#include <persondirectory.h>
 
 #include <collectioneditor.h>
 
 #include "globalinstances.h"
+#include "session.h"
 #include "interfaces/pixmapmanipulatori.h"
 
 class TransitionalPersonBackendPrivate
@@ -80,7 +81,7 @@ QVector<Person*> TransitionalPersonEditor::items() const
 
 CollectionInterface& TransitionalPersonBackend::instance()
 {
-    static auto instance = PersonModel::instance().addCollection<TransitionalPersonBackend>();
+    static auto instance = Session::instance()->personDirectory()->addCollection<TransitionalPersonBackend>();
     return *instance;
 }
 

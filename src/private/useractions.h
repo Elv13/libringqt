@@ -26,7 +26,7 @@
 #include <categorizedbookmarkmodel.h>
 #include <categorizedhistorymodel.h>
 #include <individual.h>
-#include <personmodel.h>
+#include <persondirectory.h>
 #include <media/textrecording.h>
 #include <interfaces/actionextenderi.h>
 #include <interfaces/itemmodelstateserializeri.h>
@@ -400,14 +400,14 @@ bool addPerson(ContactMethod* cm, CollectionInterface* col)
    // Try to get the best collection for this
    if (!col)
       col = GlobalInstances::itemModelStateSerializer().preferredCollection(
-         &PersonModel::instance(),
+         Session::instance()->personDirectory(),
          CollectionInterface::SupportedFeatures::ADD
       );
 
    // Take a random collection that match
    if (!col) {
-      const QVector<CollectionInterface*> cols = PersonModel::instance()
-         .collections(CollectionInterface::SupportedFeatures::ADD);
+      const QVector<CollectionInterface*> cols = Session::instance()->personDirectory()
+         ->collections(CollectionInterface::SupportedFeatures::ADD);
 
       if (cols.isEmpty())
          return false;
