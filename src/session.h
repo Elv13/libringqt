@@ -42,6 +42,7 @@ class EventModel;
 class RingtoneModel;
 class PersonDirectory;
 class InfoTemplateManager;
+class NumberCompletionModel;
 
 namespace Media {
 class RecordingModel;
@@ -75,6 +76,7 @@ public:
     Q_PROPERTY(Media::RecordingModel* recordingModel READ recordingModel CONSTANT)
     Q_PROPERTY(Video::PreviewManager* previewManager READ previewManager CONSTANT)
     Q_PROPERTY(InfoTemplateManager* infoTemplateManager READ infoTemplateManager CONSTANT)
+    Q_PROPERTY(NumberCompletionModel* numberCompletionModel READ numberCompletionModel CONSTANT)
 
     Q_PROPERTY(QAbstractItemModel* contactCategoryModel READ contactCategoryModel CONSTANT)
     Q_PROPERTY(QItemSelectionModel* contactCategorySelectionModel READ contactCategorySelectionModel CONSTANT)
@@ -98,6 +100,7 @@ public:
     PersonDirectory* personDirectory() const;
     Video::PreviewManager* previewManager() const;
     InfoTemplateManager* infoTemplateManager() const;
+    NumberCompletionModel* numberCompletionModel() const;
 
     QAbstractItemModel* contactCategoryModel() const;
     QItemSelectionModel* contactCategorySelectionModel() const;

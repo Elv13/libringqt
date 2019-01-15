@@ -36,6 +36,7 @@
 #include "video/previewmanager.h"
 #include "persondirectory.h"
 #include "infotemplatemanager.h"
+#include "numbercompletionmodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -174,6 +175,13 @@ Video::PreviewManager* Session::previewManager() const
 InfoTemplateManager* Session::infoTemplateManager() const
 {
     static InfoTemplateManager m;
+
+    return &m;
+}
+
+NumberCompletionModel* Session::numberCompletionModel() const
+{
+    static NumberCompletionModel m;
 
     return &m;
 }
