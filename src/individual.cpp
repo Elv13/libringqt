@@ -1492,7 +1492,7 @@ Individual* Individual::getIndividual(const QList<ContactMethod*>& cms)
 
 InfoTemplate* IndividualPrivate::infoTemplate()
 {
-    return InfoTemplateManager::instance().defaultInfoTemplate();
+    return Session::instance()->infoTemplateManager()->defaultInfoTemplate();
 }
 
 /**

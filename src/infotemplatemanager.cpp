@@ -55,12 +55,6 @@ InfoTemplateManager::InfoTemplateManager(QObject* parent)
     d_ptr->m_pCollection = addCollection<LocalInfoTemplateCollection>();
 }
 
-InfoTemplateManager& InfoTemplateManager::instance()
-{
-    static auto instance = new InfoTemplateManager(QCoreApplication::instance());
-    return *instance;
-}
-
 InfoTemplateManager::~InfoTemplateManager()
 {
     while (d_ptr->m_lInfoTemplate.size()) {

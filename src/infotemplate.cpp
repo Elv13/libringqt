@@ -21,6 +21,7 @@
 // Ring
 #include <infotemplatemanager.h>
 #include <vcardutils.h>
+#include <session.h>
 
 // Std
 #include <random>
@@ -80,8 +81,8 @@ QByteArray InfoTemplate::uid() const
         static std::uniform_int_distribution<uint64_t> id_generator;
 
         while (d_ptr->m_Uid.isEmpty()
-            || (InfoTemplateManager::instance().getByUid(d_ptr->m_Uid)
-                && InfoTemplateManager::instance().getByUid(d_ptr->m_Uid) != this)) {
+            || (Session::instance()->infoTemplateManager()->getByUid(d_ptr->m_Uid)
+                && Session::instance()->infoTemplateManager()->getByUid(d_ptr->m_Uid) != this)) {
             d_ptr->m_Uid = QString::number(id_generator(rand)).toLatin1();
         }
     }

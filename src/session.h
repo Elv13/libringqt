@@ -39,6 +39,7 @@ class PresenceStatusModel;
 class EventModel;
 class RingtoneModel;
 class PersonDirectory;
+class InfoTemplateManager;
 
 namespace Media {
 class RecordingModel;
@@ -71,6 +72,7 @@ public:
     Q_PROPERTY(RingtoneModel* ringtoneModel READ ringtoneModel CONSTANT)
     Q_PROPERTY(Media::RecordingModel* recordingModel READ recordingModel CONSTANT)
     Q_PROPERTY(Video::PreviewManager* previewManager READ previewManager CONSTANT)
+    Q_PROPERTY(InfoTemplateManager* infoTemplateManager READ infoTemplateManager CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -89,6 +91,7 @@ public:
     Media::RecordingModel* recordingModel() const;
     PersonDirectory* personDirectory() const;
     Video::PreviewManager* previewManager() const;
+    InfoTemplateManager* infoTemplateManager() const;
 
     static Session* instance();
 

@@ -72,6 +72,7 @@
 #include <media/recordingmodel.h>
 #include <video/previewmanager.h>
 #include <persondirectory.h>
+#include <infotemplatemanager.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -123,7 +124,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( RingtoneModel              )
     QML_TYPE_MOD( PresenceStatusModel        )
     QML_TYPE_MOD( PersonDirectory            )
-
+    QML_TYPE_MOD( InfoTemplateManager        )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 
@@ -166,4 +167,7 @@ void RingQtQuick::initializeEngine(QQmlEngine *engine, const char *uri)
     Q_UNUSED(engine)
     Q_UNUSED(uri)
     engine->rootContext()->setContextProperty("RingSession", Session::instance());
+
+    // Some singleton need to be loaded early to avoid side effects
+    Session::instance()->infoTemplateManager();
 }

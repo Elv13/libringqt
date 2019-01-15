@@ -35,6 +35,7 @@ class InfoTemplate;
 class LIB_EXPORT InfoTemplateManager : public QAbstractListModel, public CollectionManagerInterface<InfoTemplate>
 {
    Q_OBJECT
+   friend class Session; // factory
 public:
 
     virtual ~InfoTemplateManager();
@@ -49,8 +50,6 @@ public:
     Q_INVOKABLE InfoTemplate* getByUid(const QByteArray& a) const;
 
     InfoTemplate* defaultInfoTemplate() const;
-
-    static InfoTemplateManager& instance();
 
 private:
     explicit InfoTemplateManager(QObject* parent = nullptr);

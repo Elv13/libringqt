@@ -35,6 +35,7 @@
 #include "media/recordingmodel.h"
 #include "video/previewmanager.h"
 #include "persondirectory.h"
+#include "infotemplatemanager.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -166,6 +167,13 @@ PersonDirectory* Session::personDirectory() const
 Video::PreviewManager* Session::previewManager() const
 {
     static Video::PreviewManager m;
+
+    return &m;
+}
+
+InfoTemplateManager* Session::infoTemplateManager() const
+{
+    static InfoTemplateManager m;
 
     return &m;
 }

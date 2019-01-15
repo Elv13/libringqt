@@ -32,6 +32,7 @@
 #include "private/vcardutils.h"
 #include "collectioneditor.h"
 #include "individual.h"
+#include "session.h"
 #include "infotemplatemanager.h"
 #include "private/threadworker.h"
 
@@ -188,7 +189,7 @@ bool LocalInfoTemplateCollection::load()
                 continue;
             }
 
-            auto it = new InfoTemplate(file.readAll(), &InfoTemplateManager::instance());
+            auto it = new InfoTemplate(file.readAll(), Session::instance()->infoTemplateManager());
 
             it->setCollection(this);
             editor<InfoTemplate>()->addExisting(it);
@@ -196,7 +197,7 @@ bool LocalInfoTemplateCollection::load()
 
         // Add the default template
         if (size() == 0) {
-            auto it = new InfoTemplate(d_ptr->defaultTemplate(), &InfoTemplateManager::instance());
+            auto it = new InfoTemplate(d_ptr->defaultTemplate(), Session::instance()->infoTemplateManager());
 
             it->setCollection(this);
             editor<InfoTemplate>()->addExisting(it);
