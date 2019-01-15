@@ -20,6 +20,8 @@
 
 // Qt
 #include <QtCore/QObject>
+class QAbstractItemModel;
+class QItemSelectionModel;
 
 #include <typedefs.h>
 
@@ -74,6 +76,10 @@ public:
     Q_PROPERTY(Video::PreviewManager* previewManager READ previewManager CONSTANT)
     Q_PROPERTY(InfoTemplateManager* infoTemplateManager READ infoTemplateManager CONSTANT)
 
+    Q_PROPERTY(QAbstractItemModel* contactCategoryModel READ contactCategoryModel CONSTANT)
+    Q_PROPERTY(QItemSelectionModel* contactCategorySelectionModel READ contactCategorySelectionModel CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* sortedContactModel READ sortedContactModel CONSTANT)
+
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
     CategorizedHistoryModel* historyModel() const;
@@ -92,6 +98,10 @@ public:
     PersonDirectory* personDirectory() const;
     Video::PreviewManager* previewManager() const;
     InfoTemplateManager* infoTemplateManager() const;
+
+    QAbstractItemModel* contactCategoryModel() const;
+    QItemSelectionModel* contactCategorySelectionModel() const;
+    QAbstractItemModel* sortedContactModel() const;
 
     static Session* instance();
 

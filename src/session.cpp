@@ -177,3 +177,18 @@ InfoTemplateManager* Session::infoTemplateManager() const
 
     return &m;
 }
+
+QAbstractItemModel* Session::sortedContactModel() const
+{
+    return CategorizedContactModel::SortedProxy::instance().model();
+}
+
+QAbstractItemModel* Session::contactCategoryModel() const
+{
+    return CategorizedContactModel::SortedProxy::instance().categoryModel();
+}
+
+QItemSelectionModel* Session::contactCategorySelectionModel() const
+{
+    return CategorizedContactModel::SortedProxy::instance().categorySelectionModel();
+}
