@@ -48,6 +48,7 @@ class LIB_EXPORT EventModel : public QAbstractListModel, public CollectionManage
 
    friend class ContactMethod; // calls into the private API when deduplicating itself
    friend class EventAggregate; // use the private getters to get references on the event list
+   friend class Session; // factory
 public:
 
     virtual ~EventModel();
@@ -69,8 +70,6 @@ public:
 
     QSharedPointer<Event> oldest(const ContactMethod* cm) const;
     QSharedPointer<Event> newest(const ContactMethod* cm) const;
-
-    static EventModel& instance();
 
 Q_SIGNALS:
     void calendarLoaded(Calendar* cal);

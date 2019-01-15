@@ -527,7 +527,7 @@ Event* CalendarPrivate::getEvent(const EventPrivate& data, Event::SyncState st)
 {
     if (data.m_UID.size())
 
-    if (auto ret = data.m_UID.isEmpty() ? nullptr : EventModel::instance().getById(data.m_UID)) {
+    if (auto ret = data.m_UID.isEmpty() ? nullptr : Session::instance()->eventModel()->getById(data.m_UID)) {
         return updateEvent(ret.data(), data);
     }
 

@@ -36,6 +36,7 @@ class NumberCategoryModel;
 class IndividualDirectory;
 class ProfileModel;
 class PresenceStatusModel;
+class EventModel;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -55,6 +56,8 @@ public:
     Q_PROPERTY(NumberCategoryModel* numberCategoryModel READ numberCategoryModel CONSTANT)
     Q_PROPERTY(ProfileModel* profileModel READ profileModel CONSTANT)
     Q_PROPERTY(PresenceStatusModel* presenceStatusModel READ presenceStatusModel CONSTANT)
+    Q_PROPERTY(EventModel* eventModel READ eventModel CONSTANT)
+    Q_PROPERTY(IndividualDirectory* individualDirectory READ individualDirectory CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -68,6 +71,7 @@ public:
     IndividualDirectory* individualDirectory() const;
     ProfileModel* profileModel() const;
     PresenceStatusModel* presenceStatusModel() const;
+    EventModel* eventModel() const;
 
     static Session* instance();
 

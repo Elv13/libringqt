@@ -30,6 +30,7 @@
 #include "individualdirectory.h"
 #include "profilemodel.h"
 #include "presencestatusmodel.h"
+#include "eventmodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -126,6 +127,13 @@ ProfileModel* Session::profileModel() const
 PresenceStatusModel* Session::presenceStatusModel() const
 {
     static PresenceStatusModel m;
+
+    return &m;
+}
+
+EventModel* Session::eventModel() const
+{
+    static EventModel m;
 
     return &m;
 }

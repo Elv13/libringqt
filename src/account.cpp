@@ -588,7 +588,7 @@ RingDeviceModel* Account::ringDeviceModel() const
 Calendar* Account::calendar() const
 {
     if (!d_ptr->m_pCalendar) {
-        d_ptr->m_pCalendar = EventModel::instance().addCollection<Calendar, Account*>(
+        d_ptr->m_pCalendar = Session::instance()->eventModel()->addCollection<Calendar, Account*>(
             const_cast<Account*>(this), LoadOptions::FORCE_ENABLED
         );
     }

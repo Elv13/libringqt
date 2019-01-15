@@ -450,7 +450,7 @@ QVariant Individual::roleData(int role) const
 //       case static_cast<int>(Role::CanSendTexts):
 //           return canSendTexts() == ContactMethod::MediaAvailailityStatus::AVAILABLE;
 //       case static_cast<int>(Role::TotalEventCount):
-//           return EventModel::instance().d_ptr->events(this).size();
+//           return Session::instance()->eventModel()->d_ptr->events(this).size();
 //       case static_cast<int>(Role::TotalMessageCount):
 //           if (auto rec = textRecording())
 //             cat = rec->sentCount() + rec->receivedCount();

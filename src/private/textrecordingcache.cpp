@@ -487,7 +487,7 @@ QSharedPointer<Event> Serializable::Group::event(bool allowPlaceholders) const
 
     // In the future, this should work most of the time. However existing data
     // and some obscure core paths may still handle unregistered events
-    if ((m_pEvent = EventModel::instance().getById(eventUid, allowPlaceholders))) {
+    if ((m_pEvent = Session::instance()->eventModel()->getById(eventUid, allowPlaceholders))) {
         reloadAttendees();
         return m_pEvent;
     }

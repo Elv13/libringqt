@@ -25,6 +25,7 @@
 #include <libcard/private/event_p.h>
 #include <libcard/private/eventmodel_p.h>
 #include <eventmodel.h>
+#include <session.h>
 #include <individual.h>
 #include <contactmethod.h>
 
@@ -168,7 +169,7 @@ private:
     QSharedPointer<EventAggregate> m_pParentRef {nullptr};
 };
 
-EventAggregate::EventAggregate() : QObject(&EventModel::instance())
+EventAggregate::EventAggregate() : QObject(Session::instance()->eventModel())
 {
 //     d_ptr = (EventAggregatePrivate*) malloc(sizeof(EventAggregatePrivate));
 //     d_ptr = new(d_ptr) EventAggregatePrivate();
@@ -223,7 +224,7 @@ QSharedPointer<EventAggregate> EventAggregate::build(ContactMethod* cm)
 
     ret->d_ptr->m_Mode = EventAggregatePrivate::Mode::CONTACT_METHOD;
 
-    ret->d_ptr->m_lAllEvents = EventModel::instance().d_ptr->events(cm);
+    ret->d_ptr->m_lAllEvents = Session::instance()->eventModel()->d_ptr->events(cm);
 
     int i=0;
     for (auto e : qAsConst(ret->d_ptr->m_lAllEvents))
@@ -243,7 +244,7 @@ QSharedPointer<EventAggregate> EventAggregate::build(Individual* ind)
 
 
     ind->forAllNumbers([ret](ContactMethod* cm) {
-        ret->d_ptr->m_lAllEvents.append(EventModel::instance().d_ptr->events(cm));
+        ret->d_ptr->m_lAllEvents.append(Session::instance()->eventModel()->d_ptr->events(cm));
     });
 
     int i=0;
@@ -330,7 +331,7 @@ int UnsortedEventListView::rowCount( const QModelIndex& parent ) const
 
 QHash<int,QByteArray> UnsortedEventListView::roleNames() const
 {
-    return EventModel::instance().roleNames();
+    return Session::instance()->eventModel()->roleNames();
 }
 
 QModelIndex UnsortedEventListView::parent( const QModelIndex& index ) const

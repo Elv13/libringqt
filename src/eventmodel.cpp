@@ -223,12 +223,6 @@ EventModel::EventModel(QObject* parent)
     d_ptr->q_ptr = this;
 }
 
-EventModel& EventModel::instance()
-{
-    static auto instance = new EventModel(QCoreApplication::instance());
-    return *instance;
-}
-
 EventModel::~EventModel()
 {
     // The EventModel owns the events, but given they are shared, there is no

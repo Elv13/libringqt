@@ -887,7 +887,7 @@ QVariant ContactMethod::roleData(int role) const
       case static_cast<int>(Role::TotalCallCount):
           return callCount();
       case static_cast<int>(Role::TotalEventCount):
-          return EventModel::instance().d_ptr->events(this).size();
+          return Session::instance()->eventModel()->d_ptr->events(this).size();
       case static_cast<int>(Role::TotalMessageCount):
           if (auto rec = textRecording())
             cat = rec->sentCount() + rec->receivedCount();
@@ -1011,7 +1011,7 @@ QSharedPointer<EventAggregate> ContactMethod::eventAggregate() const
  */
 QSharedPointer<Event> ContactMethod::oldestEvent() const
 {
-    return EventModel::instance().oldest(this);
+    return Session::instance()->eventModel()->oldest(this);
 }
 
 /**
@@ -1021,7 +1021,7 @@ QSharedPointer<Event> ContactMethod::oldestEvent() const
  */
 QSharedPointer<Event> ContactMethod::newestEvent() const
 {
-    return EventModel::instance().newest(this);
+    return Session::instance()->eventModel()->newest(this);
 }
 
 QMimeData* ContactMethod::mimePayload() const
@@ -1210,7 +1210,7 @@ bool ContactMethod::merge(ContactMethod* other)
       other->d_ptr->m_Present = true;
 
    // Merge the events
-   EventModel::instance().d_ptr->mergeEvents(other, this);
+   Session::instance()->eventModel()->d_ptr->mergeEvents(other, this);
 
    if (contact() && !other->contact())
       other->setPerson(contact());
