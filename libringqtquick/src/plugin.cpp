@@ -63,6 +63,7 @@
 #include <categorizedcontactmodel.h>
 #include <namedirectory.h>
 #include <peerstimelinemodel.h>
+#include <individualdirectory.h>
 #include <numbercategorymodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
@@ -109,6 +110,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( CategorizedHistoryModel    )
     QML_TYPE_MOD( PeersTimelineModel         )
     QML_TYPE_MOD( NumberCategoryModel        )
+    QML_TYPE_MOD( IndividualDirectory        )
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 

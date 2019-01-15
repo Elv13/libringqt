@@ -63,10 +63,10 @@ namespace Media {
  *  * An account
  *  * A person (contact)
  *
- * There CM are created by the PhoneDirectoryModel. Only 1 instance per
- * primary+secondary keys can exists at any time. The PhoneDirectoryModel
+ * There CM are created by the IndividualDirectory. Only 1 instance per
+ * primary+secondary keys can exists at any time. The IndividualDirectory
  * ensure that implicitly. Note that these objects are proxies and can be merged
- * and split transparently by the PhoneDirectoryModel. The URI is immutable
+ * and split transparently by the IndividualDirectory. The URI is immutable
  * while the account and contact can go from nullptr to a value (but not the
  * other way around).
  *
@@ -90,8 +90,8 @@ class LIB_EXPORT ContactMethod : public ItemBase
 {
    Q_OBJECT
 public:
-   friend class PhoneDirectoryModel; // factory
-   friend class PhoneDirectoryModelPrivate; // owner
+   friend class IndividualDirectory; // factory
+   friend class IndividualDirectoryPrivate; // owner
    friend class LocalTextRecordingCollection; // Manage the CM own text recording
    friend class CallPrivate; //TODO remove, this is a legacy of the pre-Event separation of concerns
    friend class AccountPrivate; // An account is a ContactMethod and share some internals
@@ -331,7 +331,7 @@ protected:
    //Private setters
    void setPresenceMessage(const QString& message);
 
-   //PhoneDirectoryModel mutator
+   //IndividualDirectory mutator
    bool merge(ContactMethod* other);
 
    ContactMethodDirectoryPrivate* dir_d_ptr {nullptr};

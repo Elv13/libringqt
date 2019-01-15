@@ -20,7 +20,7 @@
 #include <QtCore/QObject>
 
 //Ring
-class PhoneDirectoryModel;
+class IndividualDirectory;
 class LocalNameServiceCache;
 #include "contactmethod.h"
 #include "account.h"
@@ -51,11 +51,11 @@ public:
    void reload();
 };
 
-class PhoneDirectoryModelPrivate final : public QObject
+class IndividualDirectoryPrivate final : public QObject
 {
    Q_OBJECT
 public:
-   explicit PhoneDirectoryModelPrivate(PhoneDirectoryModel* parent);
+   explicit IndividualDirectoryPrivate(IndividualDirectory* parent);
 
 
    //Model columns
@@ -103,10 +103,10 @@ public:
    LocalNameServiceCache*        m_pNameServiceCache {nullptr};
    QMutex                        m_DirectoryAccess;
 
-   Q_DECLARE_PUBLIC(PhoneDirectoryModel)
+   Q_DECLARE_PUBLIC(IndividualDirectory)
 
 private:
-   PhoneDirectoryModel* q_ptr;
+   IndividualDirectory* q_ptr;
 
 private Q_SLOTS:
    void slotCallAdded(Call* call);

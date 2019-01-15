@@ -32,7 +32,7 @@
 #include <mime.h>
 #include <media/textrecording.h>
 #include <media/recordingmodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <private/call_p.h>
 #include <private/vcardutils.h>
 #include <private/textrecording_p.h>
@@ -194,7 +194,7 @@ void IMConversationManagerPrivate::newMessage(const QString& callId, const QStri
 
 void IMConversationManagerPrivate::newAccountMessage(const QString& accountId, const QString& from, const QMap<QString,QString>& payloads)
 {
-   if (auto cm = PhoneDirectoryModel::instance().getNumber(from, Session::instance()->accountModel()->getById(accountId.toLatin1()))) {
+   if (auto cm = Session::instance()->individualDirectory()->getNumber(from, Session::instance()->accountModel()->getById(accountId.toLatin1()))) {
        auto txtRecording = cm->textRecording();
        txtRecording->d_ptr->insertNewMessage(payloads, cm, Media::Media::Direction::IN);
    }
@@ -202,7 +202,7 @@ void IMConversationManagerPrivate::newAccountMessage(const QString& accountId, c
 
 void IMConversationManagerPrivate::accountMessageStatusChanged(const QString& accountId, uint64_t id, const QString& to, int status)
 {
-    if (auto cm = PhoneDirectoryModel::instance().getNumber(to, Session::instance()->accountModel()->getById(accountId.toLatin1()))) {
+    if (auto cm = Session::instance()->individualDirectory()->getNumber(to, Session::instance()->accountModel()->getById(accountId.toLatin1()))) {
         auto txtRecording = cm->textRecording();
         txtRecording->d_ptr->accountMessageStatusChanged(id, static_cast<DRing::Account::MessageStates>(status));
     }

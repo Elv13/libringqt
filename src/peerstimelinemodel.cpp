@@ -28,7 +28,7 @@
 // Ring
 #include <individual.h>
 #include <session.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <historytimecategorymodel.h>
 
 #define NEVER static_cast<int>(HistoryTimeCategoryModel::HistoryConst::Never)
@@ -133,7 +133,7 @@ PeersTimelineModel::~PeersTimelineModel()
 
 QHash<int,QByteArray> PeersTimelineModel::roleNames() const
 {
-    return PhoneDirectoryModel::instance().roleNames();
+    return Session::instance()->individualDirectory()->roleNames();
 }
 
 QVariant PeersTimelineModel::data( const QModelIndex& idx, int role) const

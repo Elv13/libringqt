@@ -61,7 +61,7 @@
 #include "codecmodel.h"
 #include "networkinterfacemodel.h"
 #include "contactmethod.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "presencestatusmodel.h"
 #include "uri.h"
 #include "private/vcardutils.h"
@@ -172,7 +172,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
          .getContacts(a->id().data());
 
       for (const auto& contact_info : qAsConst(account_contacts)) {
-         auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
+         auto cm = Session::instance()->individualDirectory()->getNumber(contact_info[QStringLiteral("id")], a);
          cm->d_ptr->m_ConfirmationStatus = contact_info["confirmed"] == QStringLiteral("true") ?
             ContactMethod::ConfirmationStatus::CONFIRMED :
             ContactMethod::ConfirmationStatus::PENDING;
@@ -182,7 +182,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
    //Load the tracked buddies
    const VectorMapStringString subscriptions = PresenceManager::instance().getSubscriptions(a->id());
    foreach(auto subscription, subscriptions){
-       ContactMethod* tracked_buddy = PhoneDirectoryModel::instance().getNumber(subscription[DRing::Presence::BUDDY_KEY], a);
+       ContactMethod* tracked_buddy = Session::instance()->individualDirectory()->getNumber(subscription[DRing::Presence::BUDDY_KEY], a);
        bool tracked_buddy_present = subscription[DRing::Presence::STATUS_KEY].compare(DRing::Presence::ONLINE_KEY) == 0;
        tracked_buddy->setTracked(true);
        tracked_buddy->d_ptr->setPresent(tracked_buddy_present);
@@ -190,7 +190,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 
     const QString currentUri = a->d_ptr->buildUri();
 
-    a->d_ptr->m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, a);
+    a->d_ptr->m_pAccountNumber = Session::instance()->individualDirectory()->getNumber(currentUri, a);
     Q_ASSERT(a->d_ptr->m_pAccountNumber->uri() != '@');
 
     a->d_ptr->m_pAccountNumber->d_ptr->setType(ContactMethod::Type::ACCOUNT);
@@ -2709,7 +2709,7 @@ void AccountPrivate::reload()
 
          const auto old = m_pAccountNumber;
 
-         m_pAccountNumber = PhoneDirectoryModel::instance().getNumber(currentUri, q_ptr);
+         m_pAccountNumber = Session::instance()->individualDirectory()->getNumber(currentUri, q_ptr);
 
          if (m_pAccountNumber != old)
             emit q_ptr->contactMethodChanged(m_pAccountNumber);

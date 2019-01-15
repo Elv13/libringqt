@@ -52,7 +52,7 @@
 #include "certificate.h"
 #include "numbercategory.h"
 #include "certificatemodel.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "contactmethod.h"
 #include "video/renderer.h"
 #include "video/sourcemodel.h"
@@ -455,7 +455,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
     else if (acc->protocol() == Account::Protocol::RING && peerNumber.left(5) == QStringLiteral("sip:"))
         peerNumber = peerNumber.replace(0, 5, QStringLiteral("ring:"));
 
-    const auto& nb = PhoneDirectoryModel::instance().getNumber(peerNumber, acc);
+    const auto& nb = Session::instance()->individualDirectory()->getNumber(peerNumber, acc);
 
     // When a peer calls for the first time, it's registered name isn't known yet
     if (acc->protocol() == Account::Protocol::RING && nb->registeredName().isEmpty()) {
@@ -557,7 +557,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
    auto acc = Session::instance()->accountModel()->getById(accId);
 
    // Older history files may still have invalid entries, get rid of them
-   if ((!PhoneDirectoryModel::ensureValidity(number, acc)) && startTimeStamp == stopTimeStamp)
+   if ((!IndividualDirectory::ensureValidity(number, acc)) && startTimeStamp == stopTimeStamp)
        return nullptr;
 
    // This will happen if an account is deleted. As it can be very verbose,
@@ -579,7 +579,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
    if (!contactUid.isEmpty())
       ct = PersonModel::instance().getPlaceHolder(contactUid.toLatin1());
 
-   ContactMethod*  nb             = PhoneDirectoryModel::instance().getNumber(number,ct,acc);
+   ContactMethod*  nb             = Session::instance()->individualDirectory()->getNumber(number,ct,acc);
 
    Call*           call           = new Call(Call::State::OVER, (name == QLatin1String("empty"))?QString():name.toString(), nb, acc );
    call->d_ptr->m_DringId         = callId.toString();
@@ -1448,7 +1448,7 @@ Call::State CallPrivate::stateChanged(const QString& newStateName)
    }
    if (q_ptr->lifeCycleState() != Call::LifeCycleState::CREATION && m_pDialNumber) {
       if (!m_LegacyFields.m_pPeerContactMethod) {
-          m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
+          m_LegacyFields.m_pPeerContactMethod = Session::instance()->individualDirectory()->fromTemporary(m_pDialNumber);
       }
       m_pDialNumber->deleteLater();
       m_pDialNumber = nullptr;
@@ -1934,7 +1934,7 @@ void CallPrivate::call()
     }
 
     if (!m_LegacyFields.m_pPeerContactMethod) {
-        m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().getNumber(uri, q_ptr->account());
+        m_LegacyFields.m_pPeerContactMethod = Session::instance()->individualDirectory()->getNumber(uri, q_ptr->account());
     }
 
     // m_pDialNumber is now discarded
@@ -2078,7 +2078,7 @@ void CallPrivate::start()
    emit q_ptr->changed();
    if (m_pDialNumber) {
       if (!m_LegacyFields.m_pPeerContactMethod) {
-          m_LegacyFields.m_pPeerContactMethod = PhoneDirectoryModel::instance().fromTemporary(m_pDialNumber);
+          m_LegacyFields.m_pPeerContactMethod = Session::instance()->individualDirectory()->fromTemporary(m_pDialNumber);
       }
       m_pDialNumber->deleteLater();
       m_pDialNumber = nullptr;

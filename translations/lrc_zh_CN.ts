@@ -583,114 +583,114 @@
     </message>
 </context>
 <context>
-    <name>PhoneDirectoryModel</name>
+    <name>IndividualDirectory</name>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="234"/>
+        <location filename="../src/individualdirectory.cpp" line="234"/>
         <source>This account does not support presence tracking</source>
         <translation>该帐户不支持Presence追踪</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="237"/>
+        <location filename="../src/individualdirectory.cpp" line="237"/>
         <source>No associated account</source>
         <translation>没有关联帐户</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>URI</source>
         <translation>URI</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Type</source>
         <translation>类别</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Person</source>
         <translation>人</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Account</source>
         <translation>帐户</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>State</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Call count</source>
         <translation>通话统计</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Week count</source>
         <translation>周统计</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Trimester count</source>
         <translation>季度统计</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Have Called</source>
         <translation>已通话</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Last used</source>
         <translation>上次使用</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Name_count</source>
         <translation>名称总数</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Total (in seconds)</source>
         <translation>总计（秒）</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Popularity_index</source>
         <translation>受欢迎指数</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Bookmarked</source>
         <translation>已收藏</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Tracked</source>
         <translation>已追踪</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Present</source>
         <translation>在线</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Presence message</source>
         <translation>Presence消息</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Uid</source>
         <translation>UID</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Has certificate</source>
         <translation>有证书</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Registered name</source>
         <translation type="unfinished"/>
     </message>

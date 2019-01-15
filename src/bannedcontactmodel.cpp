@@ -23,11 +23,12 @@
 // LRC
 #include "dbus/configurationmanager.h"
 #include "contactmethod.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 
 #include <contactrequest.h>
 #include <certificate.h>
 #include <account.h>
+#include "session.h"
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
 #include "contactmethod.h"
@@ -55,7 +56,7 @@ d_ptr(new BannedContactModelPrivate)
     if (a->protocol() == Account::Protocol::RING) {
         for (auto contact_info : account_contacts) {
             if (contact_info[QStringLiteral("banned")] == QLatin1String("true")) {
-                auto cm = PhoneDirectoryModel::instance().getNumber(contact_info[QStringLiteral("id")], a);
+                auto cm = Session::instance()->individualDirectory()->getNumber(contact_info[QStringLiteral("id")], a);
                 add(cm);
             }
         }

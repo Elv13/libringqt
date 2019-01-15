@@ -27,7 +27,7 @@
 #include <QtCore/QMutex>
 
 //Ring
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "contactmethod.h"
 #include "address.h"
 #include "accountmodel.h"
@@ -100,14 +100,14 @@ struct VCardMapper final {
    void apply() {
       // Finalize the transaction, set the ContactsMethods
       // it is done at the end to make sure UID has been set and all CMs
-      // are there at once not to mess PhoneDirectoryModel detection
+      // are there at once not to mess IndividualDirectory detection
 
       QMutexLocker locker(m_pMutex);
 
       for (QHash<Person*, QList<GetNumberFuture>>::iterator i = m_hDelayedCMInserts.begin(); i != m_hDelayedCMInserts.end(); ++i) {
 
          foreach(const GetNumberFuture& v, i.value()) {
-            ContactMethod* cm = PhoneDirectoryModel::instance().getNumber(v.uri,v.c,nullptr,v.category);
+            ContactMethod* cm = Session::instance()->individualDirectory()->getNumber(v.uri,v.c,nullptr,v.category);
 
             i.key()->individual()->addPhoneNumber(cm);
          }

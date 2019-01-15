@@ -583,114 +583,114 @@
     </message>
 </context>
 <context>
-    <name>PhoneDirectoryModel</name>
+    <name>IndividualDirectory</name>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="234"/>
+        <location filename="../src/individualdirectory.cpp" line="234"/>
         <source>This account does not support presence tracking</source>
         <translation>Цей аккаунт не аідтримує відстеження присутності</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="237"/>
+        <location filename="../src/individualdirectory.cpp" line="237"/>
         <source>No associated account</source>
         <translation>Немає проасіцюйованого аккаунту</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>URI</source>
         <translation>URI</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Type</source>
         <translation>Тип</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Person</source>
         <translation>Персона</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Account</source>
         <translation>Аккаунт</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>State</source>
         <translation>Статус</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Call count</source>
         <translation>Кількість двзінків</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Week count</source>
         <translation>Кількість тижнів</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Trimester count</source>
         <translation>Кількість триместрів (3 місяці)</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Have Called</source>
         <translation>Дзвонив</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Last used</source>
         <translation>Останнє використання</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Name_count</source>
         <translation>Кількість контактів</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Total (in seconds)</source>
         <translation>Усього (секунди)</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Popularity_index</source>
         <translation>Індекс популярності</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Bookmarked</source>
         <translation>Збережено</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Tracked</source>
         <translation>Відстежено</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Present</source>
         <translation>Присутність</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Presence message</source>
         <translation>Повідомлення пристуності</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Uid</source>
         <translation>Ідентифікатор користувача UID</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Has certificate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Registered name</source>
         <translation type="unfinished"/>
     </message>

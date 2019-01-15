@@ -579,109 +579,109 @@
     </message>
 </context>
 <context>
-    <name>PhoneDirectoryModel</name>
+    <name>IndividualDirectory</name>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="232"/>
+        <location filename="../src/individualdirectory.cpp" line="232"/>
         <source>This account does not support presence tracking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="235"/>
+        <location filename="../src/individualdirectory.cpp" line="235"/>
         <source>No associated account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>URI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>Person</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>Account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>State</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>Call count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="295"/>
+        <location filename="../src/individualdirectory.cpp" line="295"/>
         <source>Week count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Trimester count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Have Called</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Last used</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Name_count</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Total (in seconds)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="296"/>
+        <location filename="../src/individualdirectory.cpp" line="296"/>
         <source>Popularity_index</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Tracked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Present</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Presence message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Uid</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="297"/>
+        <location filename="../src/individualdirectory.cpp" line="297"/>
         <source>Has certificate</source>
         <translation type="unfinished"></translation>
     </message>

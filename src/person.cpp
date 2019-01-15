@@ -33,7 +33,7 @@
 #include "private/vcardutils.h"
 #include "personmodel.h"
 #include "historytimecategorymodel.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "numbercategorymodel.h"
 #include "numbercategory.h"
 #include "individual.h"
@@ -416,7 +416,7 @@ bool Person::isPresent() const
 
 /** Return if this Person is currently used as a profile.
  *
- * @warning This is not cached and if the PhoneDirectoryModel fails to
+ * @warning This is not cached and if the IndividualDirectory fails to
  * deduplicate things properly it can take quite long.
  */
 bool Person::isProfile() const

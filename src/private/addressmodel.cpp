@@ -22,9 +22,10 @@
 #include <contactmethod.h>
 #include <numbercategory.h>
 #include <categorizedhistorymodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <person.h>
 #include <address.h>
+#include <session.h>
 
 AddressModel::AddressModel(const Person* parent) :
     QAbstractListModel(const_cast<Person*>(parent)), m_pPerson(const_cast<Person*>(parent))
@@ -81,7 +82,7 @@ bool AddressModel::removeRows(int row, int count, const QModelIndex &parent)
 
 QHash<int,QByteArray> AddressModel::roleNames() const
 {
-    static QHash<int, QByteArray> roles = PhoneDirectoryModel::instance().roleNames();
+    static QHash<int, QByteArray> roles = Session::instance()->individualDirectory()->roleNames();
     static bool initRoles = false;
     if (!initRoles) {
         initRoles = true;

@@ -29,7 +29,7 @@
 #include <account_const.h>
 
 //Ring
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "contactmethod.h"
 #include "call.h"
 #include "session.h"
@@ -44,7 +44,7 @@
 #include "libcard/matrixutils.h"
 
 //Private
-#include "private/phonedirectorymodel_p.h"
+#include "private/individualdirectory_p.h"
 
 class NumberCompletionModelPrivate final : public QObject
 {
@@ -142,7 +142,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
    t->start();
 }
 
-NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(&PhoneDirectoryModel::instance()), d_ptr(new NumberCompletionModelPrivate(this))
+NumberCompletionModel::NumberCompletionModel() : QAbstractTableModel(Session::instance()->individualDirectory()), d_ptr(new NumberCompletionModelPrivate(this))
 {
    setObjectName(QStringLiteral("NumberCompletionModel"));
    connect(Session::instance()->callModel(), &CallModel::dialNumberChanged, d_ptr,
@@ -174,7 +174,7 @@ NumberCompletionModel::~NumberCompletionModel()
 
 QHash<int,QByteArray> NumberCompletionModel::roleNames() const
 {
-   static QHash<int, QByteArray> roles = PhoneDirectoryModel::instance().roleNames();
+   static QHash<int, QByteArray> roles = Session::instance()->individualDirectory()->roleNames();
    static bool initRoles = false;
 
    if (!initRoles) {
@@ -386,7 +386,7 @@ ContactMethod* NumberCompletionModel::number(const QModelIndex& idx) const
       //Keep the temporary contact methods private, export a copy
       ContactMethod* m = (d_ptr->m_hNumbers.end()-1-idx.row()).value();
       return m->type() == ContactMethod::Type::TEMPORARY ?
-         PhoneDirectoryModel::instance().fromTemporary(qobject_cast<TemporaryContactMethod*>(m))
+         Session::instance()->individualDirectory()->fromTemporary(qobject_cast<TemporaryContactMethod*>(m))
          : m;
    }
 
@@ -469,7 +469,7 @@ void NumberCompletionModelPrivate::updateModel()
    }
    else if (m_DisplayMostUsedNumbers) {
       //If enabled, display the most probable entries
-      const QVector<ContactMethod*> cl = PhoneDirectoryModel::instance().getNumbersByPopularity();
+      const QVector<ContactMethod*> cl = Session::instance()->individualDirectory()->getNumbersByPopularity();
 
       for (int i=0;i<((cl.size()>=10)?10:cl.size());i++) {
          ContactMethod* n = cl[i];
@@ -522,12 +522,12 @@ QSet<Account*> NumberCompletionModelPrivate::getRange(const QMap<QString,NumberW
 
 QSet<Account*> NumberCompletionModelPrivate::locateNameRange(const QString& prefix, QSet<ContactMethod*>& set)
 {
-   return getRange(PhoneDirectoryModel::instance().d_ptr->m_lSortedNames,prefix,set);
+   return getRange(Session::instance()->individualDirectory()->d_ptr->m_lSortedNames,prefix,set);
 }
 
 QSet<Account*> NumberCompletionModelPrivate::locateNumberRange(const QString& prefix, QSet<ContactMethod*>& set)
 {
-   return getRange(PhoneDirectoryModel::instance().d_ptr->m_hSortedNumbers,prefix,set);
+   return getRange(Session::instance()->individualDirectory()->d_ptr->m_hSortedNumbers,prefix,set);
 }
 
 uint NumberCompletionModelPrivate::getWeight(ContactMethod* number)

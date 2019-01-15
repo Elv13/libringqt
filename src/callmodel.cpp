@@ -30,7 +30,7 @@
 #include "call.h"
 #include "uri.h"
 #include "session.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "contactmethod.h"
 #include "accountmodel.h"
 #include "availableaccountmodel.h"
@@ -1366,7 +1366,7 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
       Call* target = getCall(targetIdx);
       qDebug() << "Phone number" << encodedContactMethod << "on call" << target;
       Call* newCall = dialingCall(QString(),target->account());
-      ContactMethod* nb = PhoneDirectoryModel::instance().fromHash(encodedContactMethod);
+      ContactMethod* nb = Session::instance()->individualDirectory()->fromHash(encodedContactMethod);
       newCall->setDialNumber(nb);
       newCall->performAction(Call::Action::ACCEPT);
       createJoinOrMergeConferenceFromCall(newCall,target);

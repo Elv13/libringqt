@@ -32,7 +32,7 @@
 #include "individual.h"
 #include "contactmethod.h"
 #include "private/contactmethod_p.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "private/vcardutils.h"
 #include "dbus/configurationmanager.h"
 #include "uri.h"
@@ -276,7 +276,7 @@ void IncomingContactRequestManager::slotIncomingContactRequest(const QString& ac
        Session::instance()->accountModel()->incomingContactRequestModel()
    )->d_ptr->addRequest(r);
 
-   auto contactMethod = PhoneDirectoryModel::instance().getNumber(ringID, a);
+   auto contactMethod = Session::instance()->individualDirectory()->getNumber(ringID, a);
    r->setPeer(VCardUtils::mapToPersonFromReceivedProfile(contactMethod, payload));
 }
 
@@ -289,7 +289,7 @@ void IncomingContactRequestManager::slotContactAdded(const QString& accountId, c
         return;
     }
 
-    auto contactMethod = PhoneDirectoryModel::instance().getNumber(hash, a);
+    auto contactMethod = Session::instance()->individualDirectory()->getNumber(hash, a);
 
     contactMethod->d_ptr->m_ConfirmationStatus = confirm ?
         ContactMethod::ConfirmationStatus::CONFIRMED :

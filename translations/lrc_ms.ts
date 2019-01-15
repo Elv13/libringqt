@@ -583,114 +583,114 @@
     </message>
 </context>
 <context>
-    <name>PhoneDirectoryModel</name>
+    <name>IndividualDirectory</name>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="234"/>
+        <location filename="../src/individualdirectory.cpp" line="234"/>
         <source>This account does not support presence tracking</source>
         <translation>Akaun ini tidak menyokong pengesan kehadiran</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="237"/>
+        <location filename="../src/individualdirectory.cpp" line="237"/>
         <source>No associated account</source>
         <translation>Tiada akaun berkaitan</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>URI</source>
         <translation>URI</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Type</source>
         <translation>Jenis</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Person</source>
         <translation>Seseorang</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Account</source>
         <translation>Akaun</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>State</source>
         <translation>Keadaan</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Call count</source>
         <translation>Bilangan panggilan</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="305"/>
+        <location filename="../src/individualdirectory.cpp" line="305"/>
         <source>Week count</source>
         <translation>Bilangan minggu</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Trimester count</source>
         <translation>Bilangan trimester</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Have Called</source>
         <translation>Telah memanggil</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Last used</source>
         <translation>Terakhir digunakan</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Name_count</source>
         <translation>Name_count</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Total (in seconds)</source>
         <translation>Jumlah (dalam saat)</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="306"/>
+        <location filename="../src/individualdirectory.cpp" line="306"/>
         <source>Popularity_index</source>
         <translation>Popularity_index</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Bookmarked</source>
         <translation>Dibookmark</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Tracked</source>
         <translation>Dikesan</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Present</source>
         <translation>Muncul</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Presence message</source>
         <translation>Pesan muncul</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Uid</source>
         <translation>Uid</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Has certificate</source>
         <translation>Mempunyai certificate</translation>
     </message>
     <message>
-        <location filename="../src/phonedirectorymodel.cpp" line="307"/>
+        <location filename="../src/individualdirectory.cpp" line="307"/>
         <source>Registered name</source>
         <translation type="unfinished"/>
     </message>

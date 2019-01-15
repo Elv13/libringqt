@@ -33,7 +33,7 @@
 #include "callmodel.h"
 #include "contactmethod.h"
 #include "account.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "accountmodel.h"
 #include "personmodel.h"
 #include "private/textrecording_p.h"

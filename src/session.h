@@ -33,6 +33,7 @@ class AvailableAccountModel;
 class NameDirectory;
 class PeersTimelineModel;
 class NumberCategoryModel;
+class IndividualDirectory;
 
 /**
  * All uncreatable single instance objects of the base namespace.
@@ -60,6 +61,7 @@ public:
     NameDirectory* nameDirectory() const;
     PeersTimelineModel* peersTimelineModel() const;
     NumberCategoryModel* numberCategoryModel() const;
+    IndividualDirectory* individualDirectory() const;
 
     static Session* instance();
 

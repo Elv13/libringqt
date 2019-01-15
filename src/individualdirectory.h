@@ -37,16 +37,18 @@ class TemporaryContactMethod;
 class NumberTreeBackend;
 
 //Private
-class PhoneDirectoryModelPrivate;
+class IndividualDirectoryPrivate;
 
 ///CredentialModel: A model for account credentials
-class LIB_EXPORT PhoneDirectoryModel : public QAbstractTableModel {
+class LIB_EXPORT IndividualDirectory : public QAbstractTableModel
+{
 
    //NumberCompletionModel need direct access to the indexes
    friend class NumberCompletionModel;
    friend class NumberCompletionModelPrivate;
    friend class MostPopularNumberModel;
    friend class CategorizedBookmarkModel;
+   friend class Session; // factory
 
    //Friend unit test class
    friend class AutoCompletionTest;
@@ -65,7 +67,7 @@ public:
       Object = 100,
    };
 
-   virtual ~PhoneDirectoryModel();
+   virtual ~IndividualDirectory();
 
    //Abstract model members
    virtual QVariant      data       (const QModelIndex& index, int role = Qt::DisplayRole                 ) const override;
@@ -75,9 +77,6 @@ public:
    virtual bool          setData    (const QModelIndex& index, const QVariant &value, int role            )       override;
    virtual QVariant      headerData (int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override;
    virtual QHash<int,QByteArray> roleNames() const override;
-
-   //Singleton
-   static PhoneDirectoryModel& instance();
 
    //Factory
    Q_INVOKABLE ContactMethod* getNumber(const URI& uri, const QString& type = {});
@@ -107,11 +106,11 @@ public:
 
 private:
    //Constructor
-   explicit PhoneDirectoryModel(QObject* parent = nullptr);
+   explicit IndividualDirectory(QObject* parent = nullptr);
 
    //Attributes
-   QScopedPointer<PhoneDirectoryModelPrivate> d_ptr;
-   Q_DECLARE_PRIVATE(PhoneDirectoryModel)
+   QScopedPointer<IndividualDirectoryPrivate> d_ptr;
+   Q_DECLARE_PRIVATE(IndividualDirectory)
 
 public Q_SLOTS:
     void setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name);
@@ -121,4 +120,4 @@ Q_SIGNALS:
    void contactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
    void contactMethodMerged(ContactMethod* cm, ContactMethod* into);
 };
-Q_DECLARE_METATYPE(PhoneDirectoryModel*)
+Q_DECLARE_METATYPE(IndividualDirectory*)

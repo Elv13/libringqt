@@ -15,7 +15,7 @@
  *   You should have received a copy of the GNU General Public License      *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 
 //Qt
 #include <QtCore/QCoreApplication>
@@ -50,7 +50,7 @@
 #include "individual.h"
 
 //Private
-#include "private/phonedirectorymodel_p.h"
+#include "private/individualdirectory_p.h"
 
 class ContactMethodDirectoryPrivate
 {
@@ -59,29 +59,29 @@ public:
    int m_PopularityIndex{-1};
 };
 
-PhoneDirectoryModelPrivate::PhoneDirectoryModelPrivate(PhoneDirectoryModel* parent) : QObject(parent), q_ptr(parent),
+IndividualDirectoryPrivate::IndividualDirectoryPrivate(IndividualDirectory* parent) : QObject(parent), q_ptr(parent),
 m_CallWithAccount(false),m_pPopularModel(nullptr)
 {
     QTimer::singleShot(0, [this]() {
         m_pNameServiceCache = Session::instance()->bookmarkModel()->addCollection<LocalNameServiceCache>(LoadOptions::FORCE_ENABLED);
     });
-    connect(Session::instance()->nameDirectory(), &NameDirectory::registeredNameFound, this, &PhoneDirectoryModelPrivate::slotRegisteredNameFound);
+    connect(Session::instance()->nameDirectory(), &NameDirectory::registeredNameFound, this, &IndividualDirectoryPrivate::slotRegisteredNameFound);
 }
 
-PhoneDirectoryModel::PhoneDirectoryModel(QObject* parent) :
-   QAbstractTableModel(parent?parent:QCoreApplication::instance()), d_ptr(new PhoneDirectoryModelPrivate(this))
+IndividualDirectory::IndividualDirectory(QObject* parent) :
+   QAbstractTableModel(parent?parent:QCoreApplication::instance()), d_ptr(new IndividualDirectoryPrivate(this))
 {
-   setObjectName(QStringLiteral("PhoneDirectoryModel"));
+   setObjectName(QStringLiteral("IndividualDirectory"));
    connect(&PresenceManager::instance(),SIGNAL(newBuddyNotification(QString,QString,bool,QString)),d_ptr.data(),
            SLOT(slotNewBuddySubscription(QString,QString,bool,QString)));
 
    QTimer::singleShot(0, [this]() {
       connect(Session::instance()->accountModel(), &AccountModel::accountStateChanged,
-         d_ptr.data(), &PhoneDirectoryModelPrivate::slotAccountStateChanged);
+         d_ptr.data(), &IndividualDirectoryPrivate::slotAccountStateChanged);
    });
 }
 
-PhoneDirectoryModel::~PhoneDirectoryModel()
+IndividualDirectory::~IndividualDirectory()
 {
    QList<NumberWrapper*> vals = d_ptr->m_hNumbersByNames.values();
    //Used by indexes
@@ -116,14 +116,8 @@ PhoneDirectoryModel::~PhoneDirectoryModel()
    }
 }
 
-PhoneDirectoryModel& PhoneDirectoryModel::instance()
-{
-   static auto instance = new PhoneDirectoryModel;
-   return *instance;
-}
-
 /// To keep in sync with ContactMethod::roleData
-QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
+QHash<int,QByteArray> IndividualDirectory::roleNames() const
 {
     static QHash<int, QByteArray> roles = QAbstractItemModel::roleNames();
     static bool initRoles = false;
@@ -170,12 +164,12 @@ QHash<int,QByteArray> PhoneDirectoryModel::roleNames() const
     return roles;
 }
 
-QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
+QVariant IndividualDirectory::data(const QModelIndex& index, int role ) const
 {
    if (!index.isValid() || index.row() >= d_ptr->m_lNumbers.size()) return QVariant();
    const ContactMethod* number = d_ptr->m_lNumbers[index.row()];
-   switch (static_cast<PhoneDirectoryModelPrivate::Columns>(index.column())) {
-      case PhoneDirectoryModelPrivate::Columns::URI:
+   switch (static_cast<IndividualDirectoryPrivate::Columns>(index.column())) {
+      case IndividualDirectoryPrivate::Columns::URI:
          switch (role) {
             case Qt::DisplayRole:
                return number->uri();
@@ -189,7 +183,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                 return number->roleData(role);
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::BEST_NAME:
+      case IndividualDirectoryPrivate::Columns::BEST_NAME:
          switch (role) {
             case Qt::DisplayRole:
                return number->individual()->bestName();
@@ -197,7 +191,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return number->bestName();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::TYPE:
+      case IndividualDirectoryPrivate::Columns::TYPE:
          switch (role) {
             case Qt::DisplayRole:
                return number->category()->name();
@@ -205,7 +199,7 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                return number->icon();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::CONTACT:
+      case IndividualDirectoryPrivate::Columns::CONTACT:
          switch (role) {
             case Qt::DisplayRole:
                return number->contact()?number->contact()->formattedName():QVariant();
@@ -215,13 +209,13 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                 );
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::IS_SELF:
+      case IndividualDirectoryPrivate::Columns::IS_SELF:
          switch (role) {
             case Qt::CheckStateRole:
                return number->isSelf()?Qt::Checked:Qt::Unchecked;;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::ACCOUNT:
+      case IndividualDirectoryPrivate::Columns::ACCOUNT:
          switch (role) {
             case Qt::DisplayRole:
                static QMetaEnum metaEnum = QMetaEnum::fromType<Account::Protocol>();
@@ -232,25 +226,25 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
                   : QVariant();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::STATE:
+      case IndividualDirectoryPrivate::Columns::STATE:
          switch (role) {
             case Qt::DisplayRole:
                return (int)number->type();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::CALL_COUNT:
+      case IndividualDirectoryPrivate::Columns::CALL_COUNT:
          switch (role) {
             case Qt::DisplayRole:
                return number->roleData((int)ContactMethod::Role::TotalCallCount);
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::LAST_USED:
+      case IndividualDirectoryPrivate::Columns::LAST_USED:
          switch (role) {
             case Qt::DisplayRole:
                return (int)number->lastUsed();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::NAME_COUNT:
+      case IndividualDirectoryPrivate::Columns::NAME_COUNT:
          switch (role) {
             case Qt::DisplayRole:
                return number->alternativeNames().size();
@@ -267,66 +261,66 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
             }
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::TOTAL_SECONDS:
+      case IndividualDirectoryPrivate::Columns::TOTAL_SECONDS:
          switch (role) {
             case Qt::DisplayRole:
                return number->totalSpentTime();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::WEEK_COUNT:
+      case IndividualDirectoryPrivate::Columns::WEEK_COUNT:
          switch (role) {
             case Qt::DisplayRole:
                return number->weekCount();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::TRIM_COUNT:
+      case IndividualDirectoryPrivate::Columns::TRIM_COUNT:
          switch (role) {
             case Qt::DisplayRole:
                return number->trimCount();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::HAVE_CALLED:
+      case IndividualDirectoryPrivate::Columns::HAVE_CALLED:
          switch (role) {
             case Qt::DisplayRole:
                return number->haveCalled();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::POPULARITY_INDEX:
+      case IndividualDirectoryPrivate::Columns::POPULARITY_INDEX:
          switch (role) {
             case Qt::DisplayRole:
                return number->dir_d_ptr->m_PopularityIndex;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::BOOKMARED:
+      case IndividualDirectoryPrivate::Columns::BOOKMARED:
          switch (role) {
             case Qt::CheckStateRole:
                return number->isBookmarked()?Qt::Checked:Qt::Unchecked;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::HAS_CERTIFICATE:
+      case IndividualDirectoryPrivate::Columns::HAS_CERTIFICATE:
          switch (role) {
             case Qt::CheckStateRole:
                return number->certificate()?Qt::Checked:Qt::Unchecked;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::TRACKED:
+      case IndividualDirectoryPrivate::Columns::TRACKED:
          switch (role) {
             case Qt::CheckStateRole:
                if (number->account() && number->account()->supportPresenceSubscribe())
                   return number->isTracked()?Qt::Checked:Qt::Unchecked;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::PRESENT:
+      case IndividualDirectoryPrivate::Columns::PRESENT:
          switch (role) {
             case Qt::CheckStateRole:
                return number->isPresent()?Qt::Checked:Qt::Unchecked;
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::PRESENCE_MESSAGE:
+      case IndividualDirectoryPrivate::Columns::PRESENCE_MESSAGE:
          switch (role) {
             case Qt::DisplayRole: {
-               if ((index.column() == static_cast<int>(PhoneDirectoryModelPrivate::Columns::TRACKED)
-                  || static_cast<int>(PhoneDirectoryModelPrivate::Columns::PRESENT))
+               if ((index.column() == static_cast<int>(IndividualDirectoryPrivate::Columns::TRACKED)
+                  || static_cast<int>(IndividualDirectoryPrivate::Columns::PRESENT))
                   && number->account() && (!number->account()->supportPresenceSubscribe())) {
                   return tr("This account does not support presence tracking");
                }
@@ -337,14 +331,14 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
             }
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::UID:
+      case IndividualDirectoryPrivate::Columns::UID:
          switch (role) {
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
                return number->uid();
          }
          break;
-      case PhoneDirectoryModelPrivate::Columns::REGISTERED_NAME:
+      case IndividualDirectoryPrivate::Columns::REGISTERED_NAME:
          switch (role) {
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
@@ -355,17 +349,17 @@ QVariant PhoneDirectoryModel::data(const QModelIndex& index, int role ) const
    return QVariant();
 }
 
-int PhoneDirectoryModel::rowCount(const QModelIndex& parent ) const
+int IndividualDirectory::rowCount(const QModelIndex& parent ) const
 {
    return parent.isValid() ? 0 : d_ptr->m_lNumbers.size();
 }
 
-int PhoneDirectoryModel::columnCount(const QModelIndex& parent ) const
+int IndividualDirectory::columnCount(const QModelIndex& parent ) const
 {
    return parent.isValid() ? 0 : 22;
 }
 
-Qt::ItemFlags PhoneDirectoryModel::flags(const QModelIndex& index ) const
+Qt::ItemFlags IndividualDirectory::flags(const QModelIndex& index ) const
 {
    const ContactMethod* number = d_ptr->m_lNumbers[index.row()];
 
@@ -374,20 +368,20 @@ Qt::ItemFlags PhoneDirectoryModel::flags(const QModelIndex& index ) const
    if (number->isDuplicate())
       return Qt::NoItemFlags;
 
-   const bool enabled = !((index.column() == static_cast<int>(PhoneDirectoryModelPrivate::Columns::TRACKED)
-      || static_cast<int>(PhoneDirectoryModelPrivate::Columns::PRESENT))
+   const bool enabled = !((index.column() == static_cast<int>(IndividualDirectoryPrivate::Columns::TRACKED)
+      || static_cast<int>(IndividualDirectoryPrivate::Columns::PRESENT))
       && number->account() && (!number->account()->supportPresenceSubscribe()));
 
    return Qt::ItemIsEnabled
       | Qt::ItemIsSelectable
-      | (index.column() == static_cast<int>(PhoneDirectoryModelPrivate::Columns::TRACKED)&&enabled?Qt::ItemIsUserCheckable:Qt::NoItemFlags);
+      | (index.column() == static_cast<int>(IndividualDirectoryPrivate::Columns::TRACKED)&&enabled?Qt::ItemIsUserCheckable:Qt::NoItemFlags);
 }
 
 ///This model is read and for debug purpose
-bool PhoneDirectoryModel::setData(const QModelIndex& index, const QVariant &value, int role )
+bool IndividualDirectory::setData(const QModelIndex& index, const QVariant &value, int role )
 {
    ContactMethod* number = d_ptr->m_lNumbers[index.row()];
-   if (static_cast<PhoneDirectoryModelPrivate::Columns>(index.column())==PhoneDirectoryModelPrivate::Columns::TRACKED) {
+   if (static_cast<IndividualDirectoryPrivate::Columns>(index.column())==IndividualDirectoryPrivate::Columns::TRACKED) {
       if (role == Qt::CheckStateRole && number) {
          number->setTracked(value.toBool());
       }
@@ -395,7 +389,7 @@ bool PhoneDirectoryModel::setData(const QModelIndex& index, const QVariant &valu
    return false;
 }
 
-QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientation, int role ) const
+QVariant IndividualDirectory::headerData(int section, Qt::Orientation orientation, int role ) const
 {
    if (orientation == Qt::Vertical)
       return {};
@@ -434,7 +428,7 @@ QVariant PhoneDirectoryModel::headerData(int section, Qt::Orientation orientatio
  * correctly with their alternate URIs. In case there is an obvious duplication,
  * it will try to merge both numbers.
  */
-void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* account ) {
+void IndividualDirectoryPrivate::setAccount(ContactMethod* number, Account* account ) {
    const URI& strippedUri = number->uri();
    const bool hasAtSign = strippedUri.hasHostname();
    number->setAccount(account);
@@ -471,7 +465,7 @@ void PhoneDirectoryModelPrivate::setAccount(ContactMethod* number, Account* acco
 }
 
 ///Add new information to existing numbers and try to merge
-ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, const URI& strippedUri, Account* account, Person* contact, const QString& type)
+ContactMethod* IndividualDirectoryPrivate::fillDetails(NumberWrapper* wrap, const URI& strippedUri, Account* account, Person* contact, const QString& type)
 {
     //TODO pick the best URI
     //TODO the account hostname change corner case
@@ -562,7 +556,7 @@ ContactMethod* PhoneDirectoryModelPrivate::fillDetails(NumberWrapper* wrap, cons
 }
 
 /// Detect some common invalid entries
-bool PhoneDirectoryModel::ensureValidity(const URI& uri, Account* a)
+bool IndividualDirectory::ensureValidity(const URI& uri, Account* a)
 {
     if (Q_UNLIKELY(uri.isEmpty())) {
         qWarning() << "Trying to create a contact method with an empty URI" << a;
@@ -601,7 +595,7 @@ bool PhoneDirectoryModel::ensureValidity(const URI& uri, Account* a)
  * creating the first account where for a few ms, there will be elements in the
  * timeline and the "first run" mode will be skipped.
  */
-ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Account* a, const QString& type)
+ContactMethod* IndividualDirectory::getNumber(const URI& uri, Individual* i, Account* a, const QString& type)
 {
     // First check for existing entries
     ContactMethod* cm = nullptr;
@@ -654,9 +648,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Acc
 
     connect(cm,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
     connect(cm,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
-    connect(cm,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
-    connect(cm,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged);
-    connect(cm,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
+    connect(cm,&ContactMethod::lastUsedChanged,d_ptr.data(), &IndividualDirectoryPrivate::slotLastUsedChanged);
+    connect(cm,&ContactMethod::contactChanged ,d_ptr.data(), &IndividualDirectoryPrivate::slotContactChanged);
+    connect(cm,&ContactMethod::rebased ,d_ptr.data(), &IndividualDirectoryPrivate::slotContactMethodMerged);
 
     // perform a username lookup for new CM with RingID
     if (cm->uri().protocolHint() == URI::ProtocolHint::RING)
@@ -670,13 +664,13 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Individual* i, Acc
  * It will also try to attach an account to existing numbers. This is not 100% reliable, but
  * it is correct often enough to do it.
  */
-ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Account* account, const QString& type)
+ContactMethod* IndividualDirectory::getNumber(const URI& uri, Account* account, const QString& type)
 {
    return getNumber(uri, (Person*) nullptr,account,type);
 }
 
 ///Return/create a number when no information is available
-ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& type)
+ContactMethod* IndividualDirectory::getNumber(const URI& uri, const QString& type)
 {
    d_ptr->m_DirectoryAccess.lock();
 
@@ -704,7 +698,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, const QString& typ
  * directory.
  *
  */
-void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, Account* account,  const URI& uri, const URI& extendedUri)
+void IndividualDirectoryPrivate::registerAlternateNames(ContactMethod* number, Account* account,  const URI& uri, const URI& extendedUri)
 {
     // The hostname can be empty for IP2IP accounts
     if (!account)
@@ -731,7 +725,7 @@ void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, A
         if (wrap)
             wrap->numbers << number;
         else
-            qWarning() << "PhoneDirectoryModel: code path should not be reached, wrap is nullptr";
+            qWarning() << "IndividualDirectory: code path should not be reached, wrap is nullptr";
 
         // The part below can't be true, no need to process it
         return;
@@ -753,7 +747,7 @@ void PhoneDirectoryModelPrivate::registerAlternateNames(ContactMethod* number, A
 }
 
 ///Create a number when a more information is available duplicated ones
-ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
+ContactMethod* IndividualDirectory::getNumber(const URI& uri, Person* contact, Account* account, const QString& type)
 {
    d_ptr->m_DirectoryAccess.lock();
 
@@ -883,9 +877,9 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
 
    connect(number,SIGNAL(callAdded(Call*)),d_ptr.data(),SLOT(slotCallAdded(Call*)));
    connect(number,SIGNAL(changed()),d_ptr.data(),SLOT(slotChanged()));
-   connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &PhoneDirectoryModelPrivate::slotLastUsedChanged);
-   connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactChanged );
-   connect(number,&ContactMethod::rebased ,d_ptr.data(), &PhoneDirectoryModelPrivate::slotContactMethodMerged);
+   connect(number,&ContactMethod::lastUsedChanged,d_ptr.data(), &IndividualDirectoryPrivate::slotLastUsedChanged);
+   connect(number,&ContactMethod::contactChanged ,d_ptr.data(), &IndividualDirectoryPrivate::slotContactChanged );
+   connect(number,&ContactMethod::rebased ,d_ptr.data(), &IndividualDirectoryPrivate::slotContactMethodMerged);
 
    beginInsertRows({}, d_ptr->m_lNumbers.size(), d_ptr->m_lNumbers.size());
    {
@@ -901,7 +895,7 @@ ContactMethod* PhoneDirectoryModel::getNumber(const URI& uri, Person* contact, A
    return number;
 }
 
-ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
+ContactMethod* IndividualDirectory::fromTemporary(ContactMethod* number)
 {
     if (!number)
         return nullptr;
@@ -928,7 +922,7 @@ ContactMethod* PhoneDirectoryModel::fromTemporary(ContactMethod* number)
     return ret;
 }
 
-ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
+ContactMethod* IndividualDirectory::fromHash(const QString& hash)
 {
    const QStringList fields = hash.split(QStringLiteral("///"));
    if (fields.size() == 3) {
@@ -951,7 +945,7 @@ ContactMethod* PhoneDirectoryModel::fromHash(const QString& hash)
  *
  * This is the only reliable way of loading a serialized ContactMethod
  */
-ContactMethod* PhoneDirectoryModel::fromJson(const QJsonObject& o)
+ContactMethod* IndividualDirectory::fromJson(const QJsonObject& o)
 {
     const auto accountId = o[QStringLiteral("accountId")].toString();
     const auto uri       = o[QStringLiteral("uri")      ].toString();
@@ -963,7 +957,7 @@ ContactMethod* PhoneDirectoryModel::fromJson(const QJsonObject& o)
     auto c = personUID.isEmpty() ?
         nullptr: PersonModel::instance().getPlaceHolder(personUID.toLatin1());
 
-    return PhoneDirectoryModel::instance().getNumber(uri, c, a);
+    return Session::instance()->individualDirectory()->getNumber(uri, c, a);
 }
 
 
@@ -973,7 +967,7 @@ ContactMethod* PhoneDirectoryModel::fromJson(const QJsonObject& o)
  * This should help reduce the number of accidental duplicates once its
  * usage spread over the code. It also reduce the boilerplate code.
  **/
-ContactMethod* PhoneDirectoryModel::getExistingNumberIf(const URI& uri, const std::function<bool(const ContactMethod*)>& pred) const
+ContactMethod* IndividualDirectory::getExistingNumberIf(const URI& uri, const std::function<bool(const ContactMethod*)>& pred) const
 {
    //See if the number is already loaded
    const NumberWrapper* w = d_ptr->m_hDirectory.value(uri);
@@ -986,12 +980,12 @@ ContactMethod* PhoneDirectoryModel::getExistingNumberIf(const URI& uri, const st
    return (iter != std::end(w->numbers)) ? *iter : nullptr;
 }
 
-QVector<ContactMethod*> PhoneDirectoryModel::getNumbersByPopularity() const
+QVector<ContactMethod*> IndividualDirectory::getNumbersByPopularity() const
 {
    return d_ptr->m_lPopularityIndex;
 }
 
-void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
+void IndividualDirectoryPrivate::slotCallAdded(Call* call)
 {
    Q_UNUSED(call)
 
@@ -1043,7 +1037,7 @@ void PhoneDirectoryModelPrivate::slotCallAdded(Call* call)
    }
 }
 
-void PhoneDirectoryModelPrivate::slotChanged()
+void IndividualDirectoryPrivate::slotChanged()
 {
    ContactMethod* number = qobject_cast<ContactMethod*>(sender());
    if (number) {
@@ -1057,7 +1051,7 @@ void PhoneDirectoryModelPrivate::slotChanged()
 }
 
 /// Remove
-void PhoneDirectoryModelPrivate::slotContactMethodMerged(ContactMethod* other)
+void IndividualDirectoryPrivate::slotContactMethodMerged(ContactMethod* other)
 {
     // Other == cm when the person they depend on got merged. As a CM is an
     // "person-lite" this still counts as most code paths care about both. Not
@@ -1077,7 +1071,7 @@ void PhoneDirectoryModelPrivate::slotContactMethodMerged(ContactMethod* other)
 
 // Reload all ContactMethod mediaavailability. This is done here and only once
 // rather than having 1 qobject connection per CM.
-void PhoneDirectoryModelPrivate::slotAccountStateChanged(Account* a, const Account::RegistrationState state)
+void IndividualDirectoryPrivate::slotAccountStateChanged(Account* a, const Account::RegistrationState state)
 {
     Q_UNUSED(state)
     for (const auto numbers : qAsConst(m_hDirectory)) {
@@ -1088,7 +1082,7 @@ void PhoneDirectoryModelPrivate::slotAccountStateChanged(Account* a, const Accou
     }
 }
 
-void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
+void IndividualDirectoryPrivate::slotLastUsedChanged(time_t t)
 {
    ContactMethod* cm = qobject_cast<ContactMethod*>(QObject::sender());
 
@@ -1105,7 +1099,7 @@ void PhoneDirectoryModelPrivate::slotLastUsedChanged(time_t t)
    }
 }
 
-void PhoneDirectoryModelPrivate::slotContactChanged(Person* newContact, Person* oldContact)
+void IndividualDirectoryPrivate::slotContactChanged(Person* newContact, Person* oldContact)
 {
    ContactMethod* cm = qobject_cast<ContactMethod*>(QObject::sender());
 
@@ -1113,7 +1107,7 @@ void PhoneDirectoryModelPrivate::slotContactChanged(Person* newContact, Person* 
       emit q_ptr->contactChanged(cm, newContact, oldContact);
 }
 
-void PhoneDirectoryModelPrivate::slotNewBuddySubscription(const QString& accountId, const QString& uri, bool status, const QString& message)
+void IndividualDirectoryPrivate::slotNewBuddySubscription(const QString& accountId, const QString& uri, bool status, const QString& message)
 {
    ContactMethod* number = q_ptr->getNumber(uri,Session::instance()->accountModel()->getById(accountId.toLatin1()));
    number->d_ptr->setPresent(status);
@@ -1122,7 +1116,7 @@ void PhoneDirectoryModelPrivate::slotNewBuddySubscription(const QString& account
 }
 
 ///Make sure the indexes are still valid for those names
-void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStringList &names)
+void IndividualDirectoryPrivate::indexNumber(ContactMethod* number, const QStringList &names)
 {
    for (const QString& name : qAsConst(names)) {
       const QString lower = name.toLower();
@@ -1157,7 +1151,7 @@ void PhoneDirectoryModelPrivate::indexNumber(ContactMethod* number, const QStrin
  * Useful for caching locally some names
  */
 void
-PhoneDirectoryModel::setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name)
+IndividualDirectory::setRegisteredNameForRingId(const QByteArray& ringId, const QByteArray& name)
 {
     auto account = Session::instance()->accountModel()->findAccountIf([](const Account& a) {
         return a.protocol() == Account::Protocol::RING;
@@ -1171,7 +1165,7 @@ PhoneDirectoryModel::setRegisteredNameForRingId(const QByteArray& ringId, const 
 }
 
 void
-PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
+IndividualDirectoryPrivate::slotRegisteredNameFound(Account* account, NameDirectory::LookupStatus status, const QString& address, const QString& name)
 {
     if (status != NameDirectory::LookupStatus::SUCCESS) {
         // unsuccessfull lookup, so its useless
@@ -1272,21 +1266,21 @@ PhoneDirectoryModelPrivate::slotRegisteredNameFound(Account* account, NameDirect
     }
 }
 
-int PhoneDirectoryModel::count() const {
+int IndividualDirectory::count() const {
    return d_ptr->m_lNumbers.size();
 }
-bool PhoneDirectoryModel::callWithAccount() const {
+bool IndividualDirectory::callWithAccount() const {
    return d_ptr->m_CallWithAccount;
 }
 
 //Setters
-void PhoneDirectoryModel::setCallWithAccount(bool value) {
+void IndividualDirectory::setCallWithAccount(bool value) {
    d_ptr->m_CallWithAccount = value;
 }
 
 ///Popular number model related code
 
-MostPopularNumberModel::MostPopularNumberModel() : QAbstractListModel(&PhoneDirectoryModel::instance()) {
+MostPopularNumberModel::MostPopularNumberModel() : QAbstractListModel(Session::instance()->individualDirectory()) {
    setObjectName(QStringLiteral("MostPopularNumberModel"));
 }
 
@@ -1295,14 +1289,14 @@ QVariant MostPopularNumberModel::data( const QModelIndex& index, int role ) cons
    if (!index.isValid())
       return QVariant();
 
-   return PhoneDirectoryModel::instance().d_ptr->m_lPopularityIndex[index.row()]->roleData(
+   return Session::instance()->individualDirectory()->d_ptr->m_lPopularityIndex[index.row()]->roleData(
       role == Qt::DisplayRole ? (int)Call::Role::Name : role
    );
 }
 
 int MostPopularNumberModel::rowCount( const QModelIndex& parent ) const
 {
-   return parent.isValid() ? 0 : PhoneDirectoryModel::instance().d_ptr->m_lPopularityIndex.size();
+   return parent.isValid() ? 0 : Session::instance()->individualDirectory()->d_ptr->m_lPopularityIndex.size();
 }
 
 Qt::ItemFlags MostPopularNumberModel::flags( const QModelIndex& index ) const
@@ -1320,7 +1314,7 @@ bool MostPopularNumberModel::setData( const QModelIndex& index, const QVariant &
 
 void MostPopularNumberModel::addRow()
 {
-   const int oldSize = PhoneDirectoryModel::instance().d_ptr->m_lPopularityIndex.size()-1;
+   const int oldSize = Session::instance()->individualDirectory()->d_ptr->m_lPopularityIndex.size()-1;
    beginInsertRows(QModelIndex(),oldSize,oldSize);
    endInsertRows();
 }
@@ -1330,7 +1324,7 @@ void MostPopularNumberModel::reload()
    emit dataChanged(index(0,0),index(rowCount(),0));
 }
 
-QAbstractListModel* PhoneDirectoryModel::mostPopularNumberModel() const
+QAbstractListModel* IndividualDirectory::mostPopularNumberModel() const
 {
    if (!d_ptr->m_pPopularModel)
       d_ptr->m_pPopularModel = new MostPopularNumberModel();
@@ -1342,7 +1336,7 @@ QAbstractListModel* PhoneDirectoryModel::mostPopularNumberModel() const
  * @return true if any ContactMethod stored has an unread message. False otherwise
  */
 bool
-PhoneDirectoryModel::hasUnreadMessage() const
+IndividualDirectory::hasUnreadMessage() const
 {
     return std::any_of(d_ptr->m_lNumbers.constBegin(), d_ptr->m_lNumbers.constEnd(),
     [](ContactMethod* cm){

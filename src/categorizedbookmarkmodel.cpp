@@ -24,13 +24,14 @@
 #include <QtCore/QAbstractItemModel>
 
 //Ring
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "contactmethod.h"
 #include "callmodel.h"
 #include "mime.h"
+#include "session.h"
 #include "collectioneditor.h"
 #include "collectioninterface.h"
-#include "private/phonedirectorymodel_p.h"
+#include "private/individualdirectory_p.h"
 
 class BookmarkNode;
 
@@ -137,7 +138,7 @@ CategorizedBookmarkModel::~CategorizedBookmarkModel()
 
 QHash<int,QByteArray> CategorizedBookmarkModel::roleNames() const
 {
-    return PhoneDirectoryModel::instance().roleNames();
+    return Session::instance()->individualDirectory()->roleNames();
 }
 
 BookmarkNode* CategorizedBookmarkModelPrivate::getCategory(BookmarkNode* bm)
@@ -193,10 +194,10 @@ QVariant CategorizedBookmarkModel::data( const QModelIndex& index, int role) con
         const auto parentItem = static_cast<BookmarkNode*>(index.parent().internalPointer());
 
         if (parentItem->m_MostPopular) {
-            const auto mpIdx = PhoneDirectoryModel::instance()
-                .mostPopularNumberModel()->index(index.row(),0);
+            const auto mpIdx = Session::instance()->individualDirectory()->
+                mostPopularNumberModel()->index(index.row(),0);
 
-            return PhoneDirectoryModel::instance().mostPopularNumberModel()->data(
+            return Session::instance()->individualDirectory()->mostPopularNumberModel()->data(
                 mpIdx,
                 role
             );
@@ -253,7 +254,7 @@ int CategorizedBookmarkModel::rowCount( const QModelIndex& parent ) const
     switch (modelItem->m_Type) {
         case BookmarkNode::Type::CATEGORY:
             if (modelItem->m_MostPopular) {
-                static auto& index = PhoneDirectoryModel::instance().d_ptr->m_lPopularityIndex;
+                static auto& index = Session::instance()->individualDirectory()->d_ptr->m_lPopularityIndex;
                 return index.size();
             }
             else
@@ -375,12 +376,12 @@ void CategorizedBookmarkModel::setDisplayPopular(bool value)
     d_ptr->m_DisplayPopular = value;
 
     if (d_ptr->m_DisplayPopular)
-        connect(PhoneDirectoryModel::instance().mostPopularNumberModel(),
+        connect(Session::instance()->individualDirectory()->mostPopularNumberModel(),
             &QAbstractItemModel::rowsInserted,
             d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
         );
     else
-        disconnect(PhoneDirectoryModel::instance().mostPopularNumberModel(),
+        disconnect(Session::instance()->individualDirectory()->mostPopularNumberModel(),
             &QAbstractItemModel::rowsInserted,
             d_ptr,&CategorizedBookmarkModelPrivate::reloadCategories
         );

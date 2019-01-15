@@ -54,7 +54,7 @@
 #include "private/pendingcontactrequestmodel_p.h"
 #include "person.h"
 #include "private/vcardutils.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "bannedcontactmodel.h"
 
 QHash<QByteArray,AccountPlaceHolder*> AccountModelPrivate::m_hsPlaceHolder;
@@ -534,7 +534,7 @@ AccountModelPrivate::slotContactRemoved(const QString &accountID, const QString 
         return;
 
     auto account = q_ptr->getById(accountID.toLatin1());
-    auto cm = PhoneDirectoryModel::instance().getNumber(uri, account);
+    auto cm = Session::instance()->individualDirectory()->getNumber(uri, account);
     account->bannedContactModel()->add(cm);
 }
 

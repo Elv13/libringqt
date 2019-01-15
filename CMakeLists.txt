@@ -156,7 +156,7 @@ SET( libringqt_LIB_SRCS
   src/categorizedcontactmodel.cpp
   src/useractionmodel.cpp
   src/presencestatusmodel.cpp
-  src/phonedirectorymodel.cpp
+  src/individualdirectory.cpp
   src/historytimecategorymodel.cpp
   src/numbercategorymodel.cpp
   src/macromodel.cpp
@@ -309,7 +309,7 @@ SET( libringqt_LIB_HDRS
   src/presencestatusmodel.h
   src/presencestatus.h
   src/contactmethod.h
-  src/phonedirectorymodel.h
+  src/individualdirectory.h
   src/historytimecategorymodel.h
   src/numbercategorymodel.h
   src/keyexchangemodel.h
@@ -557,7 +557,7 @@ SET(libringqt_PRIVATE_HDRS
    src/private/account_p.h
    src/private/sortproxies.h
    src/private/accountmodel_p.h
-   src/private/phonedirectorymodel_p.h
+   src/private/individualdirectory_p.h
    src/private/videorenderer_p.h
    src/private/textrecording_p.h
    src/private/videodevice_p.h

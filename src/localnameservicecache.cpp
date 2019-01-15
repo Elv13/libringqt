@@ -30,8 +30,9 @@
 #include <contactmethod.h>
 #include <accountmodel.h>
 #include <personmodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <collectioneditor.h>
+#include "session.h"
 #include <globalinstances.h>
 #include <interfaces/pixmapmanipulatori.h>
 
@@ -98,7 +99,7 @@ bool LocalNameServiceCache::load()
                     qWarning() << "The registered name cache is corrupted";
                     return;
                 }
-                PhoneDirectoryModel::instance().setRegisteredNameForRingId(fields[0], fields[1]);
+                Session::instance()->individualDirectory()->setRegisteredNameForRingId(fields[0], fields[1]);
             }
 
             return;

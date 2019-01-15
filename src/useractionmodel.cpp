@@ -30,7 +30,7 @@
 #include "accountmodel.h"
 #include "contactmethod.h"
 #include "availableaccountmodel.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "interfaces/actionextenderi.h"
@@ -958,7 +958,7 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
                      // an existing chat history.
                      if (c->state() == Call::State::DIALING) {
                         ret &= updateByContactMethod(
-                          action, PhoneDirectoryModel::instance().getExistingNumberIf(
+                          action, Session::instance()->individualDirectory()->getExistingNumberIf(
                              c->peerContactMethod()->uri(),
                              [](const ContactMethod* cm) -> bool { return cm->account();}
                           )

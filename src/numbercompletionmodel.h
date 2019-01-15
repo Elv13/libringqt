@@ -24,7 +24,7 @@
 class QItemSelectionModel;
 
 //Ring
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <itemdataroles.h>
 #include <contactmethod.h>
 class Call;

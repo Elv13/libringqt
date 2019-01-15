@@ -34,7 +34,7 @@
 #include <contactmethod.h>
 #include <accountmodel.h>
 #include <personmodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <collectioneditor.h>
 #include <globalinstances.h>
 #include <interfaces/pixmapmanipulatori.h>
@@ -290,7 +290,7 @@ void Serializable::BookmarkNode::read(const QJsonObject &json)
 
    account = accountId.isEmpty()?nullptr:Session::instance()->accountModel()->getById( accountId );
    contact = contactId.isEmpty()?nullptr:PersonModel::instance  ().getPersonByUid( contactId            );
-   cm      = uri.isEmpty()?nullptr:PhoneDirectoryModel::instance().getNumber     ( uri, contact, account);
+   cm      = uri.isEmpty()?nullptr:Session::instance()->individualDirectory()->getNumber     ( uri, contact, account);
 }
 
 void Serializable::BookmarkNode::write(QJsonObject& json) const

@@ -277,10 +277,10 @@ private:
     static void deleteCall(Call* call);
 
     // Used as contact until m_pPeerContactMethod is created
-    // Owner is PhoneDirectoryModel instance
+    // Owner is IndividualDirectory instance
     TemporaryContactMethod* m_pDialNumber {nullptr};
 
-    // Owner is PhoneDirectoryModel instance
+    // Owner is IndividualDirectory instance
     TemporaryContactMethod* m_pTransferNumber {nullptr};
 
 private Q_SLOTS:

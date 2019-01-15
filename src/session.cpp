@@ -27,6 +27,7 @@
 #include "namedirectory.h"
 #include "peerstimelinemodel.h"
 #include "numbercategorymodel.h"
+#include "individualdirectory.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -102,6 +103,13 @@ PeersTimelineModel* Session::peersTimelineModel() const
 NumberCategoryModel* Session::numberCategoryModel() const
 {
     static NumberCategoryModel m;
+
+    return &m;
+}
+
+IndividualDirectory* Session::individualDirectory() const
+{
+    static IndividualDirectory m;
 
     return &m;
 }

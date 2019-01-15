@@ -25,7 +25,7 @@
 #include "dbus/configurationmanager.h"
 
 //Ring
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "person.h"
 #include "session.h"
 #include "account.h"
@@ -55,7 +55,7 @@
 #include "interfaces/pixmapmanipulatori.h"
 
 //Private
-#include "private/phonedirectorymodel_p.h"
+#include "private/individualdirectory_p.h"
 #include "private/textrecording_p.h"
 
 class UsageStatisticsPrivate
@@ -196,7 +196,7 @@ ContactMethodPrivate* ContactMethod::d() const
 }
 
 ///Constructor
-ContactMethod::ContactMethod(const URI& number, NumberCategory* cat, Type st) : ItemBase(&PhoneDirectoryModel::instance()),
+ContactMethod::ContactMethod(const URI& number, NumberCategory* cat, Type st) : ItemBase(Session::instance()->individualDirectory()),
 d_ptr(new ContactMethodPrivate(number,cat,st,this))
 {
    setObjectName(d_ptr->m_Uri);
@@ -390,7 +390,7 @@ void ContactMethod::setPerson(Person* contact)
       return;
 
    // This *will* have bad side effects. Better just call
-   // `PhoneDirectoryModel::getNumber()` to get a new ContactMethod.
+   // `IndividualDirectory::getNumber()` to get a new ContactMethod.
    if (d_ptr->m_pPerson && contact && contact->uid() != d_ptr->m_pPerson->uid()) {
       qWarning() << "WARNING: There's already a contact, this is a bug"
          << contact << d_ptr->m_pPerson;
@@ -406,7 +406,7 @@ void ContactMethod::setPerson(Person* contact)
 
    if (contact && d_ptr->m_Type != ContactMethod::Type::TEMPORARY) {
       contact->individual()->registerContactMethod(this);
-      PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+QStringList(contact->formattedName()));
+      Session::instance()->individualDirectory()->d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+QStringList(contact->formattedName()));
       d_ptr->m_PrimaryName_cache = contact->formattedName();
       d_ptr->primaryNameChanged(d_ptr->m_PrimaryName_cache);
 
@@ -518,7 +518,7 @@ void ContactMethodPrivate::setRegisteredName(const QString& registeredName)
    // If this happens, better create another ContactMethod manually to avoid
    // all the corner cases. Doing this, for example, allows to keep track of
    // the name in the private index of unique names kept by the
-   // PhoneDirectoryModel
+   // IndividualDirectory
    if (!m_RegisteredName.isEmpty()) {
       qWarning() << "A registered name is already set for this ContactMethod"
          << m_RegisteredName << registeredName;
@@ -1132,7 +1132,7 @@ void ContactMethod::incrementAlternativeName(const QString& name, const time_t l
    d_ptr->m_hNames[name].first++;
 
    if (needReIndexing && d_ptr->m_Type != ContactMethod::Type::TEMPORARY) {
-      PhoneDirectoryModel::instance().d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+(d_ptr->m_pPerson?(QStringList(d_ptr->m_pPerson->formattedName())):QStringList()));
+      Session::instance()->individualDirectory()->d_ptr->indexNumber(this,d_ptr->m_hNames.keys()+(d_ptr->m_pPerson?(QStringList(d_ptr->m_pPerson->formattedName())):QStringList()));
       //Invalid m_PrimaryName_cache
       if (!d_ptr->m_pPerson) {
          d_ptr->m_PrimaryName_cache.clear();
@@ -1181,7 +1181,7 @@ void ContactMethodPrivate::slotNameChanged()
 /**
  * Merge two phone number to share the same data. This avoid having to change
  * pointers all over the place. The ContactMethod objects remain intact, the
- * PhoneDirectoryModel will replace the old references, but existing ones will
+ * IndividualDirectory will replace the old references, but existing ones will
  * keep working.
  */
 bool ContactMethod::merge(ContactMethod* other)

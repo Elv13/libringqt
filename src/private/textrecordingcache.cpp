@@ -35,7 +35,7 @@
 #include "media/file.h"
 #include "availableaccountmodel.h"
 #include "localtextrecordingcollection.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 
 QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;
 
@@ -359,7 +359,7 @@ void Serializable::Peers::read(const QJsonObject &json, const QString& path)
             continue;
         }
 
-        auto cm = PhoneDirectoryModel::instance().fromJson(o);
+        auto cm = Session::instance()->individualDirectory()->fromJson(o);
         Q_ASSERT(cm);
 
         m_hSha1[cm->sha1()] = cm;

@@ -24,10 +24,11 @@
 #include <account.h>
 #include <certificate.h>
 #include <certificatemodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include "private/vcardutils.h"
 #include "itembase.h"
 #include "personmodel.h"
+#include "session.h"
 #include <peerprofilecollection2.h>
 
 //DRing
@@ -46,7 +47,7 @@ public:
 
 ContactRequest::ContactRequest(Account* a, const QString& id, time_t time, const QByteArray& payload) : QObject(a), d_ptr(new ContactRequestPrivate)
 {
-   d_ptr->m_pContactMethod = PhoneDirectoryModel::instance().getNumber(id, a);
+   d_ptr->m_pContactMethod = Session::instance()->individualDirectory()->getNumber(id, a);
    d_ptr->m_pPeer = VCardUtils::mapToPersonFromReceivedProfile(d_ptr->m_pContactMethod, payload);
 
    d_ptr->m_pAccount     = a;

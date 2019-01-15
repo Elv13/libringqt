@@ -32,18 +32,18 @@ class Individual;
 class PeersTimelineModelPrivate;
 
 /**
- * This model sort the PhoneDirectoryModel contact methods into a timeline.
+ * This model sort the IndividualDirectory contact methods into a timeline.
  *
  * It is a successor to the RecentModel as it became too complex to be extended
  * any further. Compared to its predesessor, it doesn't attempt to track
  * multiple object type nor does it exposes a tree. It is a thin "proxy" on top
- * of the PhoneDirectoryModel and use modern C++ algorithm to rotate the CMs
+ * of the IndividualDirectory and use modern C++ algorithm to rotate the CMs
  * instead of a thousand line of imperative code. It delegate some of the
  * responsabilities previously handled by the RecentModel to the ContactMethod.
  * This simplify everything as the contact method object have direct access to
  * the events instead of trying to recreate them on an upper layer.
  *
- * This model could have been merged into PhoneDirectoryModel, but that would
+ * This model could have been merged into IndividualDirectory, but that would
  * add complexity to mature code. Rewriting RecentModel would have carried risk
  * for shipping products. Once/If this model meet the requirement to replace
  * RecentModel, the old code could be retired.

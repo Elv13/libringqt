@@ -22,7 +22,7 @@
 #include <contactmethod.h>
 #include <numbercategory.h>
 #include <categorizedhistorymodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <person.h>
 #include <account.h>
 #include "libcard/eventaggregate.h"
@@ -61,7 +61,7 @@ public:
 
     explicit IndividualPrivate() {
         moveToThread(QCoreApplication::instance()->thread());
-        setParent(&PhoneDirectoryModel::instance());
+        setParent(Session::instance()->individualDirectory());
     }
 
     // This is a private class, no need for d_ptr
@@ -134,7 +134,7 @@ Individual::Individual(Person* parent) :
         &IndividualPrivate::slotRegisteredName);
 }
 
-Individual::Individual() : QAbstractListModel(&PhoneDirectoryModel::instance()), d_ptr(new IndividualPrivate)
+Individual::Individual() : QAbstractListModel(Session::instance()->individualDirectory()), d_ptr(new IndividualPrivate)
 {
     d_ptr->q_ptr = this;
     d_ptr->m_lParents << this;
@@ -324,7 +324,7 @@ bool Individual::removeRows(int row, int count, const QModelIndex &parent)
 
 QHash<int,QByteArray> Individual::roleNames() const
 {
-    static QHash<int, QByteArray> roles = PhoneDirectoryModel::instance().roleNames();
+    static QHash<int, QByteArray> roles = Session::instance()->individualDirectory()->roleNames();
     static bool initRoles = false;
     if (!initRoles) {
         initRoles = true;
@@ -745,7 +745,7 @@ bool Individual::hasPhoneNumber(ContactMethod* cm) const
 ContactMethod* Individual::addPhoneNumber(const URI& uri, Account* a, const QString& type)
 {
     return addPhoneNumber(
-        PhoneDirectoryModel::instance().getNumber(uri, this, a, type)
+        Session::instance()->individualDirectory()->getNumber(uri, this, a, type)
     );
 }
 
@@ -760,7 +760,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     }
 
     if (cm->type() == ContactMethod::Type::TEMPORARY)
-        cm = PhoneDirectoryModel::instance().fromTemporary(
+        cm = Session::instance()->individualDirectory()->fromTemporary(
             static_cast<TemporaryContactMethod*>(cm)
         );
 
@@ -913,7 +913,7 @@ ContactMethod* Individual::replacePhoneNumber(ContactMethod* old, ContactMethod*
     }
 
     if (newCm->type() == ContactMethod::Type::TEMPORARY)
-        newCm = PhoneDirectoryModel::instance().fromTemporary(
+        newCm = Session::instance()->individualDirectory()->fromTemporary(
             static_cast<TemporaryContactMethod*>(newCm)
         );
 

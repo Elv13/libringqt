@@ -29,7 +29,7 @@
 #include "session.h"
 #include "categorizedhistorymodel.h"
 #include "contactmethod.h"
-#include "phonedirectorymodel.h"
+#include "individualdirectory.h"
 #include "historytimecategorymodel.h"
 #include "person.h"
 #include "uri.h"

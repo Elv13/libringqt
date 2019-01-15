@@ -32,7 +32,7 @@
 #include <accountmodel.h>
 #include <personmodel.h>
 #include <eventmodel.h>
-#include <phonedirectorymodel.h>
+#include <individualdirectory.h>
 #include <localrecordingcollection.h>
 #include <media/avrecording.h>
 #include "../private/call_p.h"
@@ -163,7 +163,7 @@ bool Calendar::load()
         }
 
         self->m_lAttendees << QPair<ContactMethod*, QString> {
-            PhoneDirectoryModel::instance().getNumber(val, p, a ? a : account()),
+            Session::instance()->individualDirectory()->getNumber(val, p, a ? a : account()),
             self->m_CN
         };
     });

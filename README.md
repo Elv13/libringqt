@@ -57,7 +57,7 @@ reaching him/her/it. It has the following primary keys:
  * An Account object (can be set only once)
  * A Person object (can be set only once)
 
-The factory is `PhoneDirectoryModel` and will take care of re-using and
+The factory is `IndividualDirectory` and will take care of re-using and
 de-duplicating all instances.
 
 A `TemporaryContactMethod` subclass exists with more related requirements but
