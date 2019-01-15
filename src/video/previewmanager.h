@@ -20,6 +20,7 @@
 #include <QtCore/QObject>
 
 #include <typedefs.h>
+class Session;
 
 namespace Video {
 
@@ -34,11 +35,9 @@ class LIB_EXPORT PreviewManager : public QObject
 {
    Q_OBJECT
 
+   friend class ::Session; // factory
 public:
     Q_PROPERTY(bool previewing READ isPreviewing NOTIFY previewStateChanged)
-
-   //Singleton
-   static PreviewManager& instance();
 
    //Getters
    bool             isPreviewing   ();

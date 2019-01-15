@@ -44,6 +44,10 @@ namespace Media {
 class RecordingModel;
 }
 
+namespace Video {
+class PreviewManager;
+}
+
 /**
  * All uncreatable single instance objects of the base namespace.
  */
@@ -66,7 +70,7 @@ public:
     Q_PROPERTY(IndividualDirectory* individualDirectory READ individualDirectory CONSTANT)
     Q_PROPERTY(RingtoneModel* ringtoneModel READ ringtoneModel CONSTANT)
     Q_PROPERTY(Media::RecordingModel* recordingModel READ recordingModel CONSTANT)
-    Q_PROPERTY(PersonDirectory* personDirectory READ personDirectory CONSTANT)
+    Q_PROPERTY(Video::PreviewManager* previewManager READ previewManager CONSTANT)
 
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
@@ -84,6 +88,7 @@ public:
     RingtoneModel* ringtoneModel() const;
     Media::RecordingModel* recordingModel() const;
     PersonDirectory* personDirectory() const;
+    Video::PreviewManager* previewManager() const;
 
     static Session* instance();
 

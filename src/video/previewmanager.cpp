@@ -20,12 +20,6 @@
 #include "private/videorenderermanager.h"
 #include "video/renderer.h"
 
-Video::PreviewManager& Video::PreviewManager::instance()
-{
-   static auto instance = new PreviewManager();
-   return *instance;
-}
-
 //Getters
 bool Video::PreviewManager::isPreviewing()
 {

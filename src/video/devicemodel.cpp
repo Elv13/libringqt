@@ -24,6 +24,7 @@
 //Ring
 #include "device.h"
 #include <call.h>
+#include <session.h>
 #include <account.h>
 #include <video/previewmanager.h>
 #include "../dbus/videomanager.h"
@@ -137,9 +138,9 @@ void Video::DeviceModel::setActive(const QModelIndex& idx)
       emit currentIndexChanged(idx.row());
 
       //If the only renderer is the preview, reload it
-      if (Video::PreviewManager::instance().isPreviewing() && VideoRendererManager::instance().size() == 1) {
-         Video::PreviewManager::instance().stopPreview();
-         Video::PreviewManager::instance().startPreview();
+      if (Session::instance()->previewManager()->isPreviewing() && VideoRendererManager::instance().size() == 1) {
+         Session::instance()->previewManager()->stopPreview();
+         Session::instance()->previewManager()->startPreview();
       }
    }
 }

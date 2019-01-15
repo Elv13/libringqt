@@ -33,6 +33,7 @@
 #include "eventmodel.h"
 #include "ringtonemodel.h"
 #include "media/recordingmodel.h"
+#include "video/previewmanager.h"
 #include "persondirectory.h"
 
 Session::Session(QObject* parent) : QObject(parent)
@@ -158,6 +159,13 @@ Media::RecordingModel* Session::recordingModel() const
 PersonDirectory* Session::personDirectory() const
 {
     static PersonDirectory m;
+
+    return &m;
+}
+
+Video::PreviewManager* Session::previewManager() const
+{
+    static Video::PreviewManager m;
 
     return &m;
 }

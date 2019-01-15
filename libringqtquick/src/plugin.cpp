@@ -70,6 +70,7 @@
 #include <presencestatusmodel.h>
 #include <eventmodel.h>
 #include <media/recordingmodel.h>
+#include <video/previewmanager.h>
 #include <persondirectory.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
@@ -121,7 +122,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( EventModel                 )
     QML_TYPE_MOD( RingtoneModel              )
     QML_TYPE_MOD( PresenceStatusModel        )
-    QML_TYPE_MOD( PersonDirectory                )
+    QML_TYPE_MOD( PersonDirectory            )
 
 
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
@@ -139,8 +140,9 @@ void RingQtQuick::registerTypes(const char *uri)
 
     // Video subsystem
     { using namespace Video;
-        QML_TYPE_VIM( SourceModel );
-        QML_TYPE_VID( Renderer    );
+        QML_TYPE_VIM( SourceModel    );
+        QML_TYPE_VID( Renderer       );
+        QML_TYPE_MOD( PreviewManager )
     }
 
     // Live troubleshooting subsystem

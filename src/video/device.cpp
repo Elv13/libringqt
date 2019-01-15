@@ -26,6 +26,7 @@
 #include "resolution.h"
 #include "rate.h"
 #include "channel.h"
+#include "session.h"
 #include "renderer.h"
 #include "previewmanager.h"
 
@@ -237,8 +238,8 @@ void VideoDevicePrivate::saveIdle()
 
    //If the preview is running, reload it
    //doing this during a call will cause re-invite, this is unwanted
-   if (Video::PreviewManager::instance().isPreviewing() && VideoRendererManager::instance().size() == 1) {
-      Video::PreviewManager::instance().stopPreview();
-      Video::PreviewManager::instance().startPreview();
+   if (Session::instance()->previewManager()->isPreviewing() && VideoRendererManager::instance().size() == 1) {
+      Session::instance()->previewManager()->stopPreview();
+      Session::instance()->previewManager()->startPreview();
    }
 }
