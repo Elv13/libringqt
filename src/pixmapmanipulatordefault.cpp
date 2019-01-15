@@ -105,7 +105,7 @@ QVariant PixmapManipulatorDefault::historySortingCategoryIcon(const CategorizedH
     return QVariant();
 }
 
-QVariant PixmapManipulatorDefault::contactSortingCategoryIcon(const CategorizedContactModel::SortedProxy::Categories cat) const
+QVariant PixmapManipulatorDefault::contactSortingCategoryIcon(const ContactModel::SortedProxy::Categories cat) const
 {
     Q_UNUSED(cat)
     return QVariant();

@@ -27,7 +27,7 @@
 
 //Ring
 #include "libcard/matrixutils.h"
-#include <categorizedcontactmodel.h>
+#include <contactmodel.h>
 #include <categorizedhistorymodel.h>
 #include <globalinstances.h>
 #include <session.h>
@@ -46,7 +46,7 @@ namespace CategoryModelCommon {
       return false;
    }
 
-   static const Matrix1D<CategorizedContactModel::SortedProxy::Categories,QString> contactSortNames = {{
+   static const Matrix1D<ContactModel::SortedProxy::Categories,QString> contactSortNames = {{
            QT_TRANSLATE_NOOP("ContactSortingCategoryModel", "Name"         ),
            QT_TRANSLATE_NOOP("ContactSortingCategoryModel", "Organisation" ),
            QT_TRANSLATE_NOOP("ContactSortingCategoryModel", "Recently used"),
@@ -123,38 +123,38 @@ ContactSortingCategoryModel::~ContactSortingCategoryModel()
 static void sortContact(QSortFilterProxyModel* p, int roleIdx)
 {
    static auto m = Session::instance()->contactModel();
-   switch(static_cast<CategorizedContactModel::SortedProxy::Categories>(roleIdx)) {
-      case CategorizedContactModel::SortedProxy::Categories::NAME:
+   switch(static_cast<ContactModel::SortedProxy::Categories>(roleIdx)) {
+      case ContactModel::SortedProxy::Categories::NAME:
          m->setSortAlphabetical(true);
-         m->setDefaultCategory(QT_TRANSLATE_NOOP("CategorizedContactModel", "Empty"));
+         m->setDefaultCategory(QT_TRANSLATE_NOOP("ContactModel", "Empty"));
          p->setSortRole(Qt::DisplayRole);
          m->setRole(Qt::DisplayRole);
          break;
-      case CategorizedContactModel::SortedProxy::Categories::ORGANIZATION:
+      case ContactModel::SortedProxy::Categories::ORGANIZATION:
          m->setSortAlphabetical(false);
-         m->setDefaultCategory(QT_TRANSLATE_NOOP("CategorizedContactModel", "Unknown"));
+         m->setDefaultCategory(QT_TRANSLATE_NOOP("ContactModel", "Unknown"));
          p->setSortRole((int)Person::Role::Organization);
          m->setRole((int)Person::Role::Organization);
          break;
-      case CategorizedContactModel::SortedProxy::Categories::RECENTLYUSED:
+      case ContactModel::SortedProxy::Categories::RECENTLYUSED:
          m->setSortAlphabetical(false);
-         m->setDefaultCategory(QT_TRANSLATE_NOOP("CategorizedContactModel", "Never"));
+         m->setDefaultCategory(QT_TRANSLATE_NOOP("ContactModel", "Never"));
          p->setSortRole((int)Person::Role::IndexedLastUsed);
          m->setRole((int)Person::Role::FormattedLastUsed);
          break;
-      case CategorizedContactModel::SortedProxy::Categories::GROUP:
+      case ContactModel::SortedProxy::Categories::GROUP:
          m->setSortAlphabetical(false);
-         m->setDefaultCategory(QT_TRANSLATE_NOOP("CategorizedContactModel", "Other"));
+         m->setDefaultCategory(QT_TRANSLATE_NOOP("ContactModel", "Other"));
          p->setSortRole((int)Person::Role::Group);
          m->setRole((int)Person::Role::Group);
          break;
-      case CategorizedContactModel::SortedProxy::Categories::DEPARTMENT:
+      case ContactModel::SortedProxy::Categories::DEPARTMENT:
          m->setSortAlphabetical(false);
-         m->setDefaultCategory(QT_TRANSLATE_NOOP("CategorizedContactModel", "Unknown"));
+         m->setDefaultCategory(QT_TRANSLATE_NOOP("ContactModel", "Unknown"));
          p->setSortRole((int)Person::Role::Department);
          m->setRole((int)Person::Role::Department);
          break;
-      case CategorizedContactModel::SortedProxy::Categories::COUNT__:
+      case ContactModel::SortedProxy::Categories::COUNT__:
          break;
    };
 }
@@ -164,9 +164,9 @@ QVariant ContactSortingCategoryModel::data( const QModelIndex& index, int role )
    if (index.isValid()) {
       switch (role) {
          case Qt::DisplayRole:
-            return CategoryModelCommon::contactSortNames[static_cast<CategorizedContactModel::SortedProxy::Categories>(index.row())];
+            return CategoryModelCommon::contactSortNames[static_cast<ContactModel::SortedProxy::Categories>(index.row())];
          case Qt::DecorationRole:
-            return GlobalInstances::pixmapManipulator().contactSortingCategoryIcon(static_cast<CategorizedContactModel::SortedProxy::Categories>(index.row()));
+            return GlobalInstances::pixmapManipulator().contactSortingCategoryIcon(static_cast<ContactModel::SortedProxy::Categories>(index.row()));
       }
    }
    return QVariant();
@@ -174,7 +174,7 @@ QVariant ContactSortingCategoryModel::data( const QModelIndex& index, int role )
 
 int ContactSortingCategoryModel::rowCount( const QModelIndex& parent) const
 {
-   return parent.isValid()? 0 : enum_class_size<CategorizedContactModel::SortedProxy::Categories>();
+   return parent.isValid()? 0 : enum_class_size<ContactModel::SortedProxy::Categories>();
 }
 
 Qt::ItemFlags ContactSortingCategoryModel::flags( const QModelIndex& index ) const

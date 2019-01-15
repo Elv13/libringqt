@@ -280,9 +280,9 @@
     </message>
 </context>
 <context>
-    <name>CategorizedContactModel</name>
+    <name>ContactModel</name>
     <message>
-        <location filename="../src/categorizedcontactmodel.cpp" line="401"/>
+        <location filename="../src/contactmodel.cpp" line="401"/>
         <source>Contacts</source>
         <translation>Contatti</translation>
     </message>

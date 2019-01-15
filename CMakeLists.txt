@@ -153,7 +153,7 @@ SET( libringqt_LIB_SRCS
   src/categorizedhistorymodel.cpp
   src/categorizedbookmarkmodel.cpp
   src/credentialmodel.cpp
-  src/categorizedcontactmodel.cpp
+  src/contactmodel.cpp
   src/useractionmodel.cpp
   src/presencestatusmodel.cpp
   src/individualdirectory.cpp
@@ -304,7 +304,7 @@ SET( libringqt_LIB_HDRS
   src/collectioninterface.hpp
   src/categorizedbookmarkmodel.h
   src/credentialmodel.h
-  src/categorizedcontactmodel.h
+  src/contactmodel.h
   src/useractionmodel.h
   src/presencestatusmodel.h
   src/presencestatus.h

@@ -21,7 +21,7 @@
 #include "callmodel.h"
 #include "accountmodel.h"
 #include "categorizedhistorymodel.h"
-#include "categorizedcontactmodel.h"
+#include "contactmodel.h"
 #include "categorizedbookmarkmodel.h"
 #include "availableaccountmodel.h"
 #include "namedirectory.h"
@@ -73,9 +73,9 @@ CategorizedHistoryModel* Session::historyModel() const
     return &m;
 }
 
-CategorizedContactModel* Session::contactModel() const
+ContactModel* Session::contactModel() const
 {
-    static CategorizedContactModel m;
+    static ContactModel m;
 
     return &m;
 }
@@ -180,15 +180,15 @@ InfoTemplateManager* Session::infoTemplateManager() const
 
 QAbstractItemModel* Session::sortedContactModel() const
 {
-    return CategorizedContactModel::SortedProxy::instance().model();
+    return ContactModel::SortedProxy::instance().model();
 }
 
 QAbstractItemModel* Session::contactCategoryModel() const
 {
-    return CategorizedContactModel::SortedProxy::instance().categoryModel();
+    return ContactModel::SortedProxy::instance().categoryModel();
 }
 
 QItemSelectionModel* Session::contactCategorySelectionModel() const
 {
-    return CategorizedContactModel::SortedProxy::instance().categorySelectionModel();
+    return ContactModel::SortedProxy::instance().categorySelectionModel();
 }

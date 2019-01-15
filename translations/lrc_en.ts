@@ -276,9 +276,9 @@
     </message>
 </context>
 <context>
-    <name>CategorizedContactModel</name>
+    <name>ContactModel</name>
     <message>
-        <location filename="../src/categorizedcontactmodel.cpp" line="393"/>
+        <location filename="../src/contactmodel.cpp" line="393"/>
         <source>Contacts</source>
         <translation type="unfinished"></translation>
     </message>

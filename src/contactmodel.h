@@ -28,11 +28,11 @@ class PersonDirectory;
 class ContactTreeNode;
 class TopLevelItem;
 class ContactTreeBinder;
-class CategorizedContactModelPrivate;
+class ContactModelPrivate;
 class QSortFilterProxyModel;
 class QItemSelectionModel;
 
-class LIB_EXPORT CategorizedContactModel :  public QAbstractItemModel
+class LIB_EXPORT ContactModel :  public QAbstractItemModel
 {
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -45,7 +45,7 @@ public:
    friend class SortedProxy      ;
    friend class Session          ; // factory
 
-   virtual ~CategorizedContactModel();
+   virtual ~ContactModel();
 
    //Setters
    void setRole             ( int role           );
@@ -86,13 +86,13 @@ public:
       QAbstractItemModel * model                 () const;
       QAbstractItemModel * categoryModel         () const;
       QItemSelectionModel* categorySelectionModel() const;
-      static CategorizedContactModel::SortedProxy& instance();
+      static ContactModel::SortedProxy& instance();
    };
 
 private:
-   explicit CategorizedContactModel(int role = Qt::DisplayRole);
+   explicit ContactModel(int role = Qt::DisplayRole);
 
-   QScopedPointer<CategorizedContactModelPrivate> d_ptr;
-   Q_DECLARE_PRIVATE(CategorizedContactModel)
+   QScopedPointer<ContactModelPrivate> d_ptr;
+   Q_DECLARE_PRIVATE(ContactModel)
 };
 

@@ -29,7 +29,7 @@ class QItemSelectionModel;
 class CallModel;
 class AccountModel;
 class CategorizedHistoryModel;
-class CategorizedContactModel;
+class ContactModel;
 class CategorizedBookmarkModel;
 class AvailableAccountModel;
 class NameDirectory;
@@ -61,7 +61,7 @@ public:
     Q_PROPERTY(CallModel* callModel READ callModel CONSTANT)
     Q_PROPERTY(AccountModel* accountModel READ accountModel CONSTANT)
     Q_PROPERTY(CategorizedHistoryModel* historyModel READ historyModel CONSTANT)
-    Q_PROPERTY(CategorizedContactModel* contactModel READ contactModel CONSTANT)
+    Q_PROPERTY(ContactModel* contactModel READ contactModel CONSTANT)
     Q_PROPERTY(CategorizedBookmarkModel* bookmarkModel READ bookmarkModel CONSTANT)
     Q_PROPERTY(AvailableAccountModel* availableAccountModel READ availableAccountModel CONSTANT)
     Q_PROPERTY(NameDirectory* nameDirectory READ nameDirectory CONSTANT)
@@ -83,7 +83,7 @@ public:
     CallModel*    callModel   () const;
     AccountModel* accountModel() const;
     CategorizedHistoryModel* historyModel() const;
-    CategorizedContactModel* contactModel() const;
+    ContactModel* contactModel() const;
     CategorizedBookmarkModel* bookmarkModel() const;
     AvailableAccountModel* availableAccountModel() const;
     NameDirectory* nameDirectory() const;

@@ -60,7 +60,7 @@
 #include <numbercompletionmodel.h>
 #include <categorizedbookmarkmodel.h>
 #include <categorizedhistorymodel.h>
-#include <categorizedcontactmodel.h>
+#include <contactmodel.h>
 #include <namedirectory.h>
 #include <peerstimelinemodel.h>
 #include <individualdirectory.h>
@@ -114,7 +114,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( CallModel                  )
     QML_TYPE_MOD( AccountModel               )
     QML_TYPE_MOD( CategorizedBookmarkModel   )
-    QML_TYPE_MOD( CategorizedContactModel    )
+    QML_TYPE_MOD( ContactModel    )
     QML_TYPE_MOD( CategorizedHistoryModel    )
     QML_TYPE_MOD( PeersTimelineModel         )
     QML_TYPE_MOD( NumberCategoryModel        )
