@@ -73,6 +73,7 @@
 #include <video/previewmanager.h>
 #include <persondirectory.h>
 #include <infotemplatemanager.h>
+#include <video/devicemodel.h>
 // #include <recentfilemodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
@@ -130,6 +131,9 @@ void RingQtQuick::registerTypes(const char *uri)
 //     qmlRegisterType<RecentFileModel>(moduri, 1,0, "RecentFileModel");
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 
+    qmlRegisterUncreatableType<::Media::Media>(
+        uri, 1,0, "Media", QStringLiteral("cannot be instantiated")
+    );
     // Media subsystem
     { using namespace Media;
         QML_TYPE_MED( Recording     );
@@ -146,6 +150,7 @@ void RingQtQuick::registerTypes(const char *uri)
         QML_TYPE_VIM( SourceModel    );
         QML_TYPE_VID( Renderer       );
         QML_TYPE_MOD( PreviewManager )
+        QML_TYPE_MOD( DeviceModel    )
     }
 
     // Live troubleshooting subsystem

@@ -19,6 +19,7 @@
 #include "devicemodel.h"
 #include "channel.h"
 #include "resolution.h"
+#include "session.h"
 #include "../private/videorate_p.h"
 
 Video::Rate::Rate(const Video::Resolution* res,const QString& name) :
@@ -35,7 +36,7 @@ Video::Rate::~Rate()
 
 int Video::Rate::relativeIndex()
 {
-   return Video::DeviceModel::instance().activeDevice()->activeChannel()->activeResolution()->validRates().indexOf(this);
+   return Session::instance()->deviceModel()->activeDevice()->activeChannel()->activeResolution()->validRates().indexOf(this);
 }
 
 QString Video::Rate::name() const

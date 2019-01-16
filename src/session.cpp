@@ -38,6 +38,7 @@
 #include "infotemplatemanager.h"
 #include "numbercompletionmodel.h"
 #include "recentfilemodel.h"
+#include "video/devicemodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -190,6 +191,13 @@ NumberCompletionModel* Session::numberCompletionModel() const
 RecentFileModel* Session::recentFileModel() const
 {
     static RecentFileModel m;
+
+    return &m;
+}
+
+Video::DeviceModel* Session::deviceModel() const
+{
+    static Video::DeviceModel m;
 
     return &m;
 }

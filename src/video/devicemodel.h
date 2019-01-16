@@ -23,25 +23,26 @@
 #include <QtCore/QRect>
 #include "device.h"
 
-
-//Qt
+class Session;
 
 
 namespace Video {
 
 class DeviceModelPrivate;
+class ConfigurationProxy;
 
 ///Abstract model for managing account video codec list
-class LIB_EXPORT DeviceModel : public QAbstractListModel {
+class LIB_EXPORT DeviceModel : public QAbstractListModel
+{
    #pragma GCC diagnostic push
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    Q_OBJECT
    #pragma GCC diagnostic pop
 
+   friend class ::Session; // factory
 public:
-   //Private constructor, can only be called by 'Account'
-   explicit DeviceModel();
-   virtual ~DeviceModel();
+   Q_PROPERTY(ConfigurationProxy* configurationProxy READ configurationProxy CONSTANT)
+   Q_PROPERTY(Video::Device* activeDevice READ activeDevice NOTIFY currentIndexChanged)
 
    //Model functions
    virtual QVariant      data     ( const QModelIndex& index, int role = Qt::DisplayRole     ) const override;
@@ -50,27 +51,28 @@ public:
    virtual bool          setData  ( const QModelIndex& index, const QVariant &value, int role)       override;
    virtual QHash<int,QByteArray> roleNames() const override;
 
-   static DeviceModel& instance();
+   ConfigurationProxy* configurationProxy() const;
 
+   int activeIndex() const;
 
    Video::Device* activeDevice() const;
-   int activeIndex() const;
    Video::Device* getDevice(const QString& devId) const;
    QList<Video::Device*> devices() const;
 
 private:
+   //Private constructor, can only be called by 'Account'
+   explicit DeviceModel();
+   virtual ~DeviceModel();
    const QScopedPointer<DeviceModelPrivate> d_ptr;
 
 public Q_SLOTS:
    void setActive(const QModelIndex& idx);
-   void setActive(const int idx);
    void setActive(const Video::Device* device);
    void reload();
 
 Q_SIGNALS:
    void changed();
    void currentIndexChanged(int);
-
 };
 
 }

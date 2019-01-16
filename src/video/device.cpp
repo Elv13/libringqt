@@ -159,7 +159,7 @@ const QString Video::Device::name() const
 ///Is this device the default one
 bool Video::Device::isActive() const
 {
-   return Video::DeviceModel::instance().activeDevice() == this;
+   return Session::instance()->deviceModel()->activeDevice() == this;
 }
 
 bool Video::Device::setActiveChannel(Video::Channel* chan)

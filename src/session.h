@@ -51,6 +51,7 @@ class RecordingModel;
 
 namespace Video {
 class PreviewManager;
+class DeviceModel;
 }
 
 /**
@@ -79,6 +80,7 @@ public:
     Q_PROPERTY(InfoTemplateManager* infoTemplateManager READ infoTemplateManager CONSTANT)
     Q_PROPERTY(NumberCompletionModel* numberCompletionModel READ numberCompletionModel CONSTANT)
     Q_PROPERTY(RecentFileModel* recentFileModel READ recentFileModel CONSTANT)
+    Q_PROPERTY(Video::DeviceModel* deviceModel READ deviceModel CONSTANT)
 
     Q_PROPERTY(QAbstractItemModel* contactCategoryModel READ contactCategoryModel CONSTANT)
     Q_PROPERTY(QItemSelectionModel* contactCategorySelectionModel READ contactCategorySelectionModel CONSTANT)
@@ -104,6 +106,7 @@ public:
     InfoTemplateManager* infoTemplateManager() const;
     NumberCompletionModel* numberCompletionModel() const;
     RecentFileModel* recentFileModel() const;
+    Video::DeviceModel* deviceModel() const;
 
     QAbstractItemModel* contactCategoryModel() const;
     QItemSelectionModel* contactCategorySelectionModel() const;

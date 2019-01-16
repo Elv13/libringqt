@@ -22,6 +22,8 @@
 class QAbstractItemModel;
 class QItemSelectionModel;
 
+class ConfigurationProxyPrivate;
+
 namespace Video {
 
 /**
@@ -30,20 +32,43 @@ namespace Video {
  * proxy flatten the three to the clients don't have to
  * implement the managing logic.
  */
-class LIB_EXPORT ConfigurationProxy {
+class LIB_EXPORT ConfigurationProxy final : public QObject
+{
+    Q_OBJECT
+    friend class DeviceModel; // factory
 public:
-   static QAbstractItemModel& deviceModel    ();
-   static QAbstractItemModel& channelModel   ();
-   static QAbstractItemModel& resolutionModel();
-   static QAbstractItemModel& rateModel      ();
+    Q_PROPERTY(bool decodingAccellerated READ isDecodingAccelerated WRITE setDecodingAccelerated NOTIFY changed)
+    Q_PROPERTY(QAbstractItemModel* deviceModel     READ deviceModel     CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* channelModel    READ channelModel    CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* resolutionModel READ resolutionModel CONSTANT)
+    Q_PROPERTY(QAbstractItemModel* rateModel       READ rateModel       CONSTANT)
+    Q_PROPERTY(QItemSelectionModel* deviceSelectionModel     READ deviceSelectionModel     CONSTANT)
+    Q_PROPERTY(QItemSelectionModel* channelSelectionModel    READ channelSelectionModel    CONSTANT)
+    Q_PROPERTY(QItemSelectionModel* resolutionSelectionModel READ resolutionSelectionModel CONSTANT)
+    Q_PROPERTY(QItemSelectionModel* rateSelectionModel       READ rateSelectionModel       CONSTANT)
 
-   static QItemSelectionModel& deviceSelectionModel    ();
-   static QItemSelectionModel& channelSelectionModel   ();
-   static QItemSelectionModel& resolutionSelectionModel();
-   static QItemSelectionModel& rateSelectionModel      ();
+    QAbstractItemModel* deviceModel    ();
+    QAbstractItemModel* channelModel   ();
+    QAbstractItemModel* resolutionModel();
+    QAbstractItemModel* rateModel      ();
 
-   static bool isDecodingAccelerated();
-   static void setDecodingAccelerated(bool state);
+    QItemSelectionModel* deviceSelectionModel    ();
+    QItemSelectionModel* channelSelectionModel   ();
+    QItemSelectionModel* resolutionSelectionModel();
+    QItemSelectionModel* rateSelectionModel      ();
+
+    bool isDecodingAccelerated();
+    void setDecodingAccelerated(bool state);
+
+Q_SIGNALS:
+    void changed();
+
+private:
+    explicit ConfigurationProxy();
+    virtual ~ConfigurationProxy();
+
+    ConfigurationProxyPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(ConfigurationProxy)
 };
 
 } //namespace Video

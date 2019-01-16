@@ -119,12 +119,12 @@ Video::Renderer* VideoRendererManager::previewRenderer()
 {
    if (!d_ptr->m_hRenderers.contains(PREVIEW_RENDERER_ID)) {
 
-      if ((!Video::DeviceModel::instance().activeDevice()) || (!Video::DeviceModel::instance().activeDevice()->activeChannel())) {
+      if ((!Session::instance()->deviceModel()->activeDevice()) || (!Session::instance()->deviceModel()->activeDevice()->activeChannel())) {
          qWarning() << "No device found";
          return nullptr;
       }
 
-      Video::Resolution* res = Video::DeviceModel::instance().activeDevice()->activeChannel()->activeResolution();
+      Video::Resolution* res = Session::instance()->deviceModel()->activeDevice()->activeChannel()->activeResolution();
 
       if (!res) {
          qWarning() << "Misconfigured video device";
@@ -249,7 +249,7 @@ void VideoRendererManagerPrivate::startedDecoding(const QString& id, const QStri
 
    r->startRendering();
 
-   Video::Device* dev = Video::DeviceModel::instance().getDevice(id);
+   Video::Device* dev = Session::instance()->deviceModel()->getDevice(id);
 
    if (dev)
       emit dev->renderingStarted(r);
@@ -326,7 +326,7 @@ void VideoRendererManagerPrivate::stoppedDecoding(const QString& id, const QStri
 
     qDebug() << "Video stopped for call" << id <<  "Renderer found:" << m_hRenderers.contains(id.toLatin1());
 
-    Video::Device* dev = Video::DeviceModel::instance().getDevice(id);
+    Video::Device* dev = Session::instance()->deviceModel()->getDevice(id);
 
     if (dev)
         emit dev->renderingStopped(r);
@@ -394,7 +394,7 @@ void VideoRendererManagerPrivate::removeRenderer(Video::Renderer* r)
 
    qDebug() << "Video stopped for call" << id <<  "Renderer found:" << m_hRenderers.contains(id);
 
-   Video::Device* dev = Video::DeviceModel::instance().getDevice(id);
+   Video::Device* dev = Session::instance()->deviceModel()->getDevice(id);
 
    if (dev)
       emit dev->renderingStopped(r);

@@ -26,6 +26,7 @@
 #include <call.h>
 #include <session.h>
 #include <account.h>
+#include "configurationproxy.h"
 #include <video/previewmanager.h>
 #include "../dbus/videomanager.h"
 #include "../private/videorenderermanager.h"
@@ -55,7 +56,9 @@ Video::DeviceModelPrivate::DeviceModelPrivate() : m_pDummyDevice(nullptr),m_pAct
 ///
 void Video::DeviceModelPrivate::idleReload()
 {
-   DeviceModel::instance().setActive(DeviceModel::instance().activeDevice());
+   Session::instance()->deviceModel()->setActive(
+      Session::instance()->deviceModel()->activeDevice()
+   );
 }
 
 ///Constructor
@@ -67,10 +70,9 @@ d_ptr(new Video::DeviceModelPrivate())
    connect(&interface, SIGNAL(deviceEvent()), this, SLOT(reload()), Qt::QueuedConnection);
 }
 
-Video::DeviceModel& Video::DeviceModel::instance()
+int Video::DeviceModel::activeIndex() const
 {
-    static auto instance = new Video::DeviceModel;
-    return *instance;
+    return d_ptr->m_lDevices.indexOf(activeDevice());
 }
 
 QHash<int,QByteArray> Video::DeviceModel::roleNames() const
@@ -145,13 +147,6 @@ void Video::DeviceModel::setActive(const QModelIndex& idx)
    }
 }
 
-///Convenience
-void Video::DeviceModel::setActive(const int idx)
-{
-   setActive(index(idx,0,QModelIndex()));
-}
-
-
 void Video::DeviceModel::setActive(const Video::Device* device)
 {
    VideoManagerInterface& interface = VideoManager::instance();
@@ -224,12 +219,6 @@ Video::Device* Video::DeviceModel::activeDevice() const
    return d_ptr->m_pActiveDevice;
 }
 
-int Video::DeviceModel::activeIndex() const
-{
-   return d_ptr->m_lDevices.indexOf(activeDevice());
-}
-
-
 Video::Device* Video::DeviceModel::getDevice(const QString& devId) const
 {
    return d_ptr->m_hDevices[devId];
@@ -238,6 +227,13 @@ Video::Device* Video::DeviceModel::getDevice(const QString& devId) const
 QList<Video::Device*> Video::DeviceModel::devices() const
 {
    return d_ptr->m_lDevices;
+}
+
+Video::ConfigurationProxy* Video::DeviceModel::configurationProxy() const
+{
+    ConfigurationProxy p;
+
+    return &p;
 }
 
 #include <devicemodel.moc>
