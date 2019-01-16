@@ -195,6 +195,7 @@ SET( libringqt_LIB_SRCS
   src/audio/settings.cpp
   src/media/recordingmodel.cpp
   src/bannedcontactmodel.cpp
+  src/recentfilemodel.cpp
   src/individual.cpp
 
   # iCal/vCard/WebDav collections
@@ -316,6 +317,7 @@ SET( libringqt_LIB_HDRS
   src/codecmodel.h
   src/tlsmethodmodel.h
   src/protocolmodel.h
+  src/recentfilemodel.h
   src/numbercompletionmodel.h
   src/profilemodel.h
   src/numbercategory.h
@@ -439,6 +441,7 @@ SET(libringqt_troubleshoot_LIB_HDRS
 
 SET(libringqt_interface_LIB_HDRS
   src/interfaces/accountlistcolorizeri.h
+  src/interfaces/fileprovideri.h
   src/interfaces/contactmethodselectori.h
   src/interfaces/presenceserializeri.h
   src/interfaces/itemmodelstateserializeri.h

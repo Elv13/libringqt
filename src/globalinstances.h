@@ -30,6 +30,7 @@ class PixmapManipulatorI;
 class PresenceSerializerI;
 class ShortcutCreatorI;
 class ActionExtenderI;
+class FileProviderI;
 } // namespace Interfaces
 
 /**
@@ -74,6 +75,8 @@ void LIB_EXPORT setShortcutCreator(std::unique_ptr<Interfaces::ShortcutCreatorI>
 LIB_EXPORT Interfaces::ActionExtenderI& actionExtender();
 void LIB_EXPORT setActionExtender(std::unique_ptr<Interfaces::ActionExtenderI> instance);
 
+LIB_EXPORT Interfaces::FileProviderI& fileProvider();
+void LIB_EXPORT setFileProvider(std::unique_ptr<Interfaces::FileProviderI> instance);
 
 
 //Private use only
@@ -85,6 +88,7 @@ void LIB_EXPORT setInterfaceInternal(Interfaces::PixmapManipulatorI       *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::PresenceSerializerI      *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::ShortcutCreatorI         *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::ActionExtenderI          *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::FileProviderI            *);
 
 /**
  * Generic interface setter. This metamethod can set any type of interface

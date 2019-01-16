@@ -73,6 +73,7 @@
 #include <video/previewmanager.h>
 #include <persondirectory.h>
 #include <infotemplatemanager.h>
+// #include <recentfilemodel.h>
 
 #define QML_TYPE(name) qmlRegisterUncreatableType<name>(uri, 1,0, #name, #name "cannot be instantiated");
 #define QML_TYPE_MED(name) qmlRegisterUncreatableType<name>(meduri, 1,0, #name, #name "cannot be instantiated");
@@ -113,9 +114,9 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( ProtocolModel              )
     QML_TYPE_MOD( CallModel                  )
     QML_TYPE_MOD( AccountModel               )
-    QML_TYPE_MOD( BookmarkModel   )
-    QML_TYPE_MOD( ContactModel    )
-    QML_TYPE_MOD( CallHistoryModel    )
+    QML_TYPE_MOD( BookmarkModel              )
+    QML_TYPE_MOD( ContactModel               )
+    QML_TYPE_MOD( CallHistoryModel           )
     QML_TYPE_MOD( PeersTimelineModel         )
     QML_TYPE_MOD( NumberCategoryModel        )
     QML_TYPE_MOD( IndividualDirectory        )
@@ -126,6 +127,7 @@ void RingQtQuick::registerTypes(const char *uri)
     QML_TYPE_MOD( PersonDirectory            )
     QML_TYPE_MOD( InfoTemplateManager        )
 
+//     qmlRegisterType<RecentFileModel>(moduri, 1,0, "RecentFileModel");
     qmlRegisterType<NumberCompletionModel>(moduri, 1,0, "NumberCompletionModel");
 
     // Media subsystem

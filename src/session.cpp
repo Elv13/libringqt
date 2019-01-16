@@ -37,6 +37,7 @@
 #include "persondirectory.h"
 #include "infotemplatemanager.h"
 #include "numbercompletionmodel.h"
+#include "recentfilemodel.h"
 
 Session::Session(QObject* parent) : QObject(parent)
 {}
@@ -182,6 +183,13 @@ InfoTemplateManager* Session::infoTemplateManager() const
 NumberCompletionModel* Session::numberCompletionModel() const
 {
     static NumberCompletionModel m;
+
+    return &m;
+}
+
+RecentFileModel* Session::recentFileModel() const
+{
+    static RecentFileModel m;
 
     return &m;
 }

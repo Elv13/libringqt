@@ -27,6 +27,7 @@
 #include "interfaces/presenceserializeri.h"
 #include "interfaces/shortcutcreatori.h"
 #include "interfaces/actionextenderi.h"
+#include "interfaces/fileprovideri.h"
 
 #include "accountlistcolorizerdefault.h"
 #include "dbuserrorhandlerdefault.h"
@@ -47,6 +48,7 @@ struct InstanceManager
     std::unique_ptr<Interfaces::PresenceSerializerI>       m_presenceSerializer;
     std::unique_ptr<Interfaces::ShortcutCreatorI>          m_shortcutCreator;
     std::unique_ptr<Interfaces::ActionExtenderI>           m_actionExtender;
+    std::unique_ptr<Interfaces::FileProviderI>             m_fileProvider;
 };
 
 static InstanceManager&
@@ -200,7 +202,7 @@ setShortcutCreator(std::unique_ptr<Interfaces::ShortcutCreatorI> instance)
 Interfaces::ActionExtenderI&
 actionExtender()
 {
-    if (!instanceManager().m_shortcutCreator)
+    if (!instanceManager().m_actionExtender)
         instanceManager().m_actionExtender.reset(new Interfaces::ActionExtenderDefault);
     return *instanceManager().m_actionExtender.get();
 }
@@ -216,6 +218,23 @@ setActionExtender(std::unique_ptr<Interfaces::ActionExtenderI> instance)
     instanceManager().m_actionExtender = std::move(instance);
 }
 
+Interfaces::FileProviderI&
+fileProvider()
+{
+//     if (!instanceManager().m_fileProvider)
+//         instanceManager().m_fileProvider.reset(new Interfaces::ActionExtenderDefault);
+    return *instanceManager().m_fileProvider.get();
+}
+
+void LIB_EXPORT setFileProvider(std::unique_ptr<Interfaces::FileProviderI> instance)
+{
+    // do not allow empty pointers
+    if (!instance) {
+        qWarning() << "ignoring empty unique_ptr";
+        return;
+    }
+    instanceManager().m_fileProvider = std::move(instance);
+}
 
 /*
  * This API have some advantage over a more "explicit" one
@@ -245,6 +264,7 @@ REGISTER_INTERFACE(Interfaces::PixmapManipulatorI       , m_pixmapManipulator   
 REGISTER_INTERFACE(Interfaces::PresenceSerializerI      , m_presenceSerializer      )
 REGISTER_INTERFACE(Interfaces::ShortcutCreatorI         , m_shortcutCreator         )
 REGISTER_INTERFACE(Interfaces::ActionExtenderI          , m_actionExtender          )
+REGISTER_INTERFACE(Interfaces::FileProviderI            , m_fileProvider            )
 
 #pragma GCC diagnostic pop
 
