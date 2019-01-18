@@ -216,3 +216,13 @@ QItemSelectionModel* Session::contactCategorySelectionModel() const
 {
     return ContactModel::SortedProxy::instance().categorySelectionModel();
 }
+
+/* The old manual deletion order:
+   delete Session::instance()->peersTimelineModel();
+   delete Session::instance()->recordingModel();
+   delete Session::instance()->personDirectory();
+   delete Session::instance()->callModel();
+   delete Session::instance()->profileModel();
+   delete Session::instance()->accountModel();
+   delete Session::instance()->individualDirectory();
+   delete Session::instance()->numberCategoryModel();*/

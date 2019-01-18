@@ -26,6 +26,8 @@
 // LibRingQtQuick
 #include "accountfields.h"
 #include "accountbuilder.h"
+#include "messagebuilder.h"
+#include "contactbuilder.h"
 
 // Globals
 #include <session.h>
@@ -161,6 +163,8 @@ void RingQtQuick::registerTypes(const char *uri)
 
     qmlRegisterType<AccountFields> (uri, 1, 0, "AccountFields" );
     qmlRegisterType<AccountBuilder>(uri, 1, 0, "AccountBuilder");
+    qmlRegisterType<MessageBuilder>(uri, 1, 0, "MessageBuilder");
+    qmlRegisterType<ContactBuilder>(uri, 1, 0, "ContactBuilder");
 
     // Alias
     qmlRegisterUncreatableType<AttachedAccountFieldStatus>(

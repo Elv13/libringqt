@@ -36,12 +36,16 @@ configure_package_config_file(
 set(libringqtquick_LIB_SRCS
     src/accountfields.cpp
     src/accountbuilder.cpp
+    src/messagebuilder.cpp
+    src/contactbuilder.cpp
     src/plugin.cpp
 )
 
 set(libringqtquick_LIB_HEADERS
-    accountfields.h
-    accountbuilder.h
+    src/accountfields.h
+    src/accountbuilder.h
+    src/contactbuilder.h
+    src/messagebuilder.h
 )
 
 # if(NOT BUILD_SHARED_LIBS)
@@ -65,6 +69,11 @@ target_link_libraries( ringqtquick
     Qt5::Quick
 )
 
+set_target_properties(ringqtquick PROPERTIES
+    PUBLIC_HEADER
+    "${libringqtquick_LIB_HEADERS}"
+)
+
 set_target_properties( ringqtquick
    PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
 )
@@ -78,6 +87,7 @@ if("${DISABLE_EXPORT}" MATCHES "OFF")
         LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}" COMPONENT ringqtquick
         ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/libringqt
         COMPONENT Devel
     )
 

@@ -19,6 +19,7 @@
 
 // Qt
 #include <QtCore/QVariant>
+class QMimeData;
 
 #include <typedefs.h>
 #include <libcard/flagutils.h>
