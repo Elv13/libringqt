@@ -102,13 +102,8 @@ void LIB_EXPORT setInterfaceInternal(Interfaces::FileProviderI            *);
 template<class I, typename ...Ts>
 void LIB_EXPORT setInterface(Ts... args)
 {
-   try {
-      auto i = new I(args...);
-      setInterfaceInternal(i);
-   }
-   catch(void* e) { //TODO define some kind of object for errors like this
-      qDebug() << "Interface could not be set";
-   }
+    auto i = new I(args...);
+    setInterfaceInternal(i);
 }
 
 } // namespace GlobalInstances
