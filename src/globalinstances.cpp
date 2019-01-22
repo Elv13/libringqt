@@ -77,15 +77,11 @@ setAccountListColorizer(std::unique_ptr<Interfaces::AccountListColorizerI> insta
     instanceManager().m_accountListColorizer = std::move(instance);
 }
 
-/**
- * LRC does not provide a default implementation of this interface, thus an exception will be thrown
- * if this getter is called without an instance being set by the client
- */
 Interfaces::ContactMethodSelectorI&
 contactMethodSelector()
 {
     if (!instanceManager().m_contactMethodSelector)
-        throw "no instance of ContactMethodSelector available";
+        return;
     return *instanceManager().m_contactMethodSelector.get();
 }
 
@@ -119,15 +115,12 @@ setDBusErrorHandler(std::unique_ptr<Interfaces::DBusErrorHandlerI> instance)
     instanceManager().m_dBusErrorHandler = std::move(instance);
 }
 
-/**
- * LRC does not provide a default implementation of this interface, thus an exception will be thrown
- * if this getter is called without an instance being set by the client
- */
 Interfaces::ItemModelStateSerializerI&
 itemModelStateSerializer()
 {
     if (!instanceManager().m_itemModelStateSerializer)
-        throw "no instance of ItemModelStateSerializer available";
+        return;
+
     return *instanceManager().m_itemModelStateSerializer.get();
 }
 

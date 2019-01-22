@@ -99,7 +99,6 @@ void RingQtQuick::registerTypes(const char *uri)
 
     // Uncreatable types
     QML_TYPE( Account       )
-    QML_TYPE( const Account )
     QML_TYPE( Call          )
     QML_TYPE( Person        )
     QML_TYPE( Individual    )
