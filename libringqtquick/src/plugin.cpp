@@ -20,6 +20,7 @@
 
 // Qt
 #include <QtCore/QObject>
+#include <QtCore/QTimer>
 #include <QQmlEngine>
 #include <QQmlContext>
 
@@ -178,6 +179,16 @@ void RingQtQuick::initializeEngine(QQmlEngine *engine, const char *uri)
     Q_UNUSED(engine)
     Q_UNUSED(uri)
     engine->rootContext()->setContextProperty("RingSession", Session::instance());
+
+    if ((!Session::instance()->callModel()->isConnected()) || (!Session::instance()->callModel()->isValid())) {
+        QTimer::singleShot(5000,this,[]() {
+            if ((!Session::instance()->callModel()->isConnected()) || (!Session::instance()->callModel()->isValid())) {
+                //KMessageBox::error(nullptr, ErrorMessage::NO_DAEMON_ERROR);
+                qWarning() << "Failed to contact the Jami daemon";
+                exit(1);
+            }
+        });
+    }
 
     // Some singleton need to be loaded early to avoid side effects
     Session::instance()->infoTemplateManager();
