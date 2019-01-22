@@ -75,6 +75,10 @@ FIND_PACKAGE(Qt5Core ${QT_MIN_VERSION} REQUIRED)
 FIND_PACKAGE(Qt5Quick ${QT_MIN_VERSION})
 FIND_PACKAGE(Qt5LinguistTools QUIET   ) # translations
 
+# Right now libringqt uses a few exceptions, it should be removed, but right
+# now they exits.
+add_definitions(-fexceptions)
+
 IF(NOT ENABLE_LIBWRAP)
    FIND_PACKAGE(Qt5DBus REQUIRED)
 ENDIF()
