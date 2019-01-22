@@ -206,7 +206,7 @@ bool CollectionModel::setData (const QModelIndex& idx, const QVariant &value, in
       if (item && item->collection) {
          const bool old = item->collection->isEnabled();
          try {
-            GlobalInstances::itemModelStateSerializer().setChecked(item->collection,value==Qt::Checked);
+            GlobalInstances::itemModelStateSerializer()->setChecked(item->collection,value==Qt::Checked);
             emit dataChanged(index(idx.row(),0),index(idx.row(),columnCount()-1));
 
             // The state change has been cached in the interface, but is not applied yet.
@@ -288,12 +288,12 @@ bool CollectionModel::save()
 
       // Enable/disabled collections that changed
       for (QHash<CollectionInterface*,bool>::const_iterator i = d_ptr->m_hPendingChanges.begin(); i != d_ptr->m_hPendingChanges.end(); ++i) {
-         i.key()->enable(GlobalInstances::itemModelStateSerializer().isChecked(i.key()));
+         i.key()->enable(GlobalInstances::itemModelStateSerializer()->isChecked(i.key()));
       }
 
       d_ptr->m_hPendingChanges.clear();
 
-      return GlobalInstances::itemModelStateSerializer().save();
+      return GlobalInstances::itemModelStateSerializer()->save();
    } catch (...) {
       qDebug() << "no ItemModelStateSerializer exists";
    }
@@ -303,7 +303,7 @@ bool CollectionModel::save()
 bool CollectionModel::load()
 {
    try {
-      return GlobalInstances::itemModelStateSerializer().load();
+      return GlobalInstances::itemModelStateSerializer()->load();
    } catch (...) {
       return false;
    }

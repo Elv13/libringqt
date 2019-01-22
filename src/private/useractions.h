@@ -399,7 +399,7 @@ bool addPerson(ContactMethod* cm, CollectionInterface* col)
 
    // Try to get the best collection for this
    if (!col)
-      col = GlobalInstances::itemModelStateSerializer().preferredCollection(
+      col = GlobalInstances::itemModelStateSerializer()->preferredCollection(
          Session::instance()->personDirectory(),
          CollectionInterface::SupportedFeatures::ADD
       );

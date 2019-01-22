@@ -77,12 +77,12 @@ setAccountListColorizer(std::unique_ptr<Interfaces::AccountListColorizerI> insta
     instanceManager().m_accountListColorizer = std::move(instance);
 }
 
-Interfaces::ContactMethodSelectorI&
+Interfaces::ContactMethodSelectorI*
 contactMethodSelector()
 {
     if (!instanceManager().m_contactMethodSelector)
-        return;
-    return *instanceManager().m_contactMethodSelector.get();
+        return nullptr;
+    return instanceManager().m_contactMethodSelector.get();
 }
 
 void
@@ -115,13 +115,16 @@ setDBusErrorHandler(std::unique_ptr<Interfaces::DBusErrorHandlerI> instance)
     instanceManager().m_dBusErrorHandler = std::move(instance);
 }
 
-Interfaces::ItemModelStateSerializerI&
+Interfaces::ItemModelStateSerializerI*
 itemModelStateSerializer()
 {
-    if (!instanceManager().m_itemModelStateSerializer)
-        return;
+    if (!instanceManager().m_itemModelStateSerializer) {
+        Q_ASSERT(false);
+        qWarning() << "The collection model serializer isn't set, expect a crash";
+        return nullptr;
+    }
 
-    return *instanceManager().m_itemModelStateSerializer.get();
+    return instanceManager().m_itemModelStateSerializer.get();
 }
 
 void

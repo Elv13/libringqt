@@ -1376,7 +1376,7 @@ bool CallModel::dropMimeData(const QMimeData* mimedata, Qt::DropAction action, i
       Call* target = getCall(targetIdx);
       qDebug() << "Contact" << encodedPerson << "on call" << target;
       try {
-         const ContactMethod* number = GlobalInstances::contactMethodSelector().number(
+         const ContactMethod* number = GlobalInstances::contactMethodSelector()->number(
          Session::instance()->personDirectory()->getPersonByUid(encodedPerson));
          if (!number->uri().isEmpty()) {
             Call* newCall = dialingCall();

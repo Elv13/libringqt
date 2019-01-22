@@ -210,7 +210,7 @@ bool FallbackPersonCollection::isEnabled() const
 {
     /* if ItemModelStateSerializer exists, check if collectin is enabled, else assume it is */
     try {
-        return GlobalInstances::itemModelStateSerializer().isChecked(this);
+        return GlobalInstances::itemModelStateSerializer()->isChecked(this);
     } catch (...) {
         return true;
      }
