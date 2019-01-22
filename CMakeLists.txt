@@ -730,6 +730,16 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
       DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingQt
       COMPONENT Devel
     )
+ELSE()
+    INSTALL(TARGETS ringqt
+        EXPORT LibRingQtTargets
+        COMPONENT Devel
+    )
+
+    INSTALL(EXPORT LibRingQtTargets
+        DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake/LibRingQt
+        COMPONENT Devel
+    )
 ENDIF()
 
 # translations
