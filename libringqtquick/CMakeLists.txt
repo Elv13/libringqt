@@ -78,7 +78,7 @@ set_target_properties( ringqtquick
    PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_VERSION}
 )
 
-if("${DISABLE_EXPORT}" MATCHES "OFF")
+#if("${DISABLE_EXPORT}" MATCHES "OFF")
 
     export(TARGETS ringqtquick FILE "${PROJECT_BINARY_DIR}/cmake/LibRingQtQuickTargets.cmake" )
 
@@ -96,4 +96,4 @@ if("${DISABLE_EXPORT}" MATCHES "OFF")
         COMPONENT Devel
     )
 
-endif()
+#endif()
