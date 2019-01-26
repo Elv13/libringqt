@@ -29,6 +29,7 @@
 #include "accountbuilder.h"
 #include "messagebuilder.h"
 #include "contactbuilder.h"
+#include "sharedmodellocker.h"
 
 // Globals
 #include <session.h>
@@ -165,6 +166,7 @@ void RingQtQuick::registerTypes(const char *uri)
     qmlRegisterType<AccountBuilder>(uri, 1, 0, "AccountBuilder");
     qmlRegisterType<MessageBuilder>(uri, 1, 0, "MessageBuilder");
     qmlRegisterType<ContactBuilder>(uri, 1, 0, "ContactBuilder");
+    qmlRegisterType<SharedModelLocker>(uri, 1, 0, "SharedModelLocker");
 
     // Alias
     qmlRegisterUncreatableType<AttachedAccountFieldStatus>(

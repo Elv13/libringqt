@@ -38,6 +38,7 @@ set(libringqtquick_LIB_SRCS
     src/accountbuilder.cpp
     src/messagebuilder.cpp
     src/contactbuilder.cpp
+    src/sharedmodellocker.cpp
     src/plugin.cpp
 )
 
