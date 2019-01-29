@@ -236,12 +236,15 @@ void CertificateNode::setStrings(const QString& col1, const QVariant& col2, cons
    m_ToolTip = tooltip;
 }
 
-CertificateNode* CertificateModelPrivate::createCategory(const QString& name, const QString& col2, const QString& tooltip )
+CertificateNode* CertificateModelPrivate::createCategory(QString name, const QString& col2, const QString& tooltip )
 {
    QMutexLocker l(&m_CertLoader);
    const int idx = m_lTopLevelNodes.size();
 
-   Q_ASSERT(!name.isEmpty());
+   if (name.isEmpty()) {
+       qWarning() << "Trying to create a certificate category with an empty name" << col2 << tooltip;
+       name = "N/A";
+   }
 
    // This should be avoided whenever possible. Having a duplicate would be
    // both a memory leak and a potential collision attack (far fetched).
@@ -313,7 +316,7 @@ CertificateNode* CertificateModelPrivate::getCategory(const Account* a)
    CertificateNode* cat = m_hAccToCat.value(a);
 
    if (!cat) {
-      cat = createCategory(a->alias(),QString(),QString());
+      cat = createCategory(a->alias().isEmpty() ? "account" : a->alias(), {}, {});
       m_hAccToCat[a] = cat;
    }
 

@@ -38,7 +38,7 @@ public:
 
    //Helper
    CertificateNode* defaultCategory();
-   CertificateNode* createCategory(const QString& name, const QString& col2, const QString& tooltip);
+   CertificateNode* createCategory(QString name, const QString& col2, const QString& tooltip);
    CertificateNode* getCategory(const Account* a);
    CertificateNode* addToTree(Certificate* cert, CertificateNode* category = nullptr);
    CertificateNode* addToTree(Certificate* cert, Account* a);
