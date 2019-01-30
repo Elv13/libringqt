@@ -30,6 +30,8 @@
 #include <account.h>
 #include <contactmethod.h>
 #include <individual.h>
+#include <eventmodel.h>
+#include <session.h>
 #include "libcard/private/event_p.h"
 #include "libcard/matrixutils.h"
 
@@ -88,7 +90,7 @@ const Matrix2D<Event::SyncState, EventInternals::EditActions, Event::SyncState> 
 
 // Note that the nullptr parent is intentional. The events are managed using
 // shared pointers.
-Event::Event(const EventPrivate& attrs, Event::SyncState st) : ItemBase(nullptr),
+Event::Event(const EventPrivate& attrs, Event::SyncState st) : ItemBase(Session::instance()->eventModel()),
     d_ptr(new EventPrivate)
 {
     (*d_ptr) = attrs;

@@ -18,6 +18,8 @@
 #include "recording.h"
 
 #include "recordingmodel.h"
+#include <session.h>
+#include <eventmodel.h>
 #include "libcard/matrixutils.h"
 
 namespace Media {
@@ -63,7 +65,7 @@ const Matrix2D<Recording::Status, Recording::Action, RedFct> RecordingPrivate::m
 RecordingPrivate::RecordingPrivate(Recording*)
 {}
 
-Recording::Recording(const Recording::Type type, const Recording::Status status) : ItemBase(nullptr),
+Recording::Recording(const Recording::Type type, const Recording::Status status) : ItemBase(Session::instance()->eventModel()),
 d_ptr(new RecordingPrivate(this))
 {
    //FIXME setParent(Session::instance()->recordingModel());

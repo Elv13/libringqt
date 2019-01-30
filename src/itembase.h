@@ -33,7 +33,7 @@ class LIB_EXPORT ItemBase : public QObject
    friend class CollectionInterface;
 public:
    //Constructor
-   explicit ItemBase(QObject* parent = nullptr);
+   explicit ItemBase(QObject* parent);
    virtual ~ItemBase();
    virtual CollectionInterface* collection() const final;
 

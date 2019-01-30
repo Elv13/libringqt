@@ -21,11 +21,19 @@
 
 ItemBase::ItemBase(QObject* parent) :QObject(nullptr), d_ptr(new ItemBasePrivate())
 {
+   // Otherwise QML will claim and destroy them
+   //Q_ASSERT(parent);
+
    // Because after moveToThread, the code is still running in the old thread,
    // setting the parent may be done in multiple threads in parallel on the
    // same parent. In that case the parent object children list is potentially
    // being resized in *another thread context*. This avoids causing such issue.
    if (QCoreApplication::instance()->thread() != thread()) {
+      // Set a temporary parent to be certain that if a thread event loop
+      // iteration takes a long time, there is no window of opportunity for
+      // QtQuick to claim and free the object.
+      setParent(QCoreApplication::instance());
+
       QObject::moveToThread(QCoreApplication::instance()->thread());
       QTimer::singleShot(0, [this, parent]() {
          QObject::setParent(parent);

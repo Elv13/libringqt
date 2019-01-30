@@ -45,7 +45,7 @@ RingDevicePrivate::RingDevicePrivate(RingDevice* device) : QObject(device), q_pt
 }
 
 /// Constructors
-RingDevice::RingDevice(const QString& id, const QString& name, Account* a, bool isSelf)
+RingDevice::RingDevice(const QString& id, const QString& name, Account* a, bool isSelf) : ItemBase(a)
 {
     d_ptr = new RingDevicePrivate(this);
     d_ptr->m_pAccount = a;

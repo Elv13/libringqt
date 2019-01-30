@@ -35,7 +35,7 @@ Macro::Macro(QObject* parent) : ItemBase(parent), d_ptr(new MacroPrivate())
 {
 }
 
-Macro::Macro(const Macro* macro) : ItemBase(nullptr), d_ptr(new MacroPrivate())
+Macro::Macro(const Macro* macro) : ItemBase(QCoreApplication::instance()), d_ptr(new MacroPrivate())
 {
    d_ptr->m_Position    = macro->d_ptr->m_Position   ;
    d_ptr->m_Name        = macro->d_ptr->m_Name       ;
