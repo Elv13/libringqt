@@ -52,6 +52,9 @@ class LIB_EXPORT IndividualTimelineModel final : public QAbstractItemModel
 
     friend class Individual; //factory
 public:
+    Q_PROPERTY(bool hasLinks    READ hasLinks    NOTIFY contentTypeChanged)
+    Q_PROPERTY(bool hasBookmark READ hasBookmark NOTIFY contentTypeChanged)
+    Q_PROPERTY(bool hasFiles    READ hasFiles    NOTIFY contentTypeChanged)
 
     /// The different types of element included in the timeline.
     enum class NodeType {
@@ -94,6 +97,12 @@ public:
 
     virtual QHash<int,QByteArray> roleNames() const override;
 
+    bool hasLinks() const;
+    bool hasBookmark() const;
+    bool hasFiles() const;
+
+Q_SIGNALS:
+    void contentTypeChanged();
 
 private:
     explicit IndividualTimelineModel(Individual* ind);

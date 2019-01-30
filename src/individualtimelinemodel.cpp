@@ -34,6 +34,7 @@
 #include "individual.h"
 #include "libcard/eventaggregate.h"
 #include "call.h"
+#include "libcard/flagutils.h"
 #include "historytimecategorymodel.h"
 #include "private/textrecording_p.h"
 #include "libcard/matrixutils.h"
@@ -45,7 +46,8 @@ struct TimeCategoryData
     int m_Entries {0};
 };
 
-struct IndividualTimelineNode final {
+struct IndividualTimelineNode final
+{
     std::vector<IndividualTimelineNode*> m_lChildren;
     Media::Media::Direction              m_Direction;
     IndividualTimelineNode*              m_pParent {nullptr};
@@ -94,6 +96,13 @@ class IndividualTimelineModelPrivate : public QObject
 {
     Q_OBJECT
 public:
+    enum class ContentType {
+        NONE     , /*!<  */
+        LINKS    , /*!<  */
+        BOOKMARKS, /*!<  */
+        FILES    , /*!<  */
+    };
+
     explicit IndividualTimelineModelPrivate(IndividualTimelineModel* parent);
 
     // Attributes
@@ -102,6 +111,7 @@ public:
     std::vector<IndividualTimelineNode*> m_lTimeCategories;
     QHash<int, IndividualTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
     int m_TotalEntries {0};
+    FlagPack<ContentType> m_ContentTypes;
 
     // Keep track of the current group to simplify the lookup. It also allows
     // to split upstream (Serializable::Group) in multiple logical groups in
@@ -124,6 +134,7 @@ public:
     void incrementCounter(IndividualTimelineNode* n);
     void init();
     void disconnectOldCms();
+    void updateContentType(IndividualTimelineNode* n);
 
     IndividualTimelineModel* q_ptr;
 public Q_SLOTS:
@@ -496,6 +507,8 @@ void IndividualTimelineModelPrivate::incrementCounter(IndividualTimelineNode* n)
 void IndividualTimelineModelPrivate::insert(IndividualTimelineNode* n, time_t t,
     std::vector<IndividualTimelineNode*>& in, const QModelIndex& parent)
 {
+    updateContentType(n);
+
     // Many, if not most, elements are already sorted, speedup this case
     if (in.size() > 0 && in[in.size()-1]->m_StartTime < t) {
         n->m_Index = in.size();
@@ -901,6 +914,40 @@ slotTextRecordingAdded(Media::TextRecording* r)
 
     connect(r->d_ptr, &Media::TextRecordingPrivate::messageAdded,
         this, &IndividualTimelineModelPrivate::slotMessageAdded);
+}
+
+bool IndividualTimelineModel::hasLinks() const
+{
+    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::LINKS;
+}
+
+bool IndividualTimelineModel::hasBookmark() const
+{
+    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::BOOKMARKS;
+}
+
+bool IndividualTimelineModel::hasFiles() const
+{
+    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::FILES;
+}
+
+void IndividualTimelineModelPrivate::updateContentType(IndividualTimelineNode* n)
+{
+    //TODO there's media in the other too, such as recordings
+    if (n->m_Type != IndividualTimelineModel::NodeType::TEXT_MESSAGE)
+        return;
+
+    const auto old = m_ContentTypes;
+    const auto m = n->m_pMessage;
+
+    if (!m->m_pMessage->linkList().isEmpty())
+        m_ContentTypes |= IndividualTimelineModelPrivate::ContentType::LINKS;
+
+    if (m->m_pMessage->hasBookmark())
+        m_ContentTypes |= IndividualTimelineModelPrivate::ContentType::BOOKMARKS;
+
+    if (old != m_ContentTypes)
+        emit q_ptr->contentTypeChanged();
 }
 
 #include <individualtimelinemodel.moc>
