@@ -786,6 +786,8 @@ QVariant TextMessageNode::roleData(int role) const
             return QVariant::fromValue(m_pMessage->linkList());
         case (int)Media::TextRecording::Role::Id                   :
             return QVariant::fromValue(m_pMessage->id());
+        case (int)Media::TextRecording::Role::Bookmarked           :
+            return m_pMessage->hasBookmark();
         default:
             break;
     }
@@ -805,6 +807,17 @@ QVariant Media::TextRecording::roleData(int row, int role) const
     Q_ASSERT(row < d_ptr->m_lNodes.size());
 
     return d_ptr->m_lNodes[row]->roleData(role);
+}
+
+bool TextMessageNode::setRoleData(int role, const QVariant& value)
+{
+    switch(role) {
+        case (int) Media::TextRecording::Role::Bookmarked:
+            m_pMessage->bookmark(value.toBool(), {});
+            return true;
+    }
+
+    return false;
 }
 
 void Media::TextRecordingPrivate::clear()

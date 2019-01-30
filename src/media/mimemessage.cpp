@@ -49,7 +49,7 @@ public:
     MimeMessage::Type            m_Type      { MimeMessage::Type::CHAT     };
     MimeMessage::State           m_Status    { MimeMessage::State::UNKNOWN };
     uint64_t                     m_Id        {               0             };
-
+    bool                         m_Bookmark  {             false           };
 
     //Cache the most common payload to avoid lookup
     QString     m_PlainText;
@@ -141,8 +141,9 @@ MimeMessage* MimeMessage::buildFromSnapshot(const QString& path)
     ret->d_ptr->m_Status      = MimeMessage::State::READ;
 
     auto p = new MimeMessage::Payload();
-    p->mimeType = RingMimes::SNAPSHOT;
-    p->payload  = path;
+    p->mimeType   = RingMimes::SNAPSHOT;
+    p->payload    = path;
+    p->bookmarked = false;
     ret->d_ptr->m_lPayloads << p;
 
     return ret;
@@ -416,6 +417,26 @@ bool MimeMessage::hasText() const
     return d_ptr->m_HasText;
 }
 
+bool MimeMessage::hasBookmark() const
+{
+    return d_ptr->m_Bookmark;
+}
+
+void MimeMessage::bookmark(bool value, const QString& mimeType)
+{
+    d_ptr->m_Bookmark = value; //TODO really support them per payload
+
+    if (auto p = primaryPayload()) {
+        p->bookmarked = value;
+        //TODO save
+    }
+}
+
+MimeMessage::Payload* MimeMessage::primaryPayload() const
+{
+    return d_ptr->m_lPayloads.first();
+}
+
 MimeMessage::Type MimeMessage::type() const
 {
     return d_ptr->m_Type;
@@ -428,14 +449,16 @@ QList<MimeMessage::Payload*> MimeMessage::payloads() const
 
 void MimeMessage::Payload::read(const QJsonObject &json)
 {
-   payload  = json[QStringLiteral("payload") ].toString();
-   mimeType = json[QStringLiteral("mimeType")].toString();
+   payload    = json[QStringLiteral("payload")   ].toString();
+   mimeType   = json[QStringLiteral("mimeType")  ].toString();
+   bookmarked = json[QStringLiteral("bookmerged")].toBool();
 }
 
 void MimeMessage::Payload::write(QJsonObject& json) const
 {
-   json[QStringLiteral("payload") ] = payload ;
-   json[QStringLiteral("mimeType")] = mimeType;
+   json[QStringLiteral("payload")   ] = payload   ;
+   json[QStringLiteral("mimeType")  ] = mimeType  ;
+   json[QStringLiteral("bookmarked")] = bookmarked;
 }
 
 } //Media::

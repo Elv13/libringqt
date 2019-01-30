@@ -92,6 +92,7 @@ public:
       FormattedHtml        ,
       LinkList             ,
       Id                   ,
+      Bookmarked           ,
    };
 
    /** Loading a full text recording takes a lot of memory that's unlikely to

@@ -118,5 +118,6 @@ struct TextMessageNode
     QByteArray            m_AuthorSha1    {       };
 
     QVariant roleData(int role) const;
-   QVariant snapshotRoleData(int role) const;
+    QVariant snapshotRoleData(int role) const;
+    bool setRoleData(int role, const QVariant& value);
 };

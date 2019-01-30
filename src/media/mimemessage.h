@@ -47,6 +47,7 @@ public:
 
     class Payload {
     public:
+        bool bookmarked {false};
         QString payload;
         QString mimeType;
 
@@ -104,9 +105,14 @@ public:
     Type type() const;
     State status() const;
     bool hasText() const;
+    bool hasBookmark() const;
     QList<Payload*> payloads() const;
 
+    Payload* primaryPayload() const;
+
     const QString& getFormattedHtml(); //FIXME remove
+
+    void bookmark(bool value, const QString& mimeType = {});
 
 private:
 
