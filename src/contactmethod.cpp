@@ -38,7 +38,7 @@
 #include "numbercategorymodel.h"
 #include "bookmarkmodel.h"
 #include "private/numbercategorymodel_p.h"
-#include "numbercategory.h"
+#include "collections/numbercategory.h"
 #include "certificate.h"
 #include "accountmodel.h"
 #include "individual.h"

@@ -34,9 +34,9 @@
 #include "person.h"
 #include "contactmethod.h"
 #include "callmodel.h"
-#include "collectioneditor.h"
+#include "picocms/collectioneditor.h"
 #include "historytimecategorymodel.h"
-#include "collectioninterface.h"
+#include "picocms/collectioninterface.h"
 
 /*****************************************************************************
  *                                                                           *

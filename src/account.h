@@ -26,7 +26,7 @@
 class QString;
 
 //Ring
-#include "itembase.h"
+#include <picocms/itembase.h>
 #include "keyexchangemodel.h"
 #include "tlsmethodmodel.h"
 #include "uri.h"

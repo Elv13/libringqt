@@ -21,7 +21,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
 #include <time.h>
-#include <itembase.h>
+#include <picocms/itembase.h>
 #include <media/media.h>
 
 //Ring

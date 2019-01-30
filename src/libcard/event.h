@@ -23,7 +23,7 @@
 #include <QtCore/QSharedPointer>
 
 #include <typedefs.h>
-#include <itembase.h>
+#include <picocms/itembase.h>
 #include <itemdataroles.h>
 
 class EventPrivate;

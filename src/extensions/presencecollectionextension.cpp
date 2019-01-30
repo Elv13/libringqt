@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 #include "presencecollectionextension.h"
-#include "collectioninterface.h"
+#include <picocms/collectioninterface.h>
 #include "contactmethod.h"
 #include "person.h"
 #include "presencestatusmodel.h"
-#include "collectionextensionmodel.h"
+#include <picocms/collectionextensionmodel.h>
 
 DECLARE_COLLECTION_EXTENSION(PresenceCollectionExtension)
 

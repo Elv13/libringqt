@@ -33,7 +33,7 @@
 #include <persondirectory.h>
 #include <eventmodel.h>
 #include <individualdirectory.h>
-#include <localrecordingcollection.h>
+#include <collections/localrecordingcollection.h>
 #include <media/avrecording.h>
 #include "../private/call_p.h"
 #include "libcard/private/event_p.h"

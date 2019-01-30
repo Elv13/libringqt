@@ -37,7 +37,7 @@
 #include <private/vcardutils.h>
 #include <private/textrecording_p.h>
 #include <private/imconversationmanagerprivate.h>
-#include <peerprofilecollection2.h>
+#include <collections/peerprofilecollection2.h>
 #include <accountmodel.h>
 #include <persondirectory.h>
 

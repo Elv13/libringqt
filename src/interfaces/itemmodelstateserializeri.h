@@ -20,7 +20,7 @@
 #include <typedefs.h>
 
 // Ring
-#include <collectioninterface.h>
+#include <picocms/collectioninterface.h>
 class Account;
 class CollectionManagerInterfaceBase;
 

@@ -20,7 +20,7 @@
 #include <contactmethod.h>
 #include <person.h>
 #include <persondirectory.h>
-#include <collectioninterface.h>
+#include <picocms/collectioninterface.h>
 #include <numbercategorymodel.h>
 #include <individualdirectory.h>
 #include <individual.h>

@@ -18,10 +18,10 @@
 #pragma once
 
 #include <typedefs.h>
-#include <itembase.h>
+#include <picocms/itembase.h>
 
 #include <presencestatus.h>
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 
 class PresenceStatusPrivate;
 

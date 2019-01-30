@@ -28,12 +28,12 @@
 #include "call.h"
 #include "uri.h"
 #include "contactmethod.h"
-#include "collectioninterface.h"
-#include "collectionmodel.h"
-#include "collectioneditor.h"
+#include "picocms/collectioninterface.h"
+#include "picocms/collectionmodel.h"
+#include "picocms/collectioneditor.h"
 #include "individual.h"
-#include "transitionalpersonbackend.h"
-#include "peerprofilecollection2.h"
+#include "collections/transitionalpersonbackend.h"
+#include "collections/peerprofilecollection2.h"
 
 //Qt
 #include <QtCore/QHash>

@@ -32,7 +32,7 @@
 #include "infotemplate.h"
 #include "accountmodel.h"
 #include "ringtone.h"
-#include <localinfotemplatecollection.h>
+#include <collections/localinfotemplatecollection.h>
 
 class InfoTemplateManagerPrivate final : public QObject
 {

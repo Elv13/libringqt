@@ -18,7 +18,7 @@
 #pragma once
 
 #include <typedefs.h>
-#include <itembase.h>
+#include <picocms/itembase.h>
 
 class RingtonePrivate;
 

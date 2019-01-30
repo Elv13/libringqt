@@ -18,7 +18,7 @@
  ***********************************************************************************/
 #pragma once
 
-#include <collectioninterface.h>
+#include <picocms/collectioninterface.h>
 #include <typedefs.h>
 
 class InfoTemplate;

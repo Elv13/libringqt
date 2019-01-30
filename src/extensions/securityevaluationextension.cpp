@@ -16,14 +16,14 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 #include "securityevaluationextension.h"
-#include "collectioninterface.h"
+#include <picocms/collectioninterface.h>
 #include "contactmethod.h"
 #include "certificate.h"
 #include "person.h"
 #include "account.h"
 #include "call.h"
 #include "presencestatusmodel.h"
-#include "collectionextensionmodel.h"
+#include <picocms/collectionextensionmodel.h>
 #include "globalinstances.h"
 #include "interfaces/pixmapmanipulatori.h"
 #include "private/securityevaluationmodel_p.h"

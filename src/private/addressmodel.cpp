@@ -20,7 +20,7 @@
 
 // Ring
 #include <contactmethod.h>
-#include <numbercategory.h>
+#include <collections/numbercategory.h>
 #include <callhistorymodel.h>
 #include <individualdirectory.h>
 #include <person.h>

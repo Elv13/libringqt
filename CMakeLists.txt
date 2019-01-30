@@ -123,9 +123,8 @@ SET( libringqt_LIB_SRCS
   src/credential.cpp
   src/person.cpp
   src/contactmethod.cpp
-  src/numbercategory.cpp
+  src/collections/numbercategory.cpp
   src/macro.cpp
-  src/collectionextensioninterface.cpp
   src/video/rate.cpp
   src/video/device.cpp
   src/video/renderer.cpp
@@ -174,9 +173,6 @@ SET( libringqt_LIB_SRCS
   src/eventmodel.cpp
   src/securityevaluationmodel.cpp
   src/persondirectory.cpp
-  src/collectionmodel.cpp
-  src/collectionextensionmodel.cpp
-  src/collectionmanagerinterface.cpp
   src/networkinterfacemodel.cpp
   src/certificatemodel.cpp
   src/ciphermodel.cpp
@@ -221,23 +217,30 @@ SET( libringqt_LIB_SRCS
   src/troubleshoot/absent.cpp
   src/troubleshoot/unhold.cpp
 
+  # Content Management System
+  src/picocms/collectioninterface.cpp
+  src/picocms/collectioneditor.cpp
+  src/picocms/collectionextensioninterface.cpp
+  src/picocms/collectionmodel.cpp
+  src/picocms/collectionextensionmodel.cpp
+  src/picocms/collectionmanagerinterface.cpp
+  src/picocms/itembase.cpp
+
   #Data collections
-  src/transitionalpersonbackend.cpp
-  src/collectioninterface.cpp
-  src/collectioneditor.cpp
-  src/fallbackpersoncollection.cpp
-  src/daemoncertificatecollection.cpp
-  src/foldercertificatecollection.cpp
-  src/localrecordingcollection.cpp
-  src/localtextrecordingcollection.cpp
-  src/localhistorycollection.cpp
-  src/localprofilecollection.cpp
-  src/localmacrocollection.cpp
-  src/localbookmarkcollection.cpp
-  src/localnameservicecache.cpp
-  src/localringtonecollection.cpp
-  src/localinfotemplatecollection.cpp
-  src/peerprofilecollection2.cpp
+  src/collections/transitionalpersonbackend.cpp
+  src/collections/fallbackpersoncollection.cpp
+  src/collections/daemoncertificatecollection.cpp
+  src/collections/foldercertificatecollection.cpp
+  src/collections/localrecordingcollection.cpp
+  src/collections/localtextrecordingcollection.cpp
+  src/collections/localhistorycollection.cpp
+  src/collections/localprofilecollection.cpp
+  src/collections/localmacrocollection.cpp
+  src/collections/localbookmarkcollection.cpp
+  src/collections/localnameservicecache.cpp
+  src/collections/localringtonecollection.cpp
+  src/collections/localinfotemplatecollection.cpp
+  src/collections/peerprofilecollection2.cpp
 
   #Communication
   src/dbus/configurationmanager.cpp
@@ -247,19 +250,17 @@ SET( libringqt_LIB_SRCS
   src/dbus/presencemanager.cpp
 
   #Default interface implementations
-  src/globalinstances.cpp
-  src/accountlistcolorizerdefault.cpp
-  src/presenceserializerdefault.cpp
-  src/pixmapmanipulatordefault.cpp
-  src/shortcutcreatordefault.cpp
-  src/actionextenderdefault.cpp
-  src/dbuserrorhandlerdefault.cpp
+  src/interfaces/default/accountlistcolorizerdefault.cpp
+  src/interfaces/default/presenceserializerdefault.cpp
+  src/interfaces/default/pixmapmanipulatordefault.cpp
+  src/interfaces/default/shortcutcreatordefault.cpp
+  src/interfaces/default/actionextenderdefault.cpp
+  src/interfaces/default/dbuserrorhandlerdefault.cpp
 
   #Other
   src/itemdataroles.cpp # Because namespaced MOC need this as of CMake 3.10
   src/hookmanager.cpp
   src/namedirectory.cpp
-  src/itembase.cpp
   src/private/vcardutils.cpp
   src/private/textrecordingcache.cpp
   src/private/textrecordingmodel.cpp
@@ -271,6 +272,7 @@ SET( libringqt_LIB_SRCS
   src/mime.cpp
   src/session.cpp
   src/smartinfohub.cpp
+  src/globalinstances.cpp
 
   #Extension
   src/extensions/presencecollectionextension.cpp
@@ -305,8 +307,6 @@ SET( libringqt_LIB_HDRS
   src/bootstrapmodel.h
   src/individualeditor.h
   src/ringdevicemodel.h
-  src/collectioninterface.h
-  src/collectioninterface.hpp
   src/bookmarkmodel.h
   src/credentialmodel.h
   src/contactmodel.h
@@ -324,26 +324,12 @@ SET( libringqt_LIB_HDRS
   src/recentfilemodel.h
   src/numbercompletionmodel.h
   src/profilemodel.h
-  src/numbercategory.h
   src/ringtonemodel.h
   src/infotemplatemanager.h
   src/eventmodel.h
-  src/localrecordingcollection.h
-  src/localbookmarkcollection.h
-  src/localringtonecollection.h
-  src/localinfotemplatecollection.h
-  src/localmacrocollection.h
-  src/localhistorycollection.h
-  src/localprofilecollection.h
-  src/localtextrecordingcollection.h
-  src/peerprofilecollection2.h
   src/securityevaluationmodel.h
   src/certificate.h
   src/persondirectory.h
-  src/transitionalpersonbackend.h
-  src/collectionmodel.h
-  src/collectionextensionmodel.h
-  src/collectionextensionmodel.hpp
   src/macromodel.h
   src/hookmanager.h
   src/namedirectory.h
@@ -351,41 +337,58 @@ SET( libringqt_LIB_HDRS
   src/macro.h
   src/ringtone.h
   src/infotemplate.h
-  src/itembase.h
-  src/itembase.hpp
   src/mime.h
-  src/collectionextensioninterface.h
-  src/collectionmanagerinterface.h
-  src/collectionmanagerinterface.hpp
   src/networkinterfacemodel.h
   src/certificatemodel.h
   src/ciphermodel.h
   src/accountstatusmodel.h
-  src/collectionmediator.h
-  src/collectionmediator.hpp
-  src/collectioneditor.h
-  src/collectioneditor.hpp
-  src/fallbackpersoncollection.h
-  src/daemoncertificatecollection.h
-  src/foldercertificatecollection.h
   src/securityflaw.h
-  src/collectioncreationinterface.h
-  src/collectionconfigurationinterface.h
   src/peerstimelinemodel.h
   src/individualtimelinemodel.h
   src/chainoftrustmodel.h
   src/pendingcontactrequestmodel.h
   src/contactrequest.h
   src/globalinstances.h
-  src/accountlistcolorizerdefault.h
-  src/presenceserializerdefault.h
-  src/pixmapmanipulatordefault.h
-  src/shortcutcreatordefault.h
-  src/dbuserrorhandlerdefault.h
   src/itemdataroles.h
   src/smartinfohub.h
   src/usagestatistics.h
   src/bannedcontactmodel.h
+)
+
+SET(libringqt_cms_LIB_HDRS
+  src/picocms/collectionmediator.h
+  src/picocms/collectionmediator.hpp
+  src/picocms/collectioneditor.h
+  src/picocms/collectioneditor.hpp
+  src/picocms/collectionmodel.h
+  src/picocms/collectionextensionmodel.h
+  src/picocms/collectionextensionmodel.hpp
+  src/picocms/collectioninterface.h
+  src/picocms/collectioninterface.hpp
+  src/picocms/collectionextensioninterface.h
+  src/picocms/collectionmanagerinterface.h
+  src/picocms/collectionmanagerinterface.hpp
+  src/picocms/itembase.h
+  src/picocms/itembase.hpp
+  src/picocms/collectioncreationinterface.h
+  src/picocms/collectionconfigurationinterface.h
+)
+
+SET(libringqt_collections_LIB_HDRS
+  src/collections/numbercategory.h
+  src/collections/transitionalpersonbackend.h
+  src/collections/localrecordingcollection.h
+  src/collections/localbookmarkcollection.h
+  src/collections/localringtonecollection.h
+  src/collections/localinfotemplatecollection.h
+  src/collections/localmacrocollection.h
+  src/collections/localhistorycollection.h
+  src/collections/localprofilecollection.h
+  src/collections/localtextrecordingcollection.h
+  src/collections/peerprofilecollection2.h
+  src/collections/fallbackpersoncollection.h
+  src/collections/daemoncertificatecollection.h
+  src/collections/foldercertificatecollection.h
 )
 
 SET(libringqt_video_LIB_HDRS
@@ -573,15 +576,15 @@ SET(libringqt_PRIVATE_HDRS
    src/private/securityflaw_p.h
    src/private/macromodel_p.h
    src/private/person_p.h
-   src/collectioncreationinterface.h
    src/private/securityevaluationmodel_p.h
-   src/collectionconfigurationinterface.h
    src/private/imconversationmanagerprivate.h
    src/private/smartInfoHub_p.h
    src/private/certificatemodel_p.h
    src/usagestatistics.h
    src/private/personstatistics.hpp
    src/itemdataroles.h
+   src/picocms/collectionconfigurationinterface.h
+   src/picocms/collectioncreationinterface.h
 )
 
 QT5_WRAP_CPP(LIB_HEADER_MOC ${libringqt_PRIVATE_HDRS})
@@ -720,6 +723,16 @@ IF("${DISABLE_EXPORT}" MATCHES "OFF")
 
     INSTALL( FILES ${libringqt_interface_LIB_HDRS}
         DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/interfaces
+        COMPONENT Devel
+    )
+
+    INSTALL( FILES ${libringqt_cms_LIB_HDRS}
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/picocms
+        COMPONENT Devel
+    )
+
+    INSTALL( FILES ${libringqt_collections_LIB_HDRS}
+        DESTINATION ${INCLUDE_INSTALL_DIR}/libringqt/collections
         COMPONENT Devel
     )
 

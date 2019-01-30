@@ -25,8 +25,8 @@
 class QItemSelectionModel;
 
 // Ring
-#include "collectionmanagerinterface.h"
-#include "collectioninterface.h"
+#include "picocms/collectionmanagerinterface.h"
+#include "picocms/collectioninterface.h"
 #include "typedefs.h"
 #include "contactmethod.h"
 

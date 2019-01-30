@@ -27,7 +27,7 @@ class QItemSelectionModel;
 class QStringList;
 
 // Ring
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 class Person;
 class ProfileModelPrivate;
 class Account;

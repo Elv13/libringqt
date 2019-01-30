@@ -35,7 +35,7 @@
 #include "session.h"
 #include "mimemessage.h"
 #include "call.h"
-#include "localtextrecordingcollection.h"
+#include "collections/localtextrecordingcollection.h"
 
 //DRing
 #include "dbus/configurationmanager.h"

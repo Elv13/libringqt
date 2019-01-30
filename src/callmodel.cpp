@@ -44,7 +44,7 @@
 #include "typedefs.h"
 #include "libcard/calendar.h"
 #include "individual.h"
-#include "collectioninterface.h"
+#include "picocms/collectioninterface.h"
 #include "dbus/videomanager.h"
 #include "callhistorymodel.h"
 #include "globalinstances.h"

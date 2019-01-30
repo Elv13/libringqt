@@ -231,7 +231,7 @@ QList<Video::Device*> Video::DeviceModel::devices() const
 
 Video::ConfigurationProxy* Video::DeviceModel::configurationProxy() const
 {
-    ConfigurationProxy p;
+    static ConfigurationProxy p;
 
     return &p;
 }

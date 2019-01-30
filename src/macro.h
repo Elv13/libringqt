@@ -25,7 +25,7 @@
 //Ring
 class MacroModel;
 #include "typedefs.h"
-#include "itembase.h"
+#include <picocms/itembase.h>
 
 class MacroPrivate;
 

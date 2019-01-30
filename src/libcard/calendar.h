@@ -18,8 +18,8 @@
  ***********************************************************************************/
 #pragma once
 
-#include "collectioninterface.h"
-#include "collectioneditor.h"
+#include "picocms/collectioninterface.h"
+#include "picocms/collectioneditor.h"
 
 class QTimeZone;
 

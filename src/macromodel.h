@@ -23,7 +23,7 @@
 
 //Ring
 #include "typedefs.h"
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 
 //Ring
 class Macro;

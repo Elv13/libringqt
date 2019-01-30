@@ -18,7 +18,7 @@
 #pragma once
 
 #include <QtCore/QObject>
-#include <itembase.h>
+#include <picocms/itembase.h>
 
 #include <typedefs.h>
 

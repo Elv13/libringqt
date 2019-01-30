@@ -1,0 +1,304 @@
+/************************************************************************************
+ *   Copyright (C) 2014-2016 by Savoir-faire Linux                                       *
+ *   Author : Emmanuel Lepage Vallee <emmanuel.lepage@savoirfairelinux.com>         *
+ *                                                                                  *
+ *   This library is free software; you can redistribute it and/or                  *
+ *   modify it under the terms of the GNU Lesser General Public                     *
+ *   License as published by the Free Software Foundation; either                   *
+ *   version 2.1 of the License, or (at your option) any later version.             *
+ *                                                                                  *
+ *   This library is distributed in the hope that it will be useful,                *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of                 *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU              *
+ *   Lesser General Public License for more details.                                *
+ *                                                                                  *
+ *   You should have received a copy of the GNU Lesser General Public               *
+ *   License along with this library; if not, write to the Free Software            *
+ *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
+ ***********************************************************************************/
+#include "localbookmarkcollection.h"
+
+//Qt
+#include <QtCore/QFile>
+#include <QtCore/QHash>
+#include <QtCore/QTimer>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonObject>
+#include <QtCore/QStandardPaths>
+
+//Ring
+#include <call.h>
+#include <account.h>
+#include <session.h>
+#include <contactmethod.h>
+#include <accountmodel.h>
+#include <persondirectory.h>
+#include <individualdirectory.h>
+#include <picocms/collectioneditor.h>
+#include <globalinstances.h>
+#include <interfaces/pixmapmanipulatori.h>
+
+namespace Serializable {
+   class BookmarkNode
+   {
+   public:
+      mutable Account* account  ;
+      ContactMethod*   cm       ;
+      Person*          contact  ;
+
+      void read (const QJsonObject &json);
+      void write(QJsonObject       &json) const;
+   };
+}
+
+class LocalBookmarkEditor final : public CollectionEditor<ContactMethod>
+{
+public:
+   LocalBookmarkEditor(CollectionMediator<ContactMethod>* m)
+     : CollectionEditor<ContactMethod>(m),m_Tracked(false) {}
+   virtual bool save       ( const ContactMethod* item ) override;
+   virtual bool remove     ( const ContactMethod* item ) override;
+   virtual bool addNew     ( ContactMethod*       item ) override;
+   virtual bool contains   (const ContactMethod*  item ) const override;
+   virtual bool addExisting( const ContactMethod* item ) override;
+
+   //Attributes
+   QVector<ContactMethod*> m_lNumbers;
+   QList<Serializable::BookmarkNode> m_Nodes;
+   bool m_Tracked;
+
+private:
+   virtual QVector<ContactMethod*> items() const override;
+};
+
+class LocalBookmarkCollectionPrivate
+{
+public:
+
+   //Attributes
+   constexpr static const char FILENAME[] = "bookmark.json";
+};
+
+constexpr const char LocalBookmarkCollectionPrivate::FILENAME[];
+
+LocalBookmarkCollection::LocalBookmarkCollection(CollectionMediator<ContactMethod>* mediator) :
+   CollectionInterface(new LocalBookmarkEditor(mediator)), d_ptr(new LocalBookmarkCollectionPrivate())
+{
+    QTimer::singleShot(0, [this]() {load();});
+}
+
+
+LocalBookmarkCollection::~LocalBookmarkCollection()
+{
+   delete d_ptr;
+}
+
+bool LocalBookmarkCollection::load()
+{
+   QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+              + QLatin1Char('/')
+              + LocalBookmarkCollectionPrivate::FILENAME);
+   if ( file.open(QIODevice::ReadOnly | QIODevice::Text) ) {
+      LocalBookmarkEditor* e = static_cast<LocalBookmarkEditor*>(editor<ContactMethod>());
+      const QByteArray content = file.readAll();
+      QJsonDocument loadDoc = QJsonDocument::fromJson(content);
+      QJsonArray a = loadDoc.array();
+
+      for (int i = 0; i < a.size(); ++i) {
+         QJsonObject o = a[i].toObject();
+         Serializable::BookmarkNode n;
+         n.read(o);
+
+         e->addExisting(n.cm);
+
+         n.cm->setTracked   (e->m_Tracked);
+         n.cm->setBookmarked(true        );
+
+         e->m_Nodes << n;
+      }
+
+      return true;
+   }
+   else
+      qWarning() << "Bookmarks doesn't exist or is not readable";
+   return false;
+}
+
+bool LocalBookmarkEditor::save(const ContactMethod* number)
+{
+   Q_UNUSED(number)
+
+   static QString path = QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+        + QLatin1Char('/')
+        + LocalBookmarkCollectionPrivate::FILENAME;
+
+   QFile file(path);
+
+   if (file.open(QIODevice::WriteOnly | QIODevice::Text) ) {
+
+      QJsonArray a;
+
+      foreach (const Serializable::BookmarkNode& g, m_Nodes) {
+         QJsonObject o;
+         g.write(o);
+         a.append(o);
+      }
+
+      QJsonDocument doc(a);
+
+      QTextStream streamFileOut(&file);
+      streamFileOut << doc.toJson();
+      streamFileOut.flush();
+      file.close();
+
+      return true;
+   }
+   else
+      qWarning() << "Unable to save bookmarks";
+
+   return false;
+}
+
+bool LocalBookmarkEditor::remove(const ContactMethod* item)
+{
+   Q_UNUSED(item)
+
+   int idx = -1;
+
+   if ((idx = m_lNumbers.indexOf(const_cast<ContactMethod*>(item))) != -1) {
+      m_lNumbers.removeAt(idx);
+      mediator()->removeItem(item);
+
+      for (int i =0;i<m_Nodes.size();i++) {
+         if (m_Nodes[i].cm == item) {
+            m_Nodes.removeAt(i);
+            break;
+         }
+      }
+
+      return save(nullptr);
+   }
+   return false;
+}
+
+bool LocalBookmarkEditor::contains(const ContactMethod* item) const
+{
+    return m_lNumbers.contains(const_cast<ContactMethod*>(item));
+}
+
+bool LocalBookmarkEditor::addNew( ContactMethod* number)
+{
+   if (!contains(number)) {
+      number->setTracked(m_Tracked);
+      Serializable::BookmarkNode n;
+
+      n.cm = number;
+      n.account = number->account();
+      n.contact = number->contact();
+      m_Nodes << n;
+
+      addExisting(number);
+
+      number->setBookmarked(true);
+
+      if (!save(number))
+         qWarning() << "Unable to save bookmarks";
+   }
+   else
+      qDebug() << number->uri() << "is already bookmarked";
+
+   return save(number);
+}
+
+bool LocalBookmarkEditor::addExisting(const ContactMethod* item)
+{
+   m_lNumbers << const_cast<ContactMethod*>(item);
+   mediator()->addItem(item);
+   return false;
+}
+
+QVector<ContactMethod*> LocalBookmarkEditor::items() const
+{
+   return m_lNumbers;
+}
+
+QString LocalBookmarkCollection::name () const
+{
+   return QObject::tr("Local bookmarks");
+}
+
+QString LocalBookmarkCollection::category () const
+{
+   return QObject::tr("Bookmark");
+}
+
+QVariant LocalBookmarkCollection::icon() const
+{
+   return GlobalInstances::pixmapManipulator().collectionIcon(this,Interfaces::PixmapManipulatorI::CollectionIconHint::BOOKMARK);
+}
+
+bool LocalBookmarkCollection::isEnabled() const
+{
+   return true;
+}
+
+bool LocalBookmarkCollection::reload()
+{
+   return false;
+}
+
+FlagPack<CollectionInterface::SupportedFeatures> LocalBookmarkCollection::supportedFeatures() const
+{
+   return
+      CollectionInterface::SupportedFeatures::NONE      |
+      CollectionInterface::SupportedFeatures::LOAD      |
+      CollectionInterface::SupportedFeatures::CLEAR     |
+      CollectionInterface::SupportedFeatures::ADD       |
+      CollectionInterface::SupportedFeatures::MANAGEABLE|
+      CollectionInterface::SupportedFeatures::REMOVE    ;
+}
+
+bool LocalBookmarkCollection::clear()
+{
+   return QFile::remove(QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+                        + QLatin1Char('/')
+                        + LocalBookmarkCollectionPrivate::FILENAME);
+}
+
+QByteArray LocalBookmarkCollection::id() const
+{
+   return "localbookmark";
+}
+
+
+void LocalBookmarkCollection::setPresenceTracked(bool tracked)
+{
+   static_cast<LocalBookmarkEditor*>(editor<ContactMethod>())->m_Tracked = tracked;
+}
+
+bool LocalBookmarkCollection::isPresenceTracked() const
+{
+   return static_cast<LocalBookmarkEditor*>(editor<ContactMethod>())->m_Tracked;
+}
+
+void Serializable::BookmarkNode::read(const QJsonObject &json)
+{
+   const QString&    uri       = json[ QStringLiteral("uri")       ].toString()           ;
+   const QByteArray& accountId = json[ QStringLiteral("accountId") ].toString().toLatin1();
+   const QByteArray& contactId = json[ QStringLiteral("contactId") ].toString().toLatin1();
+
+   account = accountId.isEmpty()?nullptr:Session::instance()->accountModel()->getById( accountId );
+   contact = contactId.isEmpty()?nullptr:Session::instance()->personDirectory()->getPersonByUid( contactId );
+   cm      = uri.isEmpty()?nullptr:Session::instance()->individualDirectory()->getNumber( uri, contact, account);
+}
+
+void Serializable::BookmarkNode::write(QJsonObject& json) const
+{
+   if (!account)
+      account = cm->account();
+
+   json[ QStringLiteral("uri")       ] = cm->uri()                      ;
+   json[ QStringLiteral("accountId") ] = account?account->id():QString();
+   json[ QStringLiteral("contactId") ] = contact?contact->uid ():QString();
+}

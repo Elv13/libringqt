@@ -29,12 +29,12 @@
 #include "interfaces/actionextenderi.h"
 #include "interfaces/fileprovideri.h"
 
-#include "accountlistcolorizerdefault.h"
-#include "dbuserrorhandlerdefault.h"
-#include "pixmapmanipulatordefault.h"
-#include "presenceserializerdefault.h"
-#include "shortcutcreatordefault.h"
-#include "actionextenderdefault.h"
+#include "interfaces/default/accountlistcolorizerdefault.h"
+#include "interfaces/default/dbuserrorhandlerdefault.h"
+#include "interfaces/default/pixmapmanipulatordefault.h"
+#include "interfaces/default/presenceserializerdefault.h"
+#include "interfaces/default/shortcutcreatordefault.h"
+#include "interfaces/default/actionextenderdefault.h"
 
 namespace GlobalInstances {
 

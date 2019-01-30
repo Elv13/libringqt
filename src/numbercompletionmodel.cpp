@@ -35,7 +35,7 @@
 #include "session.h"
 #include "callmodel.h"
 #include "uri.h"
-#include "numbercategory.h"
+#include "collections/numbercategory.h"
 #include "accountmodel.h"
 #include "availableaccountmodel.h"
 #include "numbercategorymodel.h"

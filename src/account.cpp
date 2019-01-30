@@ -70,7 +70,7 @@
 #include "libcard/calendar.h"
 #include "namedirectory.h"
 #include "securityevaluationmodel.h"
-#include "daemoncertificatecollection.h"
+#include "collections/daemoncertificatecollection.h"
 #include "private/securityevaluationmodel_p.h"
 #include "extensions/securityevaluationextension.h"
 #include "bannedcontactmodel.h"

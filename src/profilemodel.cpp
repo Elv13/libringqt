@@ -28,8 +28,8 @@
 
 //Ring
 #include "accountmodel.h"
-#include "collectioninterface.h"
-#include "collectioneditor.h"
+#include "picocms/collectioninterface.h"
+#include "picocms/collectioneditor.h"
 #include "callmodel.h"
 #include "individual.h"
 #include "session.h"

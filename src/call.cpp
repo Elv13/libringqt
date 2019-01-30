@@ -37,7 +37,7 @@
 //Ring library
 #include "dbus/callmanager.h"
 
-#include "collectioninterface.h"
+#include "picocms/collectioninterface.h"
 #include "person.h"
 #include "session.h"
 #include "uri.h"
@@ -46,11 +46,11 @@
 #include "accountmodel.h"
 #include "availableaccountmodel.h"
 #include "private/videorenderermanager.h"
-#include "localrecordingcollection.h"
+#include "collections/localrecordingcollection.h"
 #include "useractionmodel.h"
 #include "callmodel.h"
 #include "certificate.h"
-#include "numbercategory.h"
+#include "collections/numbercategory.h"
 #include "certificatemodel.h"
 #include "individualdirectory.h"
 #include "contactmethod.h"

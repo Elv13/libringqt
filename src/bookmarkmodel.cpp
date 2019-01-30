@@ -29,8 +29,8 @@
 #include "callmodel.h"
 #include "mime.h"
 #include "session.h"
-#include "collectioneditor.h"
-#include "collectioninterface.h"
+#include "picocms/collectioneditor.h"
+#include "picocms/collectioninterface.h"
 #include "private/individualdirectory_p.h"
 
 class BookmarkNode;

@@ -44,7 +44,7 @@
 #include "mime.h"
 #include "dbus/configurationmanager.h"
 #include "private/textrecordingmodel.h"
-#include "localtextrecordingcollection.h"
+#include "collections/localtextrecordingcollection.h"
 
 //Std
 #include <ctime>

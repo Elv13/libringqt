@@ -18,7 +18,7 @@
 #include "numbercategorymodel.h"
 #include "private/numbercategorymodel_p.h"
 #include "contactmethod.h"
-#include "numbercategory.h"
+#include "collections/numbercategory.h"
 #include "session.h"
 
 NumberCategoryModel::NumberCategoryModel(QObject* parent) : QAbstractListModel(parent),CollectionManagerInterface(this),d_ptr(new NumberCategoryModelPrivate())

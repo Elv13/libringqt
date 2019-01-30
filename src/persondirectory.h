@@ -25,7 +25,7 @@
 
 #include "typedefs.h"
 #include "person.h"
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 
 //Ring
 class Person;

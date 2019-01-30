@@ -17,8 +17,8 @@
  ***************************************************************************/
 #pragma once
 
-#include <collectionextensioninterface.h>
-#include <collectionextensionmodel.h>
+#include <picocms/collectionextensioninterface.h>
+#include <picocms/collectionextensionmodel.h>
 #include <securityevaluationmodel.h>
 
 #include <typedefs.h>

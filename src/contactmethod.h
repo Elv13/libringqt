@@ -19,7 +19,7 @@
 
 #include "typedefs.h"
 #include <time.h>
-#include <itembase.h>
+#include <picocms/itembase.h>
 
 //Qt
 #include <QStringList>

@@ -21,7 +21,7 @@
 
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QVector>
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 
 class ContactMethod;
 class NumberCategory;

@@ -18,7 +18,7 @@
  ***************************************************************************/
 #pragma once
 
-#include <itembase.h>
+#include <picocms/itembase.h>
 #include <time.h>
 
 //Qt

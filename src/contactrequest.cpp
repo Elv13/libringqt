@@ -26,10 +26,10 @@
 #include <certificatemodel.h>
 #include <individualdirectory.h>
 #include "private/vcardutils.h"
-#include "itembase.h"
+#include "picocms/itembase.h"
 #include "persondirectory.h"
 #include "session.h"
-#include <peerprofilecollection2.h>
+#include <collections/peerprofilecollection2.h>
 
 //DRing
 #include "dbus/configurationmanager.h"

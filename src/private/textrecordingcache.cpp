@@ -34,7 +34,7 @@
 #include "libcard/calendar.h"
 #include "media/file.h"
 #include "availableaccountmodel.h"
-#include "localtextrecordingcollection.h"
+#include <collections/localtextrecordingcollection.h>
 #include "individualdirectory.h"
 
 QHash<QByteArray, QWeakPointer<Serializable::Peers>> SerializableEntityManager::m_hPeers;

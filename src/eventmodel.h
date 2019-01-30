@@ -26,7 +26,7 @@ class QTimer;
 class QItemSelectionModel;
 
 //Ring
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 class Account;
 class Calendar;
 class EventModelPrivate;

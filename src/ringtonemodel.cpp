@@ -31,7 +31,7 @@
 #include "session.h"
 #include "accountmodel.h"
 #include "ringtone.h"
-#include <localringtonecollection.h>
+#include <collections/localringtonecollection.h>
 
 class RingtoneModelPrivate final : public QObject
 {

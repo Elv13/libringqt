@@ -27,7 +27,7 @@
 
 //Ring
 #include "call.h"
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 
 //Typedef
 typedef QMap<uint, Call*>  CallMap;

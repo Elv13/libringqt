@@ -25,7 +25,7 @@ class QTimer;
 class QItemSelectionModel;
 
 //Ring
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 class Account;
 class RingtoneModelPrivate;
 class Ringtone;

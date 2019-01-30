@@ -17,7 +17,7 @@
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA *
  ***********************************************************************************/
 #include "historyimporter.h"
-#include "../localhistorycollection.h"
+#include <collections/localhistorycollection.h>
 
 // Qt
 #include <QtCore/QTimer>
@@ -30,7 +30,7 @@
 #include <media/recordingmodel.h>
 #include <media/recording.h>
 #include <media/textrecording.h>
-#include <localtextrecordingcollection.h>
+#include <collections/localtextrecordingcollection.h>
 #include <private/textrecording_p.h>
 #include <libcard/calendar.h>
 #include <libcard/event.h>

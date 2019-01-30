@@ -27,7 +27,7 @@
 #include <person.h>
 #include <individual.h>
 #include <contactmethod.h>
-#include <numbercategory.h>
+#include <collections/numbercategory.h>
 
 /**
  * This method enable inter-operability with various third party applications

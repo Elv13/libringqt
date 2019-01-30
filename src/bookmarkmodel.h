@@ -21,7 +21,7 @@
 #include <QtCore/QAbstractItemModel>
 
 //Ring
-#include "collectionmanagerinterface.h"
+#include "picocms/collectionmanagerinterface.h"
 #include "typedefs.h"
 #include "contactmethod.h"
 
