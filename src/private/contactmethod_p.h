@@ -66,6 +66,10 @@ public:
    UsageStatistics*   m_pUsageStats       {nullptr};
    QVector<Media::TextRecording*> m_lAltTR;
 
+   ContactMethod::NotificationPolicy m_NotificationPolicy {
+       ContactMethod::NotificationPolicy::DEFAULT
+   };
+
    // ContactRequests
    bool m_IsConfirmationEnabled {true};
    ContactMethod::ConfirmationStatus m_ConfirmationStatus { ContactMethod::ConfirmationStatus::NOT_APPLICABLE };

@@ -33,6 +33,7 @@
 #include "private/person_p.h"
 #include "private/contactmethod_p.h"
 #include "call.h"
+#include "private/notificationstatemodel_p.h"
 #include "availableaccountmodel.h"
 #include "dbus/presencemanager.h"
 #include "numbercategorymodel.h"
@@ -1541,6 +1542,19 @@ void ContactMethodPrivate::removeInitCall(Call* c)
       emit n->hasInitCallChanged(q_ptr->hasInitCall());
 }
 
+void ContactMethod::setNotificationPolicy(NotificationPolicy p)
+{
+    d_ptr->m_NotificationPolicy = p;
+
+    NotificationStateModel::instance()->setState(this, p);
+
+    d_ptr->changed();
+}
+
+ContactMethod::NotificationPolicy ContactMethod::notificationPolicy() const
+{
+    return d_ptr->m_NotificationPolicy;
+}
 
 /************************************************************************************
  *                                                                                  *

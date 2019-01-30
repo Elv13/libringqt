@@ -147,6 +147,7 @@ SET( libringqt_LIB_SRCS
   src/media/availabilitytracker.cpp
 
   #Models
+  src/private/notificationstatemodel_p.cpp
   src/bootstrapmodel.cpp
   src/individualeditor.cpp
   src/ringdevicemodel.cpp
@@ -241,6 +242,7 @@ SET( libringqt_LIB_SRCS
   src/collections/localringtonecollection.cpp
   src/collections/localinfotemplatecollection.cpp
   src/collections/peerprofilecollection2.cpp
+  src/collections/notificationstatecollection.cpp
 
   #Communication
   src/dbus/configurationmanager.cpp

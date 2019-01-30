@@ -103,6 +103,7 @@ public:
    friend class EventModelPrivate; // manage the CM Events, emit signals and so on
    friend class EventModel; // manage the CM Events, emit signals and so on
    friend class IncomingContactRequestManager; // manage the confirmation status
+   friend class NotificationStateCollection; // manage the setNotificationPolicy
 
     // To synchronize the timeline weak pointers
     friend class Person;
@@ -164,6 +165,9 @@ public:
    Q_PROPERTY(Call*            firstOutgoingCall READ firstOutgoingCall NOTIFY hasActiveCallChanged   )
    Q_PROPERTY(Call*            firstActiveCall   READ firstActiveCall   NOTIFY hasActiveCallChanged   )
 
+   Q_PROPERTY(NotificationPolicy notificationPolicy READ notificationPolicy WRITE setNotificationPolicy NOTIFY changed)
+
+
    // Contact requests
    Q_PROPERTY(bool confirmationEnabled READ isConfirmationEnabled WRITE setConfirmationEnabled NOTIFY confirmationChanged)
    Q_PROPERTY(ConfirmationStatus confirmationStatus READ confirmationStatus NOTIFY confirmationChanged)
@@ -203,6 +207,17 @@ public:
        COUNT__
    };
    Q_ENUM(MediaAvailailityStatus)
+
+   /**
+    * How to handle the notifications for this ContactMethod.
+    */
+   enum class NotificationPolicy : char {
+        DEFAULT, /*!< Use the default notification policy                     */
+        NOTIFY , /*!< Always post notification except in  do-not-disturb mode */
+        FORCE  , /*!< Always post the notifications                           */
+        SKIP   , /*!< No not create notifications for this contact method     */
+   };
+   Q_ENUM(NotificationPolicy)
 
    /**
     * Ring accounts support contact (and/or firends) requests.
@@ -261,6 +276,7 @@ public:
    Call*                 firstOutgoingCall() const;
    Call*                 firstActiveCall () const;
    bool                  hasTextRecordings() const;
+   NotificationPolicy    notificationPolicy() const;
 
    // ContactRequest
    ContactRequest* request() const;
@@ -300,6 +316,7 @@ public:
    Q_INVOKABLE void setTracked       (bool                track         );
    void             setCategory      (NumberCategory*     cat           );
    void             setBookmarked    (bool                bookmarked    );
+   void setNotificationPolicy(NotificationPolicy p);
 
    //Mutator
    Q_INVOKABLE void addCall(Call* call);
