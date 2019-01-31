@@ -71,6 +71,7 @@ public:
     QMetaObject::Connection m_cEndCB;
     TemporaryContactMethod* m_pTmpCM {nullptr};
     QString m_BestName;
+    QMutex s_GlobalMergeMutex;
 
     ContactMethod*           m_LastUsedCM {nullptr};
     QVector<ContactMethod*>  m_HiddenContactMethods;
@@ -202,6 +203,8 @@ bool Individual::merge(Individual* other)
         return false;
     }
 
+    d_ptr->s_GlobalMergeMutex.lock();
+
     other->d_ptr->m_lParents << this;
     other->d_ptr->m_BestName.clear();
 
@@ -236,7 +239,8 @@ bool Individual::merge(Individual* other)
         }
     }
 
-    delete d_ptr;
+    d_ptr->s_GlobalMergeMutex.unlock();
+    d_ptr->deleteLater();
 
     d_ptr = other->d_ptr;
 
@@ -244,6 +248,7 @@ bool Individual::merge(Individual* other)
 
     emit Session::instance()->peersTimelineModel()->individualMerged(this, other);
     emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
+
 
     return true;
 }
@@ -654,7 +659,10 @@ void Individual::registerContactMethod(ContactMethod* m)
 ///Get the phone number list
 QVector<ContactMethod*> Individual::phoneNumbers() const
 {
-   return d_ptr->m_Numbers;
+    d_ptr->s_GlobalMergeMutex.lock();
+    auto ret = d_ptr->m_Numbers;
+    d_ptr->s_GlobalMergeMutex.unlock();
+    return d_ptr->m_Numbers;
 }
 
 QVector<Media::TextRecording*> Individual::textRecordings() const
@@ -686,7 +694,11 @@ QVector<Media::TextRecording*> Individual::textRecordings() const
  */
 QVector<ContactMethod*> Individual::relatedContactMethods() const
 {
-    return d_ptr->m_HiddenContactMethods;
+    d_ptr->s_GlobalMergeMutex.lock();
+    auto ret = d_ptr->m_HiddenContactMethods;
+    d_ptr->s_GlobalMergeMutex.unlock();
+
+    return ret;
 }
 
 ///Set the phone number (type and number)
@@ -1267,9 +1279,15 @@ void Individual::forAllNumbers(const std::function<void(ContactMethod*)> functor
 
 bool Individual::isSelf() const
 {
+    d_ptr->s_GlobalMergeMutex.lock();
+
     // Profiles are always ourselves
-    if (d_ptr->m_pPerson && d_ptr->m_pPerson->collection() && d_ptr->m_pPerson->collection()->id() == "lpc")
+    if (d_ptr->m_pPerson && d_ptr->m_pPerson->collection() && d_ptr->m_pPerson->collection()->id() == "lpc") {
+        d_ptr->s_GlobalMergeMutex.unlock();
         return true;
+    }
+
+    d_ptr->s_GlobalMergeMutex.unlock();
 
     return hasProperty<&ContactMethod::isSelf>();
 }
