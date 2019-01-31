@@ -20,6 +20,8 @@
 
 //Qt
 #include <QtCore/QMimeData>
+#include <QtCore/QMutex>
+#include <QtCore/QTimer>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QAbstractItemModel>
 
@@ -103,10 +105,10 @@ BookmarkNode::BookmarkNode(const QString& name)
 
 BookmarkNode::~BookmarkNode()
 {
-    qDeleteAll(m_lChildren);
     QObject::disconnect(m_ChConn);
     QObject::disconnect(m_NameConn);
     QObject::disconnect(m_RemConn);
+    qDeleteAll(m_lChildren);
 }
 
 BookmarkModel::BookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
@@ -448,6 +450,8 @@ void BookmarkModelPrivate::slotIndexChanged(const QModelIndex& idx)
     emit q_ptr->dataChanged(idx,idx);
 }
 
+static QMutex bookmarkLoadingThreadMutex;
+
 bool BookmarkModel::addItemCallback(const ContactMethod* bookmark)
 {
     // Contact methods can be duplicates of each other, make sure to handle them
@@ -460,10 +464,17 @@ bool BookmarkModel::addItemCallback(const ContactMethod* bookmark)
     bm->m_pParent = category;
     bm->m_Index   = category->m_lChildren.size();
     bm->m_ChConn  = connect(bookmark, &ContactMethod::changed, bookmark, [this,bm]() {
-        d_ptr->slotIndexChanged(
-            index(bm->m_Index, 0, index(bm->m_pParent->m_Index,0))
-        );
-    });
+        // Do nothing if the slot has been disconnected
+        if (!bm->m_ChConn)
+            return;
+
+        if (bookmarkLoadingThreadMutex.tryLock()) {
+            d_ptr->slotIndexChanged(
+                index(bm->m_Index, 0, index(bm->m_pParent->m_Index,0))
+            );
+            bookmarkLoadingThreadMutex.unlock();
+        }
+    }, Qt::QueuedConnection);
 
     beginInsertRows(index(category->m_Index,0), bm->m_Index, bm->m_Index);
     category->m_lChildren << bm;
@@ -473,19 +484,30 @@ bool BookmarkModel::addItemCallback(const ContactMethod* bookmark)
     auto dptr = bookmark->d();
 
     //If a contact arrive later, remove and add again (as the category may have changed)
-    category->m_NameConn = connect(bookmark, &ContactMethod::primaryNameChanged, bookmark, [this,displayName,bookmark]() {
-        if (displayName != bookmark->bestName()) {
+    category->m_NameConn = connect(bookmark, &ContactMethod::primaryNameChanged, bookmark, [bm, this,displayName,bookmark]() {
+        // Do nothing if the slot has been disconnected
+        if (!bm->m_NameConn)
+            return;
+
+        if (displayName != bookmark->bestName() && bookmarkLoadingThreadMutex.tryLock()) {
             Q_ASSERT(d_ptr->m_hTracked.contains(bookmark->d()));
             removeItemCallback(bookmark);
             addItemCallback(bookmark);
+            bookmarkLoadingThreadMutex.unlock();
         }
-    });
+    }, Qt::QueuedConnection);
 
     //If something like the nameservice causes a rebase, update the reverse map
     bm->m_RemConn = connect(bookmark, &ContactMethod::rebased, bookmark, [bm, dptr, this]() {
+        // Do nothing if the slot has been disconnected
+        if (!bm->m_RemConn)
+            return;
+
+        bookmarkLoadingThreadMutex.lock();
         d_ptr->m_hTracked.remove(dptr);
         d_ptr->m_hTracked[bm->m_pNumber->d()] = bm;
-    });
+        bookmarkLoadingThreadMutex.unlock();
+    }, Qt::QueuedConnection);
 
     d_ptr->m_hTracked[dptr] = bm;
 
@@ -498,6 +520,13 @@ bool BookmarkModel::removeItemCallback(const ContactMethod* cm)
 
     if (!item)
         return false;
+
+    bookmarkLoadingThreadMutex.lock();
+
+    // Avoid some use-after-free
+    disconnect(item->m_ChConn);
+    disconnect(item->m_NameConn);
+    disconnect(item->m_RemConn);
 
     Q_ASSERT(item->m_Type == BookmarkNode::Type::BOOKMARK);
     Q_ASSERT(item->m_pParent);
@@ -535,9 +564,14 @@ bool BookmarkModel::removeItemCallback(const ContactMethod* cm)
         endRemoveRows();
     }
 
-    delete item;
+    // there might be some queued connections left
+    QTimer::singleShot(0, [item]() {
+        delete item;
+    });
 
     d_ptr->m_hTracked.remove(cm->d());
+
+    bookmarkLoadingThreadMutex.unlock();
 
     return true;
 }
