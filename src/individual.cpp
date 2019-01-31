@@ -1298,7 +1298,9 @@ time_t Individual::lastUsedTime() const
 
 QString Individual::formattedLastUsedTime() const
 {
-    return QDateTime::fromTime_t(lastUsedTime()).toString();
+    const auto t = lastUsedTime();
+    return t ?
+        QDateTime::fromTime_t(t).toString() : tr("Never contacted");
 }
 
 int Individual::callCount() const
