@@ -198,6 +198,7 @@ SET( libringqt_LIB_SRCS
   src/bannedcontactmodel.cpp
   src/recentfilemodel.cpp
   src/individual.cpp
+  src/private/timelinelens_p.cpp
 
   # iCal/vCard/WebDav collections
   src/libcard/event.cpp
@@ -274,6 +275,7 @@ SET( libringqt_LIB_SRCS
   src/mime.cpp
   src/session.cpp
   src/smartinfohub.cpp
+  src/private/lensmanager_p.cpp
   src/globalinstances.cpp
 
   #Extension

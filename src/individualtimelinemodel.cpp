@@ -39,6 +39,7 @@
 #include "private/textrecording_p.h"
 #include "libcard/matrixutils.h"
 #include <media/avrecording.h>
+#include "private/lensmanager_p.h"
 
 struct TimeCategoryData
 {
@@ -96,12 +97,6 @@ class IndividualTimelineModelPrivate : public QObject
 {
     Q_OBJECT
 public:
-    enum class ContentType {
-        NONE     , /*!<  */
-        LINKS    , /*!<  */
-        BOOKMARKS, /*!<  */
-        FILES    , /*!<  */
-    };
 
     explicit IndividualTimelineModelPrivate(IndividualTimelineModel* parent);
 
@@ -111,7 +106,7 @@ public:
     std::vector<IndividualTimelineNode*> m_lTimeCategories;
     QHash<int, IndividualTimelineNode*>  m_hCats; //int <-> HistoryTimeCategoryModel::HistoryConst
     int m_TotalEntries {0};
-    FlagPack<ContentType> m_ContentTypes;
+    LensManager m_LensManager;
 
     // Keep track of the current group to simplify the lookup. It also allows
     // to split upstream (Serializable::Group) in multiple logical groups in
@@ -164,7 +159,8 @@ const Matrix1D<IndividualTimelineModel::NodeType, QString> IndividualTimelineMod
     { IndividualTimelineModel::NodeType::RECORDINGS        , QStringLiteral( "recordings"       )},
 };
 
-IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelineModel* parent) : q_ptr(parent)
+IndividualTimelineModelPrivate::IndividualTimelineModelPrivate(IndividualTimelineModel* parent) :
+    m_LensManager(parent), q_ptr(parent)
 {
     auto t = new QTimer(this);
 
@@ -916,19 +912,24 @@ slotTextRecordingAdded(Media::TextRecording* r)
         this, &IndividualTimelineModelPrivate::slotMessageAdded);
 }
 
-bool IndividualTimelineModel::hasLinks() const
+QSharedPointer<QAbstractItemModel> IndividualTimelineModel::lens(LensType t) const
 {
-    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::LINKS;
+    return d_ptr->m_LensManager.getLens(t);
 }
 
-bool IndividualTimelineModel::hasBookmark() const
+void IndividualTimelineModel::setDefaultLenses(FlagPack<LensType> lenses)
 {
-    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::BOOKMARKS;
+    LensManager::defaultLenses = lenses;
 }
 
-bool IndividualTimelineModel::hasFiles() const
+void IndividualTimelineModel::setMaximiumLensSize(int size)
 {
-    return d_ptr->m_ContentTypes & IndividualTimelineModelPrivate::ContentType::FILES;
+    LensManager::maximumSize = size;
+}
+
+bool IndividualTimelineModel::isLensAvailable(LensType t) const
+{
+    return d_ptr->m_LensManager.m_ContentTypes & t;
 }
 
 void IndividualTimelineModelPrivate::updateContentType(IndividualTimelineNode* n)
@@ -937,17 +938,17 @@ void IndividualTimelineModelPrivate::updateContentType(IndividualTimelineNode* n
     if (n->m_Type != IndividualTimelineModel::NodeType::TEXT_MESSAGE)
         return;
 
-    const auto old = m_ContentTypes;
+    const auto old = m_LensManager.m_ContentTypes;
     const auto m = n->m_pMessage;
 
     if (!m->m_pMessage->linkList().isEmpty())
-        m_ContentTypes |= IndividualTimelineModelPrivate::ContentType::LINKS;
+        m_LensManager.m_ContentTypes |= IndividualTimelineModel::LensType::LINKS;
 
     if (m->m_pMessage->hasBookmark())
-        m_ContentTypes |= IndividualTimelineModelPrivate::ContentType::BOOKMARKS;
+        m_LensManager.m_ContentTypes |= IndividualTimelineModel::LensType::BOOKMARKS;
 
-    if (old != m_ContentTypes)
-        emit q_ptr->contentTypeChanged();
+    if (old != m_LensManager.m_ContentTypes)
+        emit q_ptr->availableLensesChanged();
 }
 
 #include <individualtimelinemodel.moc>

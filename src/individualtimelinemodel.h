@@ -24,6 +24,7 @@
 #include <QtCore/QAbstractItemModel>
 
 // Ring
+#include <libcard/flagutils.h>
 class ContactMethod;
 class Individual;
 
@@ -52,9 +53,14 @@ class LIB_EXPORT IndividualTimelineModel final : public QAbstractItemModel
 
     friend class Individual; //factory
 public:
-    Q_PROPERTY(bool hasLinks    READ hasLinks    NOTIFY contentTypeChanged)
-    Q_PROPERTY(bool hasBookmark READ hasBookmark NOTIFY contentTypeChanged)
-    Q_PROPERTY(bool hasFiles    READ hasFiles    NOTIFY contentTypeChanged)
+
+    /// The types of lenses (summary filters) available for the timeline.
+    enum class LensType {
+        NONE      = 0x0 << 0, /*!< Nothing                              */
+        LINKS     = 0x1 << 0, /*!< Urls and external content            */
+        BOOKMARKS = 0x1 << 1, /*!< Bookmarked messages or MIME payloads */
+        FILES     = 0x1 << 2, /*!< Downloaded files                     */
+    };
 
     /// The different types of element included in the timeline.
     enum class NodeType {
@@ -97,12 +103,24 @@ public:
 
     virtual QHash<int,QByteArray> roleNames() const override;
 
-    bool hasLinks() const;
-    bool hasBookmark() const;
-    bool hasFiles() const;
+    QSharedPointer<QAbstractItemModel> lens(LensType t) const;
+
+    bool isLensAvailable(LensType t) const;
+
+    /**
+     * When creating a new IndividualTimelineModel, these lenses will also be
+     * created. Warning, they *have* to be accesses immediately or they will
+     * be deleted.
+     */
+    static void setDefaultLenses(FlagPack<LensType> lenses);
+
+    /**
+     * The maximum size for the the lens (it reduces memory usage)
+     */
+    static void setMaximiumLensSize(int size);
 
 Q_SIGNALS:
-    void contentTypeChanged();
+    void availableLensesChanged();
 
 private:
     explicit IndividualTimelineModel(Individual* ind);

@@ -52,7 +52,12 @@ public:
     Q_PROPERTY(QAbstractItemModel* timelineModel READ timelineModel NOTIFY changed)
     Q_PROPERTY(QAbstractItemModel* unsortedListView READ unsortedListView NOTIFY changed)
     Q_PROPERTY(Person* currentPerson READ currentPerson WRITE setPerson NOTIFY changed)
-
+    Q_PROPERTY(bool hasLinks    READ hasLinks    NOTIFY changed)
+    Q_PROPERTY(bool hasBookmark READ hasBookmark NOTIFY changed)
+    Q_PROPERTY(bool hasFiles    READ hasFiles    NOTIFY changed)
+    Q_PROPERTY(QAbstractItemModel* linksLens READ linksLens NOTIFY changed)
+    Q_PROPERTY(QAbstractItemModel* bookmarksLens READ bookmarksLens NOTIFY changed)
+    Q_PROPERTY(QAbstractItemModel* filesLens READ filesLens NOTIFY changed)
 
     Q_INVOKABLE explicit SharedModelLocker(QObject* parent = nullptr);
     virtual ~SharedModelLocker();
@@ -63,6 +68,14 @@ public:
     QAbstractItemModel* timelineModel() const;
     QAbstractItemModel* unsortedListView() const;
     Person* currentPerson() const;
+
+    bool hasLinks() const;
+    bool hasBookmark() const;
+    bool hasFiles() const;
+
+    QAbstractItemModel* linksLens() const;
+    QAbstractItemModel* bookmarksLens() const;
+    QAbstractItemModel* filesLens() const;
 
 public Q_SLOTS:
     void setContactMethod(ContactMethod* cm);

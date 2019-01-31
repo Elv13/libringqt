@@ -27,6 +27,7 @@
 #include <peerstimelinemodel.h>
 #include <individualdirectory.h>
 #include <contactmethod.h>
+#include <individualtimelinemodel.h>
 #include <libcard/eventaggregate.h>
 #include <individual.h>
 #include <person.h>
@@ -55,9 +56,16 @@ public:
     QSharedPointer<QAbstractItemModel> m_TimelineModel;
     bool m_IsLocked{false};
 
+    QSharedPointer<QAbstractItemModel> m_LinksLens;
+    QSharedPointer<QAbstractItemModel> m_BookmarksLens;
+    QSharedPointer<QAbstractItemModel> m_FilesLens;
+
     QList< QTimer* > m_lTimers;
 
     SharedModelLocker* q_ptr;
+
+public Q_SLOTS:
+    void slotAvailableLensesChanged();
 };
 
 SharedModelLocker::SharedModelLocker(QObject* parent) :
@@ -120,6 +128,9 @@ SharedModelLocker::~SharedModelLocker()
     d_ptr->m_TimelineModel.clear();
     d_ptr->m_Invididual = nullptr;
     d_ptr->m_CallsModel.clear();
+    d_ptr->m_LinksLens.clear();
+    d_ptr->m_BookmarksLens.clear();
+    d_ptr->m_FilesLens.clear();
 
     // Release the shared pointer reference from the timer.
     for (auto t : qAsConst(d_ptr->m_lTimers)) {
@@ -241,6 +252,93 @@ ContactMethod* SharedModelLocker::currentContactMethod() const
 {
     Q_ASSERT(false); //TODO
     return nullptr;
+}
+
+void SharedModelLockerPrivate::slotAvailableLensesChanged()
+{
+    emit q_ptr->changed();
+}
+
+bool SharedModelLocker::hasLinks() const
+{
+    if (!d_ptr->m_TimelineModel)
+        return false;
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    return rm->lens(IndividualTimelineModel::LensType::LINKS);
+}
+
+bool SharedModelLocker::hasBookmark() const
+{    if (!d_ptr->m_TimelineModel)
+        return false;
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    return rm->lens(IndividualTimelineModel::LensType::BOOKMARKS);
+}
+
+bool SharedModelLocker::hasFiles() const
+{    if (!d_ptr->m_TimelineModel)
+        return false;
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    return rm->lens(IndividualTimelineModel::LensType::FILES);
+}
+
+QAbstractItemModel* SharedModelLocker::linksLens() const
+{
+    if (!d_ptr->m_Invididual)
+        return nullptr;
+
+    if (!d_ptr->m_TimelineModel)
+        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    if (!d_ptr->m_LinksLens)
+        d_ptr->m_LinksLens = rm->lens(IndividualTimelineModel::LensType::LINKS);
+
+    return d_ptr->m_LinksLens.data();
+}
+
+QAbstractItemModel* SharedModelLocker::bookmarksLens() const
+{
+    if (!d_ptr->m_Invididual)
+        return nullptr;
+
+    if (!d_ptr->m_TimelineModel)
+        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    if (!d_ptr->m_BookmarksLens)
+        d_ptr->m_BookmarksLens = rm->lens(IndividualTimelineModel::LensType::BOOKMARKS);
+
+    return d_ptr->m_BookmarksLens.data();
+}
+
+QAbstractItemModel* SharedModelLocker::filesLens() const
+{
+    if (!d_ptr->m_Invididual)
+        return nullptr;
+
+    if (!d_ptr->m_TimelineModel)
+        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+
+    QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
+    const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
+
+    if (!d_ptr->m_FilesLens)
+        d_ptr->m_FilesLens = rm->lens(IndividualTimelineModel::LensType::FILES);
+
+    return d_ptr->m_FilesLens.data();
 }
 
 #include <sharedmodellocker.moc>
