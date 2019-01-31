@@ -231,6 +231,13 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
         }
     }
 
+    Q_ASSERT(currentNode);
+
+    if (!currentNode) {
+        qWarning() << "There is a probably fatal race condition, this is a bug, please report it";
+        return;
+    }
+
     auto account_pro     = createNodeForAccount(acc);
     account_pro->m_Index = currentNode->children.size();
     account_pro->parent  = currentNode;
