@@ -482,6 +482,9 @@ Individual* PeersTimelineModel::mostRecentIndividual() const
 
 QModelIndex PeersTimelineModel::individualIndex(Individual* i) const
 {
+    if (!i)
+        return {};
+
     auto n = d_ptr->m_hMapping.value(i->masterObject());
     return n ? createIndex(n->m_Index, 0, n) : QModelIndex();
 }
