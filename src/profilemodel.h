@@ -50,7 +50,6 @@ public:
 
     explicit ProfileModel(QObject* parent = nullptr);
     virtual ~ProfileModel();
-    static ProfileModel& instance();
 
     //Abstract model member
     virtual QVariant      data        ( const QModelIndex& index, int role = Qt::DisplayRole         ) const override;
@@ -92,6 +91,7 @@ private:
     virtual bool removeItemCallback(const Person* item) override;
 
 public Q_SLOTS:
+    void initialize();
     bool remove(const QModelIndex& idx);
     bool add(Person* person = nullptr);
     Person* add(const QString& name);

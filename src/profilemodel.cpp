@@ -213,6 +213,7 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
     if (!currentNode) {
         if (currentProfile && currentProfile->isPlaceHolder()) {
             qWarning() << "A profile was not found, using a random fallback" << acc << currentProfile;
+            currentNode = profileNodeById(m_pDefaultProfile->m_PerData.m_pPerson->uid());
         }
         else if (currentProfile && currentProfile->collection()) {
             const auto collections = q_ptr->collections(CollectionInterface::SupportedFeatures::ADD);
@@ -231,10 +232,10 @@ void ProfileModelPrivate::slotAccountAdded(Account* acc)
         }
     }
 
-    Q_ASSERT(currentNode);
 
     if (!currentNode) {
         qWarning() << "There is a probably fatal race condition, this is a bug, please report it";
+        Q_ASSERT(false);
         return;
     }
 
@@ -269,29 +270,12 @@ ProfileNode* ProfileModelPrivate::profileNodeById(const QByteArray& id) const
     return nullptr;
 }
 
-ProfileModel& ProfileModel::instance()
-{
-    static auto instance = new ProfileModel(QCoreApplication::instance());
-    return *instance;
-}
-
 ProfileModelPrivate::ProfileModelPrivate(ProfileModel* parent) : QObject(parent), q_ptr(parent)
 {}
 
 ProfileModel::ProfileModel(QObject* parent) : QAbstractItemModel(parent),
 CollectionManagerInterface<Person>(this), d_ptr(new ProfileModelPrivate(this))
-{
-    //Once LibRingClient is ready, start listening
-    QTimer::singleShot(0,d_ptr,[this]() {
-        connect(Session::instance()->accountModel(), &QAbstractItemModel::dataChanged  , d_ptr, &ProfileModelPrivate::slotDataChanged   );
-        connect(Session::instance()->accountModel(), &AccountModel::accountRemoved     , d_ptr, &ProfileModelPrivate::slotAccountRemoved);
-        connect(Session::instance()->accountModel(), &AccountModel::accountAdded       , d_ptr, &ProfileModelPrivate::slotAccountAdded);
-
-        // Load existing accounts
-        for (int i = 0; i < Session::instance()->accountModel()->rowCount(); i++)
-            d_ptr->slotAccountAdded((*Session::instance()->accountModel())[i]);
-    });
-}
+{}
 
 ProfileModel::~ProfileModel()
 {
@@ -1197,5 +1181,23 @@ void SingleProfileModel::addAt(int i) {
     endInsertRows();
 }
 
+
+void ProfileModel::initialize()
+{
+    // Fix loop-dependency issue between constructors
+    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
+    if (!init_flag.test_and_set()) {
+        //Once LibRingClient is ready, start listening
+        QTimer::singleShot(0, d_ptr, [this]() {
+            connect(Session::instance()->accountModel(), &QAbstractItemModel::dataChanged  , d_ptr, &ProfileModelPrivate::slotDataChanged   );
+            connect(Session::instance()->accountModel(), &AccountModel::accountRemoved     , d_ptr, &ProfileModelPrivate::slotAccountRemoved);
+            connect(Session::instance()->accountModel(), &AccountModel::accountAdded       , d_ptr, &ProfileModelPrivate::slotAccountAdded);
+
+            // Load existing accounts
+            for (int i = 0; i < Session::instance()->accountModel()->rowCount(); i++)
+                d_ptr->slotAccountAdded((*Session::instance()->accountModel())[i]);
+        });
+    }
+}
 
 #include "profilemodel.moc"

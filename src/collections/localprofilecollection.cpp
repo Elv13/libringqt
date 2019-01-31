@@ -33,6 +33,7 @@
 #include "account.h"
 #include "session.h"
 #include "accountmodel.h"
+#include "profilemodel.h"
 #include "persondirectory.h"
 #include "person.h"
 
@@ -94,6 +95,8 @@ bool LocalProfileCollection::load()
     // No profiles found, create one
     if (size() == 0)
         d_ptr->setupDefaultProfile();
+
+    Session::instance()->profileModel()->initialize();
 
     return true;
 }
