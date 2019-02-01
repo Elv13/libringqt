@@ -62,6 +62,7 @@ public:
     Q_PROPERTY(int callCount READ callCount NOTIFY callAdded)
     Q_PROPERTY(int totalSpentTime READ totalSpentTime NOTIFY callAdded)
     Q_PROPERTY(int textMessageCount READ textMessageCount NOTIFY eventAdded)
+    Q_PROPERTY(int unreadTextMessageCount READ unreadTextMessageCount NOTIFY unreadCountChanged)
     Q_PROPERTY(int lastUsedTime READ lastUsedTime NOTIFY lastUsedTimeChanged)
     Q_PROPERTY(bool isSelf READ isSelf NOTIFY isSelfChanged)
 
