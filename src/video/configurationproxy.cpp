@@ -53,7 +53,7 @@ public:
     Video::Resolution* currentResolution();
     //    static Video::Rate*       currentRate      ();
 
-    Video::ConfigurationProxy* q_ptr;
+    ConfigurationProxy* q_ptr;
 
 public Q_SLOTS:
     void changeDevice    ();
@@ -67,18 +67,18 @@ public Q_SLOTS:
     void updateRateSelection      ();
 };
 
-Video::ConfigurationProxy::ConfigurationProxy() : QObject(QCoreApplication::instance()),
+ConfigurationProxy::ConfigurationProxy() : QObject(QCoreApplication::instance()),
     d_ptr(new ConfigurationProxyPrivate())
 {
     d_ptr->q_ptr = this;
 }
 
-Video::ConfigurationProxy::~ConfigurationProxy()
+ConfigurationProxy::~ConfigurationProxy()
 {
     delete d_ptr;
 }
 
-QAbstractItemModel* Video::ConfigurationProxy::deviceModel()
+QAbstractItemModel* ConfigurationProxy::deviceModel()
 {
     if (!d_ptr->m_spDeviceModel) {
         d_ptr->m_spDeviceModel = new QIdentityProxyModel(d_ptr->m_sourceModel);
@@ -223,7 +223,7 @@ void ConfigurationProxyPrivate::updateRateSelection()
     }
 }
 
-QAbstractItemModel* Video::ConfigurationProxy::channelModel()
+QAbstractItemModel* ConfigurationProxy::channelModel()
 {
     if (!d_ptr->m_spChannelModel) {
         d_ptr->m_spChannelModel = new QIdentityProxyModel(d_ptr->m_sourceModel);
@@ -236,7 +236,7 @@ QAbstractItemModel* Video::ConfigurationProxy::channelModel()
     return d_ptr->m_spChannelModel;
 }
 
-QAbstractItemModel* Video::ConfigurationProxy::resolutionModel()
+QAbstractItemModel* ConfigurationProxy::resolutionModel()
 {
     if (!d_ptr->m_spResolutionModel) {
         d_ptr->m_spResolutionModel = new QIdentityProxyModel(d_ptr->m_sourceModel);
@@ -249,7 +249,7 @@ QAbstractItemModel* Video::ConfigurationProxy::resolutionModel()
     return d_ptr->m_spResolutionModel;
 }
 
-QAbstractItemModel* Video::ConfigurationProxy::rateModel()
+QAbstractItemModel* ConfigurationProxy::rateModel()
 {
     if (!d_ptr->m_spRateModel) {
         d_ptr->m_spRateModel = new QIdentityProxyModel(d_ptr->m_sourceModel);
@@ -259,7 +259,7 @@ QAbstractItemModel* Video::ConfigurationProxy::rateModel()
     return d_ptr->m_spRateModel;
 }
 
-QItemSelectionModel* Video::ConfigurationProxy::deviceSelectionModel()
+QItemSelectionModel* ConfigurationProxy::deviceSelectionModel()
 {
     if (!d_ptr->m_spDeviceSelectionModel) {
         d_ptr->m_spDeviceSelectionModel = new QItemSelectionModel(deviceModel());
@@ -278,7 +278,7 @@ QItemSelectionModel* Video::ConfigurationProxy::deviceSelectionModel()
     return d_ptr->m_spDeviceSelectionModel;
 }
 
-QItemSelectionModel* Video::ConfigurationProxy::channelSelectionModel()
+QItemSelectionModel* ConfigurationProxy::channelSelectionModel()
 {
     if (!d_ptr->m_spChannelSelectionModel) {
         d_ptr->m_spChannelSelectionModel = new QItemSelectionModel(channelModel());
@@ -292,7 +292,7 @@ QItemSelectionModel* Video::ConfigurationProxy::channelSelectionModel()
     return d_ptr->m_spChannelSelectionModel;
 }
 
-QItemSelectionModel* Video::ConfigurationProxy::resolutionSelectionModel()
+QItemSelectionModel* ConfigurationProxy::resolutionSelectionModel()
 {
     if (!d_ptr->m_spResolutionSelectionModel) {
         d_ptr->m_spResolutionSelectionModel = new QItemSelectionModel(resolutionModel());
@@ -306,7 +306,7 @@ QItemSelectionModel* Video::ConfigurationProxy::resolutionSelectionModel()
     return d_ptr->m_spResolutionSelectionModel;
 }
 
-QItemSelectionModel* Video::ConfigurationProxy::rateSelectionModel()
+QItemSelectionModel* ConfigurationProxy::rateSelectionModel()
 {
     if (!d_ptr->m_spRateSelectionModel) {
         d_ptr->m_spRateSelectionModel = new QItemSelectionModel(rateModel());
@@ -320,13 +320,13 @@ QItemSelectionModel* Video::ConfigurationProxy::rateSelectionModel()
     return d_ptr->m_spRateSelectionModel;
 }
 
-bool Video::ConfigurationProxy::isDecodingAccelerated()
+bool ConfigurationProxy::isDecodingAccelerated()
 {
     VideoManagerInterface& interface = VideoManager::instance();
     return interface.getDecodingAccelerated();
 }
 
-void Video::ConfigurationProxy::setDecodingAccelerated(bool state)
+void ConfigurationProxy::setDecodingAccelerated(bool state)
 {
     VideoManagerInterface& interface = VideoManager::instance();
     interface.setDecodingAccelerated(state);

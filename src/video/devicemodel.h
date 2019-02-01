@@ -26,10 +26,11 @@
 class Session;
 
 
+class ConfigurationProxy;
+
 namespace Video {
 
 class DeviceModelPrivate;
-class ConfigurationProxy;
 
 ///Abstract model for managing account video codec list
 class LIB_EXPORT DeviceModel : public QAbstractListModel

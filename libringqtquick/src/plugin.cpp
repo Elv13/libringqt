@@ -75,6 +75,7 @@
 #include <eventmodel.h>
 #include <media/recordingmodel.h>
 #include <video/previewmanager.h>
+#include <video/configurationproxy.h>
 #include <persondirectory.h>
 #include <infotemplatemanager.h>
 #include <video/devicemodel.h>
@@ -150,11 +151,13 @@ void RingQtQuick::registerTypes(const char *uri)
 
     // Video subsystem
     { using namespace Video;
-        QML_TYPE_VIM( SourceModel    );
-        QML_TYPE_VID( Renderer       );
-        QML_TYPE_MOD( PreviewManager )
-        QML_TYPE_MOD( DeviceModel    )
+        QML_TYPE_VIM( SourceModel        );
+        QML_TYPE_VID( Renderer           );
+        QML_TYPE_MOD( PreviewManager     )
+        QML_TYPE_MOD( DeviceModel        )
+        QML_TYPE_VID( ConfigurationProxy )
     }
+    QML_TYPE(ConfigurationProxy)
 
     // Live troubleshooting subsystem
     { using namespace Troubleshoot;

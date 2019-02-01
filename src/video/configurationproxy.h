@@ -25,6 +25,8 @@ class QItemSelectionModel;
 class ConfigurationProxyPrivate;
 
 namespace Video {
+    class DeviceModel;
+}
 
 /**
  * This class is used to simplify the configuration process.
@@ -35,7 +37,7 @@ namespace Video {
 class LIB_EXPORT ConfigurationProxy final : public QObject
 {
     Q_OBJECT
-    friend class DeviceModel; // factory
+    friend class Video::DeviceModel; // factory
 public:
     Q_PROPERTY(bool decodingAccellerated READ isDecodingAccelerated WRITE setDecodingAccelerated NOTIFY changed)
     Q_PROPERTY(QAbstractItemModel* deviceModel     READ deviceModel     CONSTANT)
@@ -70,5 +72,3 @@ private:
     ConfigurationProxyPrivate* d_ptr;
     Q_DECLARE_PRIVATE(ConfigurationProxy)
 };
-
-} //namespace Video
