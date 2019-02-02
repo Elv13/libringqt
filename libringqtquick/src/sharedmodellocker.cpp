@@ -53,6 +53,7 @@ class SharedModelLockerPrivate final : public QObject
 public:
     QSharedPointer<QAbstractItemModel> m_CallsModel;
     Individual* m_Invididual {nullptr};
+    ContactMethod* m_pContactMethod {nullptr};
     QSharedPointer<QAbstractItemModel> m_TimelineModel;
     bool m_IsLocked{false};
 
@@ -127,6 +128,7 @@ SharedModelLocker::~SharedModelLocker()
 {
     d_ptr->m_TimelineModel.clear();
     d_ptr->m_Invididual = nullptr;
+    d_ptr->m_pContactMethod = nullptr;
     d_ptr->m_CallsModel.clear();
     d_ptr->m_LinksLens.clear();
     d_ptr->m_BookmarksLens.clear();
@@ -149,6 +151,7 @@ void SharedModelLocker::setIndividual(Individual* ind)
     d_ptr->m_IsLocked = true;
     emit changed();
 
+    d_ptr->m_pContactMethod = nullptr;
     d_ptr->m_Invididual = ind;
     d_ptr->m_TimelineModel = ind->timelineModel();
     d_ptr->m_CallsModel = ind->eventAggregate()->unsortedListView();
@@ -185,6 +188,7 @@ void SharedModelLocker::setContactMethod(ContactMethod* cm)
     Q_ASSERT(d_ptr->m_CallsModel);
 
     d_ptr->m_TimelineModel = cm->individual()->timelineModel();
+    d_ptr->m_pContactMethod = cm;
     emit changed();
 }
 
@@ -192,6 +196,7 @@ void SharedModelLocker::setPerson(Person* p)
 {
     auto ind = p->individual();
     d_ptr->m_Invididual = ind;
+    d_ptr->m_pContactMethod = nullptr;
 
     d_ptr->m_CallsModel = ind->eventAggregate()->unsortedListView();
     Q_ASSERT(d_ptr->m_CallsModel);
@@ -250,7 +255,6 @@ Person* SharedModelLocker::currentPerson() const
 
 ContactMethod* SharedModelLocker::currentContactMethod() const
 {
-    Q_ASSERT(false); //TODO
     return nullptr;
 }
 
