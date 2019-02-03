@@ -52,8 +52,6 @@ class SharedModelLockerPrivate final : public QObject
     Q_OBJECT
 public:
     QSharedPointer<QAbstractItemModel> m_CallsModel;
-    Individual* m_Invididual {nullptr};
-    ContactMethod* m_pContactMethod {nullptr};
     QSharedPointer<QAbstractItemModel> m_TimelineModel;
     bool m_IsLocked{false};
 
@@ -63,10 +61,26 @@ public:
 
     QList< QTimer* > m_lTimers;
 
+    // Helpers
+    void replaceIndividual(Individual* i);
+    void replaceContactMethod(ContactMethod* cm);
+    void replaceCall(Call* c);
+
     SharedModelLocker* q_ptr;
+
+    inline Individual*    individual   () const {return m_pIndividual;   }
+    inline ContactMethod* contactMethod() const {return m_pContactMethod;}
+    inline Call*          call         () const {return m_pCall;         }
+
+private:
+    Individual*    m_pIndividual    {nullptr};
+    ContactMethod* m_pContactMethod {nullptr};
+    Call*          m_pCall          {nullptr};
 
 public Q_SLOTS:
     void slotAvailableLensesChanged();
+    void slotCallAdded(Call* c);
+    void slotCallRemoved();
 };
 
 SharedModelLocker::SharedModelLocker(QObject* parent) :
@@ -77,12 +91,12 @@ SharedModelLocker::SharedModelLocker(QObject* parent) :
     cp->setSourceModel(Session::instance()->callModel());
 
     connect(Session::instance()->callModel(), &CallModel::callAttentionRequest,
-        this, &SharedModelLocker::showVideo);
+        this, &SharedModelLocker::showCall);
 
     // Wait a bit, the timeline will change while it is loading, so before
     // picking something at random, give it a chance to load some things.
     QTimer::singleShot(500, [this]() {
-        if (d_ptr->m_Invididual)
+        if (d_ptr->individual())
             return;
 
         auto i = Session::instance()->peersTimelineModel()->mostRecentIndividual();
@@ -99,7 +113,7 @@ SharedModelLocker::SharedModelLocker(QObject* parent) :
             QMetaObject::Connection c;
 
             c = connect(Session::instance()->peersTimelineModel(), &QAbstractItemModel::rowsInserted, this, [c, this]() {
-                if (d_ptr->m_Invididual) {
+                if (d_ptr->individual()) {
                     disconnect(c);
                     return;
                 }
@@ -127,8 +141,6 @@ SharedModelLocker::SharedModelLocker(QObject* parent) :
 SharedModelLocker::~SharedModelLocker()
 {
     d_ptr->m_TimelineModel.clear();
-    d_ptr->m_Invididual = nullptr;
-    d_ptr->m_pContactMethod = nullptr;
     d_ptr->m_CallsModel.clear();
     d_ptr->m_LinksLens.clear();
     d_ptr->m_BookmarksLens.clear();
@@ -151,11 +163,15 @@ void SharedModelLocker::setIndividual(Individual* ind)
     d_ptr->m_IsLocked = true;
     emit changed();
 
-    d_ptr->m_pContactMethod = nullptr;
-    d_ptr->m_Invididual = ind;
+    if (ind && d_ptr->contactMethod() && d_ptr->contactMethod()->individual()->d() != ind->d())
+        d_ptr->replaceContactMethod(nullptr);
+
     d_ptr->m_TimelineModel = ind->timelineModel();
-    d_ptr->m_CallsModel = ind->eventAggregate()->unsortedListView();
-    Q_ASSERT(d_ptr->m_CallsModel);
+
+    if (d_ptr->call() && d_ptr->call()->peer()->d() != d_ptr->individual()->d())
+        d_ptr->replaceCall(nullptr);
+
+    d_ptr->replaceIndividual(ind);
 
     d_ptr->m_IsLocked = false;
     emit changed();
@@ -163,7 +179,7 @@ void SharedModelLocker::setIndividual(Individual* ind)
 
 void SharedModelLocker::setContactMethod(ContactMethod* cm)
 {
-    if ((!cm))
+    if ((!cm) || cm == d_ptr->contactMethod())
         return;
 
     cm = Session::instance()->individualDirectory()->fromTemporary(cm);
@@ -182,24 +198,27 @@ void SharedModelLocker::setContactMethod(ContactMethod* cm)
         }
     }
 
-    // Keep a strong reference because QML won't
-    d_ptr->m_Invididual = cm->individual();
-    d_ptr->m_CallsModel = cm->individual()->eventAggregate()->unsortedListView();
-    Q_ASSERT(d_ptr->m_CallsModel);
+    if (d_ptr->individual() && d_ptr->individual() == cm->individual()) {
+        emit changed();
+        return;
+    }
+
+    if (cm && d_ptr->call() && d_ptr->call()->peerContactMethod()->d() != cm->d())
+        d_ptr->replaceCall(nullptr);
 
     d_ptr->m_TimelineModel = cm->individual()->timelineModel();
-    d_ptr->m_pContactMethod = cm;
+
+    d_ptr->replaceIndividual(cm->individual());
+    d_ptr->replaceContactMethod(cm);
+
     emit changed();
 }
 
 void SharedModelLocker::setPerson(Person* p)
 {
     auto ind = p->individual();
-    d_ptr->m_Invididual = ind;
-    d_ptr->m_pContactMethod = nullptr;
-
-    d_ptr->m_CallsModel = ind->eventAggregate()->unsortedListView();
-    Q_ASSERT(d_ptr->m_CallsModel);
+    d_ptr->replaceIndividual(ind);
+    d_ptr->replaceContactMethod(nullptr);
 
     emit changed();
 }
@@ -214,20 +233,22 @@ bool ActiveCallProxy2::filterAcceptsRow(int row, const QModelIndex& srcParent ) 
         .data((int)Call::Role::LifeCycleState) == QVariant::fromValue(Call::LifeCycleState::PROGRESS);
 }
 
-void SharedModelLocker::showVideo(Call* c)
+void SharedModelLocker::showCall(Call* c)
 {
     // Ignore clicks on dialing calls
     if ((!c) || c->state() == Call::State::NEW || c->state() == Call::State::DIALING)
         return;
 
-    setContactMethod(c->peerContactMethod());
+    setCall(c);
+
+    emit changed();
 }
 
 QModelIndex SharedModelLocker::suggestedTimelineIndex() const
 {
-    if (d_ptr->m_Invididual)
+    if (d_ptr->individual())
         return Session::instance()->peersTimelineModel()->individualIndex(
-            qobject_cast<Individual*>(d_ptr->m_Invididual)
+            qobject_cast<Individual*>(d_ptr->individual())
         );
 
     return {};
@@ -235,7 +256,7 @@ QModelIndex SharedModelLocker::suggestedTimelineIndex() const
 
 Individual* SharedModelLocker::currentIndividual() const
 {
-    return d_ptr->m_Invididual;
+    return d_ptr->individual();
 }
 
 QAbstractItemModel* SharedModelLocker::timelineModel() const
@@ -245,12 +266,19 @@ QAbstractItemModel* SharedModelLocker::timelineModel() const
 
 QAbstractItemModel* SharedModelLocker::unsortedListView() const
 {
+    if (d_ptr->individual() && !d_ptr->m_CallsModel) {
+        d_ptr->m_CallsModel = d_ptr->individual()->eventAggregate()
+            ->unsortedListView();
+
+        Q_ASSERT(d_ptr->m_CallsModel);
+    }
+
     return d_ptr->m_IsLocked ? nullptr : d_ptr->m_CallsModel.data();
 }
 
 Person* SharedModelLocker::currentPerson() const
 {
-    return d_ptr->m_Invididual ? d_ptr->m_Invididual->person() : nullptr;
+    return d_ptr->individual() ? d_ptr->individual()->person() : nullptr;
 }
 
 ContactMethod* SharedModelLocker::currentContactMethod() const
@@ -296,11 +324,11 @@ bool SharedModelLocker::hasFiles() const
 
 QAbstractItemModel* SharedModelLocker::linksLens() const
 {
-    if (!d_ptr->m_Invididual)
+    if (!d_ptr->individual())
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -313,11 +341,11 @@ QAbstractItemModel* SharedModelLocker::linksLens() const
 
 QAbstractItemModel* SharedModelLocker::bookmarksLens() const
 {
-    if (!d_ptr->m_Invididual)
+    if (!d_ptr->individual())
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -330,11 +358,11 @@ QAbstractItemModel* SharedModelLocker::bookmarksLens() const
 
 QAbstractItemModel* SharedModelLocker::filesLens() const
 {
-    if (!d_ptr->m_Invididual)
+    if (!d_ptr->individual())
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->m_Invididual->timelineModel();
+        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -343,6 +371,107 @@ QAbstractItemModel* SharedModelLocker::filesLens() const
         d_ptr->m_FilesLens = rm->lens(IndividualTimelineModel::LensType::FILES);
 
     return d_ptr->m_FilesLens.data();
+}
+
+Call* SharedModelLocker::call() const
+{
+    return d_ptr->call();
+}
+
+void SharedModelLocker::setCall(Call* c)
+{
+    d_ptr->replaceCall(c);
+
+    if (c && ((!d_ptr->individual()) || c->peer()->d() != d_ptr->individual()->d()))
+        setIndividual(c->peer());
+
+    setContactMethod(c->peerContactMethod());
+
+    emit changed();
+}
+
+void SharedModelLockerPrivate::replaceCall(Call* c)
+{
+    m_pCall = c;
+
+    if (!c) {
+        emit q_ptr->callChanged();
+        return;
+    }
+
+    if (c && ((!m_pIndividual) || c->peer()->d() != m_pIndividual->d()))
+        replaceContactMethod(c->peerContactMethod());
+    else if (!m_pContactMethod)
+        replaceContactMethod(c->peerContactMethod());
+
+    m_pCall = c;
+
+    emit q_ptr->callChanged();
+}
+
+void SharedModelLockerPrivate::replaceIndividual(Individual* i)
+{
+    if (m_pIndividual && m_pIndividual->d() == i)
+        return;
+
+    if (m_pIndividual) {
+        disconnect(m_pIndividual, &Individual::callAdded,
+            this, &SharedModelLockerPrivate::slotCallAdded);
+    }
+
+    m_pIndividual = i;
+
+    if (!i) {
+        emit q_ptr->individualChanged();
+        return;
+    }
+
+    connect(m_pIndividual, &Individual::callAdded,
+        this, &SharedModelLockerPrivate::slotCallAdded);
+
+    if (auto c = i->firstActiveCall())
+        replaceCall(c);
+
+    emit q_ptr->individualChanged();
+}
+
+void SharedModelLockerPrivate::replaceContactMethod(ContactMethod* cm)
+{
+    if (m_pContactMethod && cm && m_pContactMethod->d() == cm->d())
+        return;
+
+    m_pContactMethod = cm;
+
+    emit q_ptr->contactMethodChanged();
+}
+
+void SharedModelLockerPrivate::slotCallAdded(Call* c)
+{
+    connect(c, &Call::stateChanged,
+        this, &SharedModelLockerPrivate::slotCallRemoved);
+
+    if (m_pCall && m_pCall->lifeCycleState() == Call::LifeCycleState::PROGRESS)
+        return;
+
+    switch(c->lifeCycleState()) {
+        case Call::LifeCycleState::CREATION:
+        case Call::LifeCycleState::FINISHED:
+            return;
+        case Call::LifeCycleState::PROGRESS:
+        case Call::LifeCycleState::INITIALIZATION:
+            replaceCall(c);
+    }
+}
+
+void SharedModelLockerPrivate::slotCallRemoved()
+{
+    if (!m_pCall)
+        return;
+
+    if (m_pCall->lifeCycleState() == Call::LifeCycleState::FINISHED) {
+        replaceCall(nullptr);
+        emit q_ptr->changed();
+    }
 }
 
 #include <sharedmodellocker.moc>

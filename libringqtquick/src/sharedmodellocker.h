@@ -47,11 +47,12 @@ class SharedModelLocker : public QObject
 
 public:
     Q_PROPERTY(QModelIndex suggestedTimelineIndex READ suggestedTimelineIndex)
-    Q_PROPERTY(ContactMethod* currentContactMethod READ currentContactMethod WRITE setContactMethod NOTIFY changed)
-    Q_PROPERTY(Individual* currentIndividual READ currentIndividual WRITE setIndividual NOTIFY changed)
+    Q_PROPERTY(ContactMethod* currentContactMethod READ currentContactMethod WRITE setContactMethod NOTIFY contactMethodChanged)
+    Q_PROPERTY(Individual* currentIndividual READ currentIndividual WRITE setIndividual NOTIFY individualChanged)
     Q_PROPERTY(QAbstractItemModel* timelineModel READ timelineModel NOTIFY changed)
     Q_PROPERTY(QAbstractItemModel* unsortedListView READ unsortedListView NOTIFY changed)
     Q_PROPERTY(Person* currentPerson READ currentPerson WRITE setPerson NOTIFY changed)
+    Q_PROPERTY(Call* call READ call WRITE setCall NOTIFY callChanged)
     Q_PROPERTY(bool hasLinks    READ hasLinks    NOTIFY changed)
     Q_PROPERTY(bool hasBookmark READ hasBookmark NOTIFY changed)
     Q_PROPERTY(bool hasFiles    READ hasFiles    NOTIFY changed)
@@ -69,6 +70,9 @@ public:
     QAbstractItemModel* unsortedListView() const;
     Person* currentPerson() const;
 
+    Call* call() const;
+    void setCall(Call* c);
+
     bool hasLinks() const;
     bool hasBookmark() const;
     bool hasFiles() const;
@@ -81,11 +85,14 @@ public Q_SLOTS:
     void setContactMethod(ContactMethod* cm);
     void setIndividual(Individual* ind);
     void setPerson(Person* p);
-    void showVideo(Call* c);
+    void showCall(Call* c);
 
 Q_SIGNALS:
     void suggestSelection(Individual* individual, const QModelIndex& modelIndex);
     void changed();
+    void individualChanged();
+    void contactMethodChanged();
+    void callChanged();
 
 private:
     SharedModelLockerPrivate* d_ptr;
