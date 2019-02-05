@@ -25,7 +25,14 @@
 #include <QtCore/QTimer>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QVariant>
+
+#ifdef Q_OS_ANDROID
+ #ifndef __ANDROID__
+  #define __ANDROID__ 1
+ #endif
+#endif
 
 #include <future>
 
@@ -160,6 +167,22 @@ public:
                 [this](const std::string& message) {
                     Q_EMIT this->debugMessageReceived(message);
                 }),
+#ifdef Q_OS_ANDROID
+            exportable_callback<ConfigurationSignal::GetAppDataPath>(
+                [this](const std::string& name, std::vector<std::string>* paths) {
+                    if (name == "config") {
+                        QString path =  QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                            + "/dring/"+QString(name.c_str())+"/";
+                        paths->push_back(path.toStdString());
+
+                    }
+                    else {
+                        QString path =  QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+                            + "/dring/"+QString(name.c_str())+"/";
+                        paths->push_back(path.toStdString());
+                    }
+                }),
+#endif
         };
 
         dataXferHandlers = {

@@ -27,6 +27,12 @@
 #include <QVariant>
 #include <QTimer>
 
+#ifdef Q_OS_ANDROID
+ #ifndef __ANDROID__
+  #define __ANDROID__ 1
+ #endif
+#endif
+
 #include "dring.h"
 #include "../typedefs.h"
 #include "conversions_wrap.hpp"
