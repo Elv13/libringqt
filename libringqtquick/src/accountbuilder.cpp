@@ -27,20 +27,32 @@
 #include <profilemodel.h>
 #include <accountmodel.h>
 
-
-AccountBuilder::AccountBuilder(QObject* parent) : QIdentityProxyModel(parent)
+class AccountBuilderPrivate final : public QObject
 {
-    setSourceModel(m_pSource);
+    Q_OBJECT
+public:
+    ProtocolModel* m_pSource {new ProtocolModel()};
+
+public Q_SLOTS:
+    void slotAccountStateChanged();
+};
+
+
+AccountBuilder::AccountBuilder(QObject* parent) : QIdentityProxyModel(parent),
+    d_ptr(new AccountBuilderPrivate())
+{
+    setSourceModel(d_ptr->m_pSource);
 }
 
 AccountBuilder::~AccountBuilder()
 {
-    delete m_pSource;
+    delete d_ptr->m_pSource;
+    delete d_ptr;
 }
 
 QItemSelectionModel* AccountBuilder::selectionModel() const
 {
-    return m_pSource->selectionModel();
+    return d_ptr->m_pSource->selectionModel();
 }
 
 QVariant AccountBuilder::data( const QModelIndex& index, int role ) const
@@ -57,14 +69,14 @@ QVariant AccountBuilder::data( const QModelIndex& index, int role ) const
         }
     }
     else
-        return m_pSource->data(mapToSource(index), role);
+        return d_ptr->m_pSource->data(mapToSource(index), role);
 
     return QVariant();
 }
 
 int AccountBuilder::rowCount( const QModelIndex& parent ) const
 {
-    return parent.isValid() ? 0 : m_pSource->rowCount()
+    return parent.isValid() ? 0 : d_ptr->m_pSource->rowCount()
         + static_cast<int>(AccountBuilder::ExtendedRole::COUNT__);
 }
 
@@ -76,7 +88,7 @@ QModelIndex AccountBuilder::index( int row, int column, const QModelIndex& paren
     if ( row >= static_cast<int>(Account::Protocol::COUNT__) && row < total)
         return createIndex(row, column, row);
     else
-        return mapFromSource(m_pSource->index(row, column, mapToSource(parent)));
+        return mapFromSource(d_ptr->m_pSource->index(row, column, mapToSource(parent)));
 }
 
 Account* AccountBuilder::buildFor(int i)
@@ -142,8 +154,26 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
     ctx->engine()->setObjectOwnership(a, QQmlEngine::CppOwnership);
 
     Session::instance()->accountModel()->save();
+    connect(a, &Account::stateChanged, d_ptr, &AccountBuilderPrivate::slotAccountStateChanged);
 
     return a;
 }
+
+// Save again when first time they are registered to make sure dring.yml has
+// the key path saved on disk.
+void AccountBuilderPrivate::slotAccountStateChanged()
+{
+    using RS = Account::RegistrationState;
+    auto a = qobject_cast<Account*>(sender());
+    if (!a)
+        return;
+
+    if (a->registrationState() == RS::READY) {
+        Session::instance()->accountModel()->save();
+        disconnect(a, &Account::stateChanged, this, &AccountBuilderPrivate::slotAccountStateChanged);
+    }
+}
+
+#include <accountbuilder.moc>
 
 // kate: space-indent on; indent-width 4; replace-tabs on;

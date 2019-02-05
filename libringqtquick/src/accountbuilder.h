@@ -23,6 +23,8 @@
 
 #include <protocolmodel.h>
 
+class AccountBuilderPrivate;
+
 /**
  * This class exposes a way for QML code to create or import an account or
  * a profile without tons of boilerplate.
@@ -53,7 +55,8 @@ public:
     QItemSelectionModel* selectionModel() const;
 
 private:
-    ProtocolModel* m_pSource {new ProtocolModel()};
+    AccountBuilderPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(AccountBuilder)
 };
 
 #endif
