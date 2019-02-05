@@ -141,6 +141,8 @@ Account* AccountBuilder::buildFor(const QModelIndex& index)
     const auto ctx = QQmlEngine::contextForObject(this);
     ctx->engine()->setObjectOwnership(a, QQmlEngine::CppOwnership);
 
+    Session::instance()->accountModel()->save();
+
     return a;
 }
 
