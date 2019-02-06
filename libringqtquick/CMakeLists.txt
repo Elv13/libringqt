@@ -39,6 +39,7 @@ set(libringqtquick_LIB_SRCS
     src/messagebuilder.cpp
     src/contactbuilder.cpp
     src/sharedmodellocker.cpp
+    src/ringaccountbuilder.cpp
     src/plugin.cpp
 )
 
@@ -47,6 +48,7 @@ set(libringqtquick_LIB_HEADERS
     src/accountbuilder.h
     src/contactbuilder.h
     src/messagebuilder.h
+    src/ringaccountbuilder.h
 )
 
 # if(NOT BUILD_SHARED_LIBS)
