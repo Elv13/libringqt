@@ -31,6 +31,8 @@ class PresenceSerializerI;
 class ShortcutCreatorI;
 class ActionExtenderI;
 class FileProviderI;
+class AudioFormatI;
+class VideoFormatI;
 } // namespace Interfaces
 
 /**
@@ -55,6 +57,12 @@ void LIB_EXPORT setContactMethodSelector(std::unique_ptr<Interfaces::ContactMeth
 
 LIB_EXPORT Interfaces::DBusErrorHandlerI& dBusErrorHandler();
 void setDBusErrorHandler(std::unique_ptr<Interfaces::DBusErrorHandlerI> instance);
+
+LIB_EXPORT Interfaces::AudioFormatI& audioFormatHandler();
+void setAudioFormatHandler(std::unique_ptr<Interfaces::AudioFormatI> instance);
+
+LIB_EXPORT Interfaces::VideoFormatI& videoFormatHandler();
+void setVideoFormatHandler(std::unique_ptr<Interfaces::VideoFormatI> instance);
 
 /**
  * LRC does not provide a default implementation of this interface, thus an exception will be thrown
@@ -89,6 +97,8 @@ void LIB_EXPORT setInterfaceInternal(Interfaces::PresenceSerializerI      *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::ShortcutCreatorI         *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::ActionExtenderI          *);
 void LIB_EXPORT setInterfaceInternal(Interfaces::FileProviderI            *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::AudioFormatI             *);
+void LIB_EXPORT setInterfaceInternal(Interfaces::VideoFormatI             *);
 
 /**
  * Generic interface setter. This metamethod can set any type of interface

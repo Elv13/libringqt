@@ -453,6 +453,8 @@ SET(libringqt_troubleshoot_LIB_HDRS
 SET(libringqt_interface_LIB_HDRS
   src/interfaces/accountlistcolorizeri.h
   src/interfaces/fileprovideri.h
+  src/interfaces/audioformati.h
+  src/interfaces/videoformati.h
   src/interfaces/contactmethodselectori.h
   src/interfaces/presenceserializeri.h
   src/interfaces/itemmodelstateserializeri.h
