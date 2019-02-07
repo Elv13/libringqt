@@ -40,6 +40,7 @@ set(libringqtquick_LIB_SRCS
     src/contactbuilder.cpp
     src/sharedmodellocker.cpp
     src/ringaccountbuilder.cpp
+    src/timelineiterator.cpp
     src/plugin.cpp
 )
 

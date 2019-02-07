@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Savoir-Faire Linux                              *
+ *   Copyright (C) 2019 2019 by Blue Systems                               *
  *   Author : Emmanuel Lepage Vallee <elv1313@gmail.com>                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *

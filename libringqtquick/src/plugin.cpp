@@ -31,6 +31,7 @@
 #include "contactbuilder.h"
 #include "ringaccountbuilder.h"
 #include "sharedmodellocker.h"
+#include "timelineiterator.h"
 
 // Globals
 #include <session.h>
@@ -172,6 +173,7 @@ void RingQtQuick::registerTypes(const char *uri)
     qmlRegisterType<ContactBuilder>(uri, 1, 0, "ContactBuilder");
     qmlRegisterType<RingAccountBuilder>(uri, 1, 0, "RingAccountBuilder");
     qmlRegisterType<SharedModelLocker>(uri, 1, 0, "SharedModelLocker");
+    qmlRegisterType<TimelineIterator>(uri, 1, 0, "TimelineIterator");
 
     // Alias
     qmlRegisterUncreatableType<AttachedAccountFieldStatus>(
