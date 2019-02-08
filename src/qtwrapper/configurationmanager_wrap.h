@@ -25,10 +25,12 @@
 #include <QtCore/QTimer>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
-#include <QtCore/QStandardPaths>
 #include <QtCore/QVariant>
 
 #ifdef Q_OS_ANDROID
+ #include <QtCore/QDir>
+ #include <QtCore/QStandardPaths>
+
  #ifndef __ANDROID__
   #define __ANDROID__ 1
  #endif
@@ -170,17 +172,16 @@ public:
 #ifdef Q_OS_ANDROID
             exportable_callback<ConfigurationSignal::GetAppDataPath>(
                 [this](const std::string& name, std::vector<std::string>* paths) {
-                    if (name == "config") {
-                        QString path =  QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-                            + "/dring/"+QString(name.c_str())+"/";
-                        paths->push_back(path.toStdString());
+                    QString path =  QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+                        + "/dring/"+QString(name.c_str())+"/";
 
-                    }
-                    else {
-                        QString path =  QStandardPaths::writableLocation(QStandardPaths::DataLocation)
-                            + "/dring/"+QString(name.c_str())+"/";
-                        paths->push_back(path.toStdString());
-                    }
+                    // Without this there's some SELinux "denied" errors. I guess
+                    // dring tries to create a subdirectory in a directory that
+                    // doesn't exist.
+                    QDir d;
+                    d.mkpath(path);
+
+                    paths->push_back(path.toStdString());
                 }),
 #endif
         };
