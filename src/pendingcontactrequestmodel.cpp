@@ -195,7 +195,7 @@ void PendingContactRequestModelPrivate::addRequest(ContactRequest* r)
       return (r_->certificate()->remoteId() == r->certificate()->remoteId());
    });
 
-    if(iter)
+    if(iter != m_lRequests.end())
         removeRequest(*iter);
 
    q_ptr->beginInsertRows({}, m_lRequests.size(),m_lRequests.size());
