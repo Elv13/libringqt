@@ -17,19 +17,34 @@
  ***************************************************************************/
 #pragma once
 
+#include <interfaces/audioformati.h>
 #include <typedefs.h>
 
 namespace Interfaces {
 
 /**
- * To implement on plarforms where the media frames needs to be processed by
- * the client (Android and iOS)
+ * This class calls into some Java classes to get the optimial size for the
+ * audio buffers. Without this it will either have bad latency or crash
+ * with a segmentation fault.
  */
-class LIB_EXPORT AudioFormatI
+class LIB_EXPORT AndroidAudioFormat : public AudioFormatI
 {
 public:
-    virtual int bufferSize() const = 0;
-    virtual int sampleRate() const = 0;
+    explicit AndroidAudioFormat();
+
+    /**
+     * The context object lifecycles seems to be incorrect.
+     *
+     * Qt reference gets dropped and the object is GCed, if this
+     * happens before the methods below are called, it will crash.
+     *
+     * This function has to be called early in main to add a new
+     * Jeva reference to the Android context.
+     */
+    static void init();
+
+    virtual int bufferSize() const override;
+    virtual int sampleRate() const override;
 };
 
 }

@@ -28,6 +28,8 @@
 #include "interfaces/shortcutcreatori.h"
 #include "interfaces/actionextenderi.h"
 #include "interfaces/fileprovideri.h"
+#include "interfaces/audioformati.h"
+#include "interfaces/videoformati.h"
 
 #include "interfaces/default/accountlistcolorizerdefault.h"
 #include "interfaces/default/dbuserrorhandlerdefault.h"
@@ -49,6 +51,8 @@ struct InstanceManager
     std::unique_ptr<Interfaces::ShortcutCreatorI>          m_shortcutCreator;
     std::unique_ptr<Interfaces::ActionExtenderI>           m_actionExtender;
     std::unique_ptr<Interfaces::FileProviderI>             m_fileProvider;
+    std::unique_ptr<Interfaces::AudioFormatI>              m_audioFormats;
+    std::unique_ptr<Interfaces::VideoFormatI>              m_videoFormats;
 };
 
 static InstanceManager&
@@ -222,7 +226,30 @@ fileProvider()
     return *instanceManager().m_fileProvider.get();
 }
 
-void LIB_EXPORT setFileProvider(std::unique_ptr<Interfaces::FileProviderI> instance)
+void setFileProvider(std::unique_ptr<Interfaces::FileProviderI> instance)
+{
+    // do not allow empty pointers
+    if (!instance) {
+        qWarning() << "ignoring empty unique_ptr";
+        return;
+    }
+    instanceManager().m_fileProvider = std::move(instance);
+}
+
+Interfaces::AudioFormatI&
+audioFormatHandler()
+{
+    // There is no coming back from this. The only way it can happen is if it
+    // isn't initialized properly, in which case it will not work anyway.
+    if (!instanceManager().m_audioFormats) {
+        qWarning() << "LibrRingQt wasn't compiled properly, it will not work, bye";
+        exit(1);
+    }
+
+    return *instanceManager().m_audioFormats.get();
+}
+
+void setAudioFormatHandler(std::unique_ptr<Interfaces::FileProviderI> instance)
 {
     // do not allow empty pointers
     if (!instance) {
@@ -261,6 +288,8 @@ REGISTER_INTERFACE(Interfaces::PresenceSerializerI      , m_presenceSerializer  
 REGISTER_INTERFACE(Interfaces::ShortcutCreatorI         , m_shortcutCreator         )
 REGISTER_INTERFACE(Interfaces::ActionExtenderI          , m_actionExtender          )
 REGISTER_INTERFACE(Interfaces::FileProviderI            , m_fileProvider            )
+REGISTER_INTERFACE(Interfaces::VideoFormatI             , m_videoFormats            )
+REGISTER_INTERFACE(Interfaces::AudioFormatI             , m_audioFormats            )
 
 #pragma GCC diagnostic pop
 

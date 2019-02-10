@@ -24,7 +24,7 @@ namespace Interfaces {
  * To implement on plarforms where the media frames needs to be processed by
  * the client (Android and iOS)
  */
-class Q_DECL_EXPORT AudioFormat
+class Q_DECL_EXPORT VideoFormatI
 {
 public:
     struct AbstractFormat {
@@ -49,8 +49,6 @@ public:
 
 
     virtual QVector<AbstractDevice*> devices() const = 0;
-
-    void set
 };
 
 }

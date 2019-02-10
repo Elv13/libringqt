@@ -83,6 +83,10 @@ IF(NOT ENABLE_LIBWRAP)
    FIND_PACKAGE(Qt5DBus REQUIRED)
 ENDIF()
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+   FIND_PACKAGE(Qt5AndroidExtras REQUIRED)
+ENDIF()
+
 # Create a proper Qt plugin for QtQuick
 IF (Qt5Quick_FOUND)
    add_subdirectory(libringqtquick)
@@ -283,6 +287,14 @@ SET( libringqt_LIB_SRCS
   src/extensions/securityevaluationextension.cpp
 )
 
+# Add the Java bridge
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    SET(libringqt_LIB_SRCS
+        ${libringqt_LIB_SRCS}
+        src/interfaces/android/androidaudioformat.cpp
+    )
+ENDIF()
+
 IF(ENABLE_LIBWRAP)
    SET(libringqt_LIB_SRCS ${libringqt_LIB_SRCS}
       src/private/directrenderer.cpp
@@ -464,6 +476,13 @@ SET(libringqt_interface_LIB_HDRS
   src/interfaces/dbuserrorhandleri.h
 )
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+  SET(libringqt_interface_LIB_HDRS
+    ${libringqt_interface_LIB_HDRS}
+    src/interfaces/android/androidaudioformat.h
+  )
+ENDIF()
+
 SET( libringqt_extra_LIB_HDRS
   src/typedefs.h
 )
@@ -597,6 +616,13 @@ QT5_WRAP_CPP(LIB_HEADER_MOC ${libringqt_PRIVATE_HDRS})
 
 ADD_LIBRARY( ringqt ${libringqt_LIB_SRCS} ${LIB_HEADER_MOC} )
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    TARGET_LINK_LIBRARIES( ringqt PRIVATE
+       Qt5::AndroidExtras
+    )
+ENDIF()
+
+
 IF (DEFINED ring_INCLUDE_DIRS)
    TARGET_INCLUDE_DIRECTORIES( ringqt PRIVATE
       ${ring_INCLUDE_DIRS}
@@ -670,7 +696,7 @@ IF(NEED_LIBRT)
 ENDIF()
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
-    message(STATUS Android detected)
+    message(STATUS "Android detected")
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     TARGET_LINK_LIBRARIES( ringqt -lpthread )
 ENDIF()

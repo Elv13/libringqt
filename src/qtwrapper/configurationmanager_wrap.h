@@ -31,6 +31,9 @@
  #include <QtCore/QDir>
  #include <QtCore/QStandardPaths>
 
+ #include <globalinstances.h>
+ #include <interfaces/audioformati.h>
+
  #ifndef __ANDROID__
   #define __ANDROID__ 1
  #endif
@@ -182,6 +185,17 @@ public:
                     d.mkpath(path);
 
                     paths->push_back(path.toStdString());
+                }),
+            exportable_callback<ConfigurationSignal::GetHardwareAudioFormat>(
+                [this](std::vector<int>* params_ret) {
+
+                    params_ret->push_back(
+                        GlobalInstances::audioFormatHandler().sampleRate()
+                    );
+
+                    params_ret->push_back(
+                        GlobalInstances::audioFormatHandler().bufferSize()
+                    );
                 }),
 #endif
         };

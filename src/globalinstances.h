@@ -59,10 +59,10 @@ LIB_EXPORT Interfaces::DBusErrorHandlerI& dBusErrorHandler();
 void setDBusErrorHandler(std::unique_ptr<Interfaces::DBusErrorHandlerI> instance);
 
 LIB_EXPORT Interfaces::AudioFormatI& audioFormatHandler();
-void setAudioFormatHandler(std::unique_ptr<Interfaces::AudioFormatI> instance);
+void LIB_EXPORT setAudioFormatHandler(std::unique_ptr<Interfaces::AudioFormatI> instance);
 
 LIB_EXPORT Interfaces::VideoFormatI& videoFormatHandler();
-void setVideoFormatHandler(std::unique_ptr<Interfaces::VideoFormatI> instance);
+void LIB_EXPORT setVideoFormatHandler(std::unique_ptr<Interfaces::VideoFormatI> instance);
 
 /**
  * LRC does not provide a default implementation of this interface, thus an exception will be thrown

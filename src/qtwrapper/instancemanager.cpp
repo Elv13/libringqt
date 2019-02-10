@@ -26,6 +26,10 @@
  #include "videomanager.h"
 #endif //ENABLE_VIDEO
 
+#ifdef Q_OS_ANDROID
+ #include "interfaces/android/androidaudioformat.h"
+#endif
+
 static int ringFlags = 0;
 
 InstanceManagerInterface::InstanceManagerInterface()
@@ -47,6 +51,10 @@ InstanceManagerInterface::InstanceManagerInterface()
 #ifndef MUTE_DRING
    ringFlags |= DRing::DRING_FLAG_DEBUG;
    ringFlags |= DRing::DRING_FLAG_CONSOLE_LOG;
+#endif
+
+#ifdef Q_OS_ANDROID
+   GlobalInstances::setInterface<Interfaces::AndroidAudioFormat>();
 #endif
 
    DRing::init(static_cast<DRing::InitFlag>(ringFlags));
