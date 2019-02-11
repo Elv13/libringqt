@@ -29,6 +29,7 @@ import android.media.AudioAttributes;
 import java.util.Locale;
 import java.lang.String;
 import android.media.AudioManager;
+import android.os.Build;
 
 /*
  * WARNING: The content of this file is GPLv3 and imported from the official
@@ -62,6 +63,14 @@ public class HardwareProxy
         mBufferSize = bs;
 
         return 0;
+    }
+
+    public static String deviceManufacturer() {
+        return Build.MANUFACTURER;
+    }
+
+    public static String deviceModel() {
+        return Build.MODEL;
     }
 
     public static int sampleRate(int _) {

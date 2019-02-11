@@ -197,6 +197,17 @@ public:
                         GlobalInstances::audioFormatHandler().bufferSize()
                     );
                 }),
+            exportable_callback<ConfigurationSignal::GetDeviceName>(
+                [this](std::vector<std::string>* device_info) {
+
+                    device_info->push_back(
+                        GlobalInstances::audioFormatHandler().deviceModel().toStdString()
+                    );
+
+                    device_info->push_back(
+                        GlobalInstances::audioFormatHandler().deviceManufacturer().toStdString()
+                    );
+                }),
 #endif
         };
 

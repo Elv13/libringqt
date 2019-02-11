@@ -85,3 +85,45 @@ int Interfaces::AndroidAudioFormat::sampleRate() const
 
     return res;
 }
+
+QString Interfaces::AndroidAudioFormat::deviceModel() const
+{
+    QMutex m;
+    m.lock();
+
+    QString ret = 0;
+
+    QtAndroid::runOnAndroidThread([&m, &ret]() {
+        QAndroidJniObject o = QAndroidJniObject::callStaticMethod<jstring>(
+            uri, "deviceModel", "()S"
+        );
+        ret = o.toString();
+        m.unlock();
+    });
+
+    // Wait until the context is set
+    m.lock();
+
+    return ret;
+}
+
+QString Interfaces::AndroidAudioFormat::deviceManufacturer() const
+{
+    QMutex m;
+    m.lock();
+
+    QString ret = 0;
+
+    QtAndroid::runOnAndroidThread([&m, &ret]() {
+        QAndroidJniObject o = QAndroidJniObject::callStaticMethod<jstring>(
+            uri, "deviceManufacturer", "()S"
+        );
+        ret = o.toString();
+        m.unlock();
+    });
+
+    // Wait until the context is set
+    m.lock();
+
+    return ret;
+}

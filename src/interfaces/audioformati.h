@@ -30,6 +30,9 @@ class LIB_EXPORT AudioFormatI
 public:
     virtual int bufferSize() const = 0;
     virtual int sampleRate() const = 0;
+
+    virtual QString deviceModel() const = 0;
+    virtual QString deviceManufacturer() const = 0;
 };
 
 }
