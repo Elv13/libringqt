@@ -44,7 +44,21 @@ VideoManagerInterface::VideoManagerInterface()
         exportable_callback<VideoSignal::DecodingStopped>(
             [this] (const std::string &id, const std::string &shmPath, bool isMixer) {
                 emit sender->stoppedDecoding(QString(id.c_str()), QString(shmPath.c_str()), isMixer);
-        })
+        }),
+#ifdef Q_OS_ANDROID
+        exportable_callback<VideoSignal::SetParameters>(
+            [](const std::string& device, const int format, const int width, const int height, const int rate) {
+                //
+
+            }
+        ),
+        exportable_callback<VideoSignal::GetCameraInfo>(
+            [](const std::string& device, std::vector<int> *formats, std::vector<unsigned> *sizes, std::vector<unsigned> *rates) {
+
+            }
+        ),
+#endif
+
     };
 #endif
 }
@@ -65,10 +79,38 @@ void VideoManagerSignalProxy::slotDeviceEvent()
 
 void VideoManagerSignalProxy::slotStartedDecoding(const QString &id, const QString &shmPath, int width, int height, bool isMixer)
 {
-        emit m_pParent->startedDecoding(id,shmPath,width,height,isMixer);
+    emit m_pParent->startedDecoding(id,shmPath,width,height,isMixer);
 }
 
 void VideoManagerSignalProxy::slotStoppedDecoding(const QString &id, const QString &shmPath, bool isMixer)
 {
-        emit m_pParent->stoppedDecoding(id,shmPath,isMixer);
+    emit m_pParent->stoppedDecoding(id,shmPath,isMixer);
 }
+
+#ifdef Q_OS_ANDROID
+void VideoManagerInterface::addVideoDevice(const QString& node, const QVector<QHash<QString, QString>>& devInfo)
+{
+    //TODO add the settings
+    DRing::addVideoDevice(node.toStdString(), nullptr);
+}
+
+void VideoManagerInterface::removeVideoDevice(const QString& node)
+{
+    DRing::removeVideoDevice(node.toStdString());
+}
+
+void* VideoManagerInterface::obtainFrame(int length)
+{
+    return DRing::obtainFrame(length);
+}
+
+void VideoManagerInterface::releaseFrame(void* frame)
+{
+   DRing::releaseFrame(frame);
+}
+
+void VideoManagerInterface::publishFrame()
+{
+    DRing::publishFrame();
+}
+#endif

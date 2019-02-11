@@ -17,6 +17,8 @@
  ***************************************************************************/
 #pragma once
 
+#include <typedefs.h>
+#include <interfaces/videoformati.h>
 
 namespace Interfaces {
 
@@ -24,13 +26,13 @@ namespace Interfaces {
  * To implement on plarforms where the media frames needs to be processed by
  * the client (Android and iOS)
  */
-class Q_DECL_EXPORT AndroidVideoFormat : public VideoFormatI
+class LIB_EXPORT AndroidVideoFormat : public VideoFormatI
 {
 public:
     // To be called AFTER AndroidAudioFormat::init()
     static void init();
 
-    virtual QVector<AbstractDevice*> devices() const override;
+    virtual QVector<VideoFormatI::AbstractDevice*> devices() const override;
 };
 
 }

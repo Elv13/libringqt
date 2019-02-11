@@ -105,6 +105,16 @@ public Q_SLOTS: // METHODS
 #endif
     }
 
+#if defined(Q_OS_ANDROID) || defined(RING_UWP) || (defined(TARGET_OS_IOS) && TARGET_OS_IOS)
+    void addVideoDevice(const QString& node, const QVector<QHash<QString, QString> >& devInfo);
+    void removeVideoDevice(const QString& node);
+    void* obtainFrame(int length);
+    void releaseFrame(void* frame);
+
+    //VideoFrame* getNewFrame();
+    void publishFrame();
+#endif
+
 // TODO: test!!!!!!!!!!!!!!!
     MapStringMapStringVectorString getCapabilities(const QString &name)
     {

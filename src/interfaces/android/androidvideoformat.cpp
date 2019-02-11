@@ -24,30 +24,30 @@
 #include <QtAndroid>
 #include <QtCore/QMutex>
 
-static constexpr const char uri   [] = "net/lvindustries/libringqt/HardwareProxy";
+static constexpr const char uri[] = "net/lvindustries/libringqt/HardwareProxy";
 
-struct AndroidFormat : public Interfaces::VideoFormatI::AbstractFormat
-{
-    virtual QString name() override;
-};
-
-struct AndroidRate : public Interfaces::VideoFormatI::AbstractRate
-{
-    virtual int value() override;
-};
-
-struct AndroidDevice : public Interfaces::VideoFormatI::AbstractDevice
-{
-    virtual QString name() const override;
-    virtual QVector<QSize> sizes() override;
-    virtual QVector<AbstractFormat*> formats() const override;
-    virtual QVector<AbstractRate*> rates() const override;
-
-    virtual void setSize(const QSize& s) override;
-    virtual void setRate(AbstractRate* r) override;
-
-    virtual void select() override;
-};
+// struct AndroidFormat : public Interfaces::VideoFormatI::AbstractFormat
+// {
+//     virtual QString name() override;
+// };
+//
+// struct AndroidRate : public Interfaces::VideoFormatI::AbstractRate
+// {
+//     virtual int value() override;
+// };
+//
+// struct AndroidDevice : public Interfaces::VideoFormatI::AbstractDevice
+// {
+//     virtual QString name() const override;
+//     virtual QVector<QSize> sizes() override;
+//     virtual QVector<Interfaces::VideoFormatI::AbstractFormat*> formats() const override;
+//     virtual QVector<Interfaces::VideoFormatI::AbstractRate*> rates() const override;
+//
+//     virtual void setSize(const QSize& s) override;
+//     virtual void setRate(Interfaces::VideoFormatI::AbstractRate* r) override;
+//
+//     virtual void select() override;
+// };
 
 void Interfaces::AndroidVideoFormat::init()
 {
@@ -61,11 +61,11 @@ void Interfaces::AndroidVideoFormat::init()
         );
 
         for (int i = 0; i < counter; i++) {
-            QString name = QAndroidJniObject::callStaticMethod<jint>(
+            QAndroidJniObject name = QAndroidJniObject::callStaticMethod<jstring>(
                 uri, "cameraCount", "(I)S", i
             );
 
-            DRing::addVideoDevice(name.toStdString(), nullptr);
+            DRing::addVideoDevice(name.toString().toStdString(), nullptr);
         }
 
         m.unlock();
@@ -73,4 +73,9 @@ void Interfaces::AndroidVideoFormat::init()
 
     // Wait until the context is set
     m.lock();
+}
+
+QVector<VideoFormatI::AbstractDevice*> Interfaces::AndroidVideoFormat::devices() const
+{
+    return {};
 }
