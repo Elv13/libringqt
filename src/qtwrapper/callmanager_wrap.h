@@ -375,7 +375,7 @@ Q_SIGNALS: // SIGNALS
     void transferSucceeded();
     void recordPlaybackStopped(const QString &filepath);
     void voiceMailNotify(const QString &accountID, int count);
-    void incomingMessage(const QString &callID, const QString &from, const MapStringString &message);
+    void incomingMessage(const QString &callID, const QString &from, const QMap<QString, QString> &message);
     void incomingCall(const QString &accountID, const QString &callID, const QString &from);
     void recordPlaybackFilepath(const QString &callID, const QString &filepath);
     void conferenceCreated(const QString &confID);
@@ -384,11 +384,11 @@ Q_SIGNALS: // SIGNALS
     void conferenceRemoved(const QString &confID);
     void newCallCreated(const QString &accountID, const QString &callID, const QString &to);
     void recordingStateChanged(const QString &callID, bool recordingState);
-    void onRtcpReportReceived(const QString &callID, MapStringInt report);
+    void onRtcpReportReceived(const QString &callID, QMap<QString, int> report);
     void audioMuted(const QString &callID, bool state);
     void videoMuted(const QString &callID, bool state);
     void peerHold(const QString &callID, bool state);
-    void smartInfo(const MapStringString& info);
+    void smartInfo(const QMap<QString, QString>& info);
 };
 
 namespace org {
