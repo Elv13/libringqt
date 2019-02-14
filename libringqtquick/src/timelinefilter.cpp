@@ -31,11 +31,11 @@ class TimelineFilterPrivate final : public QTimer
 public:
 
     enum class Flags : uchar {
-        NONE,
-        MESSAGES,
-        CALLS,
-        GROUPS,
-        COUNT__
+        NONE     = 0x0 << 0,
+        MESSAGES = 0x1 << 0,
+        CALLS    = 0x1 << 1,
+        GROUPS   = 0x1 << 2,
+        COUNT__  = 0x1 << 3,
     };
 
     FlagPack<Flags> m_Flags {FlagPack<Flags>() |
@@ -114,6 +114,7 @@ bool TimelineFilter::areEmptyGroupsShown() const
 void TimelineFilter::setShowEmptyGroups(bool v)
 {
     d_ptr->m_Flags.set(Flags::GROUPS, v);
+    Q_ASSERT(areEmptyGroupsShown() == v);
     emit changed();
 }
 
@@ -158,7 +159,6 @@ bool TimelineFilter::filterAcceptsRow(int source_row, const QModelIndex &sourceP
         case IndividualTimelineModel::NodeType::TEXT_MESSAGE:
             return areMessagesShown();
         case IndividualTimelineModel::NodeType::CALL_GROUP:
-            return d_ptr->m_Flags & Flags::MESSAGES;
             return areCallsShown() || areEmptyGroupsShown();
         case IndividualTimelineModel::NodeType::SNAPSHOT_GROUP:
         case IndividualTimelineModel::NodeType::SECTION_DELIMITER:
