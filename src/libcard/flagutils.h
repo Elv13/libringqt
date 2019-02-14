@@ -113,6 +113,12 @@ public:
       return m_Flags;
    }
 
+   void set(T flag, bool val) {
+       unsigned f(static_cast<unsigned>(flag));
+       m_Flags = (m_Flags & (~f)) | (val ? f : 0);
+       Q_ASSERT((!!(*this & flag)) == val);
+   }
+
 private:
    FlagPack(unsigned base) : m_Flags(base) {}
    unsigned m_Flags;
