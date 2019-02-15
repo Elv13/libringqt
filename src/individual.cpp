@@ -434,7 +434,7 @@ QVariant Individual::roleData(int role) const
             return hasBookmarks();
         case static_cast<int>(Ring::Role::IsPresent):
         case static_cast<int>(Call::Role::IsPresent):
-            return hasProperty<&ContactMethod::isPresent>();
+            return isOnline();
         case static_cast<int>(ContactMethod::Role::IsReachable):
             return hasProperty<&ContactMethod::isReachable>();
         case static_cast<int>(ContactMethod::Role::TotalCallCount):
@@ -1572,6 +1572,11 @@ QModelIndex Individual::defaultIndex() const
     }
 
     return index(idx, 0);
+}
+
+bool Individual::isOnline() const
+{
+    return hasProperty<&ContactMethod::isPresent>();
 }
 
 bool Individual::isOffline() const

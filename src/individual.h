@@ -72,6 +72,7 @@ public:
     Q_PROPERTY(bool canVideoCall READ canVideoCall NOTIFY mediaAvailabilityChanged )
     Q_PROPERTY(bool isAvailable  READ isAvailable  NOTIFY mediaAvailabilityChanged )
     Q_PROPERTY(bool isOffline    READ isOffline    NOTIFY changed                  )
+    Q_PROPERTY(bool isOnline     READ isOnline     NOTIFY changed                  )
 
 
     virtual ~Individual();
@@ -139,6 +140,7 @@ public:
      * Ring accounts and isPresent.
      */
     bool isOffline() const;
+    bool isOnline() const;
 
     /**
      * There is no value in a QItemSelectionModel here, all there is to know is
