@@ -78,7 +78,7 @@ struct IndividualTimelineNode final
         Serializable::Group* m_pGroup;
 
         //CALL_GROUP and RECORDINGS
-        ushort m_lSummary[4];
+        ushort m_lSummary[5];
 
         // Type::CALL
         Event* m_pCall;
@@ -269,6 +269,11 @@ QHash<int,QByteArray> IndividualTimelineModel::roleNames() const
         roles.insert((int)IndividualTimelineModel::Role::IncomingEntryCount, "incomingEntryCount" );
         roles.insert((int)IndividualTimelineModel::Role::OutgoingEntryCount, "outgoingEntryCount" );
         roles.insert((int)IndividualTimelineModel::Role::AudioRecording    , "audioRecording"     );
+        roles.insert((int)IndividualTimelineModel::Role::TotalActiveTime   , "totalActiveTime"    );
+        roles.insert((int)IndividualTimelineModel::Role::IsMissed          , "isMissed"           );
+        roles.insert((int)IndividualTimelineModel::Role::MissedCount       , "missedCount"        );
+        roles.insert((int)IndividualTimelineModel::Role::IncomingCount     , "incomingCount"      );
+        roles.insert((int)IndividualTimelineModel::Role::OutgoingCount     , "outgoingCount"      );
     }
     return roles;
 }
@@ -309,6 +314,23 @@ QVariant IndividualTimelineModelPrivate::groupRoleData(IndividualTimelineNode* g
     switch(role) {
         case Qt::DisplayRole:
             return QDateTime::fromTime_t(group->m_StartTime).toString();
+        case (int)IndividualTimelineModel::Role::TotalActiveTime:
+            return group->m_lSummary[4];
+        case (int)IndividualTimelineModel::Role::IsMissed:
+            return (
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_OUT] +
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_IN ]
+            ) >= 1 && (
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::INCOMING] +
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::OUTGOING]
+            ) == 0;
+        case (int)IndividualTimelineModel::Role::MissedCount:
+            return group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_OUT] +
+                group->m_lSummary[IndividualTimelineNode::SumaryEntries::MISSED_IN ];
+        case (int)IndividualTimelineModel::Role::IncomingCount:
+            return group->m_lSummary[IndividualTimelineNode::SumaryEntries::INCOMING];
+        case (int)IndividualTimelineModel::Role::OutgoingCount:
+            return group->m_lSummary[IndividualTimelineNode::SumaryEntries::OUTGOING];
         case (int)Media::TextRecording::Role::FormattedDate:
             return QDateTime::fromTime_t(
                     group->m_EndTime
@@ -661,7 +683,7 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
         m_pCurrentCallGroup->m_StartTime = event->startTimeStamp();
         m_pCurrentCallGroup->m_EndTime   = event->stopTimeStamp ();
 
-        for (int i=0; i < 4; i++) m_pCurrentCallGroup->m_lSummary[i] = 0;
+        for (int i=0; i < 5; i++) m_pCurrentCallGroup->m_lSummary[i] = 0;
 
         m_pCurrentCallGroup->m_pParent = cat;
 
@@ -691,6 +713,10 @@ void IndividualTimelineModelPrivate::slotEventAdded(QSharedPointer<Event>& event
         (event->status() == Event::Status::X_MISSED ? 2 : 0) +
         (event->direction() == Event::Direction::INCOMING ? 0 : 1)
     ]++;
+
+    //TODO update it for ongoing events every second.
+    if (event->stopTimeStamp())
+        m_pCurrentCallGroup->m_lSummary[4] += event->stopTimeStamp() - event->startTimeStamp();
 
     m_pCurrentCallGroup->m_EndTime = ret->m_EndTime;
 

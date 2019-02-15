@@ -88,6 +88,11 @@ public:
         IncomingEntryCount,
         OutgoingEntryCount,
         AudioRecording,
+        TotalActiveTime,
+        IsMissed,
+        MissedCount, // and unread
+        IncomingCount,
+        OutgoingCount,
     };
 
     virtual ~IndividualTimelineModel();
