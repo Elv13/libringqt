@@ -48,6 +48,9 @@ public:
     Individual* individual() const;
     void setIndividual(Individual* i);
 
+    // Make them invokable
+    Q_INVOKABLE virtual QModelIndex mapFromSource(const QModelIndex& idx) const override;
+    Q_INVOKABLE virtual QModelIndex mapToSource(const QModelIndex& idx) const override;
 
     bool areMessagesShown() const;
     void setShowMessages(bool v);

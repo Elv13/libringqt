@@ -169,6 +169,18 @@ bool TimelineFilter::filterAcceptsRow(int source_row, const QModelIndex &sourceP
         case IndividualTimelineModel::NodeType::RECORDINGS:
             return true;
     }
+
+    return true;
+}
+
+QModelIndex TimelineFilter::mapFromSource(const QModelIndex& idx) const
+{
+    return QSortFilterProxyModel::mapFromSource(idx);
+}
+
+QModelIndex TimelineFilter::mapToSource(const QModelIndex& idx) const
+{
+    return QSortFilterProxyModel::mapToSource(idx);
 }
 
 #include <timelinefilter.moc>
