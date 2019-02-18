@@ -67,13 +67,13 @@ public:
 
 // The code was too repetitive, changing one detail meant copy/pasting the
 // same change too many time.
-#define ACCESS(type, prop, name) \
+#define ACCESS(type, prop, name, parent) \
     type* Session::prop() const {\
     if (d_ptr->name) \
         return d_ptr->name;\
     \
     d_ptr->name = new type();\
-    d_ptr->name->setParent(const_cast<Session*>(this));\
+    d_ptr->name->setParent((QObject*) Session:: parent ());\
     return d_ptr->name;}
 
 Session::Session(QObject* parent) : QObject(parent), d_ptr(new SessionPrivate())
@@ -91,27 +91,28 @@ Session* Session::instance()
     return s;
 }
 
-ACCESS(CallModel            , callModel            , m_pCallModel            )
-ACCESS(AccountModel         , accountModel         , m_pAccountModel         )
-ACCESS(CallHistoryModel     , historyModel         , m_pHistoryModel         )
-ACCESS(ContactModel         , contactModel         , m_pContactModel         )
-ACCESS(BookmarkModel        , bookmarkModel        , m_pBookmarkModel        )
-ACCESS(AvailableAccountModel, availableAccountModel, m_pAvailableAccountModel)
-ACCESS(NameDirectory        , nameDirectory        , m_pNameDirectory        )
-ACCESS(PeersTimelineModel   , peersTimelineModel   , m_pPeersTimelineModel   )
-ACCESS(NumberCategoryModel  , numberCategoryModel  , m_pNumberCategoryModel  )
-ACCESS(IndividualDirectory  , individualDirectory  , m_pIndividualDirectory  )
-ACCESS(ProfileModel         , profileModel         , m_pProfileModel         )
-ACCESS(PresenceStatusModel  , presenceStatusModel  , m_pPresenceStatusModel  )
-ACCESS(EventModel           , eventModel           , m_pEventModel           )
-ACCESS(RingtoneModel        , ringtoneModel        , m_pRingtoneModel        )
-ACCESS(Media::RecordingModel, recordingModel       , m_pRecordingModel       )
-ACCESS(PersonDirectory      , personDirectory      , m_pPersonDirectory      )
-ACCESS(Video::PreviewManager, previewManager       , m_pPreviewManager       )
-ACCESS(InfoTemplateManager  , infoTemplateManager  , m_pInfoTemplateManager  )
-ACCESS(NumberCompletionModel, numberCompletionModel, m_pNumberCompletionModel)
-ACCESS(RecentFileModel      , recentFileModel      , m_pRecentFileModel      )
-ACCESS(Video::DeviceModel   , deviceModel          , m_pDeviceModel          )
+/*          CLASS                  SINGLETON                ATTRIBUTE               PARENT       */
+ACCESS(CallModel            , callModel            , m_pCallModel            , accountModel       )
+ACCESS(AccountModel         , accountModel         , m_pAccountModel         , instance           )
+ACCESS(CallHistoryModel     , historyModel         , m_pHistoryModel         , individualDirectory)
+ACCESS(ContactModel         , contactModel         , m_pContactModel         , individualDirectory)
+ACCESS(BookmarkModel        , bookmarkModel        , m_pBookmarkModel        , individualDirectory)
+ACCESS(AvailableAccountModel, availableAccountModel, m_pAvailableAccountModel, accountModel       )
+ACCESS(NameDirectory        , nameDirectory        , m_pNameDirectory        , instance           )
+ACCESS(PeersTimelineModel   , peersTimelineModel   , m_pPeersTimelineModel   , individualDirectory)
+ACCESS(NumberCategoryModel  , numberCategoryModel  , m_pNumberCategoryModel  , instance           )
+ACCESS(IndividualDirectory  , individualDirectory  , m_pIndividualDirectory  , callModel          )
+ACCESS(ProfileModel         , profileModel         , m_pProfileModel         , accountModel       )
+ACCESS(PresenceStatusModel  , presenceStatusModel  , m_pPresenceStatusModel  , accountModel       )
+ACCESS(EventModel           , eventModel           , m_pEventModel           , instance           )
+ACCESS(RingtoneModel        , ringtoneModel        , m_pRingtoneModel        , instance           )
+ACCESS(Media::RecordingModel, recordingModel       , m_pRecordingModel       , instance           )
+ACCESS(PersonDirectory      , personDirectory      , m_pPersonDirectory      , individualDirectory)
+ACCESS(Video::PreviewManager, previewManager       , m_pPreviewManager       , instance           )
+ACCESS(InfoTemplateManager  , infoTemplateManager  , m_pInfoTemplateManager  , instance           )
+ACCESS(NumberCompletionModel, numberCompletionModel, m_pNumberCompletionModel, individualDirectory)
+ACCESS(RecentFileModel      , recentFileModel      , m_pRecentFileModel      , instance           )
+ACCESS(Video::DeviceModel   , deviceModel          , m_pDeviceModel          , instance           )
 
 QAbstractItemModel* Session::sortedContactModel() const
 {
