@@ -111,7 +111,7 @@ BookmarkNode::~BookmarkNode()
     qDeleteAll(m_lChildren);
 }
 
-BookmarkModel::BookmarkModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<ContactMethod>(this),
+BookmarkModel::BookmarkModel() : QAbstractItemModel(QCoreApplication::instance()), CollectionManagerInterface<ContactMethod>(this),
 d_ptr(new BookmarkModelPrivate(this))
 {
     setObjectName(QStringLiteral("BookmarkModel"));

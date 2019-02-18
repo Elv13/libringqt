@@ -40,7 +40,6 @@ public:
 
     //Constructor
     virtual ~BookmarkModel();
-    explicit BookmarkModel(QObject* parent);
 
     bool displayMostPopular() const;
     void setDisplayPopular(bool value);
@@ -66,6 +65,7 @@ public:
     int acceptedPayloadTypes();
 
 private:
+    explicit BookmarkModel();
     BookmarkModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(BookmarkModel)
 

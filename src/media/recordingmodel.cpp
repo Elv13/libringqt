@@ -163,7 +163,7 @@ Media::RecordingModel::~RecordingModel()
     delete d_ptr;
 }
 
-Media::RecordingModel::RecordingModel(QObject* parent) : QAbstractItemModel(parent), CollectionManagerInterface<Recording>(this),
+Media::RecordingModel::RecordingModel() : QAbstractItemModel(QCoreApplication::instance()), CollectionManagerInterface<Recording>(this),
 d_ptr(new RecordingModelPrivate(this))
 {
     setObjectName(QStringLiteral("RecordingModel"));

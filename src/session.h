@@ -54,6 +54,8 @@ class PreviewManager;
 class DeviceModel;
 }
 
+class SessionPrivate;
+
 /**
  * All uncreatable single instance objects of the base namespace.
  */
@@ -118,4 +120,6 @@ private:
     explicit Session(QObject* parent = nullptr);
     virtual ~Session();
 
+    SessionPrivate* d_ptr;
+    Q_DECLARE_PRIVATE(Session)
 };

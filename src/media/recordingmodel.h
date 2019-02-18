@@ -31,6 +31,7 @@ class QItemSelectionModel;
 #include "contactmethod.h"
 
 class ContactMethod;
+class Session;
 
 namespace Media {
    class Recording;
@@ -55,7 +56,7 @@ class LIB_EXPORT RecordingModel :  public QAbstractItemModel, public CollectionM
    #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    Q_OBJECT
    #pragma GCC diagnostic pop
-   friend class Session; // factory
+   friend class ::Session; // factory
 public:
     // Properties
     Q_PROPERTY(QItemSelectionModel* selectionModel  READ selectionModel  CONSTANT                           )
@@ -66,7 +67,6 @@ public:
 
     // Constructor
     virtual ~RecordingModel();
-    explicit RecordingModel(QObject* parent);
 
     virtual bool clearAllCollections() const override;
 
@@ -108,6 +108,7 @@ Q_SIGNALS:
     void currentRecordingChanged(Recording* r);
 
 private:
+    explicit RecordingModel();
     RecordingModelPrivate* d_ptr;
     Q_DECLARE_PRIVATE(RecordingModel)
 

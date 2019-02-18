@@ -40,167 +40,78 @@
 #include "recentfilemodel.h"
 #include "video/devicemodel.h"
 
-Session::Session(QObject* parent) : QObject(parent)
+class SessionPrivate {
+public:
+    CallModel*             m_pCallModel             {nullptr};
+    AccountModel*          m_pAccountModel          {nullptr};
+    CallHistoryModel*      m_pHistoryModel          {nullptr};
+    ContactModel*          m_pContactModel          {nullptr};
+    BookmarkModel*         m_pBookmarkModel         {nullptr};
+    AvailableAccountModel* m_pAvailableAccountModel {nullptr};
+    NameDirectory*         m_pNameDirectory         {nullptr};
+    PeersTimelineModel*    m_pPeersTimelineModel    {nullptr};
+    NumberCategoryModel*   m_pNumberCategoryModel   {nullptr};
+    IndividualDirectory*   m_pIndividualDirectory   {nullptr};
+    ProfileModel*          m_pProfileModel          {nullptr};
+    PresenceStatusModel*   m_pPresenceStatusModel   {nullptr};
+    EventModel*            m_pEventModel            {nullptr};
+    RingtoneModel*         m_pRingtoneModel         {nullptr};
+    Media::RecordingModel* m_pRecordingModel        {nullptr};
+    PersonDirectory*       m_pPersonDirectory       {nullptr};
+    Video::PreviewManager* m_pPreviewManager        {nullptr};
+    InfoTemplateManager*   m_pInfoTemplateManager   {nullptr};
+    NumberCompletionModel* m_pNumberCompletionModel {nullptr};
+    RecentFileModel*       m_pRecentFileModel       {nullptr};
+    Video::DeviceModel*    m_pDeviceModel           {nullptr};
+};
+
+// The code was too repetitive, changing one detail meant copy/pasting the
+// same change too many time.
+#define ACCESS(type, prop, name) \
+    type* Session::prop() const {\
+    if (d_ptr->name) \
+        return d_ptr->name;\
+    \
+    d_ptr->name = new type();\
+    d_ptr->name->setParent(const_cast<Session*>(this));\
+    return d_ptr->name;}
+
+Session::Session(QObject* parent) : QObject(parent), d_ptr(new SessionPrivate())
 {}
 
 Session::~Session()
-{}
+{
+    delete d_ptr;
+}
 
 Session* Session::instance()
 {
-    static Session s(QCoreApplication::instance());
-
-    return &s;
+    static Session* s = nullptr;
+    s = s ? s : new Session(QCoreApplication::instance());
+    return s;
 }
 
-CallModel* Session::callModel() const
-{
-    static CallModel m;
-    m.init();
-
-    return &m;
-}
-
-AccountModel* Session::accountModel() const
-{
-    static AccountModel m;
-    m.init();
-
-    return &m;
-}
-
-CallHistoryModel* Session::historyModel() const
-{
-    static CallHistoryModel m;
-
-    return &m;
-}
-
-ContactModel* Session::contactModel() const
-{
-    static ContactModel m;
-
-    return &m;
-}
-
-BookmarkModel* Session::bookmarkModel() const
-{
-    static BookmarkModel m(const_cast<Session*>(this));
-
-    return &m;
-}
-
-AvailableAccountModel* Session::availableAccountModel() const
-{
-    static AvailableAccountModel m;
-
-    return &m;
-}
-
-NameDirectory* Session::nameDirectory() const
-{
-    static NameDirectory m;
-
-    return &m;
-}
-
-PeersTimelineModel* Session::peersTimelineModel() const
-{
-    static PeersTimelineModel m;
-
-    return &m;
-}
-
-NumberCategoryModel* Session::numberCategoryModel() const
-{
-    static NumberCategoryModel m;
-
-    return &m;
-}
-
-IndividualDirectory* Session::individualDirectory() const
-{
-    static IndividualDirectory m;
-
-    return &m;
-}
-
-ProfileModel* Session::profileModel() const
-{
-    static ProfileModel m;
-
-    return &m;
-}
-
-PresenceStatusModel* Session::presenceStatusModel() const
-{
-    static PresenceStatusModel m;
-
-    return &m;
-}
-
-EventModel* Session::eventModel() const
-{
-    static EventModel m;
-
-    return &m;
-}
-
-RingtoneModel* Session::ringtoneModel() const
-{
-    static RingtoneModel m;
-
-    return &m;
-}
-
-Media::RecordingModel* Session::recordingModel() const
-{
-    static Media::RecordingModel m(const_cast<Session*>(this));
-
-    return &m;
-}
-
-PersonDirectory* Session::personDirectory() const
-{
-    static PersonDirectory m;
-
-    return &m;
-}
-
-Video::PreviewManager* Session::previewManager() const
-{
-    static Video::PreviewManager m;
-
-    return &m;
-}
-
-InfoTemplateManager* Session::infoTemplateManager() const
-{
-    static InfoTemplateManager m;
-
-    return &m;
-}
-
-NumberCompletionModel* Session::numberCompletionModel() const
-{
-    static NumberCompletionModel m;
-
-    return &m;
-}
-
-RecentFileModel* Session::recentFileModel() const
-{
-    static RecentFileModel m;
-
-    return &m;
-}
-
-Video::DeviceModel* Session::deviceModel() const
-{
-    static Video::DeviceModel m;
-
-    return &m;
-}
+ACCESS(CallModel            , callModel            , m_pCallModel            )
+ACCESS(AccountModel         , accountModel         , m_pAccountModel         )
+ACCESS(CallHistoryModel     , historyModel         , m_pHistoryModel         )
+ACCESS(ContactModel         , contactModel         , m_pContactModel         )
+ACCESS(BookmarkModel        , bookmarkModel        , m_pBookmarkModel        )
+ACCESS(AvailableAccountModel, availableAccountModel, m_pAvailableAccountModel)
+ACCESS(NameDirectory        , nameDirectory        , m_pNameDirectory        )
+ACCESS(PeersTimelineModel   , peersTimelineModel   , m_pPeersTimelineModel   )
+ACCESS(NumberCategoryModel  , numberCategoryModel  , m_pNumberCategoryModel  )
+ACCESS(IndividualDirectory  , individualDirectory  , m_pIndividualDirectory  )
+ACCESS(ProfileModel         , profileModel         , m_pProfileModel         )
+ACCESS(PresenceStatusModel  , presenceStatusModel  , m_pPresenceStatusModel  )
+ACCESS(EventModel           , eventModel           , m_pEventModel           )
+ACCESS(RingtoneModel        , ringtoneModel        , m_pRingtoneModel        )
+ACCESS(Media::RecordingModel, recordingModel       , m_pRecordingModel       )
+ACCESS(PersonDirectory      , personDirectory      , m_pPersonDirectory      )
+ACCESS(Video::PreviewManager, previewManager       , m_pPreviewManager       )
+ACCESS(InfoTemplateManager  , infoTemplateManager  , m_pInfoTemplateManager  )
+ACCESS(NumberCompletionModel, numberCompletionModel, m_pNumberCompletionModel)
+ACCESS(RecentFileModel      , recentFileModel      , m_pRecentFileModel      )
+ACCESS(Video::DeviceModel   , deviceModel          , m_pDeviceModel          )
 
 QAbstractItemModel* Session::sortedContactModel() const
 {
@@ -226,3 +137,5 @@ QItemSelectionModel* Session::contactCategorySelectionModel() const
    delete Session::instance()->accountModel();
    delete Session::instance()->individualDirectory();
    delete Session::instance()->numberCategoryModel();*/
+
+#undef ACCESS
