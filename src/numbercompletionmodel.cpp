@@ -126,6 +126,7 @@ m_pSelectionModel(nullptr),m_HasCustomSelection(false)
    //If SIP accounts are present, IP2IP is not needed
    if (ip2ip && !hasNonIp2Ip) {
       TemporaryContactMethod* cm = new TemporaryContactMethod();
+      cm->setParent(this);
       cm->setAccount(ip2ip);
       m_hSipTemporaryNumbers[ip2ip] = cm;
    }
@@ -156,18 +157,12 @@ NumberCompletionModel::~NumberCompletionModel()
 
    d_ptr->m_hSipTemporaryNumbers.clear();
 
-   while(l.size()) {
-      TemporaryContactMethod* cm = l.takeAt(0);
-      delete cm;
-   }
+   qDeleteAll(l);
 
    l = d_ptr->m_hRingTemporaryNumbers.values();
    d_ptr->m_hRingTemporaryNumbers.clear();
 
-   while(l.size()) {
-      TemporaryContactMethod* cm = l.takeAt(0);
-      delete cm;
-   }
+   qDeleteAll(l);
 
    delete d_ptr;
 }
@@ -690,6 +685,7 @@ bool NumberCompletionModelPrivate::accountAdded(Account* a)
         case Account::Protocol::SIP:
             hasNonIp2Ip = a->isEnabled();
             cm = new TemporaryContactMethod();
+            cm->setParent(this);
 
             if (!m_pPreferredTemporaryNumbers[(int)a->protocol()])
                 m_pPreferredTemporaryNumbers[(int)a->protocol()] = cm;
@@ -699,6 +695,7 @@ bool NumberCompletionModelPrivate::accountAdded(Account* a)
             break;
         case Account::Protocol::RING:
             cm = new TemporaryContactMethod();
+            cm->setParent(this);
             cm->setAccount(a);
             m_hRingTemporaryNumbers[a] = cm;
 
