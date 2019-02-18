@@ -115,7 +115,7 @@ PeersTimelineModel::PeersTimelineModel() : QAbstractTableModel(QCoreApplication:
 
     connect(this, &PeersTimelineModel::individualAdded,
         d_ptr, &PeersTimelineModelPrivate::slotIndividualAdded, Qt::QueuedConnection);
-    connect(this, &PeersTimelineModel::individualChanged,
+    connect(Session::instance()->individualDirectory(), &IndividualDirectory::individualChanged,
         d_ptr, &PeersTimelineModelPrivate::slotDataChanged, Qt::QueuedConnection);
     connect(this, &PeersTimelineModel::individualMerged,
         d_ptr, &PeersTimelineModelPrivate::slotIndividualMerged, Qt::QueuedConnection);

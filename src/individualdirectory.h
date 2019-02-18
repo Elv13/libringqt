@@ -119,5 +119,6 @@ Q_SIGNALS:
    void lastUsedChanged(ContactMethod* cm, time_t t);
    void contactChanged(ContactMethod* cm, Person* newContact, Person* oldContact);
    void contactMethodMerged(ContactMethod* cm, ContactMethod* into);
+   void individualChanged(Individual* i);
 };
 Q_DECLARE_METATYPE(IndividualDirectory*)

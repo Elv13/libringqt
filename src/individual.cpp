@@ -258,7 +258,7 @@ bool Individual::merge(Individual* other)
     emit layoutChanged();
 
     emit Session::instance()->peersTimelineModel()->individualMerged(this, other);
-    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
+    emit Session::instance()->individualDirectory()->individualChanged(masterObject());
 
 
     return true;
@@ -664,7 +664,7 @@ void Individual::registerContactMethod(ContactMethod* m)
 
     if (objectName().isEmpty())
         setObjectName(m->primaryName());
-    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
+    emit Session::instance()->individualDirectory()->individualChanged(masterObject());
 }
 
 ///Get the phone number list
@@ -860,7 +860,7 @@ ContactMethod* Individual::addPhoneNumber(ContactMethod* cm)
     if (objectName().isEmpty())
         setObjectName(cm->primaryName());
 
-    emit Session::instance()->peersTimelineModel()->individualChanged(masterObject());
+    emit Session::instance()->individualDirectory()->individualChanged(masterObject());
 
     return cm;
 }
@@ -1228,7 +1228,8 @@ void IndividualPrivate::slotChanged()
     for (auto p : qAsConst(m_lParents))
         emit p->changed();
 
-    emit Session::instance()->peersTimelineModel()->individualChanged(q_ptr->masterObject());
+    // Is explicit because otherwise it would be sent "n" time per actual change.
+    emit Session::instance()->individualDirectory()->individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotRegisteredName()
@@ -1236,7 +1237,7 @@ void IndividualPrivate::slotRegisteredName()
     m_BestName.clear();
     for (auto p : qAsConst(m_lParents))
         emit p->changed();
-    emit Session::instance()->peersTimelineModel()->individualChanged(q_ptr->masterObject());
+    emit Session::instance()->individualDirectory()->individualChanged(q_ptr->masterObject());
 }
 
 void IndividualPrivate::slotBookmark(bool b)

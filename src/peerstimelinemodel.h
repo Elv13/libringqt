@@ -97,7 +97,6 @@ Q_SIGNALS:
     void lastUsedIndividualChanged(Individual* cm, time_t t);
     void individualMerged(Individual* oldInd, Individual* mergedInto);
     void individualAdded(Individual* ind);
-    void individualChanged(Individual* ind);
     void selfRemoved(Individual* ind);
 
 private:
