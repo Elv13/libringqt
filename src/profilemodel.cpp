@@ -87,9 +87,7 @@ struct ProfileNode final
     explicit ProfileNode() {}
 
     virtual ~ProfileNode() {
-        if (type == Type::PROFILE && m_PerData.m_pModel)
-            delete m_PerData.m_pModel;
-
+        //Note: the SingleProfileModel is deleted by Qt object tree
         QObject::disconnect(m_ChangedConn);
         qDeleteAll(children);
     }
