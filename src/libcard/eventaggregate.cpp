@@ -169,14 +169,22 @@ private:
     QSharedPointer<EventAggregate> m_pParentRef {nullptr};
 };
 
+//FIXME memory leak
+static void doDelete(EventAggregate*)
+{}
+
+//FIXME memory leak
+static void doDelete2(EventAggregatePrivate*)
+{}
+
 EventAggregate::EventAggregate() : QObject(Session::instance()->eventModel())
 {
 //     d_ptr = (EventAggregatePrivate*) malloc(sizeof(EventAggregatePrivate));
 //     d_ptr = new(d_ptr) EventAggregatePrivate();
-    d_ptr = QSharedPointer<EventAggregatePrivate>(new EventAggregatePrivate());
+    d_ptr = QSharedPointer<EventAggregatePrivate>(new EventAggregatePrivate(), doDelete2);
 
     d_ptr->m_pUnsortedListModel = nullptr;
-    d_ptr->m_pWeakSelf = QSharedPointer<EventAggregate>(this);
+    d_ptr->m_pWeakSelf = QSharedPointer<EventAggregate>(this, doDelete);
 }
 
 EventAggregate::~EventAggregate()
