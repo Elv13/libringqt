@@ -344,7 +344,9 @@ Call::~Call()
 
    this->disconnect();
 
+   peerContactMethod()->blockSignals(true);
    d_ptr->terminateMedia();
+   peerContactMethod()->blockSignals(false);
 
    if (d_ptr->m_pDateOnly)
       delete d_ptr->m_pDateOnly;
