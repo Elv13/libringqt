@@ -576,7 +576,7 @@ class LIB_EXPORT Account : public ItemBase {
 
    private:
       //Constructors
-      explicit Account();
+      explicit Account(QObject* parent = nullptr);
       virtual ~Account();
 
       QSharedPointer<AccountPrivate> d_ptr;

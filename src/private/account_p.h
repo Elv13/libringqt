@@ -36,6 +36,7 @@ class BootstrapModel;
 class DaemonCertificateCollection;
 class PendingContactRequestModel;
 class Calendar;
+class AccountModel;
 
 typedef void (AccountPrivate::*account_function)();
 
@@ -76,8 +77,8 @@ public:
     QMutex                     m_ReloadLock               {};
 
     //Factory
-    static Account* buildExistingAccountFromId(const QByteArray& _accountId);
-    static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias);
+    static Account* buildExistingAccountFromId(const QByteArray& _accountId, AccountModel* parent);
+    static Account* buildNewAccountFromAlias  (Account::Protocol proto, const QString& alias, AccountModel* parent);
 
     //Setters
     void setAccountProperties(const QHash<QString,QString>& m);

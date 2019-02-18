@@ -135,8 +135,6 @@ private:
    //Constructors & Destructors
    explicit AccountModel ();
 
-   void init();
-
    //Helpers
    void add(Account* acc);
 

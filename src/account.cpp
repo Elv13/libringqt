@@ -124,16 +124,15 @@ void AccountPrivate::changeState(Account::EditState state) {
 }
 
 ///Constructors
-Account::Account():ItemBase(Session::instance()->accountModel()),d_ptr(new AccountPrivate(this))
+Account::Account(QObject* parent) : ItemBase(parent),d_ptr(new AccountPrivate(this))
 {
 }
 
 ///Build an account from it'id
-Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId)
+Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId, AccountModel* parent)
 {
 //    qDebug() << "Building an account from id: " << _accountId;
-   Account* a = new Account();
-   a->setParent(Session::instance()->accountModel());
+   Account* a = new Account(parent);
    a->d_ptr->m_AccountId = _accountId;
    a->d_ptr->setObjectName(_accountId);
    a->d_ptr->m_RemoteEnabledState = true;
@@ -141,7 +140,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
    a->performAction(Account::EditAction::RELOAD);
 
    //If a placeholder exist for this account, upgrade it
-   if (auto place_holder = Session::instance()->accountModel()->findPlaceHolder(_accountId))
+   if (auto place_holder = parent->findPlaceHolder(_accountId))
        place_holder->d_ptr->merge(a);
 
    //Load the pending trust requests
@@ -154,8 +153,8 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 
          auto contactRequest = new ContactRequest(a, ringID, timeReceived, payload);
          a->pendingContactRequestModel()->d_ptr->addRequest(contactRequest);
-         Session::instance()->accountModel()->incomingContactRequestModel();
-         Session::instance()->accountModel()->d_ptr->m_pPendingIncomingRequests->d_ptr->addRequest(contactRequest);
+         parent->incomingContactRequestModel();
+         parent->d_ptr->m_pPendingIncomingRequests->d_ptr->addRequest(contactRequest);
       }
    }
 
@@ -199,7 +198,7 @@ Account* AccountPrivate::buildExistingAccountFromId(const QByteArray& _accountId
 } //buildExistingAccountFromId
 
 ///Build an account from it's name / alias
-Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const QString& alias)
+Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const QString& alias, AccountModel* parent)
 {
    QString al = alias;
    qDebug() << "Building an account from alias: " << alias;
@@ -209,8 +208,7 @@ Account* AccountPrivate::buildNewAccountFromAlias(Account::Protocol proto, const
    }
 
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
-   Account* a = new Account();
-   a->setParent(Session::instance()->accountModel());
+   Account* a = new Account(parent);
    a->setProtocol(proto);
    a->d_ptr->m_hAccountDetails.clear();
    a->d_ptr->m_hAccountDetails[DRing::Account::ConfProperties::ENABLED] = QLatin1String("false");
@@ -2733,7 +2731,7 @@ void AccountPrivate::reload()
       //The registration state is cached, update that cache
       updateState();
 
-      Session::instance()->accountModel()->d_ptr->slotVolatileAccountDetailsChange(q_ptr->id(),configurationManager.getVolatileAccountDetails(q_ptr->id()));
+      emit configurationManager.volatileAccountDetailsChanged(q_ptr->id(),configurationManager.getVolatileAccountDetails(q_ptr->id()));
 
       m_ReloadLock.unlock();
    }

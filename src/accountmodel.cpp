@@ -66,7 +66,9 @@ AccountModelPrivate::AccountModelPrivate(AccountModel* parent) : QObject(parent)
 AccountModel::AccountModel()
     : QAbstractListModel(QCoreApplication::instance())
     , d_ptr(new AccountModelPrivate(this))
-{}
+{
+    d_ptr->init();
+}
 
 void AccountModelPrivate::init()
 {
@@ -233,15 +235,6 @@ Account* AccountModel::ip2ip() const
    return d_ptr->m_pIP2IP;
 }
 
-///Singleton
-void AccountModel::init()
-{
-    // Upload account configuration only once in re-entrant way
-    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
-    if (!init_flag.test_and_set())
-        d_ptr->init();
-}
-
 QItemSelectionModel* AccountModel::selectionModel() const
 {
    if (!d_ptr->m_pSelectionModel)
@@ -334,9 +327,10 @@ void AccountModelPrivate::slotDaemonAccountChanged(const QString& account, const
    if (!a) {
       qDebug() << "received account changed for non existing account" << account;
       const QStringList accountIds = configurationManager.getAccountList();
+
       for (int i = 0; i < accountIds.size(); ++i) {
          if ((!q_ptr->getById(accountIds[i].toLatin1())) && m_lDeletedAccounts.indexOf(accountIds[i]) == -1) {
-            Account* acc = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
+            Account* acc = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1(), q_ptr);
             qDebug() << "building missing account" << accountIds[i];
             insertAccount(acc,i);
             connectAccount(acc);
@@ -579,9 +573,10 @@ void AccountModel::update()
    }
    //ask for the list of accounts ids to the configurationManager
    const QStringList accountIds = configurationManager.getAccountList();
+
    for (int i = 0; i < accountIds.size(); ++i) {
       if (d_ptr->m_lDeletedAccounts.indexOf(accountIds[i]) == -1) {
-         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
+         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1(), this);
          d_ptr->insertAccount(a,i);
          emit dataChanged(index(i,0),index(size()-1,0));
          d_ptr->connectAccount(a);
@@ -615,7 +610,7 @@ void AccountModel::updateAccounts()
    for (int i = 0; i < accountIds.size(); ++i) {
       Account* acc = getById(accountIds[i].toLatin1());
       if (!acc) {
-         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1());
+         Account* a = AccountPrivate::buildExistingAccountFromId(accountIds[i].toLatin1(), this);
          d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
          d_ptr->connectAccount(a);
          emit dataChanged(index(size()-1,0),index(size()-1,0));
@@ -1104,7 +1099,7 @@ void AccountModelPrivate::removeAccount(Account* account)
 
 Account* AccountModel::add(const QString& alias, const Account::Protocol proto)
 {
-   Account* a = AccountPrivate::buildNewAccountFromAlias(proto,alias);
+   Account* a = AccountPrivate::buildNewAccountFromAlias(proto, alias, this);
    d_ptr->insertAccount(a,d_ptr->m_lAccounts.size());
    d_ptr->connectAccount(a);
 
