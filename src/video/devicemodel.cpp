@@ -231,9 +231,10 @@ QList<Video::Device*> Video::DeviceModel::devices() const
 
 ConfigurationProxy* Video::DeviceModel::configurationProxy() const
 {
-    static ::ConfigurationProxy p;
+    ::ConfigurationProxy* p = nullptr;
+    p = p ? p : new ConfigurationProxy();
 
-    return &p;
+    return p;
 }
 
 #include <devicemodel.moc>
