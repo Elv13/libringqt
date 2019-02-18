@@ -61,7 +61,10 @@ public:
 
     explicit IndividualPrivate() {
         moveToThread(QCoreApplication::instance()->thread());
-        setParent(Session::instance()->individualDirectory());
+
+        // Parent to the application because otherwise there is a deletion
+        // race between the d_ptr and its individual(s).
+        setParent(QCoreApplication::instance());
     }
 
     // This is a private class, no need for d_ptr
@@ -106,6 +109,7 @@ public Q_SLOTS:
     void slotIsSelf             (                         );
     void slotMediaAvailabilityChanged();
     void slotHasActiveCallChanged();
+    void slotContactDeleted();
 
     void slotChildrenContactChanged(Person* newContact, Person* oldContact);
     void slotChildrenTextRecordingAdded(Media::TextRecording* t);
@@ -116,7 +120,7 @@ Individual::Individual(Person* parent) :
     QAbstractListModel(nullptr)
 {
     moveToThread(QCoreApplication::instance()->thread());
-    setParent(parent);
+
     d_ptr = new IndividualPrivate();
     d_ptr->m_pPerson  = parent;
     d_ptr->q_ptr      = this;
@@ -133,6 +137,9 @@ Individual::Individual(Person* parent) :
 
     connect(parent, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
+
+    connect(parent, &QObject::destroyed, d_ptr,
+        &IndividualPrivate::slotContactDeleted);
 }
 
 Individual::Individual() : QAbstractListModel(Session::instance()->individualDirectory()), d_ptr(new IndividualPrivate)
@@ -146,6 +153,10 @@ Individual::Individual() : QAbstractListModel(Session::instance()->individualDir
 
 Individual::~Individual()
 {
+    // Prevent use-after-free when quitting
+    if (d_ptr->m_pPerson)
+        d_ptr->m_pPerson->d_ptr->m_pIndividual = nullptr;
+
     // If anything is still listening, make sure at least is gets a proper cleanup
     d_ptr->m_Numbers.clear();
     d_ptr->m_HiddenContactMethods.clear();
@@ -1180,6 +1191,13 @@ void IndividualPrivate::slotContactChanged()
     }
 }
 
+void IndividualPrivate::slotContactDeleted()
+{
+    auto s = sender();
+    if (s == m_pPerson || (m_pPerson && (*qobject_cast<Person*>(s)) == (*m_pPerson)))
+        m_pPerson = nullptr;
+}
+
 void IndividualPrivate::slotChanged()
 {
     auto cm = qobject_cast<ContactMethod*>(sender());
@@ -1387,6 +1405,9 @@ Person* Individual::buildPerson() const
     connect(p, &Person::formattedNameChanged, d_ptr,
         &IndividualPrivate::slotRegisteredName);
 
+    connect(p, &QObject::destroyed, d_ptr,
+        &IndividualPrivate::slotContactDeleted);
+
     for (auto cm : qAsConst(d_ptr->m_Numbers)) {
         if (!cm->contact())
             cm->setPerson(p);
@@ -1431,6 +1452,11 @@ Individual* Individual::getIndividual(Person* p)
 
     // strong ref
     p->d_ptr->m_pIndividual = new Individual(p);
+
+    //FIXME this can crash if getIndividual is called from a thread.
+    p->d_ptr->m_pIndividual->setParent(
+        Session::instance()->individualDirectory()
+    );
 
     return p->d_ptr->m_pIndividual;
 }
