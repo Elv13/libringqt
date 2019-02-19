@@ -162,7 +162,7 @@ bool LocalTextRecordingEditor::save(const Media::Recording* recording)
     dir.mkdir(QStringLiteral("text/"));
 
     //Save each file
-    for (QHash<QByteArray,QByteArray>::const_iterator i = ret.begin(); i != ret.end(); ++i) {
+    for (QHash<QByteArray,QByteArray>::const_iterator i = ret.constBegin(); i != ret.constEnd(); ++i) {
         QFile file(QStringLiteral("%1/text/%2.json").arg(dir.path()).arg(QString(i.key())));
 
         if ( file.open(QIODevice::WriteOnly | QIODevice::Text) ) {

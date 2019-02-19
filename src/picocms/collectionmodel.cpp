@@ -287,7 +287,7 @@ bool CollectionModel::save()
    try {
 
       // Enable/disabled collections that changed
-      for (QHash<CollectionInterface*,bool>::const_iterator i = d_ptr->m_hPendingChanges.begin(); i != d_ptr->m_hPendingChanges.end(); ++i) {
+      for (QHash<CollectionInterface*,bool>::const_iterator i = d_ptr->m_hPendingChanges.constBegin(); i != d_ptr->m_hPendingChanges.constEnd(); ++i) {
          i.key()->enable(GlobalInstances::itemModelStateSerializer()->isChecked(i.key()));
       }
 
