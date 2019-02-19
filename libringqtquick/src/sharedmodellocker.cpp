@@ -66,6 +66,8 @@ public:
     void replaceContactMethod(ContactMethod* cm);
     void replaceCall(Call* c);
 
+    void setSharedModel(Individual* i);
+
     SharedModelLocker* q_ptr;
 
     inline Individual*    individual   () const {return m_pIndividual;   }
@@ -166,7 +168,7 @@ void SharedModelLocker::setIndividual(Individual* ind)
     if (ind && d_ptr->contactMethod() && d_ptr->contactMethod()->individual()->d() != ind->d())
         d_ptr->replaceContactMethod(nullptr);
 
-    d_ptr->m_TimelineModel = ind->timelineModel();
+    d_ptr->setSharedModel(ind);
 
     if (d_ptr->call() && d_ptr->call()->peer()->d() != d_ptr->individual()->d())
         d_ptr->replaceCall(nullptr);
@@ -184,20 +186,6 @@ void SharedModelLocker::setContactMethod(ContactMethod* cm)
 
     cm = Session::instance()->individualDirectory()->fromTemporary(cm);
 
-    // Keep a reference for 5 minutes to avoid double free from QML
-    for (auto ptr : {d_ptr->m_CallsModel, d_ptr->m_TimelineModel}) {
-        if (ptr) {
-            auto t = new QTimer(this);
-            t->setInterval(5 * 60 * 1000);
-            t->setSingleShot(true);
-            connect(t, &QTimer::timeout, this, [t, this, ptr]() {
-                this->d_ptr->m_lTimers.removeAll(t);
-            });
-            t->start();
-            d_ptr->m_lTimers << t;
-        }
-    }
-
     if (d_ptr->individual() && d_ptr->individual() == cm->individual()) {
         emit changed();
         return;
@@ -206,7 +194,7 @@ void SharedModelLocker::setContactMethod(ContactMethod* cm)
     if (cm && d_ptr->call() && d_ptr->call()->peerContactMethod()->d() != cm->d())
         d_ptr->replaceCall(nullptr);
 
-    d_ptr->m_TimelineModel = cm->individual()->timelineModel();
+    d_ptr->setSharedModel(cm->individual());
 
     d_ptr->replaceIndividual(cm->individual());
     d_ptr->replaceContactMethod(cm);
@@ -328,7 +316,7 @@ QAbstractItemModel* SharedModelLocker::linksLens() const
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
+        d_ptr->setSharedModel(d_ptr->individual());
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -345,7 +333,7 @@ QAbstractItemModel* SharedModelLocker::bookmarksLens() const
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
+        d_ptr->setSharedModel(d_ptr->individual());
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -362,7 +350,7 @@ QAbstractItemModel* SharedModelLocker::filesLens() const
         return nullptr;
 
     if (!d_ptr->m_TimelineModel)
-        d_ptr->m_TimelineModel = d_ptr->individual()->timelineModel();
+        d_ptr->setSharedModel(d_ptr->individual());
 
     QSharedPointer<QAbstractItemModel> sp = d_ptr->m_TimelineModel;
     const auto rm = qobject_cast<IndividualTimelineModel*>(sp.data());
@@ -471,6 +459,25 @@ void SharedModelLockerPrivate::slotCallRemoved()
     if (m_pCall->lifeCycleState() == Call::LifeCycleState::FINISHED) {
         replaceCall(nullptr);
         emit q_ptr->changed();
+    }
+}
+
+void SharedModelLockerPrivate::setSharedModel(Individual* i)
+{
+    m_TimelineModel = i->timelineModel();
+
+    // Keep a reference for 5 minutes to avoid double free from QML
+    for (auto ptr : {m_CallsModel, m_TimelineModel}) {
+        if (ptr) {
+            auto t = new QTimer(this);
+            t->setInterval(5 * 60 * 1000);
+            t->setSingleShot(true);
+            connect(t, &QTimer::timeout, this, [t, this, ptr]() {
+                this->m_lTimers.removeAll(t);
+            });
+            t->start();
+            m_lTimers << t;
+        }
     }
 }
 
