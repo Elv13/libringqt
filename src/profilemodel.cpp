@@ -343,8 +343,8 @@ void ProfileModelPrivate::slotAccountRemoved(Account* a)
     q_ptr->beginRemoveRows(profIdx, accIdx, accIdx);
 
 
-    if (n->parent->parent->m_PerData.m_pModel) {
-        auto m = n->parent->parent->m_PerData.m_pModel;
+    if (n->parent->m_PerData.m_pModel) {
+        auto m = n->parent->m_PerData.m_pModel;
         m->removeAt(accIdx);
     }
 
