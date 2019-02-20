@@ -135,15 +135,6 @@ private Q_SLOTS:
  *                                                                           *
  ****************************************************************************/
 
-///Singleton
-void CallModel::init()
-{
-    // Fix loop-dependency issue between constructors
-    static std::atomic_flag init_flag = ATOMIC_FLAG_INIT;
-    if (!init_flag.test_and_set())
-        d_ptr->init();
-}
-
 CallModelPrivate::CallModelPrivate(CallModel* parent) : QObject(parent),q_ptr(parent)
 {
 }
@@ -160,6 +151,8 @@ CallModel::CallModel() : QAbstractItemModel(QCoreApplication::instance()),d_ptr(
 
    //Necessary to receive text message
    IMConversationManagerPrivate::instance();
+
+   d_ptr->init();
 } //CallModel
 
 ///Constructor (there fix an initializationn loop)

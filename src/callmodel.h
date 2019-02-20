@@ -152,8 +152,6 @@ private:
    QScopedPointer<CallModelPrivate> d_ptr;
    Q_DECLARE_PRIVATE(CallModel)
 
-   void init();
-
    //Friend API
    Call* getCall ( const QString& callId  ) const;
    void  registerCall(Call* call);
