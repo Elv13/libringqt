@@ -108,7 +108,7 @@ public:
       //No selection
       COUNT__,
    };
-   Q_ENUMS(Action)
+   Q_ENUM(Action)
 
    enum class Context {
       NONE          = 0x0 << 0, /*!< Nothing                                                    */

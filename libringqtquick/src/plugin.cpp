@@ -33,6 +33,7 @@
 #include "sharedmodellocker.h"
 #include "timelineiterator.h"
 #include "timelinefilter.h"
+#include "useractionfilter.h"
 
 // Globals
 #include <session.h>
@@ -168,14 +169,16 @@ void RingQtQuick::registerTypes(const char *uri)
         qmlRegisterType<Dispatcher>(trouri, 1,0, "Dispatcher");
     }
 
-    qmlRegisterType<AccountFields> (uri, 1, 0, "AccountFields" );
-    qmlRegisterType<AccountBuilder>(uri, 1, 0, "AccountBuilder");
-    qmlRegisterType<MessageBuilder>(uri, 1, 0, "MessageBuilder");
-    qmlRegisterType<ContactBuilder>(uri, 1, 0, "ContactBuilder");
+    qmlRegisterType<AccountFields>     (uri, 1, 0, "AccountFields"     );
+    qmlRegisterType<AccountBuilder>    (uri, 1, 0, "AccountBuilder"    );
+    qmlRegisterType<MessageBuilder>    (uri, 1, 0, "MessageBuilder"    );
+    qmlRegisterType<ContactBuilder>    (uri, 1, 0, "ContactBuilder"    );
     qmlRegisterType<RingAccountBuilder>(uri, 1, 0, "RingAccountBuilder");
-    qmlRegisterType<SharedModelLocker>(uri, 1, 0, "SharedModelLocker");
-    qmlRegisterType<TimelineIterator>(uri, 1, 0, "TimelineIterator");
-    qmlRegisterType<TimelineFilter>(uri, 1, 0, "TimelineFilter");
+    qmlRegisterType<SharedModelLocker> (uri, 1, 0, "SharedModelLocker" );
+    qmlRegisterType<TimelineIterator>  (uri, 1, 0, "TimelineIterator"  );
+    qmlRegisterType<TimelineFilter>    (uri, 1, 0, "TimelineFilter"    );
+    qmlRegisterType<UserActionFilter>  (uri, 1, 0, "UserActionFilter"  );
+    qmlRegisterType<UserAction>        (uri, 1, 0, "UserAction"        );
 
     // Alias
     qmlRegisterUncreatableType<AttachedAccountFieldStatus>(
