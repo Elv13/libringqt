@@ -40,7 +40,6 @@ public Q_SLOTS:
 
 UserAction::UserAction(QObject* parent) : QObject(parent), d_ptr(new UserActionPrivate())
 {
-    qDebug() << "\n\n\nFOO" << parent;
 }
 
 UserAction::~UserAction()
@@ -107,12 +106,9 @@ void UserActionFilterPrivate::slotDataChanged()
 {
     // Initialize once the data changes. This is late enough to avoid a race
 
-    qDebug() << "\n\nCHANGED!" << q_ptr->sourceModel() <<q_ptr->rowCount();
-
     static std::atomic_flag initRoles = ATOMIC_FLAG_INIT;
     if (!initRoles.test_and_set()) {
         for (auto ua : qAsConst(m_RealList)) {
-            qDebug() << "\n\nACTION!" << ua;
             connect(ua, &UserAction::changed,
                     this, &UserActionFilterPrivate::slotFilterChanged);
         }
@@ -130,7 +126,6 @@ void UserActionFilterPrivate::slotFilterChanged()
 bool UserActionFilter::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     const QModelIndex idx = sourceModel()->index(source_row, 0, source_parent);
-    qDebug() << "INVAL" << source_row << idx;
     const int a = idx.data((int)UserActionModel::Role::ACTION).toInt();
 
     if (!(idx.flags() & Qt::ItemIsEnabled))
@@ -138,7 +133,6 @@ bool UserActionFilter::filterAcceptsRow(int source_row, const QModelIndex &sourc
 
     //TODO use a matrix
     for (auto ua : qAsConst(d_ptr->m_RealList)) {
-        qDebug() << "F" << a << ua->action() <<  ua->isEnabled();
         if ((int)ua->action() == a)
             return ua->isEnabled();
     }
