@@ -77,6 +77,9 @@ public:
     Account* getAccount(const QModelIndex& idx) const;
     QModelIndex accountIndex(Account* a) const;
 
+    Q_INVOKABLE void reloadAllAccount(Person* profile);
+    Q_INVOKABLE void reloadAllAccount(Individual* profile);
+
     Q_INVOKABLE QItemSelectionModel* getAccountSelectionModel(Account* a) const;
     Q_INVOKABLE bool setProfile(Account* a, Person* p);
 

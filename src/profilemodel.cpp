@@ -1198,4 +1198,34 @@ void ProfileModel::initialize()
     }
 }
 
+
+void ProfileModel::reloadAllAccount(Individual* profile)
+{
+    if (!profile)
+        return;
+
+    reloadAllAccount(profile->person());
+}
+
+void ProfileModel::reloadAllAccount(Person* profile)
+{
+    if (!profile)
+        return;
+
+    auto pro = d_ptr->nodeForProfile(profile);
+
+    if (!pro)
+        return;
+
+    for (auto acc : qAsConst(pro->children)) {
+        auto a = acc->m_AccData.m_pAccount;
+        if (a->isEnabled()) {
+            a->setEnabled(false);
+            a << Account::EditAction::SAVE;
+            a->setEnabled(true);
+            a << Account::EditAction::SAVE;
+        }
+    }
+}
+
 #include "profilemodel.moc"
