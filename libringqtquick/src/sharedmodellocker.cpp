@@ -186,11 +186,6 @@ void SharedModelLocker::setContactMethod(ContactMethod* cm)
 
     cm = Session::instance()->individualDirectory()->fromTemporary(cm);
 
-    if (d_ptr->individual() && d_ptr->individual() == cm->individual()) {
-        emit changed();
-        return;
-    }
-
     if (cm && d_ptr->call() && d_ptr->call()->peerContactMethod()->d() != cm->d())
         d_ptr->replaceCall(nullptr);
 
@@ -271,7 +266,7 @@ Person* SharedModelLocker::currentPerson() const
 
 ContactMethod* SharedModelLocker::currentContactMethod() const
 {
-    return nullptr;
+    return d_ptr->contactMethod();
 }
 
 void SharedModelLockerPrivate::slotAvailableLensesChanged()
