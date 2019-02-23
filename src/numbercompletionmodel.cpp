@@ -346,6 +346,9 @@ void NumberCompletionModelPrivate::setPrefix(const QString& str)
             if (cm->account()->registrationState() != Account::RegistrationState::READY)
                 continue;
 
+            // Let it change between RING and RING_USERNAME
+            m_Prefix.setSchemeType(URI::SchemeType::RING);
+
             if (m_hNameCache.contains(m_Prefix) && m_hNameCache[m_Prefix] != QLatin1String("-1")) {
                 cm->setUri(m_hNameCache[m_Prefix]);
                 cm->setRegisteredName(m_Prefix);
