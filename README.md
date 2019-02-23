@@ -132,6 +132,27 @@ multiprocess message passing.
 Both DBus and "qtwrapper" modes are currently officially supported. REST would
 eventually be nice and a msgpack mode would also be interesting for sandboxing.
 
+### LibRingQtQuick.Builder
+
+Creating some objects require a non-trivial amount of imperative code. The
+bulder objects turn this imperative transaction into a declarative object.
+
+They can be committed or canceled. All relevant steps and choices are turned
+into properties.
+
+### LibRingQtQuick.Locker
+
+To mitigate the memory management mess mentionned below, some resource use
+shared pointers even if QtQuick is unstable when they are used. To mitigate
+this, the Locker objects track the workflow objects lifecycle internally so it
+becomes safe to use QtQuick with objects that don't follow the traditional
+object tree to manage their memory.
+
+### LibRingQtQuick.Filter
+
+Proxy models with QtQuick bindings. The allow to get the "right data" without
+imperative JavaScript.
+
 ## History
 
 This library has been created to split the logic and GUI code of SFLPhone-KDE,

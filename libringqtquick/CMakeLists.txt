@@ -38,6 +38,7 @@ set(libringqtquick_LIB_SRCS
     src/accountbuilder.cpp
     src/messagebuilder.cpp
     src/contactbuilder.cpp
+    src/callbuilder.cpp
     src/sharedmodellocker.cpp
     src/ringaccountbuilder.cpp
     src/timelineiterator.cpp
@@ -51,6 +52,7 @@ set(libringqtquick_LIB_HEADERS
     src/accountbuilder.h
     src/contactbuilder.h
     src/messagebuilder.h
+    src/callbuilder.h
     src/timelinefilter.h
     src/useractionfilter.h
     src/ringaccountbuilder.h

@@ -29,6 +29,7 @@
 #include "accountbuilder.h"
 #include "messagebuilder.h"
 #include "contactbuilder.h"
+#include "callbuilder.h"
 #include "ringaccountbuilder.h"
 #include "sharedmodellocker.h"
 #include "timelineiterator.h"
@@ -173,6 +174,7 @@ void RingQtQuick::registerTypes(const char *uri)
     qmlRegisterType<AccountBuilder>    (uri, 1, 0, "AccountBuilder"    );
     qmlRegisterType<MessageBuilder>    (uri, 1, 0, "MessageBuilder"    );
     qmlRegisterType<ContactBuilder>    (uri, 1, 0, "ContactBuilder"    );
+    qmlRegisterType<CallBuilder>       (uri, 1, 0, "CallBuilder"       );
     qmlRegisterType<RingAccountBuilder>(uri, 1, 0, "RingAccountBuilder");
     qmlRegisterType<SharedModelLocker> (uri, 1, 0, "SharedModelLocker" );
     qmlRegisterType<TimelineIterator>  (uri, 1, 0, "TimelineIterator"  );
