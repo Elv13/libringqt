@@ -1409,7 +1409,17 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
 
     if(!internal) {
         qDebug() << "Call not found" << callID << "new state" << stateName;
-        addExistingCall(callID, stateName);
+
+        // If this happens, it is absolutely a bug in the daemon, but it keeps
+        // regressing over and over again, year after year after year. Without
+        // this mitigation, it is impossible to pickup incoming calls if the
+        // state change signal wins the thread race against the incoming call
+        // signal.
+        if (stateName == DRing::Call::StateEvent::INCOMING || stateName == DRing::Call::StateEvent::RINGING)
+            addIncomingCall(callID);
+        else
+            addExistingCall(callID, stateName);
+
         return;
     }
 
