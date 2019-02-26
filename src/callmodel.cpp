@@ -1417,6 +1417,10 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
         // signal.
         if (stateName == DRing::Call::StateEvent::INCOMING || stateName == DRing::Call::StateEvent::RINGING)
             addIncomingCall(callID);
+        else if (stateName == DRing::Call::StateEvent::INACTIVE) {
+            qWarning() << "An unknown call had a state change to INACTIVE, assuming it is incoming, this may be wrong";
+            addIncomingCall(callID);
+        }
         else
             addExistingCall(callID, stateName);
 
