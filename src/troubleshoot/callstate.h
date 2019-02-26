@@ -48,6 +48,8 @@ public:
 
     virtual int autoDismissDelay() const override;
 
+    virtual void activate() override;
+
     /**
      * Called when the state or error code changes.
      */

@@ -39,6 +39,8 @@ public:
         REFUSED,
     } m_State {State::NORMAL};
 
+    Call::Direction m_Direction;
+
     QString m_MissedText;
 };
 
@@ -56,7 +58,12 @@ Troubleshoot::CallState::~CallState()
 QString Troubleshoot::CallState::headerText() const
 {
     static QString busy = tr("This contact is currently busy and can't puck up the call.");
-    static QString refused = tr("This contact refused the call.");
+    static QString refused = tr("This contact refused the call. The DND (\"Do not disturb\") mode may be enabled.");
+
+    static QStringList options {
+        tr("Hang up this call"),
+        tr("Try again now"),
+    };
 
     switch(d_ptr->m_State) {
         case CallStatePrivate::State::NORMAL:
@@ -83,6 +90,57 @@ bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
     return false;
 }
 
+void Troubleshoot::CallState::activate()
+{
+    static const QStringList busyOptions {
+        tr("Remind me in 5 minutes"),
+        tr("Remind me in 15 minutes"),
+        tr("Remind me in 1 hour"),
+    };
+
+    static const QStringList missedInOptions {
+        tr("Call back now")
+    };
+
+    static const QStringList missedOutOptions {
+        tr("Try again now"),
+        tr("Remind me in 5 minutes"),
+        tr("Remind me in 15 minutes"),
+        tr("Remind me in 1 hour"),
+    };
+
+    switch(d_ptr->m_State) {
+        case CallStatePrivate::State::MISSED:
+            switch(d_ptr->m_Direction) {
+                case Call::Direction::INCOMING:
+                    setStringList(missedInOptions);
+                    break;
+                case Call::Direction::OUTGOING:
+                    setStringList(missedOutOptions);
+                    break;
+            }
+            break;
+        case CallStatePrivate::State::REFUSED:
+            switch(d_ptr->m_Direction) {
+                case Call::Direction::INCOMING:
+                    setStringList({});
+                    break;
+                case Call::Direction::OUTGOING:
+                    setStringList(busyOptions);
+                    break;
+            }
+            break;
+        case CallStatePrivate::State::BUSY:
+            setStringList(busyOptions);
+            break;
+        case CallStatePrivate::State::NORMAL:
+            setStringList({});
+            break;
+    }
+
+    emit textChanged();
+}
+
 bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troubleshoot::Base* self)
 {
     Q_UNUSED(elapsedTime)
@@ -91,14 +149,17 @@ bool Troubleshoot::CallState::isAffected(Call* c, time_t elapsedTime, Troublesho
 
     auto cself = static_cast<Troubleshoot::CallState*>(self);
     cself->d_ptr->m_MissedText.clear();
+    cself->d_ptr->m_Direction = c->direction();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
-    switch(c->direction()) {
+    switch(cself->d_ptr->m_Direction) {
         case Call::Direction::INCOMING:
             switch(c->state()) {
                 case Call::State::OVER:
-                    if (c->isMissed()) {
+                    // Don't print a warning when the call is manually refused, it makes
+                    // people feel bad about themselves.
+                    if (c->isMissed() && c->failureReason() != Call::FailureReason::REFUSED) {
                         cself->d_ptr->m_State = CallStatePrivate::State::MISSED;
                         cself->d_ptr->m_MissedText = tr("<center><b>Missed call</b></center> <br />from: ")
                             + c->formattedName() + "<br /><br />"+c->dateTime().toString();
@@ -151,8 +212,17 @@ QVariant Troubleshoot::CallState::icon() const
 
 int Troubleshoot::CallState::autoDismissDelay() const
 {
-    return d_ptr->m_State == CallStatePrivate::State::MISSED ?
-        std::numeric_limits<int>::max() : -1;
+    switch(d_ptr->m_State) {
+        case CallStatePrivate::State::MISSED:
+            return std::numeric_limits<int>::max();
+        case CallStatePrivate::State::REFUSED:
+        case CallStatePrivate::State::BUSY:
+            return 30;
+        case CallStatePrivate::State::NORMAL:
+            return -1;
+    }
+
+    return -1;
 }
 
 
