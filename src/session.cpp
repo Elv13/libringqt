@@ -72,6 +72,9 @@ public:
     if (d_ptr->name) \
         return d_ptr->name;\
     \
+    \
+    static std::atomic_flag test_recurse = ATOMIC_FLAG_INIT; \
+    Q_ASSERT(!test_recurse.test_and_set()); \
     d_ptr->name = new type();\
     d_ptr->name->setParent((QObject*) Session:: parent ());\
     return d_ptr->name;}
