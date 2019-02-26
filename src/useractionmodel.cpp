@@ -913,13 +913,16 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
 
                const QVariant objTv = idx.data(static_cast<int>(Ring::Role::ObjectType));
 
+               Ring::ObjectType objT = {};
+
                //Be sure the model support the UAM abstraction
                if (!objTv.canConvert<Ring::ObjectType>()) {
-                  qWarning() << "Cannot determine object type";
+                  qWarning() << "Cannot determine object type, fallback to the call";
+                  objT = Ring::ObjectType::Call;
                   continue;
                }
-
-               const auto objT =  qvariant_cast<Ring::ObjectType>(objTv);
+               else
+                  objT = qvariant_cast<Ring::ObjectType>(objTv);
 
                ret &= availableObjectActions[action][objT];
 
@@ -947,7 +950,19 @@ bool UserActionModelPrivate::updateAction(UserActionModel::Action action)
                   }
                   case Ring::ObjectType::Call           : {
 
-                     const auto c = qvariant_cast<Call*>(idx.data(static_cast<int>(Ring::Role::Object)));
+                     auto c = qvariant_cast<Call*>(idx.data(static_cast<int>(Ring::Role::Object)));
+
+                     // Fallback to the active call to prevent not being able to hang up
+                     // due to some race conditions.
+                     if (!c) {
+                        const CallList calls = Session::instance()->callModel()->getActiveCalls();
+
+                        if (!calls.isEmpty())
+                           c = calls.first();
+                     }
+
+                     if (!c)
+                        break;
 
                      ret &= updateByCall( action, c );
 
