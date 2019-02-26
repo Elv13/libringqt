@@ -33,6 +33,7 @@ public:
     static void init();
 
     virtual QVector<VideoFormatI::AbstractDevice*> devices() const override;
+    virtual void stopCapture() override;
 };
 
 }

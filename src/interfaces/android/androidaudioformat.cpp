@@ -18,6 +18,7 @@
 #include "androidaudioformat.h"
 
 #include <QtAndroid>
+#include <QAndroidJniObject>
 #include <QtCore/QMutex>
 
 static constexpr const char uri   [] = "net/lvindustries/libringqt/HardwareProxy";
@@ -28,9 +29,13 @@ void Interfaces::AndroidAudioFormat::init()
     QMutex m;
     m.lock();
 
+qDebug()<< "================ABOUT TO READ the content";
+
+
     // First, set the context in the Java class.
     QtAndroid::runOnAndroidThread([&m]() {
-        auto ctx = QtAndroid::androidContext().object();
+        qDebug()<< "======SETCONTEXT";
+       auto ctx = QtAndroid::androidContext().object();
         QAndroidJniObject::callStaticMethod<jint>(uri, "setContext", ctxUri, QtAndroid::androidContext().object());
         m.unlock();
     });
@@ -94,8 +99,8 @@ QString Interfaces::AndroidAudioFormat::deviceModel() const
     QString ret = 0;
 
     QtAndroid::runOnAndroidThread([&m, &ret]() {
-        QAndroidJniObject o = QAndroidJniObject::callStaticMethod<jstring>(
-            uri, "deviceModel", "()S"
+        QAndroidJniObject o = QAndroidJniObject::callStaticObjectMethod(
+            uri, "deviceModel", "()Ljava/lang/String;"
         );
         ret = o.toString();
         m.unlock();
@@ -115,8 +120,8 @@ QString Interfaces::AndroidAudioFormat::deviceManufacturer() const
     QString ret = 0;
 
     QtAndroid::runOnAndroidThread([&m, &ret]() {
-        QAndroidJniObject o = QAndroidJniObject::callStaticMethod<jstring>(
-            uri, "deviceManufacturer", "()S"
+        QAndroidJniObject o = QAndroidJniObject::callStaticObjectMethod(
+            uri, "deviceManufacturer", "()Ljava/lang/String;"
         );
         ret = o.toString();
         m.unlock();
