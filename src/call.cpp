@@ -2109,6 +2109,8 @@ void CallPrivate::startStop()
    // This seems to be generally implemented this way
    if (m_LastErrorCode == ECONNABORTED)
       m_FailureReason = Call::FailureReason::REFUSED;
+   else if (q_ptr->account()->autoAnswerStatus() == Account::AutoAnswerStatus::DO_NOT_DISTURB)
+      m_FailureReason = Call::FailureReason::DO_NOT_DISTURB;
    else
       m_FailureReason = Call::FailureReason::MISSED;
 }

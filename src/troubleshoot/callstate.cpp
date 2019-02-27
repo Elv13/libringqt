@@ -37,6 +37,7 @@ public:
         MISSED,
         BUSY,
         REFUSED,
+        DO_NOT_DISTURB,
     } m_State {State::NORMAL};
 
     Call::Direction m_Direction;
@@ -59,6 +60,7 @@ QString Troubleshoot::CallState::headerText() const
 {
     static QString busy = tr("This contact is currently busy and can't puck up the call.");
     static QString refused = tr("This contact refused the call. The DND (\"Do not disturb\") mode may be enabled.");
+    static QString dnd = tr("This call was hung up because the \"Do not disturb\" mode is enabled");
 
     static QStringList options {
         tr("Hang up this call"),
@@ -74,6 +76,8 @@ QString Troubleshoot::CallState::headerText() const
             return busy;
         case CallStatePrivate::State::REFUSED:
             return refused;
+        case CallStatePrivate::State::DO_NOT_DISTURB:
+            return dnd;
     }
     return {};
 }
@@ -111,6 +115,7 @@ void Troubleshoot::CallState::activate()
 
     switch(d_ptr->m_State) {
         case CallStatePrivate::State::MISSED:
+        case CallStatePrivate::State::DO_NOT_DISTURB:
             switch(d_ptr->m_Direction) {
                 case Call::Direction::INCOMING:
                     setStringList(missedInOptions);
@@ -214,6 +219,7 @@ int Troubleshoot::CallState::autoDismissDelay() const
 {
     switch(d_ptr->m_State) {
         case CallStatePrivate::State::MISSED:
+        case CallStatePrivate::State::DO_NOT_DISTURB:
             return std::numeric_limits<int>::max();
         case CallStatePrivate::State::REFUSED:
         case CallStatePrivate::State::BUSY:

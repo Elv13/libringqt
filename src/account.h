@@ -122,7 +122,6 @@ class LIB_EXPORT Account : public ItemBase {
    Q_PROPERTY(int            bootstrapPort                READ bootstrapPort                 WRITE setBootstrapPort               NOTIFY changed)
    Q_PROPERTY(int            publishedPort                READ publishedPort                 WRITE setPublishedPort               NOTIFY changed)
    Q_PROPERTY(bool           enabled                      READ isEnabled                     WRITE setEnabled                     NOTIFY changed)
-   Q_PROPERTY(bool           autoAnswer                   READ isAutoAnswer                  WRITE setAutoAnswer                  NOTIFY changed)
    Q_PROPERTY(bool           tlsVerifyServer              READ isTlsVerifyServer             WRITE setTlsVerifyServer             NOTIFY changed)
    Q_PROPERTY(bool           tlsVerifyClient              READ isTlsVerifyClient             WRITE setTlsVerifyClient             NOTIFY changed)
    Q_PROPERTY(bool           tlsRequireClientCertificate  READ isTlsRequireClientCertificate WRITE setTlsRequireClientCertificate NOTIFY changed)
@@ -251,7 +250,6 @@ class LIB_EXPORT Account : public ItemBase {
          BootstrapPort               ,
          PublishedPort               ,
          Enabled                     ,
-         AutoAnswer                  ,
          TlsVerifyServer             ,
          TlsVerifyClient             ,
          TlsRequireClientCertificate ,
@@ -364,6 +362,17 @@ class LIB_EXPORT Account : public ItemBase {
       Q_ENUMS(MigrationEndedStatus)
 
       /**
+       * How should incoming media and even be treated.
+       */
+      enum class AutoAnswerStatus {
+          MANUAL        , /*!< Let the user manually do that */
+          AUTO_ANSWER   , /*!< Auto answer calls             */
+          QUIET         , /*!< Do not play the ringtone      */
+          DO_NOT_DISTURB, /*!< Dismiss incoming media        */
+      };
+      Q_ENUM(AutoAnswerStatus)
+
+      /**
        *Perform an action
        * @return If the state changed
        */
@@ -406,7 +415,6 @@ class LIB_EXPORT Account : public ItemBase {
       QString hostname                     () const;
       QString deviceId                     () const;
       bool    isEnabled                    () const;
-      bool    isAutoAnswer                 () const;
       QString username                     () const;
       QString registeredName               () const;
       QString mailbox                      () const;
@@ -471,6 +479,7 @@ class LIB_EXPORT Account : public ItemBase {
       ContactMethod*     contactMethod     () const;
       Person*            profile           () const;
       RingDevice*        ringDevice        () const;
+      AutoAnswerStatus   autoAnswerStatus  () const;
       bool    allowIncomingFromUnknown     () const;
       bool    allowIncomingFromHistory     () const;
       bool    allowIncomingFromContact     () const;
@@ -529,13 +538,13 @@ class LIB_EXPORT Account : public ItemBase {
       void setDisplayName                   (const QString& value   );
       void setArchivePassword               (const QString& value   );
       void setArchivePin                    (const QString& value   );
+      void setUserAgent                     (const QString& agent   );
       void setVoiceMailCount                (int  count );
       void setRegistrationExpire            (int  detail);
       void setTlsNegotiationTimeoutSec      (int  detail);
       void setLocalPort                     (unsigned short detail);
       void setBootstrapPort                 (unsigned short detail);
       void setPublishedPort                 (unsigned short detail);
-      void setAutoAnswer                    (bool detail);
       void setTlsVerifyServer               (bool detail);
       void setTlsVerifyClient               (bool detail);
       void setTlsRequireClientCertificate   (bool detail);
@@ -553,7 +562,7 @@ class LIB_EXPORT Account : public ItemBase {
       void setVideoPortMin                  (int port   );
       void setActiveCallLimit               (int value  );
       void setDTMFType                      (DtmfType type);
-      void setUserAgent                     (const QString& agent);
+      void setAutoAnswerStatus              (AutoAnswerStatus s);
       void setUpnpEnabled                   (bool enable);
       void setHasCustomUserAgent            (bool enable);
       void setUseDefaultPort                (bool value );
@@ -613,6 +622,7 @@ class LIB_EXPORT Account : public ItemBase {
       void canCallChanged(bool status);
       void canVideoCallChanged(bool status);
       void contactMethodChanged(ContactMethod* cm);
+      void autoAnswerStatusChanged();
 };
 Q_DECLARE_METATYPE(Account*)
 Q_DECLARE_METATYPE(const Account*)

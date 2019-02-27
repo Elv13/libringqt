@@ -147,7 +147,6 @@ QHash<int,QByteArray> AccountModel::roleNames() const
         roles.insert((int) Account::Role::BootstrapPort               , "bootstrapPort");
         roles.insert((int) Account::Role::PublishedPort               , "publishedPort");
         roles.insert((int) Account::Role::Enabled                     , "enabled");
-        roles.insert((int) Account::Role::AutoAnswer                  , "autoAnswer");
         roles.insert((int) Account::Role::TlsVerifyServer             , "tlsVerifyServer");
         roles.insert((int) Account::Role::TlsVerifyClient             , "tlsVerifyClient");
         roles.insert((int) Account::Role::TlsRequireClientCertificate , "tlsRequireClientCertificate");
@@ -289,10 +288,25 @@ QList<Account*> AccountModel::accountsToMigrate() const
  * @param account the account to query
  * @return contacts a QVector<QMap<QString, QString>>, keywords : "id" and "added"
  */
-QVector<QMap<QString, QString>>
+/*QVector<QMap<QString, QString>>
 AccountModel::getContacts(const Account* account) const
 {
     return ConfigurationManager::instance().getContacts(account->id().data());
+}*/
+
+Account::AutoAnswerStatus AccountModel::globalAutoAnswerStatus() const
+{
+    //FIXME implement properly
+    for (Account* account : qAsConst(d_ptr->m_lAccounts))
+        return account->autoAnswerStatus();
+
+    return Account::AutoAnswerStatus::MANUAL;
+}
+
+void AccountModel::setGlobalAutoAnswerStatus(Account::AutoAnswerStatus s)
+{
+    for (Account* account : qAsConst(d_ptr->m_lAccounts))
+        account->setAutoAnswerStatus(s);
 }
 
 /// Mutualize all the connections
@@ -304,6 +318,9 @@ void AccountModelPrivate::connectAccount(Account* acc)
     connect(acc, &Account::canCallChanged         , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
     connect(acc, &Account::canVideoCallChanged    , this, &AccountModelPrivate::slotHasMediaCodecChanged          );
     connect(acc, &Account::enabled                , this, &AccountModelPrivate::slotAvailabilityStatusChanged     );
+    connect(acc, &Account::autoAnswerStatusChanged, this, [this]() {
+        emit q_ptr->autoAnswerStatusChanged();
+    }); //FIXME
 }
 
 ///Account status changed

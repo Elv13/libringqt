@@ -492,6 +492,9 @@ Call* CallModel::firstActiveCall(ContactMethod* cm) const
 ///Make sure all signals can be mapped back to Call objects
 void CallModel::registerCall(Call* call)
 {
+   // Check against accidental misuse of []
+   Q_ASSERT(d_ptr->m_shInternalMapping.value(call));
+
    d_ptr->m_shDringId[ call->dringId() ] = d_ptr->m_shInternalMapping[call];
 }
 
@@ -628,7 +631,11 @@ Call* CallModel::dialingCall(const QString& peerName, Account* account, Call* pa
          return call;
    }
 
-   return d_ptr->addCall2(CallPrivate::buildDialingCall(peerName, account, parent));
+   auto c = d_ptr->addCall2(CallPrivate::buildDialingCall(peerName, account, parent));
+   Q_ASSERT(c->direction() == Call::Direction::OUTGOING);
+   Q_ASSERT(d_ptr->m_shInternalMapping.value(c));
+
+   return c;
 }  //dialingCall
 
 ///Create a new incoming call when the daemon is being called
@@ -662,15 +669,21 @@ Call* CallModelPrivate::addIncomingCall(const QString& callId)
 
    //Call without account is not possible
    if (call->account()) {
-       //WARNING: This code will need to be moved if we decide to drop
-       //incomingCall signal
-      if (call->account()->isAutoAnswer()) {
-         call->performAction(Call::Action::ACCEPT);
-      }
+       switch(call->account()->autoAnswerStatus()) {
+          case Account::AutoAnswerStatus::AUTO_ANSWER:
+             call->performAction(Call::Action::ACCEPT);
+             break;
+          case Account::AutoAnswerStatus::DO_NOT_DISTURB:
+             call->performAction(Call::Action::REFUSE);
+             break;
+          case Account::AutoAnswerStatus::QUIET: // Handled elsewhere (TODO)
+          case Account::AutoAnswerStatus::MANUAL:
+              break;
+       }
    }
    else {
-      qDebug() << "Incoming call from an invalid account";
-      throw tr("Invalid account");
+      qWarning() << "Incoming call from an invalid account";
+      Q_ASSERT(false);
    }
 
    return call;
@@ -1401,7 +1414,7 @@ void CallModelPrivate::slotCallStateChanged(const QString& callID, const QString
 
     //This code is part of the CallModel interface too
     qDebug() << "Call State Changed for call  " << callID << " . New state : " << stateName;
-    InternalStruct* internal = m_shDringId[callID];
+    InternalStruct* internal = m_shDringId.value(callID);
     Call* call = nullptr;
 
     if (!internal && stateName == DRing::Call::StateEvent::CONNECTING)
