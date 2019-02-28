@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 package net.lvindustries.libringqt;
 
 import org.qtproject.qt5.android.bindings.QtActivity;
@@ -49,12 +48,15 @@ import android.util.Size;
 
 public class HardwareProxy
 {
+    //TODO use this instead of the first CameraInfo
     private class VideoParams {
         public String id;
         public int format;
+
         // size as captured by Android
         public int width;
         public int height;
+
         //size, rotated, as seen by the daemon
         public int rotWidth;
         public int rotHeight;
@@ -62,11 +64,11 @@ public class HardwareProxy
         public int rotation;
 
         public VideoParams(String _id, int _format, int _width, int _height, int _rate) {
-            this.id = id;
+            this.id     = id;
             this.format = format;
-            this.width = width;
+            this.width  = width;
             this.height = height;
-            this.rate = rate;
+            this.rate   = rate;
         }
     }
 
@@ -83,6 +85,13 @@ public class HardwareProxy
             map.set("rate", Long.toString(rate));
             return map;
         }*/
+    }
+
+    static public class CameraInfo {
+        public String name;
+        public ArrayList<Integer> formats = new ArrayList<Integer>();
+        public ArrayList<Integer> sizes   = new ArrayList<Integer>();
+        public ArrayList<Integer> rates   = new ArrayList<Integer>();
     }
 
     protected static Context mContext;
@@ -102,18 +111,20 @@ public class HardwareProxy
     private static String mBackCameraName;
     private static String mExternalCameraName;
 
+    public static CameraManager getCameraManager() {
+        return mCameraManager;
+    }
+
+    public static Context getContext() {
+        return mContext;
+    }
+
     public static int setContext(android.content.Context ctx) {
         mContext = ctx;
-        int ret = 0;
         mCameraList = new ArrayList<CameraInfo>();
         System.out.println("===============INIT");
-        // Audio
-        ret = initAudio();
 
-        // Video
-        //initCamera();
-
-        return ret;
+        return initAudio();
     }
 
     public static int initAudio() {
@@ -126,7 +137,8 @@ public class HardwareProxy
             // If possible, query the native sample rate and buffer size.
             sr = Integer.parseInt(am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE));
             bs = Integer.parseInt(am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER));
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e) {
             System.out.println("Failed to read native OpenSL config: " + e);
             return 1;
         }
@@ -142,6 +154,7 @@ public class HardwareProxy
 
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
         mNativeParams.clear();
+
         if (mCameraManager == null)
             return 1;
 
@@ -155,9 +168,11 @@ public class HardwareProxy
 
                 if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
                     mFrontCameraName = id;
-                } else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
+                }
+                else if (facing == CameraCharacteristics.LENS_FACING_BACK) {
                     mBackCameraName = id;
-                } else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
+                }
+                else if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
                     mExternalCameraName = id;
                 }
 
@@ -173,7 +188,8 @@ public class HardwareProxy
             if (mCurrentCameraName != null)
                 mDefaultDeviceName = mCurrentCameraName;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("initCamera: can't enumerate devices" + e);
             return 2;
         }
@@ -181,16 +197,10 @@ public class HardwareProxy
         return 0;
     }
 
-    static private class CameraInfo {
-        public String name;
-        public ArrayList<Integer> formats = new ArrayList<Integer>();
-        public ArrayList<Integer> sizes   = new ArrayList<Integer>();
-        public ArrayList<Integer> rates   = new ArrayList<Integer>();
-    }
-
     static CameraInfo fillCameraInfo(String camId) {
         if (mCameraManager == null)
             return null;
+
         try {
             CameraInfo inf = new CameraInfo();
             inf.name = camId;
@@ -217,14 +227,14 @@ public class HardwareProxy
             //p.size.y = newSize.getHeight();
 
             long minDuration = streamConfigs.getOutputMinFrameDuration(ImageFormat.YUV_420_888, newSize);
-            double maxfps = 1000e9d / minDuration;
-            long fps = (long) maxfps;
+            double maxfps    = 1000e9d / minDuration;
+            long fps         = (long) maxfps;
             inf.rates.add((int)fps);
 
-            inf.sizes.add(newSize.getWidth());
+            inf.sizes.add(newSize.getWidth ());
             inf.sizes.add(newSize.getHeight());
             inf.sizes.add(newSize.getHeight());
-            inf.sizes.add(newSize.getWidth());
+            inf.sizes.add(newSize.getWidth ());
 
             //p.rate = fps;
 
@@ -266,18 +276,28 @@ public class HardwareProxy
     }
 
     public static int getFrameRate(int device, int id) {
-          return mCameraList.get(device).rates.get(id);
+        return mCameraList.get(device).rates.get(id);
     }
 
     public static int getSizeCount(int device) {
-          return mCameraList.get(device).sizes.size();
+        return mCameraList.get(device).sizes.size();
     }
 
     public static int getSize(int device, int id) {
-          return mCameraList.get(device).sizes.get(id);
+        return mCameraList.get(device).sizes.get(id);
     }
 
     public static int getFormat() {
         return ImageFormat.YUV_420_888;
+    }
+
+    public static CameraInfo getCameraInfoForName(String name) {
+        for (CameraInfo c : mCameraList) {
+            System.out.println("Compare "+name+" "+c.name);
+            if (name.equals(c.name))
+                return c;
+        }
+
+        return null;
     }
 }

@@ -60,6 +60,8 @@ VideoManagerInterface::VideoManagerInterface()
 #ifdef Q_OS_ANDROID
         exportable_callback<VideoSignal::StartCapture>(
             [](const std::string& device) {
+                static auto devices = GlobalInstances::videoFormatHandler().devices();
+
                 Interfaces::VideoFormatI::AbstractDevice* d = nullptr;
 
                 for (auto d_ : qAsConst(devices)) {
@@ -71,6 +73,8 @@ VideoManagerInterface::VideoManagerInterface()
 
                 if (!d)
                     return;
+
+               d->startCapture(); 
 
         }),
         exportable_callback<VideoSignal::StopCapture>(
