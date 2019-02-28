@@ -23,6 +23,7 @@
 //Std include
 #include <time.h>
 #include <memory>
+#include <errno.h>
 
 //Qt
 #include <QtCore/QFile>
