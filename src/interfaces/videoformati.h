@@ -28,7 +28,7 @@ class Q_DECL_EXPORT VideoFormatI
 {
 public:
     struct AbstractFormat {
-        virtual QString name() = 0;
+        virtual int value() = 0;
     };
 
     struct AbstractRate {
@@ -45,9 +45,10 @@ public:
         virtual void setRate(AbstractRate* r) = 0;
 
         virtual void select() = 0;
+        virtual void startCapture() = 0;
     };
 
-
+    virtual void stopCapture() = 0;
     virtual QVector<AbstractDevice*> devices() const = 0;
 };
 

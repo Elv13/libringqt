@@ -57,6 +57,7 @@ public:
    Q_PROPERTY(bool           hasAvailableAccounts       READ hasAvailableAccounts   NOTIFY hasAvailableAccountsChanged)
    Q_PROPERTY(bool           hasEnabledAccounts         READ hasEnabledAccounts   NOTIFY hasEnabledAccountsChanged)
 
+   Q_PROPERTY(Account::AutoAnswerStatus globalAutoAnswerStatus READ globalAutoAnswerStatus WRITE setGlobalAutoAnswerStatus NOTIFY autoAnswerStatusChanged)
    Q_PROPERTY(PendingContactRequestModel* incomingContactRequestModel READ incomingContactRequestModel CONSTANT)
 
    friend class AccountPrivate;
@@ -93,12 +94,17 @@ public:
    EditState            editState                   (                                      ) const;
    Account*             selectedAccount             (                                      ) const;
    QList<Account*>      accountsToMigrate           (                                      ) const;
-   QVector<QMap<QString, QString>> getContacts      (const Account* account                ) const;
+   //QVector<QMap<QString, QString>> getContacts      (const Account* account                ) const;
+
+   Account::AutoAnswerStatus globalAutoAnswerStatus() const;
 
    QItemSelectionModel* selectionModel              (                                      ) const;
    QItemSelectionModel* userSelectionModel          (                                      ) const;
 
    PendingContactRequestModel* incomingContactRequestModel (                               ) const;
+
+   // Setters
+   void setGlobalAutoAnswerStatus(Account::AutoAnswerStatus s);
 
    //Abstract model accessors
    virtual QVariant              data        ( const QModelIndex& index, int role = Qt::DisplayRole      ) const override;
@@ -188,5 +194,7 @@ Q_SIGNALS:
    void hasAvailableAccountsChanged();
    /// When there is at least one enabled (checked) account.
    void hasEnabledAccountsChanged();
+   /// When one of the account auto answer status changes
+   void autoAnswerStatusChanged();
 };
 Q_DECLARE_METATYPE(AccountModel*)

@@ -249,14 +249,37 @@ audioFormatHandler()
     return *instanceManager().m_audioFormats.get();
 }
 
-void setAudioFormatHandler(std::unique_ptr<Interfaces::FileProviderI> instance)
+void setAudioFormatHandler(std::unique_ptr<Interfaces::AudioFormatI> instance)
 {
     // do not allow empty pointers
     if (!instance) {
         qWarning() << "ignoring empty unique_ptr";
         return;
     }
-    instanceManager().m_fileProvider = std::move(instance);
+    instanceManager().m_audioFormats = std::move(instance);
+}
+
+Interfaces::VideoFormatI&
+videoFormatHandler()
+{
+    // There is no coming back from this. The only way it can happen is if it
+    // isn't initialized properly, in which case it will not work anyway.
+    if (!instanceManager().m_videoFormats) {
+        qWarning() << "LibrRingQt wasn't compiled properly, it will not work, bye";
+        exit(1);
+    }
+
+    return *instanceManager().m_videoFormats.get();
+}
+
+void setVideoFormatHandler(std::unique_ptr<Interfaces::VideoFormatI> instance)
+{
+    // do not allow empty pointers
+    if (!instance) {
+        qWarning() << "ignoring empty unique_ptr";
+        return;
+    }
+    instanceManager().m_videoFormats = std::move(instance);
 }
 
 /*

@@ -735,9 +735,9 @@ bool Account::isEnabled() const
 }
 
 ///Return if the account should auto answer
-bool Account::isAutoAnswer() const
+Account::AutoAnswerStatus Account::autoAnswerStatus() const
 {
-   return d_ptr->accountDetail(DRing::Account::ConfProperties::AUTOANSWER) IS_TRUE;
+   return d_ptr->m_AutoAnswerStatus;
 }
 
 //Return if the accounts needs to migrate
@@ -1288,8 +1288,6 @@ QVariant Account::roleData(int role) const
          return publishedPort();
       case CAST(Account::Role::Enabled):
          return isEnabled();
-      case CAST(Account::Role::AutoAnswer):
-         return isAutoAnswer();
       case CAST(Account::Role::TlsVerifyServer):
          return isTlsVerifyServer();
       case CAST(Account::Role::TlsVerifyClient):
@@ -1877,9 +1875,11 @@ void Account::setEnabled(bool detail)
 }
 
 ///Set if the account should auto answer
-void Account::setAutoAnswer(bool detail)
+void Account::setAutoAnswerStatus(Account::AutoAnswerStatus detail)
 {
-   d_ptr->setAccountProperty(DRing::Account::ConfProperties::AUTOANSWER, (detail)TO_BOOL);
+   d_ptr->m_AutoAnswerStatus = detail;
+   emit changed(this);
+   emit autoAnswerStatusChanged();
 }
 
 ///Set the TLS verification server
@@ -2222,9 +2222,6 @@ bool Account::setRoleData(int role, const QVariant& value)
          break;
       case CAST(Account::Role::Enabled):
          setEnabled(value.toBool());
-         break;
-      case CAST(Account::Role::AutoAnswer):
-         setAutoAnswer(value.toBool());
          break;
       case CAST(Account::Role::TlsVerifyServer):
          setTlsVerifyServer(value.toBool());

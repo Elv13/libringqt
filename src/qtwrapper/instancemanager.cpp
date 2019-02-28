@@ -1,5 +1,5 @@
 /****************************************************************************
- *   Copyright (C) 2009-2017 Savoir-faire Linux                          *
+ *   Copyright (C) 2009-2017 Savoir-faire Linux                             *
  *   Authors : Alexandre Lision alexandre.lision@savoirfairelinux.com       *
  *   Author : Alexandre Lision <alexandre.lision@savoirfairelinux.com>      *
  *                                                                          *
@@ -28,6 +28,7 @@
 
 #ifdef Q_OS_ANDROID
  #include "interfaces/android/androidaudioformat.h"
+ #include "interfaces/android/androidvideoformat.h"
 #endif
 
 static int ringFlags = 0;
@@ -55,6 +56,7 @@ InstanceManagerInterface::InstanceManagerInterface()
 
 #ifdef Q_OS_ANDROID
    GlobalInstances::setInterface<Interfaces::AndroidAudioFormat>();
+   GlobalInstances::setInterface<Interfaces::AndroidVideoFormat>();
 #endif
 
    DRing::init(static_cast<DRing::InitFlag>(ringFlags));

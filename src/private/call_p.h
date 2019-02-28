@@ -131,6 +131,8 @@ public:
         QSharedPointer<Event> m_pEvent {nullptr};
     } m_LegacyFields;
 
+    Call::FailureReason m_FailureReason {Call::FailureReason::UNSPECIFIED};
+
     //Cache
     HistoryTimeCategoryModel::HistoryConst m_HistoryConst {HistoryTimeCategoryModel::HistoryConst::Never};
 

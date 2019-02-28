@@ -363,6 +363,7 @@ Call* SharedModelLocker::call() const
 
 void SharedModelLocker::setCall(Call* c)
 {
+    Session::instance()->callModel()->selectCall(c);
     d_ptr->replaceCall(c);
 
     if (c && ((!d_ptr->individual()) || c->peer()->d() != d_ptr->individual()->d()))

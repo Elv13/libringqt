@@ -72,6 +72,9 @@ public:
     if (d_ptr->name) \
         return d_ptr->name;\
     \
+    \
+    static std::atomic_flag test_recurse = ATOMIC_FLAG_INIT; \
+    Q_ASSERT(!test_recurse.test_and_set()); \
     d_ptr->name = new type();\
     d_ptr->name->setParent((QObject*) Session:: parent ());\
     return d_ptr->name;}
@@ -101,7 +104,7 @@ ACCESS(AvailableAccountModel, availableAccountModel, m_pAvailableAccountModel, a
 ACCESS(NameDirectory        , nameDirectory        , m_pNameDirectory        , instance           )
 ACCESS(PeersTimelineModel   , peersTimelineModel   , m_pPeersTimelineModel   , individualDirectory)
 ACCESS(NumberCategoryModel  , numberCategoryModel  , m_pNumberCategoryModel  , instance           )
-ACCESS(IndividualDirectory  , individualDirectory  , m_pIndividualDirectory  , callModel          )
+ACCESS(IndividualDirectory  , individualDirectory  , m_pIndividualDirectory  , accountModel       )
 ACCESS(ProfileModel         , profileModel         , m_pProfileModel         , accountModel       )
 ACCESS(PresenceStatusModel  , presenceStatusModel  , m_pPresenceStatusModel  , accountModel       )
 ACCESS(EventModel           , eventModel           , m_pEventModel           , instance           )

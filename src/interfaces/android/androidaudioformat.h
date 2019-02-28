@@ -45,6 +45,9 @@ public:
 
     virtual int bufferSize() const override;
     virtual int sampleRate() const override;
+
+    virtual QString deviceModel() const override;
+    virtual QString deviceManufacturer() const override;
 };
 
 }

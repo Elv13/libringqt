@@ -243,6 +243,23 @@ public:
    };
    Q_FLAGS(HoldFlags)
 
+   /**
+    * Keep a detailed reason why a call never reached.
+    *
+    * It helps to generate better error messages and notifications.
+    */
+   enum class FailureReason {
+        UNSPECIFIED   , /*!< Either it didn't fail or it doesn't know why                    */
+        CANCELED      , /*!< It never reached Call::LifeCycleState::INITIALIZATION           */
+        MISSED        , /*!< The (incoming) call wasn't picked up                            */
+        REFUSED       , /*!< The (incoming or outgoing) call was refused manually            */
+        BUSY          , /*!< The (outgoing) peer was busy                                    */
+        SILENT_MISSED , /*!< The ringtone was disabled, the (incoming) call wasn't picked up */
+        DO_NOT_DISTURB, /*!< The (incoming) call came during DND                             */
+        ERROR         , /*!< There was an attempt to make the call active, but it failed     */
+   };
+   Q_ENUM(FailureReason)
+
    ///TODO should be deprecated when a better factory system is implemented
    class HistoryMapFields {
    public:
@@ -293,6 +310,7 @@ public:
    Q_PROPERTY( bool               hasParentCall      READ hasParentCall                             )
    Q_PROPERTY( int                lastErrorCode      READ lastErrorCode     NOTIFY errorChanged     )
    Q_PROPERTY( QString            lastErrorMessage   READ lastErrorMessage  NOTIFY errorChanged     )
+   Q_PROPERTY( FailureReason      failureReason      READ failureReason     NOTIFY stateChanged     )
    Q_PROPERTY( Video::SourceModel* sourceModel       READ sourceModel       NOTIFY mediaAdded       )
    Q_PROPERTY( QSharedPointer<Event> calendarEvent   READ calendarEvent     CONSTANT                )
 
@@ -343,6 +361,7 @@ public:
    Video::SourceModel*      sourceModel      () const;
    QSharedPointer<Event>    calendarEvent    () const;
    Individual*              peer             () const;
+   FailureReason            failureReason    () const;
 
    FlagPack<Call::LiveMediaIssues>   liveMediaIssues  () const;
    FlagPack<Media::Media::TypeFlags> defaultMediaFlags() const;

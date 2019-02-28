@@ -72,6 +72,7 @@ public:
     bool                       m_RemoteEnabledState       {false};
     Account::EditState         m_CurrentState             {Account::EditState::READY};
     Account::Protocol          m_Protocol                 {Account::Protocol::COUNT__};
+    Account::AutoAnswerStatus  m_AutoAnswerStatus         {Account::AutoAnswerStatus::MANUAL};
     QMetaObject::Connection    m_cTlsCert                 {};
     QMetaObject::Connection    m_cTlsCaCert               {};
     QMutex                     m_ReloadLock               {};

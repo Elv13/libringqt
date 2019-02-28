@@ -23,6 +23,7 @@
 //Std include
 #include <time.h>
 #include <memory>
+#include <errno.h>
 
 //Qt
 #include <QtCore/QFile>
@@ -464,8 +465,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
         Session::instance()->nameDirectory()->lookupAddress(acc, acc->nameServiceURL(), nb->uri());
     }
 
-    auto call = std::unique_ptr<Call, decltype(deleteCall)&>( new Call(startState, peerName, nb, acc),
-                                                             deleteCall );
+    auto call = new Call(startState, peerName, nb, acc);
     call->d_ptr->updateOutgoingMedia(details);
 
     call->d_ptr->m_DringId      = callId;
@@ -488,7 +488,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
     call->d_ptr->initTimer();
 
     if (call->peerContactMethod())
-        call->peerContactMethod()->addCall(call.get());
+        call->peerContactMethod()->addCall(call);
 
     //Load the certificate if it's now available
     if (!call->certificate() && !details[DRing::TlsTransport::TLS_PEER_CERT].isEmpty()) {
@@ -497,7 +497,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
         nb->d_ptr->setCertificate(cert);
     }
 
-    return call.release();
+    return call;
 } //buildCall
 
 ///Build a call from its ID
@@ -519,16 +519,15 @@ Call* CallPrivate::buildIncomingCall(const QString& callId)
 ///Build a call from a dialing call (a call that is about to exist, not existing on daemon yet)
 Call* CallPrivate::buildDialingCall(const QString& peerName, Account* account, Call* parent)
 {
-    auto call = std::unique_ptr<Call, decltype(deleteCall)&>( new Call(Call::State::NEW,
-                                                                      peerName, nullptr, account),
-                                                             deleteCall );
+    auto call = new Call(Call::State::NEW, peerName, nullptr, account);
+
     call->d_ptr->m_LegacyFields.m_Direction = Call::Direction::OUTGOING;
     call->d_ptr->m_pParentCall = parent;
     if (Audio::Settings::instance().isRoomToneEnabled()) {
         Audio::Settings::instance().playRoomTone();
     }
 
-    return call.release();
+    return call;
 }
 
 /*****************************************************************************
@@ -594,6 +593,7 @@ Call* Call::buildHistoryCall(const QMap<QStringRef,QStringRef>& hc)
 
    if (missed) {
       call->d_ptr->m_LegacyFields.m_Missed = true;
+      call->d_ptr->m_FailureReason = Call::FailureReason::MISSED;
    }
    if (!direction.isEmpty()) {
       if (direction == Call::HistoryStateName::INCOMING) {
@@ -861,6 +861,11 @@ Individual* Call::peer() const
         return nullptr;
 
     return peerContactMethod()->individual();
+}
+
+Call::FailureReason Call::failureReason() const
+{
+    return d_ptr->m_FailureReason;
 }
 
 ///Get the peer name
@@ -1703,6 +1708,8 @@ void CallPrivate::refuse()
    setStartTimeStamp();
    m_LegacyFields.m_Missed = true;
 
+   m_FailureReason = Call::FailureReason::REFUSED;
+
    //If the daemon crashed then re-spawned when a call is ringing, this happen.
    if (!ret)
       FORCE_ERROR_STATE_P()
@@ -2099,6 +2106,14 @@ void CallPrivate::startStop()
    setStartTimeStamp();
    m_LegacyFields.m_pStopTimeStamp  = m_LegacyFields.m_pStartTimeStamp;
    m_LegacyFields.m_Missed = true;
+
+   // This seems to be generally implemented this way
+   if (m_LastErrorCode == ECONNABORTED)
+      m_FailureReason = Call::FailureReason::REFUSED;
+   else if (q_ptr->account()->autoAnswerStatus() == Account::AutoAnswerStatus::DO_NOT_DISTURB)
+      m_FailureReason = Call::FailureReason::DO_NOT_DISTURB;
+   else
+      m_FailureReason = Call::FailureReason::MISSED;
 }
 
 ///Stop the timer

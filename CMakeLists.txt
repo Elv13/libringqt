@@ -292,6 +292,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     SET(libringqt_LIB_SRCS
         ${libringqt_LIB_SRCS}
         src/interfaces/android/androidaudioformat.cpp
+        src/interfaces/android/androidvideoformat.cpp
     )
 ENDIF()
 
@@ -480,6 +481,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
   SET(libringqt_interface_LIB_HDRS
     ${libringqt_interface_LIB_HDRS}
     src/interfaces/android/androidaudioformat.h
+    src/interfaces/android/androidvideoformat.h
   )
 ENDIF()
 
