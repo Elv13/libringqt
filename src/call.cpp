@@ -503,6 +503,7 @@ Call* CallPrivate::buildCall(const QString& callId, Call::Direction callDirectio
 ///Build a call from its ID
 Call* CallPrivate::buildExistingCall(const QString& callId)
 {
+    qDebug() << "=========EXISTING" << callId;
     const auto& details = getCallDetailsCommon(callId);
     const auto daemon_state = details[DRing::Call::Details::CALL_STATE];
     const auto daemon_type = details[DRing::Call::Details::CALL_TYPE];
@@ -513,6 +514,7 @@ Call* CallPrivate::buildExistingCall(const QString& callId)
 ///Build a call from a dbus event
 Call* CallPrivate::buildIncomingCall(const QString& callId)
 {
+    qDebug() << "=========INCOMING" << callId;
     return buildCall(callId, Call::Direction::INCOMING, Call::State::INCOMING);
 } //buildIncomingCall
 
@@ -1756,7 +1758,8 @@ void CallPrivate::hangUp()
    time_t curTime;
    ::time(&curTime);
    m_LegacyFields.m_pStopTimeStamp = curTime;
-   qDebug() << "Hanging up call. callId : " << q_ptr << "ConfId:" << q_ptr;
+   qDebug() << "Hanging up call. callId : " << q_ptr << "ConfId:" << q_ptr << q_ptr->state() << Session::instance()->callModel()->
+       userActionModel()->isActionEnabled(UserActionModel::Action::ACCEPT);
    bool ret;
    if (q_ptr->type() != Call::Type::CONFERENCE)
       ret = callManager.hangUp(m_DringId);

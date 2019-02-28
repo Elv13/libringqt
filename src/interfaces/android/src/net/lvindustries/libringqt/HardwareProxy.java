@@ -49,12 +49,15 @@ import android.util.Size;
 
 public class HardwareProxy
 {
+    //TODO use this instead of the first CameraInfo
     private class VideoParams {
         public String id;
         public int format;
+
         // size as captured by Android
         public int width;
         public int height;
+
         //size, rotated, as seen by the daemon
         public int rotWidth;
         public int rotHeight;
@@ -84,6 +87,14 @@ public class HardwareProxy
             return map;
         }*/
     }
+    
+
+    static public class CameraInfo {
+        public String name;
+        public ArrayList<Integer> formats = new ArrayList<Integer>();
+        public ArrayList<Integer> sizes   = new ArrayList<Integer>();
+        public ArrayList<Integer> rates   = new ArrayList<Integer>();
+    }
 
     protected static Context mContext;
 
@@ -101,6 +112,14 @@ public class HardwareProxy
     private static String mFrontCameraName;
     private static String mBackCameraName;
     private static String mExternalCameraName;
+
+    public static CameraManager getCameraManager() {
+        return mCameraManager;
+    }
+
+    public static Context getContext() {
+        return mContext; 
+    }
 
     public static int setContext(android.content.Context ctx) {
         mContext = ctx;
@@ -179,13 +198,6 @@ public class HardwareProxy
         }
 
         return 0;
-    }
-
-    static private class CameraInfo {
-        public String name;
-        public ArrayList<Integer> formats = new ArrayList<Integer>();
-        public ArrayList<Integer> sizes   = new ArrayList<Integer>();
-        public ArrayList<Integer> rates   = new ArrayList<Integer>();
     }
 
     static CameraInfo fillCameraInfo(String camId) {
@@ -279,5 +291,15 @@ public class HardwareProxy
 
     public static int getFormat() {
         return ImageFormat.YUV_420_888;
+    }
+
+    public static CameraInfo getCameraInfoForName(String name) {
+        for (CameraInfo c : mCameraList) {
+            System.out.println("Compare "+name+" "+c.name);
+            if (name.equals(c.name))
+                return c;
+        }
+
+        return null;
     }
 }
