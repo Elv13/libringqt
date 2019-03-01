@@ -23,6 +23,8 @@
 
 // Ring
 #include <call.h>
+#include <session.h>
+#include <callmodel.h>
 
 // POSIX
 #include <errno.h>
@@ -89,8 +91,39 @@ Troubleshoot::Base::Severity Troubleshoot::CallState::severity() const
 
 bool Troubleshoot::CallState::setSelection(const QModelIndex& idx, Call* c)
 {
-    Q_UNUSED(idx)
-    Q_UNUSED(c)
+    auto cm = c->peerContactMethod();
+
+    switch(d_ptr->m_State) {
+        case CallStatePrivate::State::MISSED:
+        case CallStatePrivate::State::DO_NOT_DISTURB:
+            switch(d_ptr->m_Direction) {
+                case Call::Direction::INCOMING:
+                    if (idx.row() == 0) {
+                        c << Call::Action::REFUSE;
+                        c = Session::instance()->callModel()->dialingCall(cm);
+                        c << Call::Action::ACCEPT;
+                        return true;
+                    }
+                    break;
+                case Call::Direction::OUTGOING:
+                    return false;
+            }
+            break;
+        case CallStatePrivate::State::REFUSED:
+            switch(d_ptr->m_Direction) {
+                case Call::Direction::INCOMING:
+                    return false;
+                case Call::Direction::OUTGOING:
+                    return false;
+            }
+            break;
+        case CallStatePrivate::State::BUSY:
+            //TODO
+            return false;
+        case CallStatePrivate::State::NORMAL:
+            return false;
+    }
+
     return false;
 }
 
