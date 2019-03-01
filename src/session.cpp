@@ -18,6 +18,8 @@
  ***********************************************************************************/
 #include "session.h"
 
+#include "dbus/metatypes.h"
+
 #include "callmodel.h"
 #include "accountmodel.h"
 #include "callhistorymodel.h"
@@ -80,7 +82,9 @@ public:
     return d_ptr->name;}
 
 Session::Session(QObject* parent) : QObject(parent), d_ptr(new SessionPrivate())
-{}
+{
+    registerCommTypes();
+}
 
 Session::~Session()
 {
