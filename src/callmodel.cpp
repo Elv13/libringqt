@@ -180,20 +180,25 @@ void CallModelPrivate::init()
 
     connect(Session::instance()->historyModel(),SIGNAL(newHistoryCall(Call*)),this,SLOT(slotAddPrivateCall(Call*)));
 
-    registerCommTypes();
+    // Delay adding the calls so the session has time to be initialized. Not
+    // doing so will cause signals to be emitted before they are connected and
+    // Session::instance()->callModel() called recursively.
+    QTimer::singleShot(0, [this]() {
+        CallManagerInterface& callManager = CallManager::instance();
 
-    const QStringList callList = getCallList();
-    for (const QString& callId : qAsConst(callList)) {
-        Call* tmpCall = CallPrivate::buildExistingCall(callId);
-        addCall2(tmpCall);
-    }
+        const QStringList callList = getCallList();
+        for (const QString& callId : qAsConst(callList)) {
+            Call* tmpCall = CallPrivate::buildExistingCall(callId);
+            addCall2(tmpCall);
+        }
 
-    const QStringList confList = callManager.getConferenceList();
+        const QStringList confList = callManager.getConferenceList();
 
-    for (const QString& confId : qAsConst(confList)) {
-        Call* conf = addConference(confId);
-        emit q_ptr->conferenceCreated(conf);
-    }
+        for (const QString& confId : qAsConst(confList)) {
+            Call* conf = addConference(confId);
+            emit q_ptr->conferenceCreated(conf);
+        }
+    });
 }
 
 ///Destructor
