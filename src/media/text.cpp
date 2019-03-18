@@ -95,7 +95,7 @@ IMConversationManagerPrivate::IMConversationManagerPrivate(QObject* parent) : QO
 {
    CallManagerInterface& callManager                   = CallManager::instance();
    ConfigurationManagerInterface& configurationManager = ConfigurationManager::instance();
-
+qDebug() << "=========== CONNECT TEXT!";
    connect(&configurationManager, &ConfigurationManagerInterface::incomingAccountMessage, this, &IMConversationManagerPrivate::newAccountMessage);
    connect(&configurationManager, &ConfigurationManagerInterface::accountMessageStatusChanged  , this, &IMConversationManagerPrivate::accountMessageStatusChanged);
    connect(&callManager         , &CallManagerInterface::incomingMessage                , this, &IMConversationManagerPrivate::newMessage       );
@@ -194,6 +194,8 @@ void IMConversationManagerPrivate::newMessage(const QString& callId, const QStri
 
 void IMConversationManagerPrivate::newAccountMessage(const QString& accountId, const QString& from, const QMap<QString,QString>& payloads)
 {
+   qDebug() << "============NEW ACC MESSAGE";
+
    if (auto cm = Session::instance()->individualDirectory()->getNumber(from, Session::instance()->accountModel()->getById(accountId.toLatin1()))) {
        auto txtRecording = cm->textRecording();
        txtRecording->d_ptr->insertNewMessage(payloads, cm, Media::Media::Direction::IN);

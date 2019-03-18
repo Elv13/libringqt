@@ -61,6 +61,8 @@ public:
     std::map<std::string, std::shared_ptr<DRing::CallbackWrapperBase>> confHandlers;
     std::map<std::string, std::shared_ptr<DRing::CallbackWrapperBase>> dataXferHandlers;
 
+    //qRegisterMetaType< QMap<QString,QString> >();//"QMap<QString,QString>");
+
     ConfigurationManagerInterface() {
         setObjectName("ConfigurationManagerInterface");
         using DRing::exportable_callback;
@@ -724,16 +726,16 @@ Q_SIGNALS: // SIGNALS
     void registrationStateChanged(const QString& accountID, const QString& registration_state, unsigned detail_code, const QString& detail_str);
     void stunStatusSuccess(const QString& message);
     void errorAlert(int code);
-    void volatileAccountDetailsChanged(const QString& accountID, const QMap<QString, QString>& details);
+    void volatileAccountDetailsChanged(const QString& accountID, MapStringString details);
     void certificatePinned(const QString& certId);
     void certificatePathPinned(const QString& path, const QStringList& certIds);
     void certificateExpired(const QString& certId);
     void certificateStateChanged(const QString& accountId, const QString& certId, const QString& status);
     void incomingTrustRequest(const QString& accountId, const QString& from, const QByteArray& payload, qulonglong timeStamp);
-    void knownDevicesChanged(const QString& accountId, const QMap<QString, QString>& devices);
+    void knownDevicesChanged(const QString& accountId, MapStringString devices);
     void exportOnRingEnded(const QString& accountId, int status, const QString& pin);
     void deviceRevocationEnded(const QString& accountId, const QString& deciceId, int status);
-    void incomingAccountMessage(const QString& accountId, const QString& from, const QMap<QString, QString>& payloads);
+    void incomingAccountMessage(const QString& accountId, const QString& from, MapStringString payloads);
     void mediaParametersChanged(const QString& accountId);
     void audioDeviceEvent();
     void accountMessageStatusChanged(const QString& accountId, const uint64_t id, const QString& to, int status);
